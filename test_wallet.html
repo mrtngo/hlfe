@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hyperliquid Testnet Order Tester</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+        }
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        button:hover { background: #2563eb; }
+        button:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+        .status {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .success { background: #10b981; color: white; }
+        .error { background: #ef4444; color: white; }
+        .info { background: #3b82f6; color: white; }
+        .warning { background: #f59e0b; color: white; }
+        pre {
+            background: #0a0a0a;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid #333;
+        }
+        h1 { color: #3b82f6; }
+        h2 { color: #60a5fa; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        label { display: block; margin-top: 12px; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Hyperliquid Testnet Order Tester</h1>
+    
+    <div class="card">
+        <h2>1. Connect Wallet</h2>
+        <button id="connectBtn" onclick="connectWallet()">Connect MetaMask/Rabby</button>
+        <div id="walletStatus"></div>
+    </div>
+
+    <div class="card" id="orderSection" style="display:none;">
+        <h2>2. Place Test Order</h2>
+        <label>Coin:</label>
+        <select id="coin">
+            <option value="SOL">SOL-PERP</option>
+            <option value="BTC">BTC-PERP</option>
+            <option value="ETH">ETH-PERP</option>
+        </select>
+
+        <label>Side:</label>
+        <select id="side">
+            <option value="true">Buy</option>
+            <option value="false">Sell</option>
+        </select>
+
+        <label>Size:</label>
+        <input type="number" id="size" value="1" step="0.001" min="0.001">
+
+        <label>Limit Price:</label>
+        <input type="number" id="price" value="100" step="0.01" min="0.01">
+
+        <br><br>
+        <button onclick="placeOrder()">Place Order (Immediate or Cancel)</button>
+        <div id="orderStatus"></div>
+    </div>
+
+    <script src="https://unpkg.com/hyperliquid@latest/dist/browser.global.js"></script>
+    <script>
+        let walletAddress = null;
+        let sdk = null;
+
+        // Custom BrowserWallet that patches chainId
+        class BrowserWallet {
+            constructor(address) {
+                this.address = address;
+            }
+
+            async signTypedData(domain, types, value) {
+                // Patch chainId from 1337 to 421614 for Arbitrum Sepolia
+                if (domain && domain.name === 'Exchange' && (domain.chainId === 1337 || domain.chainId === '1337')) {
+                    console.log('Patching chainId 1337 -> 421614');
+                    domain.chainId = 421614;
+                }
+
+                const { EIP712Domain, ...restTypes } = types;
+                const primaryType = Object.keys(restTypes)[0] || 'Agent';
+                
+                console.log('Signing:', { domain, types: restTypes, primaryType, message: value });
+
+                const signature = await window.ethereum.request({
+                    method: 'eth_signTypedData_v4',
+                    params: [
+                        this.address,
+                        JSON.stringify({
+                            domain,
+                            types: restTypes,
+                            primaryType,
+                            message: value,
+                        })
+                    ]
+                });
+
+                return signature;
+            }
+        }
+
+        async function connectWallet() {
+            try {
+                if (!window.ethereum) {
+                    showStatus('walletStatus', 'Please install MetaMask or Rabby', 'error');
+                    return;
+                }
+
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                walletAddress = accounts[0];
+
+                // Check network
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                console.log('Current chainId:', chainId);
+
+                if (chainId !== '0x66eee') {
+                    showStatus('walletStatus', 
+                        `⚠️ Wrong network! Please switch to Arbitrum Sepolia (Chain ID: 421614)<br>
+                        <small>Network: <a href="https://sepolia.arbiscan.io/" target="_blank">Arbitrum Sepolia</a><br>
+                        RPC: https://sepolia-rollup.arbitrum.io/rpc</small>`, 
+                        'warning');
+                    return;
+                }
+
+                showStatus('walletStatus', `✅ Connected: ${walletAddress}`, 'success');
+                document.getElementById('orderSection').style.display = 'block';
+
+                // Initialize SDK
+                sdk = HyperliquidSDK;
+                console.log('SDK loaded:', sdk);
+
+            } catch (error) {
+                showStatus('walletStatus', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function placeOrder() {
+            if (!walletAddress || !sdk) {
+                showStatus('orderStatus', 'Please connect wallet first', 'error');
+                return;
+            }
+
+            try {
+                const coin = document.getElementById('coin').value;
+                const isBuy = document.getElementById('side').value === 'true';
+                const size = parseFloat(document.getElementById('size').value);
+                const price = parseFloat(document.getElementById('price').value);
+
+                showStatus('orderStatus', '⏳ Placing order...', 'info');
+
+                // Get asset index
+                const meta = await fetch('https://api.hyperliquid-testnet.xyz/info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'meta' })
+                }).then(r => r.json());
+
+                const assetName = coin + '-PERP';
+                const assetIndex = meta.universe.findIndex(u => u.name === coin);
+                
+                if (assetIndex === -1) {
+                    throw new Error(`Asset ${coin} not found`);
+                }
+
+                console.log('Asset index:', assetIndex, 'for', coin);
+
+                // Build order request
+                const orderRequest = {
+                    coin,
+                    is_buy: isBuy,
+                    sz: size,
+                    limit_px: price,
+                    order_type: { limit: { tif: 'Ioc' } },
+                    reduce_only: false
+                };
+
+                // Use SDK to build wire order
+                const wireOrder = sdk.orderToWire(orderRequest, assetIndex);
+                
+                const actionPayload = {
+                    type: 'order',
+                    orders: [wireOrder],
+                    grouping: 'na'
+                };
+
+                console.log('Action payload:', actionPayload);
+
+                // Sign with custom wallet
+                const browserWallet = new BrowserWallet(walletAddress);
+                const nonce = Date.now();
+
+                console.log('Signing with nonce:', nonce, 'isMainnet:', false);
+
+                const signature = await sdk.signL1Action(
+                    browserWallet,
+                    actionPayload,
+                    null, // vaultAddress
+                    nonce,
+                    false // isMainnet = false for testnet
+                );
+
+                console.log('Signature:', signature);
+
+                // Send to API
+                const response = await fetch('https://api.hyperliquid-testnet.xyz/exchange', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: actionPayload,
+                        nonce,
+                        signature,
+                        vaultAddress: null
+                    })
+                });
+
+                const result = await response.json();
+                console.log('Order result:', result);
+
+                if (result.status === 'err') {
+                    throw new Error(result.response);
+                }
+
+                showStatus('orderStatus', `✅ Order placed successfully!<br><pre>${JSON.stringify(result, null, 2)}</pre>`, 'success');
+
+            } catch (error) {
+                console.error('Order error:', error);
+                showStatus('orderStatus', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function showStatus(elementId, message, type) {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
