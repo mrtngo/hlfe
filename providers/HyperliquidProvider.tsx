@@ -163,6 +163,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [authenticated, wallets]);
 
+    // Rate limiting state
+    const [rateLimited, setRateLimited] = useState(false);
+    const [retryAfter, setRetryAfter] = useState<number | null>(null);
+    const [fetchingAccount, setFetchingAccount] = useState(false);
+
     // Fetch account state when connected
     useEffect(() => {
         if (!isConnected || !address) {
@@ -179,7 +184,18 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        const fetchAccountData = async () => {
+        const fetchAccountData = async (retryCount = 0) => {
+            // Skip if rate limited
+            if (rateLimited && retryAfter && Date.now() < retryAfter) {
+                return;
+            }
+
+            // Skip if already fetching
+            if (fetchingAccount) {
+                return;
+            }
+
+            setFetchingAccount(true);
             try {
                 // Ensure address is lowercase (Hyperliquid API requirement)
                 const normalizedAddress = address?.toLowerCase();
@@ -199,6 +215,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Get user clearinghouse state (account info)
                 // Try with rawResponse to see the actual API response
                 const userState = await client.info.perpetuals.getClearinghouseState(normalizedAddress, false);
+                
+                // Success - reset rate limiting
+                setRateLimited(false);
+                setRetryAfter(null);
                 
                 console.log('📊 Raw userState response:', JSON.stringify(userState, null, 2));
                 console.log('📊 userState type:', typeof userState);
@@ -302,31 +322,58 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
             } catch (err) {
                 console.error('❌ Error fetching account data:', err);
+                
+                // Check if it's a rate limit error (429)
+                const isRateLimited = err instanceof Error && 
+                    (err.message.includes('429') || 
+                     err.message.includes('Too Many Requests') ||
+                     err.message.includes('rate limit'));
+                
+                if (isRateLimited) {
+                    console.warn('⚠️ Rate limited by API. Backing off...');
+                    setRateLimited(true);
+                    // Exponential backoff: 30s, 60s, 120s
+                    const backoffMs = Math.min(30000 * Math.pow(2, retryCount), 120000);
+                    setRetryAfter(Date.now() + backoffMs);
+                    console.log(`⏳ Will retry after ${backoffMs / 1000}s`);
+                    return;
+                }
+                
                 if (err instanceof Error) {
                     console.error('Error message:', err.message);
                     console.error('Error stack:', err.stack);
                 }
                 
-                // Set zero balance on error
-                setAccount({
-                    balance: 0,
-                    equity: 0,
-                    availableMargin: 0,
-                    usedMargin: 0,
-                    unrealizedPnl: 0,
-                    unrealizedPnlPercent: 0,
-                });
-                setPositions([]);
+                // For other errors, don't update account state (keep last known state)
+                // Only set zero if it's the first fetch
+                if (retryCount === 0) {
+                    setAccount({
+                        balance: 0,
+                        equity: 0,
+                        availableMargin: 0,
+                        usedMargin: 0,
+                        unrealizedPnl: 0,
+                        unrealizedPnlPercent: 0,
+                    });
+                    setPositions([]);
+                }
+            } finally {
+                setFetchingAccount(false);
             }
         };
 
         fetchAccountData();
 
-        // Refresh every 10 seconds
-        const interval = setInterval(fetchAccountData, 10000);
+        // Refresh every 30 seconds (increased from 10s to reduce rate limiting)
+        // If rate limited, the function will skip the fetch
+        const interval = setInterval(() => {
+            if (!rateLimited || (retryAfter && Date.now() >= retryAfter)) {
+                fetchAccountData();
+            }
+        }, 30000);
 
         return () => clearInterval(interval);
-    }, [isConnected, address, markets.length]); // Removed 'markets' dependency to avoid re-fetching on every price update
+    }, [isConnected, address, markets.length, rateLimited, retryAfter, fetchingAccount]); // Removed 'markets' dependency to avoid re-fetching on every price update
 
     // Helper to get the best provider
     const getProvider = () => {
@@ -560,10 +607,19 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             console.log('📥 API Response status:', response.status, response.statusText);
 
+            if (response.status === 429) {
+                // Rate limited - set rate limit state and throw user-friendly error
+                setRateLimited(true);
+                const retryAfterHeader = response.headers.get('Retry-After');
+                const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 60;
+                setRetryAfter(Date.now() + retryAfterSeconds * 1000);
+                throw new Error(`Rate limited. Please wait ${retryAfterSeconds} seconds before trying again.`);
+            }
+
             if (!response.ok) {
                 const error = await response.text();
                 console.error('❌ API Error Response:', error);
-                throw new Error(`API Error: ${error}`);
+                throw new Error(`API Error: ${error || `HTTP ${response.status}`}`);
             }
 
             const result = await response.json();

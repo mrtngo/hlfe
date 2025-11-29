@@ -3,20 +3,23 @@
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { TrendingUp, TrendingDown, AlertCircle, Info } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Info, Plus } from 'lucide-react';
 
-type OrderType = 'market' | 'limit';
-type OrderSide = 'buy' | 'sell';
+type OrderType = 'market' | 'limit' | 'twap';
+type OrderSide = 'long' | 'short';
+type MarginMode = 'isolated' | 'cross';
 
 export default function OrderPanel() {
     const { t, formatCurrency, formatPercent } = useLanguage();
     const { connected, getMarket, selectedMarket, placeOrder, account } = useHyperliquid();
 
-    const [orderSide, setOrderSide] = useState<OrderSide>('buy');
+    const [orderSide, setOrderSide] = useState<OrderSide>('long');
     const [orderType, setOrderType] = useState<OrderType>('market');
     const [size, setSize] = useState<string>('');
     const [price, setPrice] = useState<string>('');
-    const [leverage, setLeverage] = useState<number>(5);
+    const [leverage, setLeverage] = useState<number>(1);
+    const [advanced, setAdvanced] = useState<boolean>(false);
+    const [marginMode, setMarginMode] = useState<MarginMode>('isolated');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
@@ -29,9 +32,12 @@ export default function OrderPanel() {
     const requiredMargin = notionalValue / leverage; // Margin needed with leverage
     const fee = notionalValue * 0.0005; // 0.05% fee
     const totalRequired = requiredMargin + fee;
-    const liquidationPrice = orderSide === 'buy'
+    const liquidationPrice = orderSide === 'long'
         ? orderPrice * (1 - 1 / leverage)
         : orderPrice * (1 + 1 / leverage);
+    
+    // Convert to buy/sell for API
+    const apiSide = orderSide === 'long' ? 'buy' : 'sell';
 
     const handlePlaceOrder = async () => {
         setError('');
@@ -60,10 +66,11 @@ export default function OrderPanel() {
 
         setLoading(true);
         try {
+            // Convert long/short to buy/sell for API
             await placeOrder(
                 selectedMarket,
-                orderSide,
-                orderType,
+                apiSide,
+                orderType === 'twap' ? 'market' : orderType, // TWAP not supported yet, use market
                 orderSize,
                 orderType === 'limit' ? orderPrice : undefined,
                 leverage
@@ -85,55 +92,83 @@ export default function OrderPanel() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {/* Order Side Tabs */}
-                <div className="grid grid-cols-2 gap-2">
+                {/* Order Side Tabs - Long/Short */}
+                <div className="grid grid-cols-2 gap-3">
                     <button
-                        onClick={() => setOrderSide('buy')}
-                        className={`py-3 rounded-lg font-bold transition-all ${orderSide === 'buy'
-                                ? 'bg-buy text-white shadow-md'
-                                : 'bg-tertiary text-muted hover:bg-glass'
-                            }`}
+                        onClick={() => setOrderSide('long')}
+                        className={`py-4 rounded-full font-bold transition-all min-h-[56px] border-2 ${
+                            orderSide === 'long'
+                                ? 'bg-buy text-white border-buy shadow-md'
+                                : 'bg-elevated text-muted hover:bg-card border-border'
+                        }`}
                     >
                         <div className="flex items-center justify-center gap-2">
-                            <TrendingUp className="w-4 h-4" />
-                            {t.order.buy}
+                            <TrendingUp className="w-5 h-5" />
+                            Long
                         </div>
                     </button>
                     <button
-                        onClick={() => setOrderSide('sell')}
-                        className={`py-3 rounded-lg font-bold transition-all ${orderSide === 'sell'
-                                ? 'bg-sell text-white shadow-md'
-                                : 'bg-tertiary text-muted hover:bg-glass'
-                            }`}
+                        onClick={() => setOrderSide('short')}
+                        className={`py-4 rounded-full font-bold transition-all min-h-[56px] border-2 ${
+                            orderSide === 'short'
+                                ? 'bg-sell text-white border-sell shadow-md'
+                                : 'bg-elevated text-muted hover:bg-card border-border'
+                        }`}
                     >
                         <div className="flex items-center justify-center gap-2">
-                            <TrendingDown className="w-4 h-4" />
-                            {t.order.sell}
+                            <TrendingDown className="w-5 h-5" />
+                            Short
                         </div>
+                    </button>
+                </div>
+
+                {/* Advanced Toggle */}
+                <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">Advanced</span>
+                    <button
+                        onClick={() => setAdvanced(!advanced)}
+                        className={`relative w-12 h-6 rounded-full transition-colors ${
+                            advanced ? 'bg-primary' : 'bg-elevated border border-border'
+                        }`}
+                    >
+                        <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                            advanced ? 'translate-x-6' : 'translate-x-0'
+                        }`} />
                     </button>
                 </div>
 
                 {/* Order Type */}
                 <div>
-                    <label className="text-sm text-muted mb-2 block">{t.order.orderTypes.market}</label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                         <button
                             onClick={() => setOrderType('market')}
-                            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${orderType === 'market'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-tertiary text-muted hover:bg-glass'
-                                }`}
+                            className={`py-3 px-4 rounded-full text-sm font-semibold transition-all min-h-[48px] ${
+                                orderType === 'market'
+                                    ? 'bg-elevated text-white border-2 border-primary'
+                                    : 'bg-elevated text-muted hover:bg-card border border-border'
+                            }`}
                         >
-                            {t.order.market}
+                            Market
                         </button>
                         <button
                             onClick={() => setOrderType('limit')}
-                            className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${orderType === 'limit'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-tertiary text-muted hover:bg-glass'
-                                }`}
+                            className={`py-3 px-4 rounded-full text-sm font-semibold transition-all min-h-[48px] ${
+                                orderType === 'limit'
+                                    ? 'bg-elevated text-white border-2 border-primary'
+                                    : 'bg-elevated text-muted hover:bg-card border border-border'
+                            }`}
                         >
-                            {t.order.limit}
+                            Limit
+                        </button>
+                        <button
+                            onClick={() => setOrderType('twap')}
+                            className={`py-3 px-4 rounded-full text-sm font-semibold transition-all min-h-[48px] ${
+                                orderType === 'twap'
+                                    ? 'bg-elevated text-white border-2 border-primary'
+                                    : 'bg-elevated text-muted hover:bg-card border border-border'
+                            }`}
+                        >
+                            TWAP
                         </button>
                     </div>
                 </div>
@@ -153,53 +188,115 @@ export default function OrderPanel() {
                     </div>
                 )}
 
-                {/* Size */}
+                {/* Amount */}
                 <div>
-                    <label className="text-sm text-muted mb-2 block">{t.order.amount}</label>
+                    <label className="text-sm font-semibold mb-2 block">Amount</label>
                     <input
                         type="number"
                         value={size}
                         onChange={(e) => setSize(e.target.value)}
-                        placeholder="0.00"
-                        className="input"
+                        placeholder="$0.00"
+                        className="input text-lg font-bold"
                         step="0.001"
                     />
-                </div>
-
-                {/* Leverage Slider */}
-                <div>
-                    <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm text-muted">{t.order.leverage}</label>
-                        <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-primary">{leverage}x</span>
-                            <div className="group relative">
-                                <Info className="w-3 h-3 text-muted cursor-help" />
-                                <div className="invisible group-hover:visible absolute right-0 top-6 w-48 p-2 bg-tertiary border border-border rounded-md text-xs z-10">
-                                    {t.tooltips.leverage}
-                                </div>
-                            </div>
+                    {/* Amount Slider */}
+                    <div className="mt-3">
+                        <input
+                            type="range"
+                            min="0"
+                            max={account.availableMargin > 0 ? (account.availableMargin * leverage / currentPrice).toFixed(2) : "100"}
+                            value={orderSize || 0}
+                            onChange={(e) => setSize(e.target.value)}
+                            className="w-full h-2 bg-elevated rounded-lg appearance-none cursor-pointer accent-primary"
+                        />
+                        <div className="flex justify-between text-xs text-muted mt-1">
+                            <span>$0.00</span>
+                            <span>${((account.availableMargin * leverage / currentPrice) || 0.01).toFixed(2)}</span>
                         </div>
                     </div>
+                </div>
+
+                {/* Multiplier (Leverage) */}
+                <div>
+                    <label className="text-sm font-semibold mb-2 block">Multiplier</label>
                     <input
-                        type="range"
-                        min="1"
-                        max="50"
-                        value={leverage}
-                        onChange={(e) => setLeverage(parseInt(e.target.value))}
-                        className="w-full"
-                        style={{
-                            background: `linear-gradient(to right, var(--color-primary) 0%, var(--color-primary) ${(leverage - 1) / 49 * 100}%, var(--bg-tertiary) ${(leverage - 1) / 49 * 100}%, var(--bg-tertiary) 100%)`
+                        type="text"
+                        value={`x${leverage}`}
+                        onChange={(e) => {
+                            const val = e.target.value.replace('x', '');
+                            const num = parseInt(val) || 1;
+                            setLeverage(Math.min(Math.max(num, 1), 20));
                         }}
+                        placeholder="x1"
+                        className="input text-lg font-bold"
                     />
-                    <div className="flex justify-between text-xs text-muted mt-1">
-                        <span>1x</span>
-                        <span>25x</span>
-                        <span>50x</span>
+                    {/* Multiplier Slider */}
+                    <div className="mt-3">
+                        <input
+                            type="range"
+                            min="1"
+                            max="20"
+                            value={leverage}
+                            onChange={(e) => setLeverage(parseInt(e.target.value))}
+                            className="w-full h-2 bg-elevated rounded-lg appearance-none cursor-pointer accent-primary"
+                        />
+                        <div className="flex justify-between text-xs text-muted mt-1">
+                            <span>x1</span>
+                            <span>x20</span>
+                        </div>
                     </div>
                 </div>
 
+                {/* Margin Mode */}
+                {advanced && (
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <label className="text-sm font-semibold">Margin Mode</label>
+                            <Info className="w-3 h-3 text-muted" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={() => setMarginMode('isolated')}
+                                className={`py-3 px-4 rounded-full text-sm font-semibold transition-all min-h-[48px] ${
+                                    marginMode === 'isolated'
+                                        ? 'bg-elevated text-white border-2 border-primary'
+                                        : 'bg-elevated text-muted hover:bg-card border border-border'
+                                }`}
+                            >
+                                Isolated
+                            </button>
+                            <button
+                                onClick={() => setMarginMode('cross')}
+                                className={`py-3 px-4 rounded-full text-sm font-semibold transition-all min-h-[48px] ${
+                                    marginMode === 'cross'
+                                        ? 'bg-elevated text-white border-2 border-primary'
+                                        : 'bg-elevated text-muted hover:bg-card border border-border'
+                                }`}
+                            >
+                                Cross
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* TP/SL */}
+                {advanced && (
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm font-semibold">TP/SL</label>
+                                <Info className="w-3 h-3 text-muted" />
+                            </div>
+                            <button className="px-3 py-1.5 bg-elevated border border-border rounded-full text-sm font-semibold hover:bg-card transition-colors flex items-center gap-1">
+                                <Plus className="w-3 h-3" />
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Order Summary */}
-                <div className="space-y-2 p-3 bg-tertiary rounded-lg">
+                <div className="space-y-2 p-4 bg-elevated rounded-xl border border-border">
                     <div className="flex justify-between text-sm">
                         <span className="text-muted">{t.order.price}</span>
                         <span className="mono font-semibold">{formatCurrency(orderPrice)}</span>
@@ -235,20 +332,20 @@ export default function OrderPanel() {
                 </div>
 
                 {/* Available Balance */}
-                <div className="flex justify-between text-sm p-2 bg-glass rounded">
+                <div className="flex justify-between text-sm p-3 bg-elevated rounded-xl border border-border">
                     <span className="text-muted">{t.order.availableBalance}</span>
                     <span className="mono font-semibold">{formatCurrency(account.availableMargin)}</span>
                 </div>
 
                 {/* Error/Success Messages */}
                 {error && (
-                    <div className="flex items-center gap-2 p-3 bg-sell/10 border border-sell/30 rounded-lg text-sm text-sell">
+                    <div className="flex items-center gap-2 p-3 bg-sell-light border border-sell/30 rounded-xl text-sm text-sell">
                         <AlertCircle className="w-4 h-4 flex-shrink-0" />
                         <span>{error}</span>
                     </div>
                 )}
                 {success && (
-                    <div className="flex items-center gap-2 p-3 bg-buy/10 border border-buy/30 rounded-lg text-sm text-buy">
+                    <div className="flex items-center gap-2 p-3 bg-buy-light border border-buy/30 rounded-xl text-sm text-buy">
                         <Info className="w-4 h-4 flex-shrink-0" />
                         <span>{success}</span>
                     </div>
@@ -258,15 +355,15 @@ export default function OrderPanel() {
                 <button
                     onClick={handlePlaceOrder}
                     disabled={!connected || loading || orderSize <= 0}
-                    className={orderSide === 'buy' ? 'btn-buy w-full' : 'btn-sell w-full'}
+                    className="w-full bg-elevated hover:bg-card border-2 border-primary rounded-full py-4 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                     {loading ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center gap-2">
                             <div className="spinner" />
                             {t.common.loading}
                         </div>
                     ) : (
-                        orderSide === 'buy' ? t.order.placeBuyOrder : t.order.placeSellOrder
+                        'Place Order'
                     )}
                 </button>
             </div>

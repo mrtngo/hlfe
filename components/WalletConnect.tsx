@@ -65,14 +65,15 @@ export default function WalletConnect() {
 
                     <button
                         onClick={copyAddress}
-                        className="hidden md:flex items-center gap-2 px-3 py-2 glass-card hover:bg-glass transition-colors"
+                        className="hidden md:flex items-center gap-2 px-4 py-2 bg-elevated border border-border rounded-full hover:bg-card transition-all"
                         title={t.common.copy || 'Copy address'}
                     >
-                        <span className="text-sm mono">{formatAddress(address)}</span>
+                        <Wallet className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-mono font-semibold">{formatAddress(address)}</span>
                         {copied ? (
-                            <Check className="w-3 h-3 text-buy" />
+                            <Check className="w-4 h-4 text-buy" />
                         ) : (
-                            <Copy className="w-3 h-3 text-muted" />
+                            <Copy className="w-4 h-4 text-muted" />
                         )}
                     </button>
                 </>

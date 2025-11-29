@@ -5,7 +5,11 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { Search, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function MarketOverview() {
+interface MarketOverviewProps {
+    onTokenClick?: (symbol: string) => void;
+}
+
+export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {}) {
     const { t, formatCurrency, formatPercent } = useLanguage();
     const { markets, selectedMarket, setSelectedMarket } = useHyperliquid();
     const [isExpanded, setIsExpanded] = useState(false);
@@ -95,6 +99,7 @@ export default function MarketOverview() {
                                         onClick={() => {
                                             setSelectedMarket(market.symbol);
                                             setIsExpanded(false);
+                                            onTokenClick?.(market.symbol);
                                         }}
                                         className={`
                                             p-3 cursor-pointer transition-colors hover:bg-glass

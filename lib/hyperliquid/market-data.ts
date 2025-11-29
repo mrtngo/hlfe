@@ -25,7 +25,7 @@ export function useMarketData(): MarketData {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchMarketData = useCallback(async () => {
+    const fetchMarketData = useCallback(async (retryCount = 0) => {
         try {
             setLoading(true);
 
@@ -86,31 +86,51 @@ export function useMarketData(): MarketData {
             setError(null);
         } catch (err) {
             console.error('Error fetching market data:', err);
+            
+            // Check if it's a rate limit error (429)
+            const isRateLimited = err instanceof Error && 
+                (err.message.includes('429') || 
+                 err.message.includes('Too Many Requests') ||
+                 err.message.includes('rate limit'));
+            
+            if (isRateLimited && retryCount < 3) {
+                // Exponential backoff: 30s, 60s, 120s
+                const backoffMs = Math.min(30000 * Math.pow(2, retryCount), 120000);
+                console.warn(`⚠️ Rate limited. Retrying in ${backoffMs / 1000}s...`);
+                setTimeout(() => fetchMarketData(retryCount + 1), backoffMs);
+                return;
+            }
+            
             setError(err instanceof Error ? err.message : 'Failed to fetch market data');
 
-            // Set some default markets in case of error to avoid empty UI
-            setMarkets([
-                {
-                    symbol: 'BTC-USD',
-                    name: 'BTC',
-                    price: 97000,
-                    change24h: 0,
-                    volume24h: 0,
-                    high24h: 97000,
-                    low24h: 97000,
-                    fundingRate: 0,
-                },
-                {
-                    symbol: 'ETH-USD',
-                    name: 'ETH',
-                    price: 3450,
-                    change24h: 0,
-                    volume24h: 0,
-                    high24h: 3450,
-                    low24h: 3450,
-                    fundingRate: 0,
-                },
-            ]);
+            // Set some default markets in case of error to avoid empty UI (only if we have no markets)
+            setMarkets(prevMarkets => {
+                if (prevMarkets.length === 0) {
+                    return [
+                        {
+                            symbol: 'BTC-USD',
+                            name: 'BTC',
+                            price: 97000,
+                            change24h: 0,
+                            volume24h: 0,
+                            high24h: 97000,
+                            low24h: 97000,
+                            fundingRate: 0,
+                        },
+                        {
+                            symbol: 'ETH-USD',
+                            name: 'ETH',
+                            price: 3450,
+                            change24h: 0,
+                            volume24h: 0,
+                            high24h: 3450,
+                            low24h: 3450,
+                            fundingRate: 0,
+                        },
+                    ];
+                }
+                return prevMarkets;
+            });
         } finally {
             setLoading(false);
         }

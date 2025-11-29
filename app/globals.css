@@ -5,49 +5,40 @@
 @tailwind utilities;
 
 :root {
-  /* LATAM-Inspired Color Palette */
-  --color-primary: #FF6B35; /* Warm Orange - Energy & Passion */
-  --color-primary-light: #FF8C5F;
-  --color-primary-dark: #E04E1E;
+  /* Robinhood-Inspired Color Palette */
+  --color-primary: #00C805; /* Robinhood Green */
+  --color-primary-light: #00E806;
+  --color-primary-dark: #00A804;
   
-  --color-secondary: #1E3A8A; /* Deep Blue - Trust & Stability */
-  --color-secondary-light: #3B5AAF;
-  --color-secondary-dark: #0F1F5C;
+  /* Trading Colors - Robinhood Style */
+  --color-buy: #00C805; /* Bright Green */
+  --color-buy-hover: #00E806;
+  --color-buy-light: rgba(0, 200, 5, 0.1);
+  --color-sell: #FF5000; /* Robinhood Red */
+  --color-sell-hover: #FF6B35;
+  --color-sell-light: rgba(255, 80, 0, 0.1);
   
-  --color-accent: #F59E0B; /* Gold - Success & Prosperity */
-  --color-accent-light: #FBBF24;
-  --color-accent-dark: #D97706;
+  /* Clean Dark Theme */
+  --bg-primary: #000000; /* Pure black like Robinhood */
+  --bg-secondary: #0A0A0A; /* Very dark gray */
+  --bg-tertiary: #141414; /* Slightly lighter */
+  --bg-card: #1A1A1A; /* Card background */
+  --bg-glass: rgba(255, 255, 255, 0.03);
+  --bg-elevated: #1F1F1F; /* Elevated surfaces */
   
-  /* Trading Colors */
-  --color-buy: #10B981; /* Green - Profits */
-  --color-buy-hover: #059669;
-  --color-sell: #EF4444; /* Red - Losses */
-  --color-sell-hover: #DC2626;
+  --text-primary: #FFFFFF;
+  --text-secondary: #E5E5E5;
+  --text-muted: #999999;
+  --text-disabled: #666666;
   
-  /* Dark Theme (Primary for Trading) */
-  --bg-primary: #0A0E1A;
-  --bg-secondary: #131829;
-  --bg-tertiary: #1A2035;
-  --bg-card: rgba(26, 32, 53, 0.6);
-  --bg-glass: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(0, 200, 5, 0.2);
   
-  --text-primary: #F9FAFB;
-  --text-secondary: #D1D5DB;
-  --text-muted: #9CA3AF;
-  
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-accent: rgba(255, 107, 53, 0.3);
-  
-  /* Shadows & Effects */
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(255, 107, 53, 0.3);
-  
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #FF6B35 0%, #F59E0B 100%);
-  --gradient-secondary: linear-gradient(135deg, #1E3A8A 0%, #3B5AAF 100%);
-  --gradient-card: linear-gradient(135deg, rgba(26, 32, 53, 0.8) 0%, rgba(19, 24, 41, 0.8) 100%);
+  /* Shadows & Effects - Subtle */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 16px rgba(0, 200, 5, 0.2);
   
   /* Spacing */
   --space-xs: 0.25rem;
@@ -56,16 +47,17 @@
   --space-lg: 1.5rem;
   --space-xl: 2rem;
   
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  /* Border Radius - Very Rounded (Mobile App Style) */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px; /* Pill shape */
   
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -85,10 +77,9 @@ body {
 
 body {
   min-height: 100vh;
-  background-image: 
-    radial-gradient(circle at 20% 20%, rgba(255, 107, 53, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(30, 58, 138, 0.08) 0%, transparent 50%);
-  background-attachment: fixed;
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Typography */
@@ -140,77 +131,98 @@ h6 { font-size: 1rem; }
   background-clip: text;
 }
 
-/* Buttons */
+/* Buttons - Mobile App Style (Very Rounded) */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.5rem;
   font-weight: 600;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
+  border-radius: var(--radius-full); /* Pill shape */
+  transition: all var(--transition-base);
   cursor: pointer;
   border: none;
   font-size: 1rem;
   gap: 0.5rem;
   white-space: nowrap;
+  min-height: 48px; /* Large touch target */
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
+  transform: none !important;
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
+  background: var(--color-primary);
   color: white;
-  box-shadow: var(--shadow-sm);
+  font-weight: 700;
 }
 
 .btn-primary:hover:not(:disabled) {
-  box-shadow: var(--shadow-md), var(--shadow-glow);
-  transform: translateY(-2px);
+  background: var(--color-primary-light);
+  transform: scale(1.02);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-buy {
   background: var(--color-buy);
   color: white;
-  box-shadow: var(--shadow-sm);
   font-size: 1.125rem;
-  padding: 1rem 2rem;
+  padding: 1.125rem 2rem;
   font-weight: 700;
+  border-radius: var(--radius-full);
+  min-height: 56px; /* Extra large for primary actions */
+  box-shadow: 0 2px 8px rgba(0, 200, 5, 0.2);
 }
 
 .btn-buy:hover:not(:disabled) {
   background: var(--color-buy-hover);
-  box-shadow: 0 0 24px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 200, 5, 0.3);
   transform: scale(1.02);
+}
+
+.btn-buy:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .btn-sell {
   background: var(--color-sell);
   color: white;
-  box-shadow: var(--shadow-sm);
   font-size: 1.125rem;
-  padding: 1rem 2rem;
+  padding: 1.125rem 2rem;
   font-weight: 700;
+  border-radius: var(--radius-full);
+  min-height: 56px;
+  box-shadow: 0 2px 8px rgba(255, 80, 0, 0.2);
 }
 
 .btn-sell:hover:not(:disabled) {
   background: var(--color-sell-hover);
-  box-shadow: 0 0 24px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 80, 0, 0.3);
   transform: scale(1.02);
 }
 
+.btn-sell:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .btn-secondary {
-  background: var(--bg-tertiary);
+  background: var(--bg-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--bg-secondary);
-  border-color: var(--border-accent);
+  background: var(--bg-card);
+  border-color: var(--border-color);
+  transform: scale(1.01);
 }
 
 .btn-ghost {
@@ -224,36 +236,54 @@ h6 { font-size: 1rem; }
   border-color: var(--border-color);
 }
 
-/* Inputs */
+/* Inputs - Mobile App Style */
 .input {
   width: 100%;
-  padding: 0.875rem 1rem;
-  background: var(--bg-tertiary);
+  padding: 1rem 1.25rem;
+  background: var(--bg-elevated);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   color: var(--text-primary);
   font-size: 1rem;
-  transition: all var(--transition-fast);
+  transition: all var(--transition-base);
   font-family: 'Roboto Mono', monospace;
+  min-height: 52px; /* Large touch target */
 }
 
 .input:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(0, 200, 5, 0.1);
 }
 
 .input::placeholder {
   color: var(--text-muted);
 }
 
-/* Cards */
+/* Cards - Mobile App Style */
 .card {
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+}
+
+.glass-card:hover {
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-1px);
 }
 
 /* Badges */
@@ -291,13 +321,15 @@ h6 { font-size: 1rem; }
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
-/* Price Display */
+/* Price Display - Robinhood Style */
 .price-positive {
   color: var(--color-buy);
+  font-weight: 600;
 }
 
 .price-negative {
   color: var(--color-sell);
+  font-weight: 600;
 }
 
 /* Scrollbar */
@@ -378,20 +410,35 @@ h6 { font-size: 1rem; }
   h3 { font-size: 1.25rem; }
   
   .btn {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.9375rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    min-height: 52px; /* Even larger on mobile */
   }
   
   .btn-buy, .btn-sell {
-    padding: 0.875rem 1.5rem;
-    font-size: 1rem;
+    padding: 1.25rem 2rem;
+    font-size: 1.125rem;
+    min-height: 64px; /* Extra large for primary actions */
+  }
+  
+  .input {
+    min-height: 56px;
+    font-size: 1.0625rem; /* Slightly larger text on mobile */
+  }
+  
+  .card, .glass-card {
+    border-radius: var(--radius-xl);
   }
 }
 
 /* Ensure touch targets are large enough on mobile */
 @media (hover: none) and (pointer: coarse) {
   .btn {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 52px;
+    min-width: 52px;
+  }
+  
+  .btn-buy, .btn-sell {
+    min-height: 64px;
   }
 }
