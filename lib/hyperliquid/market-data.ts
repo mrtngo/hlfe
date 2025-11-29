@@ -92,7 +92,8 @@ export function useMarketData(): MarketData {
                     }
 
                     // Strip DEX prefix (e.g., "xyz:XYZ100" -> "XYZ100")
-                    const cleanName = asset.name.replace(/^xyz:/i, '');
+                    // Also strip -PERP suffix for cleaner UI display
+                    let cleanName = asset.name.replace(/^xyz:/i, '').replace(/-PERP$/i, '');
                     const symbol = `${cleanName}-USD`;
                     
                     // Get price: prefer markPx or midPx from asset context (most reliable for DEX assets)
@@ -293,20 +294,16 @@ export function useMarketData(): MarketData {
     }, []);
 
     useEffect(() => {
-        // Initial fetch only - updates will come via WebSocket
+        // Initial fetch only - all updates will come via WebSocket
         fetchMarketData();
 
-        // Reduced polling: only refresh market metadata (not prices) every 5 minutes
-        // Prices and volumes are updated via WebSocket in real-time
-        const interval = setInterval(() => {
-            // Only refetch if we have no markets (initial load failed)
-            if (markets.length === 0) {
-                fetchMarketData();
-            }
-        }, 300000); // 5 minutes
-
-        return () => clearInterval(interval);
-    }, [fetchMarketData, markets.length]);
+        // No polling - all updates come via WebSocket subscriptions
+        // Market metadata (funding rates, volumes) updated via activeAssetCtx subscription
+        // Prices updated via allMids subscription
+        return () => {
+            // Cleanup handled by WebSocket manager
+        };
+    }, [fetchMarketData]);
 
     return { markets, loading, error };
 }

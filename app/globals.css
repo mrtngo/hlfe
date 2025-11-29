@@ -5,34 +5,35 @@
 @tailwind utilities;
 
 :root {
-  /* Tropicalized Fintech Color Palette - Colombian Nature Inspired */
-  --color-primary: #006D77; /* Jungle Teal */
-  --color-primary-light: #02818C;
-  --color-primary-dark: #005A63;
+  /* Hyperliquid Dark Theme Color Palette */
+  --color-primary: #00D9FF; /* Teal - Primary action/brand */
+  --color-primary-light: #33E1FF;
+  --color-primary-dark: #00B8D9;
   
   --color-secondary: #FFD166; /* Solar Yellow */
   --color-secondary-light: #FFDC7A;
   --color-secondary-dark: #E6BC5C;
   
   /* Trading Colors */
-  --color-bullish: #06D6A0; /* Emerald Green */
-  --color-bullish-light: #4DE4B8;
-  --color-bullish-dark: #05B888;
+  --color-bullish: #00D9FF; /* Teal for bullish */
+  --color-bullish-light: #33E1FF;
+  --color-bullish-dark: #00B8D9;
   
-  --color-bearish: #EF476F; /* Clay Red */
-  --color-bearish-light: #F26B8A;
-  --color-bearish-dark: #D63D5F;
+  --color-bearish: #FF4444; /* Red for bearish */
+  --color-bearish-light: #FF6666;
+  --color-bearish-dark: #CC0000;
   
-  /* Text Colors */
-  --color-coffee-dark: #264653; /* Coffee Dark */
-  --color-coffee-medium: #4A6B7A;
-  --color-coffee-light: #6B8A99;
+  /* Dark Theme Text Colors */
+  --color-coffee-dark: #FFFFFF; /* White - Main text */
+  --color-coffee-medium: #B0B0B0; /* Light gray */
+  --color-coffee-light: #808080; /* Medium gray */
   
-  /* Background Colors */
-  --bg-primary: #F8FAFC; /* Very light grey/white (slate-50) */
-  --bg-secondary: #FFFFFF; /* Pure white for cards */
-  --bg-tertiary: #F1F5F9; /* Slightly darker for elevated surfaces */
-  --bg-glass: rgba(255, 255, 255, 0.8);
+  /* Dark Theme Background Colors */
+  --bg-primary: #0A0E1A; /* Very dark blue-black */
+  --bg-secondary: #131722; /* Dark gray-blue for cards */
+  --bg-tertiary: #1A1F2E; /* Slightly lighter for elevated surfaces */
+  --bg-hover: #1E2332; /* Hover states */
+  --bg-glass: rgba(19, 23, 34, 0.9);
   
   /* Shadows - Soft and Diffuse */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -73,6 +74,7 @@ body {
 body {
   min-height: 100vh;
   background: var(--bg-primary);
+  color: #FFFFFF;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -95,19 +97,19 @@ h6 { font-size: 1rem; }
   font-family: 'Roboto Mono', monospace;
 }
 
-/* Glass Morphism Effect - Lighter for light theme */
+/* Glass Morphism Effect - Dark theme */
 .glass {
   background: var(--bg-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(38, 70, 83, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-card {
   background: var(--bg-secondary);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(38, 70, 83, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-md);
   transition: all var(--transition-base);
@@ -229,8 +231,8 @@ h6 { font-size: 1rem; }
 .input {
   width: 100%;
   padding: 1rem 1.25rem;
-  background: var(--bg-secondary);
-  border: 1px solid rgba(38, 70, 83, 0.1);
+  background: var(--bg-tertiary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-xl);
   color: var(--color-coffee-dark);
   font-size: 1rem;
@@ -243,8 +245,8 @@ h6 { font-size: 1rem; }
 .input:focus {
   outline: none;
   border-color: var(--color-primary);
-  background: var(--bg-secondary);
-  box-shadow: 0 0 0 3px rgba(0, 109, 119, 0.1), var(--shadow-md);
+  background: var(--bg-tertiary);
+  box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1), var(--shadow-md);
 }
 
 .input::placeholder {

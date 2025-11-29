@@ -2,6 +2,7 @@
 
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
+import TradingChart from '@/components/TradingChart';
 import { ArrowLeft, TrendingUp, TrendingDown, Info, Star, Bookmark, Search } from 'lucide-react';
 
 interface TokenDetailProps {
@@ -67,8 +68,8 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
                 </div>
                 <h1 className="text-3xl font-bold mb-2 text-coffee-dark">{market.name}</h1>
                 
-                {/* Price Chart Placeholder */}
-                <div className="h-64 bg-white rounded-3xl mb-4 flex items-center justify-center border border-gray-200 shadow-soft-lg">
+                {/* Price Display */}
+                <div className="mb-4 p-4 bg-white rounded-2xl border border-gray-200 shadow-soft">
                     <div className="text-center">
                         <div className="text-4xl font-bold mb-2 text-coffee-dark">{formatCurrency(market.price)}</div>
                         <div className={`text-lg font-semibold flex items-center justify-center gap-1 ${
@@ -80,20 +81,9 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
                     </div>
                 </div>
 
-                {/* Timeframe Buttons */}
-                <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2">
-                    {['LIVE', '1H', '1D', '1W', '1M', '3M'].map((timeframe) => (
-                        <button
-                            key={timeframe}
-                            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
-                                timeframe === '1D'
-                                    ? 'bg-primary text-white shadow-soft'
-                                    : 'bg-white text-coffee-medium hover:bg-gray-50 border border-gray-200'
-                            }`}
-                        >
-                            {timeframe}
-                        </button>
-                    ))}
+                {/* Trading Chart */}
+                <div className="mb-6 h-[500px]">
+                    <TradingChart symbol={symbol} />
                 </div>
 
                 {/* Stats */}

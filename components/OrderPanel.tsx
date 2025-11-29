@@ -91,20 +91,20 @@ export default function OrderPanel() {
     };
 
     return (
-        <div className="glass-card h-full flex flex-col bg-white rounded-3xl shadow-soft-lg min-w-0">
-            <div className="p-6 border-b border-gray-100">
-                <h3 className="text-xl font-bold text-coffee-dark">{t.order.title}</h3>
+        <div className="glass-card h-full flex flex-col bg-bg-secondary rounded-lg shadow-soft-lg min-w-0 border border-white/10">
+            <div className="p-4 border-b border-white/10">
+                <h3 className="text-sm font-semibold text-white">{t.order.title}</h3>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {/* Order Side Tabs - Large Pill Control */}
                 <div className="grid grid-cols-2 gap-3">
                     <button
                         onClick={() => setOrderSide('long')}
-                        className={`py-4 rounded-full font-bold transition-all min-h-[64px] border-2 shadow-soft ${
+                        className={`py-4 rounded-lg font-bold transition-all min-h-[64px] border-2 shadow-soft ${
                             orderSide === 'long'
                                 ? 'bg-bullish text-white border-bullish shadow-soft-lg scale-105'
-                                : 'bg-white text-coffee-medium hover:bg-gray-50 border-gray-200'
+                                : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border-white/10'
                         }`}
                     >
                         <div className="flex items-center justify-center gap-2">
@@ -114,10 +114,10 @@ export default function OrderPanel() {
                     </button>
                     <button
                         onClick={() => setOrderSide('short')}
-                        className={`py-4 rounded-full font-bold transition-all min-h-[64px] border-2 shadow-soft ${
+                        className={`py-4 rounded-lg font-bold transition-all min-h-[64px] border-2 shadow-soft ${
                             orderSide === 'short'
                                 ? 'bg-bearish text-white border-bearish shadow-soft-lg scale-105'
-                                : 'bg-white text-coffee-medium hover:bg-gray-50 border-gray-200'
+                                : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border-white/10'
                         }`}
                     >
                         <div className="flex items-center justify-center gap-2">
@@ -129,11 +129,11 @@ export default function OrderPanel() {
 
                 {/* Advanced Toggle */}
                 <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-coffee-dark">Advanced</span>
+                    <span className="text-sm font-semibold text-white">Advanced</span>
                     <button
                         onClick={() => setAdvanced(!advanced)}
                         className={`relative w-12 h-6 rounded-full transition-colors ${
-                            advanced ? 'bg-primary' : 'bg-gray-200 border border-gray-300'
+                            advanced ? 'bg-primary' : 'bg-bg-tertiary border border-white/10'
                         }`}
                     >
                         <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-soft ${
@@ -149,10 +149,10 @@ export default function OrderPanel() {
                         <button
                                 key={type}
                                 onClick={() => setOrderType(type)}
-                                className={`py-3 px-4 rounded-full text-sm font-semibold transition-all min-h-[48px] capitalize ${
+                                className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all min-h-[48px] capitalize ${
                                     orderType === type
                                         ? 'bg-primary text-white border-2 border-primary shadow-soft'
-                                        : 'bg-white text-coffee-medium hover:bg-gray-50 border border-gray-200'
+                                        : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
                                 }`}
                             >
                                 {type}
@@ -170,7 +170,7 @@ export default function OrderPanel() {
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                             placeholder={formatCurrency(currentPrice)}
-                            className="input bg-white border-gray-200 rounded-2xl"
+                            className="input bg-bg-tertiary border-white/10 rounded-lg"
                             step="0.01"
                         />
                     </div>
@@ -178,13 +178,13 @@ export default function OrderPanel() {
 
                 {/* Amount */}
                 <div>
-                    <label className="text-sm font-semibold mb-2 block text-coffee-dark">Amount</label>
+                    <label className="text-sm font-semibold mb-2 block text-white">Amount</label>
                     <input
                         type="number"
                         value={size}
                         onChange={(e) => setSize(e.target.value)}
                         placeholder="$0.00"
-                        className="input text-lg font-bold bg-white border-gray-200 rounded-2xl"
+                        className="input text-lg font-bold bg-bg-tertiary border-white/10 rounded-lg"
                         step="0.001"
                     />
                     <div className="mt-3">
@@ -194,9 +194,9 @@ export default function OrderPanel() {
                             max={account.availableMargin > 0 ? (account.availableMargin * leverage / currentPrice).toFixed(2) : "100"}
                             value={orderSize || 0}
                             onChange={(e) => setSize(e.target.value)}
-                            className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-primary"
+                            className="w-full h-2 bg-bg-tertiary rounded-full appearance-none cursor-pointer accent-primary"
                         />
-                        <div className="flex justify-between text-xs text-coffee-light mt-1">
+                        <div className="flex justify-between text-xs text-coffee-medium mt-1">
                             <span>$0.00</span>
                             <span>${((account.availableMargin * leverage / currentPrice) || 0.01).toFixed(2)}</span>
                         </div>
@@ -205,7 +205,7 @@ export default function OrderPanel() {
 
                 {/* Multiplier (Leverage) */}
                 <div>
-                    <label className="text-sm font-semibold mb-2 block text-coffee-dark">Multiplier</label>
+                    <label className="text-sm font-semibold mb-2 block text-white">Multiplier</label>
                     <input
                         type="text"
                         value={`x${Math.min(leverage, maxLeverage)}`}
@@ -215,7 +215,7 @@ export default function OrderPanel() {
                             setLeverage(Math.min(Math.max(num, 1), maxLeverage));
                         }}
                         placeholder="x1"
-                        className="input text-lg font-bold bg-white border-gray-200 rounded-2xl"
+                        className="input text-lg font-bold bg-bg-tertiary border-white/10 rounded-lg"
                     />
                     <div className="mt-3">
                         <input
@@ -224,9 +224,9 @@ export default function OrderPanel() {
                             max={maxLeverage}
                             value={Math.min(leverage, maxLeverage)}
                             onChange={(e) => setLeverage(Math.min(parseInt(e.target.value), maxLeverage))}
-                            className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-primary"
+                            className="w-full h-2 bg-bg-tertiary rounded-full appearance-none cursor-pointer accent-primary"
                         />
-                        <div className="flex justify-between text-xs text-coffee-light mt-1">
+                        <div className="flex justify-between text-xs text-coffee-medium mt-1">
                             <span>x1</span>
                             <span>x{maxLeverage}</span>
                         </div>
@@ -237,10 +237,10 @@ export default function OrderPanel() {
                 {advanced && (
                     <div>
                         <div className="flex items-center gap-2 mb-2">
-                            <label className="text-sm font-semibold text-coffee-dark">Margin Mode</label>
-                            <Info className="w-3 h-3 text-coffee-light" />
+                            <label className="text-sm font-semibold text-white">Margin Mode</label>
+                            <Info className="w-3 h-3 text-coffee-medium" />
                             {market?.onlyIsolated && (
-                                <span className="text-xs text-secondary bg-secondary/20 px-2 py-0.5 rounded-full font-semibold">
+                                <span className="text-xs text-secondary bg-secondary/20 px-2 py-0.5 rounded font-semibold">
                                     HIP-3
                                 </span>
                             )}
@@ -251,12 +251,12 @@ export default function OrderPanel() {
                                     key={mode}
                                     onClick={() => setMarginMode(mode)}
                                     disabled={market?.onlyIsolated === true && mode === 'cross'}
-                                    className={`py-3 px-4 rounded-full text-sm font-semibold transition-all min-h-[48px] capitalize ${
+                                    className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all min-h-[48px] capitalize ${
                                         marginMode === mode
                                             ? 'bg-primary text-white border-2 border-primary shadow-soft'
                                             : market?.onlyIsolated === true && mode === 'cross'
-                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                            : 'bg-white text-coffee-medium hover:bg-gray-50 border border-gray-200'
+                                            ? 'bg-bg-tertiary text-coffee-light cursor-not-allowed'
+                                            : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
                                     }`}
                                 >
                                     {mode}
@@ -264,7 +264,7 @@ export default function OrderPanel() {
                             ))}
                         </div>
                         {market?.onlyIsolated === true && (
-                            <p className="text-xs text-coffee-light mt-2">
+                            <p className="text-xs text-coffee-medium mt-2">
                                 HIP-3 markets only support isolated margin mode
                             </p>
                         )}
@@ -272,33 +272,33 @@ export default function OrderPanel() {
                 )}
 
                 {/* Order Summary */}
-                <div className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="space-y-3 p-4 bg-bg-tertiary rounded-lg border border-white/10">
                     <div className="flex justify-between text-sm">
                         <span className="text-coffee-medium">{t.order.price}</span>
-                        <span className="mono font-semibold text-coffee-dark">{formatCurrency(orderPrice)}</span>
+                        <span className="mono font-semibold text-white">{formatCurrency(orderPrice)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-coffee-medium">Notional Value</span>
-                        <span className="mono font-semibold text-coffee-dark">{formatCurrency(notionalValue)}</span>
+                        <span className="mono font-semibold text-white">{formatCurrency(notionalValue)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-coffee-medium">Required Margin ({leverage}x)</span>
-                        <span className="mono font-semibold text-coffee-dark">{formatCurrency(requiredMargin)}</span>
+                        <span className="mono font-semibold text-white">{formatCurrency(requiredMargin)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-coffee-medium">{t.order.fee}</span>
-                        <span className="mono text-coffee-dark">{formatCurrency(fee)}</span>
+                        <span className="mono text-white">{formatCurrency(fee)}</span>
                     </div>
-                    <div className="flex justify-between text-sm border-t border-gray-200 pt-2">
-                        <span className="text-coffee-dark font-semibold">Total Required</span>
-                        <span className="mono font-semibold text-coffee-dark">{formatCurrency(totalRequired)}</span>
+                    <div className="flex justify-between text-sm border-t border-white/10 pt-2">
+                        <span className="text-white font-semibold">Total Required</span>
+                        <span className="mono font-semibold text-white">{formatCurrency(totalRequired)}</span>
                     </div>
-                    <div className="flex justify-between text-sm border-t border-gray-200 pt-2">
+                    <div className="flex justify-between text-sm border-t border-white/10 pt-2">
                         <div className="flex items-center gap-1">
                             <span className="text-coffee-medium">{t.order.estLiquidation}</span>
                             <div className="group relative">
-                                <Info className="w-3 h-3 text-coffee-light cursor-help" />
-                                <div className="invisible group-hover:visible absolute left-0 top-6 w-48 p-2 bg-white border border-gray-200 rounded-xl text-xs z-10 shadow-soft-lg">
+                                <Info className="w-3 h-3 text-coffee-medium cursor-help" />
+                                <div className="invisible group-hover:visible absolute left-0 top-6 w-48 p-2 bg-bg-tertiary border border-white/10 rounded-lg text-xs z-10 shadow-soft-lg">
                                     {t.tooltips.liquidationPrice}
                                 </div>
                             </div>
@@ -308,20 +308,20 @@ export default function OrderPanel() {
                 </div>
 
                 {/* Available Balance */}
-                <div className="flex justify-between text-sm p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="flex justify-between text-sm p-3 bg-bg-tertiary rounded-lg border border-white/10">
                     <span className="text-coffee-medium">{t.order.availableBalance}</span>
-                    <span className="mono font-semibold text-coffee-dark">{formatCurrency(account.availableMargin)}</span>
+                    <span className="mono font-semibold text-white">{formatCurrency(account.availableMargin)}</span>
                 </div>
 
                 {/* Error/Success Messages */}
                 {error && (
-                    <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-2xl text-sm text-bearish">
+                    <div className="flex items-center gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
                         <AlertCircle className="w-4 h-4 shrink-0" />
                         <span>{error}</span>
                     </div>
                 )}
                 {success && (
-                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-2xl text-sm text-bullish">
+                    <div className="flex items-center gap-2 p-3 bg-bullish/10 border border-bullish/20 rounded-lg text-sm text-bullish">
                         <Info className="w-4 h-4 shrink-0" />
                         <span>{success}</span>
                     </div>
@@ -331,7 +331,7 @@ export default function OrderPanel() {
                 <button
                     onClick={handlePlaceOrder}
                     disabled={!connected || loading || orderSize <= 0}
-                    className={`w-full rounded-full py-5 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-soft-lg ${
+                    className={`w-full rounded-lg py-4 text-base font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-soft-lg ${
                         orderSide === 'long'
                             ? 'bg-bullish hover:bg-bullish-light text-white'
                             : 'bg-bearish hover:bg-bearish-light text-white'

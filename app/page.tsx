@@ -9,31 +9,38 @@ import OrderPanel from '@/components/OrderPanel';
 import PositionsPanel from '@/components/PositionsPanel';
 import HomeScreen from '@/components/HomeScreen';
 import TokenDetail from '@/components/TokenDetail';
+import TradingChart from '@/components/TradingChart';
 import { TrendingUp, Globe, Home as HomeIcon, BarChart3 } from 'lucide-react';
 
 export default function Home() {
     const { t, language, setLanguage } = useLanguage();
-    const { selectedMarket, setSelectedMarket } = useHyperliquid();
+    const { selectedMarket, setSelectedMarket, address } = useHyperliquid();
     const [view, setView] = useState<'home' | 'token' | 'trading'>('home');
     const [selectedToken, setSelectedToken] = useState<string | null>(null);
 
+    const formatAddress = (addr: string | null) => {
+        if (!addr) return null;
+        return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    };
+
     return (
-        <div className="min-h-screen flex flex-col bg-slate-50">
+        <div className="min-h-screen flex flex-col bg-bg-primary">
             {/* Header */}
-            <header className="border-b border-gray-200 bg-white backdrop-blur-md sticky top-0 z-50 shadow-soft">
+            <header className="border-b border-white/10 bg-bg-secondary backdrop-blur-md sticky top-0 z-50 shadow-soft">
                 <div className="container mx-auto px-4 py-4 max-w-[1920px]">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-soft">
-                                <TrendingUp className="w-7 h-7 text-white" />
+                            <button className="p-2 hover:bg-bg-hover rounded-lg transition-colors">
+                                <svg className="w-6 h-6 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                            </button>
+                            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">M</span>
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold text-primary">Hyperliquid</h1>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-sm text-muted">LATAM Trading</p>
-                                    <span className="badge badge-warning text-xs rounded-full bg-secondary/20 text-secondary-dark border-secondary/30">Testnet</span>
-                                </div>
+                                <h1 className="text-xl font-bold text-white">Hyperliquid</h1>
                             </div>
                         </div>
 
@@ -41,13 +48,13 @@ export default function Home() {
                         <div className="flex items-center gap-3">
                             {/* View Switcher - Only show on home and trading views */}
                             {view !== 'token' && (
-                                <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1 border border-gray-200">
+                                <div className="flex items-center gap-2 bg-bg-tertiary rounded-lg p-1 border border-white/10">
                                     <button
                                         onClick={() => setView('home')}
-                                        className={`px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 min-h-[40px] ${
+                                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 min-h-[40px] ${
                                             view === 'home'
                                                 ? 'bg-primary text-white shadow-soft'
-                                                : 'text-coffee-medium hover:text-coffee-dark'
+                                                : 'text-coffee-medium hover:text-white'
                                         }`}
                                     >
                                         <HomeIcon className="w-4 h-4" />
@@ -55,10 +62,10 @@ export default function Home() {
                                     </button>
                                     <button
                                         onClick={() => setView('trading')}
-                                        className={`px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 min-h-[40px] ${
+                                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 min-h-[40px] ${
                                             view === 'trading'
                                                 ? 'bg-primary text-white shadow-soft'
-                                                : 'text-coffee-medium hover:text-coffee-dark'
+                                                : 'text-coffee-medium hover:text-white'
                                         }`}
                                     >
                                         <BarChart3 className="w-4 h-4" />
@@ -67,14 +74,36 @@ export default function Home() {
                                 </div>
                             )}
 
+                            {/* Welcome Banner */}
+                            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/20 rounded-lg border border-primary/30">
+                                <p className="text-sm text-primary font-medium">Welcome to Hyperliquid! Deposit Arbitrum USDC to get started.</p>
+                            </div>
+
+                            {/* Account Info - Use actual wallet address */}
+                            {address && (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-bg-tertiary rounded-lg hover:bg-bg-hover transition-colors cursor-pointer">
+                                    <span className="text-sm text-coffee-medium font-mono">{formatAddress(address)}</span>
+                                    <svg className="w-4 h-4 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                            )}
+
                             {/* Language Switcher */}
                             <button
                                 onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-                                className="btn-ghost flex items-center gap-2"
+                                className="p-2 hover:bg-bg-hover rounded-lg transition-colors"
                                 title={t.settings.language}
                             >
-                                <Globe className="w-4 h-4" />
-                                <span className="text-sm font-medium uppercase">{language}</span>
+                                <Globe className="w-5 h-5 text-coffee-medium" />
+                            </button>
+
+                            {/* Settings */}
+                            <button className="p-2 hover:bg-bg-hover rounded-lg transition-colors">
+                                <svg className="w-5 h-5 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
                             </button>
 
                             <WalletConnect />
@@ -106,50 +135,116 @@ export default function Home() {
                         />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 h-[calc(100vh-140px)]">
-                        {/* Left Sidebar - Markets (Desktop: 3 columns, Large: 4 columns) */}
-                        <div className="xl:col-span-3 2xl:col-span-3 h-full overflow-hidden">
-                            <MarketOverview 
-                                onTokenClick={(symbol) => {
-                                    setSelectedToken(symbol);
-                                    setSelectedMarket(symbol);
-                                    setView('token');
-                                }}
-                            />
+                    <div className="flex flex-col gap-4 h-[calc(100vh-140px)]">
+                        {/* Market Info Section */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-bg-secondary border-b border-white/10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">M</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg font-semibold text-white">{selectedMarket?.replace('-PERP', '') || 'BTC'}-USDC</span>
+                                    <svg className="w-4 h-4 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                    <div className="text-xl font-bold text-white">0.032544</div>
+                                    <div className="text-sm text-bearish">-0.001765 / -5.14%</div>
+                                </div>
+                                <svg className="w-5 h-5 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
                         </div>
 
-                        {/* Center - Positions (Desktop: 5 columns, Large: 4 columns) */}
-                        <div className="xl:col-span-5 2xl:col-span-4 h-full overflow-hidden">
-                            <PositionsPanel />
+                        {/* Navigation Tabs */}
+                        <div className="flex items-center gap-1 px-4 border-b border-white/10">
+                            <button className="px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary">
+                                Chart
+                            </button>
+                            <button className="px-4 py-2 text-sm font-medium text-coffee-medium hover:text-white transition-colors">
+                                Order Book
+                            </button>
+                            <button className="px-4 py-2 text-sm font-medium text-coffee-medium hover:text-white transition-colors">
+                                Trades
+                            </button>
                         </div>
 
-                        {/* Right Sidebar - Order Panel (Desktop: 4 columns, Large: 5 columns) */}
-                        <div className="xl:col-span-4 2xl:col-span-5 h-full overflow-hidden">
-                            <OrderPanel />
+                        {/* Chart Section - Full Width */}
+                        <div className="flex-1 min-h-0">
+                            <TradingChart />
+                        </div>
+
+                        {/* Bottom Grid - Markets, Positions, Orders */}
+                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
+                            {/* Left Sidebar - Markets (Desktop: 3 columns, Large: 3 columns) */}
+                            <div className="xl:col-span-3 2xl:col-span-3 h-full overflow-hidden">
+                                <MarketOverview 
+                                    onTokenClick={(symbol) => {
+                                        setSelectedToken(symbol);
+                                        setSelectedMarket(symbol);
+                                        setView('token');
+                                    }}
+                                />
+                            </div>
+
+                            {/* Center - Positions (Desktop: 5 columns, Large: 4 columns) */}
+                            <div className="xl:col-span-5 2xl:col-span-4 h-full overflow-hidden">
+                                <PositionsPanel />
+                            </div>
+
+                            {/* Right Sidebar - Order Panel (Desktop: 4 columns, Large: 5 columns) */}
+                            <div className="xl:col-span-4 2xl:col-span-5 h-full overflow-hidden">
+                                <OrderPanel />
+                            </div>
                         </div>
                     </div>
                 )}
             </main>
 
-            {/* Footer */}
-            <footer className="border-t border-gray-200 bg-white/50 py-4">
-                <div className="container mx-auto px-4">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-coffee-light">
-                        <div className="flex items-center gap-4">
-                            <span>© 2024 Hyperliquid LATAM</span>
-                            <span className="hidden md:inline">•</span>
-                            <span className="text-accent">{t.wallet.testnet}</span>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <a href="#" className="hover:text-primary transition-colors">Tutorial</a>
-                            <span>•</span>
-                            <a href="#" className="hover:text-primary transition-colors">Documentación</a>
-                            <span>•</span>
-                            <a href="#" className="hover:text-primary transition-colors">Soporte</a>
+            {/* Footer Navigation */}
+            {view === 'trading' && (
+                <footer className="border-t border-white/10 bg-bg-secondary py-3">
+                    <div className="container mx-auto px-4 max-w-[1920px]">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
+                                    Balances
+                                </button>
+                                <button className="text-sm font-medium text-primary border-b-2 border-primary pb-1">
+                                    Positions
+                                </button>
+                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
+                                    Open Orders
+                                </button>
+                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
+                                    TWAP
+                                </button>
+                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
+                                    Trade History
+                                </button>
+                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
+                                    Funding
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button className="text-xs text-coffee-medium hover:text-white transition-colors px-3 py-1.5 bg-bg-tertiary rounded hover:bg-bg-hover">
+                                    Sort by
+                                </button>
+                                <button className="text-xs text-coffee-medium hover:text-white transition-colors px-3 py-1.5 bg-bg-tertiary rounded hover:bg-bg-hover">
+                                    Collapse All Positions
+                                </button>
+                                <button className="text-xs text-bearish hover:text-bearish-light transition-colors px-3 py-1.5 bg-bg-tertiary rounded hover:bg-bg-hover">
+                                    Close All Positions
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </footer>
+                </footer>
+            )}
         </div>
     );
 }

@@ -117,10 +117,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         wsManager.connect({
             onPriceUpdate: (coin, price) => {
-                // Update market prices
-                const symbol = `${coin}-USD`;
+                // Strip -PERP suffix and xyz: prefix from coin name for matching
+                const cleanCoin = coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                const symbol = `${cleanCoin}-USD`;
                 setMarkets(prev => prev.map(m =>
-                    m.symbol === symbol || m.name === coin ? { ...m, price } : m
+                    m.symbol === symbol || m.name === cleanCoin || m.name === coin ? { ...m, price } : m
                 ));
 
                 // Update positions with new mark prices
@@ -209,14 +210,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
-    // Subscribe to user data when address is available
+        // Subscribe to user data when address is available
     useEffect(() => {
         if (address && wsManager.isConnected()) {
             const normalizedAddress = address.toLowerCase();
             wsManager.subscribeToUserData(normalizedAddress);
             wsManager.subscribeToUserEvents(normalizedAddress);
         }
-    }, [address]);
+    }, [address, wsManager.isConnected()]);
 
     // Get wallet address from Privy (embedded or external wallet)
     useEffect(() => {
@@ -238,12 +239,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [authenticated, wallets]);
 
-    // Rate limiting state
+    // Rate limiting state (for fallback HTTP calls only)
     const [rateLimited, setRateLimited] = useState(false);
     const [retryAfter, setRetryAfter] = useState<number | null>(null);
     const [fetchingAccount, setFetchingAccount] = useState(false);
+    const initialFetchDone = React.useRef(false);
 
-    // Fetch account state when connected
+    // WebSocket-based account data updates
     useEffect(() => {
         if (!isConnected || !address) {
             setAccount({
@@ -256,20 +258,116 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             });
             setPositions([]);
             setOrders([]);
+            initialFetchDone.current = false;
             return;
         }
 
-        const fetchAccountData = async (retryCount = 0) => {
+        // Reset initial fetch flag when address changes
+        if (initialFetchDone.current) {
+            return; // Already fetched initial data for this address
+        }
+
+        // Set up WebSocket callbacks for account data
+        const callbacks = {
+            onAccountUpdate: (data: any) => {
+                // Handle webData3 updates
+                if (data.userState) {
+                    const accountValue = parseFloat(data.userState.cumLedger || '0');
+                    setAccount(prev => ({
+                        ...prev,
+                        balance: accountValue,
+                        equity: accountValue,
+                    }));
+                }
+
+                // Handle clearinghouseState updates
+                if (data.marginSummary) {
+                    const accountValue = parseFloat(data.marginSummary.accountValue || '0');
+                    const totalMarginUsed = parseFloat(data.marginSummary.totalMarginUsed || '0');
+                    setAccount(prev => ({
+                        ...prev,
+                        balance: accountValue,
+                        equity: accountValue,
+                        availableMargin: accountValue - totalMarginUsed,
+                        usedMargin: totalMarginUsed,
+                    }));
+                }
+            },
+            onPositionUpdate: (assetPositions: any[]) => {
+                if (Array.isArray(assetPositions)) {
+                    const activePositions: Position[] = assetPositions
+                        .filter((p: any) => {
+                            const position = p.position || p;
+                            return parseFloat(position.szi || '0') !== 0;
+                        })
+                        .map((p: any) => {
+                            const position = p.position || p;
+                            const coin = position.coin?.replace('-PERP', '').replace('xyz:', '') || '';
+                            const market = markets.find(m => m.name === coin || m.symbol === `${coin}-USD`);
+                            const entryPrice = parseFloat(position.entryPx || '0');
+                            const markPrice = parseFloat(position.markPx || '0');
+                            const size = parseFloat(position.szi || '0');
+                            const pnl = (markPrice - entryPrice) * size;
+                            const pnlPercent = entryPrice > 0 ? (pnl / (entryPrice * Math.abs(size))) * 100 : 0;
+
+                            return {
+                                symbol: `${coin}-USD`,
+                                name: coin,
+                                side: size > 0 ? 'long' : 'short',
+                                size: Math.abs(size),
+                                entryPrice,
+                                markPrice,
+                                liquidationPrice: parseFloat(position.liquidationPx || '0'),
+                                leverage: market?.maxLeverage || 1,
+                                unrealizedPnl: pnl,
+                                unrealizedPnlPercent: pnlPercent,
+                                isStock: market?.isStock || false,
+                            };
+                        });
+                    setPositions(activePositions);
+                }
+            },
+            onOrderUpdate: (ordersData: any) => {
+                if (Array.isArray(ordersData)) {
+                    const openOrders: Order[] = ordersData
+                        .filter((o: any) => {
+                            // Filter out filled/cancelled orders
+                            const status = o.status || (o.filledSz && parseFloat(o.filledSz) >= parseFloat(o.sz) ? 'filled' : 'open');
+                            return status === 'open';
+                        })
+                        .map((o: any) => ({
+                            id: o.oid?.toString() || o.id || '',
+                            symbol: `${(o.coin || '').replace('-PERP', '').replace('xyz:', '')}-USD`,
+                            type: o.orderType?.limit ? 'limit' : 'market',
+                            side: o.isBuy ? 'buy' : 'sell',
+                            size: parseFloat(o.sz || '0'),
+                            price: parseFloat(o.limitPx || '0'),
+                            filled: parseFloat(o.filledSz || '0'),
+                            status: 'open' as const,
+                            timestamp: o.timestamp || o.time || Date.now(),
+                        }));
+                    setOrders(openOrders);
+                }
+            },
+        };
+
+        wsManager.connect(callbacks);
+
+        // Fetch initial account data via HTTP (only once on mount, then rely on WebSocket)
+        const fetchInitialAccountData = async () => {
+            if (fetchingAccount) {
+                console.log('⏸️ Already fetching account data, skipping...');
+                return;
+            }
+            
             // Skip if rate limited
             if (rateLimited && retryAfter && Date.now() < retryAfter) {
+                const waitTime = Math.ceil((retryAfter - Date.now()) / 1000);
+                console.log(`⏸️ Rate limited, waiting ${waitTime}s before retry...`);
+                setFetchingAccount(false);
                 return;
             }
-
-            // Skip if already fetching
-            if (fetchingAccount) {
-                return;
-            }
-
+            
             setFetchingAccount(true);
             try {
                 // Ensure address is lowercase (Hyperliquid API requirement)
@@ -439,8 +537,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 if (isRateLimited) {
                     console.warn('⚠️ Rate limited by API. Backing off...');
                     setRateLimited(true);
-                    // Exponential backoff: 30s, 60s, 120s
-                    const backoffMs = Math.min(30000 * Math.pow(2, retryCount), 120000);
+                    // Exponential backoff: 60s
+                    const backoffMs = 60000;
                     setRetryAfter(Date.now() + backoffMs);
                     console.log(`⏳ Will retry after ${backoffMs / 1000}s`);
                     setFetchingAccount(false);
@@ -458,7 +556,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     console.warn('  2. Visit https://app.hyperliquid-testnet.xyz/ to activate your account');
                     console.warn('  3. This is normal for new addresses');
                     // Don't update state - keep last known state or show zero if first fetch
-                    if (retryCount === 0) {
+                    if (true) {
                         setAccount({
                             balance: 0,
                             equity: 0,
@@ -494,7 +592,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 
                 // For other errors, don't update account state (keep last known state)
                 // Only set zero if it's the first fetch
-                if (retryCount === 0) {
+                if (true) {
                     setAccount({
                         balance: 0,
                         equity: 0,
@@ -510,21 +608,17 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
         };
 
-        // Initial fetch only - subsequent updates via WebSocket
-        fetchAccountData();
+        // Fetch initial data once per address, then rely on WebSocket for all updates
+        if (!initialFetchDone.current) {
+            initialFetchDone.current = true;
+            fetchInitialAccountData();
+        }
 
-        // Reduced polling: only refresh if WebSocket is not connected (fallback)
-        // WebSocket provides real-time updates, so we only poll as backup
-        const interval = setInterval(() => {
-            // Only poll if WebSocket is not connected
-            if (!wsManager.isConnected() && (!rateLimited || (retryAfter && Date.now() >= retryAfter))) {
-                console.log('📡 WebSocket disconnected, using HTTP fallback');
-                fetchAccountData();
-            }
-        }, 60000); // 1 minute fallback polling (only when WS disconnected)
-
-        return () => clearInterval(interval);
-    }, [isConnected, address, markets.length, rateLimited, retryAfter, fetchingAccount]); // Removed 'markets' dependency to avoid re-fetching on every price update
+        // No polling - all updates come via WebSocket subscriptions
+        return () => {
+            // Cleanup handled by WebSocket manager
+        };
+    }, [isConnected, address]); // Only re-run when connection or address changes
 
     // Helper to get the best provider
     const getProvider = () => {

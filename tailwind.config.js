@@ -9,50 +9,51 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Colombian Nature Inspired Palette
-        primary: "#006D77", // Jungle Teal - Primary action/brand
-        "primary-light": "#02818C",
-        "primary-dark": "#005A63",
+        // Hyperliquid Dark Theme Palette
+        primary: "#00D9FF", // Teal - Primary action/brand (Hyperliquid teal)
+        "primary-light": "#33E1FF",
+        "primary-dark": "#00B8D9",
 
         secondary: "#FFD166", // Solar Yellow - Secondary accent
         "secondary-light": "#FFDC7A",
         "secondary-dark": "#E6BC5C",
 
         // Trading Colors
-        bullish: "#06D6A0", // Emerald Green - Bullish/Up
-        "bullish-light": "#4DE4B8",
-        "bullish-dark": "#05B888",
+        bullish: "#00D9FF", // Teal for bullish (matches Hyperliquid)
+        "bullish-light": "#33E1FF",
+        "bullish-dark": "#00B8D9",
 
-        bearish: "#EF476F", // Clay Red - Bearish/Down (warm pinkish-red)
-        "bearish-light": "#F26B8A",
-        "bearish-dark": "#D63D5F",
+        bearish: "#FF4444", // Red - Bearish/Down
+        "bearish-light": "#FF6666",
+        "bearish-dark": "#CC0000",
 
-        // Text Colors
-        "coffee-dark": "#264653", // Coffee Dark - Main text
-        "coffee-medium": "#4A6B7A",
-        "coffee-light": "#6B8A99",
+        // Dark Theme Text Colors
+        "coffee-dark": "#FFFFFF", // White - Main text on dark
+        "coffee-medium": "#B0B0B0", // Light gray
+        "coffee-light": "#808080", // Medium gray
 
-        // Background Colors
-        "bg-primary": "#F8FAFC", // Very light grey/white (slate-50)
-        "bg-secondary": "#FFFFFF", // Pure white for cards
-        "bg-tertiary": "#F1F5F9", // Slightly darker for elevated surfaces
+        // Dark Theme Background Colors
+        "bg-primary": "#0A0E1A", // Very dark blue-black (main background)
+        "bg-secondary": "#131722", // Dark gray-blue (cards)
+        "bg-tertiary": "#1A1F2E", // Slightly lighter for elevated surfaces
+        "bg-hover": "#1E2332", // Hover states
 
         // Legacy support (mapping old colors to new)
-        buy: "#06D6A0",
-        "buy-hover": "#4DE4B8",
-        "buy-light": "rgba(6, 214, 160, 0.1)",
-        sell: "#EF476F",
-        "sell-hover": "#F26B8A",
-        "sell-light": "rgba(239, 71, 111, 0.1)",
+        buy: "#00D9FF",
+        "buy-hover": "#33E1FF",
+        "buy-light": "rgba(0, 217, 255, 0.1)",
+        sell: "#FF4444",
+        "sell-hover": "#FF6666",
+        "sell-light": "rgba(255, 68, 68, 0.1)",
 
-        // Text mappings
-        "text-primary": "#264653",
-        "text-secondary": "#4A6B7A",
-        "text-muted": "#6B8A99",
-        "text-disabled": "#94A3B8",
+        // Text mappings (dark theme)
+        "text-primary": "#FFFFFF",
+        "text-secondary": "#B0B0B0",
+        "text-muted": "#808080",
+        "text-disabled": "#555555",
 
-        // Border
-        border: "rgba(38, 70, 83, 0.1)",
+        // Border (dark theme)
+        border: "rgba(255, 255, 255, 0.1)",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

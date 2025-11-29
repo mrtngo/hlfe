@@ -51,18 +51,18 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
     }
 
     return (
-        <div className="glass-card h-full flex flex-col bg-white rounded-3xl shadow-soft-lg min-w-0">
+        <div className="glass-card h-full flex flex-col bg-bg-secondary rounded-lg shadow-soft-lg min-w-0 border border-white/10">
             {/* Selected Market Display */}
             <div 
-                className="p-6 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors rounded-t-3xl"
+                className="p-4 border-b border-white/10 cursor-pointer hover:bg-bg-hover transition-colors"
                 onClick={() => setIsExpanded(!isExpanded)}
             >
                 <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-bold text-coffee-dark">{t.markets.title}</h3>
+                    <h3 className="text-sm font-semibold text-white">{t.markets.title}</h3>
                     {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-coffee-light" />
+                        <ChevronUp className="w-4 h-4 text-coffee-medium" />
                     ) : (
-                        <ChevronDown className="w-5 h-5 text-coffee-light" />
+                        <ChevronDown className="w-4 h-4 text-coffee-medium" />
                     )}
                 </div>
 
@@ -70,14 +70,14 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="font-semibold text-lg text-coffee-dark">{currentMarket.symbol}</div>
-                                <div className="text-xs text-coffee-light">{currentMarket.name}</div>
+                                <div className="font-semibold text-base text-white">{currentMarket.symbol}</div>
+                                <div className="text-xs text-coffee-medium">{currentMarket.name}</div>
                             </div>
                             <div className="text-right">
-                                <div className="font-mono font-bold text-lg text-coffee-dark">
+                                <div className="font-mono font-bold text-base text-white">
                                     {formatCurrency(currentMarket.price)}
                                 </div>
-                                <div className={`flex items-center justify-end gap-1 text-sm ${
+                                <div className={`flex items-center justify-end gap-1 text-xs ${
                                     isPositive ? 'text-bullish' : 'text-bearish'
                                 }`}>
                                     {isPositive ? (
@@ -99,17 +99,17 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
             {isExpanded && (
                 <div className="flex flex-col flex-1 overflow-hidden">
                     {/* Crypto/Stocks Tabs */}
-                    <div className="p-4 border-b border-gray-100">
-                        <div className="flex items-center gap-2 bg-gray-50 rounded-full p-1">
+                    <div className="p-4 border-b border-white/10">
+                        <div className="flex items-center gap-2 bg-bg-tertiary rounded-lg p-1">
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setActiveTab('crypto');
                                 }}
-                                className={`flex-1 py-2 px-4 rounded-full font-semibold text-sm transition-all ${
+                                className={`flex-1 py-2 px-4 rounded font-semibold text-sm transition-all ${
                                     activeTab === 'crypto'
-                                        ? 'bg-white text-primary shadow-soft'
-                                        : 'text-coffee-medium hover:text-coffee-dark'
+                                        ? 'bg-bg-secondary text-primary shadow-soft'
+                                        : 'text-coffee-medium hover:text-white'
                                 }`}
                             >
                                 Crypto
@@ -119,10 +119,10 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                     e.stopPropagation();
                                     setActiveTab('stocks');
                                 }}
-                                className={`flex-1 py-2 px-4 rounded-full font-semibold text-sm transition-all ${
+                                className={`flex-1 py-2 px-4 rounded font-semibold text-sm transition-all ${
                                     activeTab === 'stocks'
-                                        ? 'bg-white text-indigo-600 shadow-soft'
-                                        : 'text-coffee-medium hover:text-coffee-dark'
+                                        ? 'bg-bg-secondary text-indigo-400 shadow-soft'
+                                        : 'text-coffee-medium hover:text-white'
                                 }`}
                                 style={activeTab === 'stocks' ? {
                                     background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
@@ -135,16 +135,16 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                     </div>
 
                     {/* Search */}
-                    <div className="p-5 border-b border-gray-100">
+                    <div className="p-4 border-b border-white/10">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-coffee-light" />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-coffee-medium" />
                             <input
                                 type="text"
                                 placeholder={t.markets.search}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 onClick={(e) => e.stopPropagation()}
-                                className="input pl-10 w-full bg-white border-gray-200 rounded-2xl"
+                                className="input pl-10 w-full bg-bg-tertiary border-white/10 rounded-lg"
                             />
                         </div>
                     </div>
@@ -164,31 +164,31 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                         onTokenClick?.(market.symbol);
                                     }}
                                     className={`
-                                        p-4 cursor-pointer transition-all rounded-2xl bg-white shadow-soft
-                                        hover:shadow-soft-lg hover:-translate-y-0.5
-                                        ${isSelected ? 'bg-primary/5 border-2 border-primary shadow-soft-lg' : 'border border-gray-100'}
+                                        p-3 cursor-pointer transition-all rounded-lg bg-bg-tertiary
+                                        hover:bg-bg-hover
+                                        ${isSelected ? 'bg-primary/20 border border-primary' : 'border border-white/10'}
                                     `}
                                     style={{ minWidth: 0 }}
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
-                                                <div className="font-semibold text-sm text-coffee-dark">{market.symbol}</div>
+                                                <div className="font-semibold text-sm text-white">{market.symbol}</div>
                                                 {market.onlyIsolated && (
-                                                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">
+                                                    <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">
                                                         Isolated
                                                     </span>
                                                 )}
                                                 {market.isStock && (
-                                                    <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">
+                                                    <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-semibold">
                                                         Stock
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-xs text-coffee-light mt-0.5">{market.name}</div>
+                                            <div className="text-xs text-coffee-medium mt-0.5">{market.name}</div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="font-mono font-semibold text-sm text-coffee-dark">
+                                            <div className="font-mono font-semibold text-sm text-white">
                                                 {formatCurrency(market.price)}
                                             </div>
                                             <div className={`flex items-center justify-end gap-1 text-xs ${
