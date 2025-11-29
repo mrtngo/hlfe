@@ -36,12 +36,12 @@ export default function WalletConnect() {
         <div className="flex items-center gap-4">
             {authenticated && address && (
                 <>
-                    <div className="hidden md:flex items-center gap-6 px-4 py-2 glass-card">
+                    <div className="hidden md:flex items-center gap-6 px-4 py-3 bg-white rounded-2xl shadow-soft border border-gray-100">
                         <div className="flex items-center gap-2">
                             <TrendingUp className="w-4 h-4 text-primary" />
                             <div className="flex flex-col">
-                                <span className="text-xs text-muted">{t.wallet.equity}</span>
-                                <span className="text-sm font-semibold mono">
+                                <span className="text-xs text-coffee-light">{t.wallet.equity}</span>
+                                <span className="text-sm font-semibold mono text-coffee-dark">
                                     {account.equity > 0 ? formatCurrency(account.equity) : '--'}
                                 </span>
                             </div>
@@ -49,8 +49,8 @@ export default function WalletConnect() {
 
                         <div className="flex items-center gap-2">
                             <div className="flex flex-col">
-                                <span className="text-xs text-muted">{t.wallet.availableMargin}</span>
-                                <span className="text-sm font-semibold mono">
+                                <span className="text-xs text-coffee-light">{t.wallet.availableMargin}</span>
+                                <span className="text-sm font-semibold mono text-coffee-dark">
                                     {account.availableMargin > 0 ? formatCurrency(account.availableMargin) : '--'}
                                 </span>
                             </div>
@@ -58,22 +58,22 @@ export default function WalletConnect() {
                     </div>
                     
                     {account.equity === 0 && (
-                        <div className="hidden md:block text-xs text-muted px-2">
+                        <div className="hidden md:block text-xs text-coffee-light px-2">
                             Check console for details
                         </div>
                     )}
 
                     <button
                         onClick={copyAddress}
-                        className="hidden md:flex items-center gap-2 px-4 py-2 bg-elevated border border-border rounded-full hover:bg-card transition-all"
+                        className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all shadow-soft"
                         title={t.common.copy || 'Copy address'}
                     >
                         <Wallet className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-mono font-semibold">{formatAddress(address)}</span>
+                        <span className="text-sm font-mono font-semibold text-coffee-dark">{formatAddress(address)}</span>
                         {copied ? (
-                            <Check className="w-4 h-4 text-buy" />
+                            <Check className="w-4 h-4 text-bullish" />
                         ) : (
-                            <Copy className="w-4 h-4 text-muted" />
+                            <Copy className="w-4 h-4 text-coffee-light" />
                         )}
                     </button>
                 </>

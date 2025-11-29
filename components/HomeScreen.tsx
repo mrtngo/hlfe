@@ -18,7 +18,6 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
     const [mounted, setMounted] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    // Only access localStorage on client-side
     useEffect(() => {
         setMounted(true);
         if (typeof window !== 'undefined') {
@@ -33,7 +32,6 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
         }
     }, []);
 
-    // Save watchlist to localStorage
     useEffect(() => {
         if (mounted && typeof window !== 'undefined') {
             localStorage.setItem(WATCHLIST_STORAGE_KEY, JSON.stringify(watchlist));
@@ -70,48 +68,48 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
     if (!mounted) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="text-muted">Loading...</div>
+                <div className="text-coffee-light">Loading...</div>
             </div>
         );
     }
 
     return (
-        <div className="space-y-6 p-6">
+        <div className="space-y-8 p-6 max-w-7xl mx-auto">
             {/* Wallet Address Section */}
             {address && (
-                <div className="bg-card border border-border rounded-2xl p-6">
+                <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-soft-lg">
                     <div className="flex items-center gap-3 mb-4">
                         <Wallet className="w-5 h-5 text-primary" />
-                        <h2 className="text-xl font-bold">Hyperliquid Wallet Address</h2>
+                        <h2 className="text-xl font-bold text-coffee-dark">Hyperliquid Wallet Address</h2>
                     </div>
-                    <p className="text-sm text-muted mb-4">
+                    <p className="text-sm text-coffee-medium mb-4">
                         Send USDC to this address on Arbitrum Sepolia to fund your trading account. This is your Hyperliquid wallet address.
                     </p>
-                    <div className="bg-elevated border border-border rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                            <div className="text-xs text-muted mb-1">Wallet Address</div>
+                            <div className="text-xs text-coffee-light mb-1">Wallet Address</div>
                             <div className="text-sm font-mono break-all text-primary">
                                 {address}
                             </div>
                         </div>
                         <button
                             onClick={copyAddress}
-                            className="flex-shrink-0 px-4 py-2 bg-elevated hover:bg-card border border-border rounded-full transition-all flex items-center gap-2 min-h-[44px]"
+                            className="shrink-0 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full transition-all flex items-center gap-2 min-h-[44px] shadow-soft"
                         >
                             {copied ? (
                                 <>
-                                    <Check className="w-4 h-4 text-buy" />
-                                    <span className="text-sm font-semibold text-buy">Copied!</span>
+                                    <Check className="w-4 h-4 text-bullish" />
+                                    <span className="text-sm font-semibold text-bullish">Copied!</span>
                                 </>
                             ) : (
                                 <>
-                                    <Copy className="w-4 h-4 text-muted" />
-                                    <span className="text-sm font-semibold">Copy</span>
+                                    <Copy className="w-4 h-4 text-coffee-light" />
+                                    <span className="text-sm font-semibold text-coffee-dark">Copy</span>
                                 </>
                             )}
                         </button>
                     </div>
-                    <div className="mt-4 flex items-center gap-2 text-xs text-muted">
+                    <div className="mt-4 flex items-center gap-2 text-xs text-coffee-light">
                         <ExternalLink className="w-3 h-3" />
                         <a 
                             href={`https://sepolia.arbiscan.io/address/${address}`}
@@ -135,32 +133,32 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
             )}
 
             {/* Portfolio Overview */}
-            <div className="bg-card border border-border rounded-2xl p-6">
-                <h2 className="text-2xl font-bold mb-6">Portfolio</h2>
+            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-soft-lg">
+                <h2 className="text-2xl font-bold mb-6 text-coffee-dark">Portfolio</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-elevated border border-border rounded-xl p-5">
-                        <div className="text-sm text-muted mb-2">Total Value</div>
-                        <div className="text-3xl font-bold">
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-soft">
+                        <div className="text-sm text-coffee-light mb-2">Total Value</div>
+                        <div className="text-3xl font-bold text-coffee-dark">
                             ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
-                    <div className="bg-elevated border border-border rounded-xl p-5">
-                        <div className="text-sm text-muted mb-2">Unrealized P&L</div>
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-soft">
+                        <div className="text-sm text-coffee-light mb-2">Unrealized P&L</div>
                         <div className={`text-3xl font-bold flex items-center gap-2 ${
-                            totalUnrealizedPnl >= 0 ? 'text-buy' : 'text-sell'
+                            totalUnrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish'
                         }`}>
                             {totalUnrealizedPnl >= 0 ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
                             ${totalUnrealizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                         {account.equity > 0 && (
-                            <div className="text-xs text-muted mt-1">
+                            <div className="text-xs text-coffee-light mt-1">
                                 {((totalUnrealizedPnl / account.equity) * 100).toFixed(2)}%
                             </div>
                         )}
                     </div>
-                    <div className="bg-elevated border border-border rounded-xl p-5">
-                        <div className="text-sm text-muted mb-2">Available Margin</div>
-                        <div className="text-3xl font-bold">
+                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-soft">
+                        <div className="text-sm text-coffee-light mb-2">Available Margin</div>
+                        <div className="text-3xl font-bold text-coffee-dark">
                             ${account.availableMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
@@ -169,22 +167,22 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Positions */}
-                <div className="bg-card border border-border rounded-2xl p-6">
-                    <h2 className="text-2xl font-bold mb-6">Open Positions</h2>
+                <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-soft-lg">
+                    <h2 className="text-2xl font-bold mb-6 text-coffee-dark">Open Positions</h2>
                     {positions.length === 0 ? (
-                        <div className="text-center py-8 text-muted">
+                        <div className="text-center py-8 text-coffee-light">
                             <p>No open positions</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
                             {positions.map((position) => {
                                 const isLong = position.side === 'long';
-                                const pnlColor = position.unrealizedPnl >= 0 ? 'text-buy' : 'text-sell';
+                                const pnlColor = position.unrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish';
                                 
                                 return (
                                     <div
                                         key={position.symbol}
-                                        className="bg-elevated border border-border rounded-xl p-4 hover:bg-card transition-all cursor-pointer active:scale-[0.98]"
+                                        className="bg-gray-50 border border-gray-200 rounded-2xl p-4 hover:bg-white transition-all cursor-pointer active:scale-[0.98] shadow-soft hover:shadow-soft-lg"
                                         onClick={() => {
                                             setSelectedMarket(position.symbol);
                                             onTokenClick?.(position.symbol);
@@ -192,8 +190,8 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                     >
                                         <div className="flex items-start justify-between mb-2">
                                             <div>
-                                                <div className="font-semibold text-lg">{position.symbol}</div>
-                                                <div className="text-sm text-muted">
+                                                <div className="font-semibold text-lg text-coffee-dark">{position.symbol}</div>
+                                                <div className="text-sm text-coffee-light">
                                                     {isLong ? 'Long' : 'Short'} • {position.leverage}x
                                                 </div>
                                             </div>
@@ -210,20 +208,20 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 text-sm">
                                             <div>
-                                                <span className="text-muted">Size:</span>{' '}
-                                                <span className="font-medium">{position.size.toFixed(4)}</span>
+                                                <span className="text-coffee-light">Size:</span>{' '}
+                                                <span className="font-medium text-coffee-dark">{position.size.toFixed(4)}</span>
                                             </div>
                                             <div>
-                                                <span className="text-muted">Entry:</span>{' '}
-                                                <span className="font-medium">${position.entryPrice.toFixed(2)}</span>
+                                                <span className="text-coffee-light">Entry:</span>{' '}
+                                                <span className="font-medium text-coffee-dark">${position.entryPrice.toFixed(2)}</span>
                                             </div>
                                             <div>
-                                                <span className="text-muted">Mark:</span>{' '}
-                                                <span className="font-medium">${position.markPrice.toFixed(2)}</span>
+                                                <span className="text-coffee-light">Mark:</span>{' '}
+                                                <span className="font-medium text-coffee-dark">${position.markPrice.toFixed(2)}</span>
                                             </div>
                                             <div>
-                                                <span className="text-muted">Liq:</span>{' '}
-                                                <span className="font-medium">${position.liquidationPrice.toFixed(2)}</span>
+                                                <span className="text-coffee-light">Liq:</span>{' '}
+                                                <span className="font-medium text-bearish">${position.liquidationPrice.toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -234,15 +232,15 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                 </div>
 
                 {/* Watchlist */}
-                <div className="bg-card border border-border rounded-2xl p-6">
+                <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-soft-lg">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold">Watchlist</h2>
+                        <h2 className="text-2xl font-bold text-coffee-dark">Watchlist</h2>
                     </div>
                     
                     {/* Add to watchlist */}
                     <div className="mb-4">
                         <select
-                            className="w-full bg-elevated border border-border rounded-xl px-4 py-3 text-sm min-h-[52px]"
+                            className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm min-h-[52px] shadow-soft focus:border-primary focus:ring-2 focus:ring-primary/20"
                             value=""
                             onChange={(e) => {
                                 if (e.target.value) {
@@ -254,7 +252,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                             <option value="">Add token to watchlist...</option>
                             {markets
                                 .filter(m => !watchlist.includes(m.name))
-                                .slice(0, 50) // Limit to first 50 to avoid huge dropdown
+                                .slice(0, 50)
                                 .map(market => (
                                     <option key={market.name} value={market.name}>
                                         {market.name} - ${market.price?.toFixed(2) || '0.00'}
@@ -265,7 +263,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
 
                     {/* Watchlist items */}
                     {watchlistMarkets.length === 0 ? (
-                        <div className="text-center py-8 text-muted">
+                        <div className="text-center py-8 text-coffee-light">
                             <p>No tokens in watchlist</p>
                             <p className="text-xs mt-2">Add tokens using the dropdown above</p>
                         </div>
@@ -278,7 +276,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                 return (
                                     <div
                                         key={market.name}
-                                        className="bg-elevated border border-border rounded-xl p-4 hover:bg-card transition-all cursor-pointer group active:scale-[0.98]"
+                                        className="bg-gray-50 border border-gray-200 rounded-2xl p-4 hover:bg-white transition-all cursor-pointer group active:scale-[0.98] shadow-soft hover:shadow-soft-lg"
                                         onClick={() => {
                                             setSelectedMarket(market.symbol);
                                             onTokenClick?.(market.symbol);
@@ -286,13 +284,13 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1">
-                                                <div className="font-semibold">{market.name}</div>
-                                                <div className="text-sm text-muted">
+                                                <div className="font-semibold text-coffee-dark">{market.name}</div>
+                                                <div className="text-sm text-coffee-light">
                                                     ${market.price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                <div className={`text-sm font-semibold ${isPositive ? 'text-buy' : 'text-sell'}`}>
+                                                <div className={`text-sm font-semibold ${isPositive ? 'text-bullish' : 'text-bearish'}`}>
                                                     {isPositive ? '+' : ''}{priceChangePercent.toFixed(2)}%
                                                 </div>
                                                 <button
@@ -300,9 +298,9 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                                         e.stopPropagation();
                                                         removeFromWatchlist(market.name);
                                                     }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-sell-light rounded-full"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-red-50 rounded-full"
                                                 >
-                                                    <X className="w-4 h-4 text-muted hover:text-sell" />
+                                                    <X className="w-4 h-4 text-coffee-light hover:text-bearish" />
                                                 </button>
                                             </div>
                                         </div>
@@ -316,4 +314,3 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
         </div>
     );
 }
-

@@ -7,9 +7,9 @@ export default function TradingChart() {
     const { t } = useLanguage();
 
     return (
-        <div className="glass-card h-full flex flex-col">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2">
+        <div className="glass-card h-full flex flex-col bg-white rounded-3xl shadow-soft-lg">
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between rounded-t-3xl">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-coffee-dark">
                     <BarChart3 className="w-5 h-5 text-primary" />
                     {t.chart.candlestick}
                 </h3>
@@ -18,7 +18,7 @@ export default function TradingChart() {
                     {(['1m', '5m', '15m', '1h', '4h', '1d'] as const).map((timeframe) => (
                         <button
                             key={timeframe}
-                            className="btn-ghost px-3 py-1 text-xs"
+                            className="px-3 py-1.5 text-xs rounded-full bg-gray-50 hover:bg-gray-100 text-coffee-medium hover:text-coffee-dark transition-all border border-gray-200"
                         >
                             {t.chart.timeframes[timeframe]}
                         </button>
@@ -27,7 +27,7 @@ export default function TradingChart() {
             </div>
 
             {/* Chart Placeholder */}
-            <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-tertiary to-secondary relative overflow-hidden">
+            <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-gray-50 to-white relative overflow-hidden rounded-b-3xl">
                 {/* Animated Background Grid */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="grid grid-cols-8 h-full">
@@ -57,10 +57,10 @@ export default function TradingChart() {
                             />
                         ))}
                     </div>
-                    <p className="text-muted text-sm">
+                    <p className="text-coffee-medium text-sm">
                         {t.chart.candlestick} • Real-time
                     </p>
-                    <p className="text-xs text-muted mt-2 opacity-60">
+                    <p className="text-xs text-coffee-light mt-2 opacity-60">
                         📊 Visualización de gráficos en tiempo real próximamente
                     </p>
                 </div>

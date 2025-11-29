@@ -17,7 +17,6 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
     const market = getMarket(symbol);
     const isPositive = (market?.change24h ?? 0) >= 0;
     
-    // Mock stats - in real app, fetch from API
     const stats = {
         openInterest: 431500000,
         maxMultiplier: 20,
@@ -28,31 +27,31 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
     if (!market) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="text-muted">Market not found</div>
+                <div className="text-coffee-light">Market not found</div>
             </div>
         );
     }
 
     return (
-        <div className="h-full flex flex-col overflow-y-auto">
+        <div className="h-full flex flex-col overflow-y-auto bg-slate-50">
             {/* Header */}
-            <div className="sticky top-0 bg-card border-b border-border z-10">
+            <div className="sticky top-0 bg-white border-b border-gray-200 z-10 shadow-soft">
                 <div className="flex items-center justify-between p-4">
                     <button
                         onClick={onBack}
-                        className="p-2 hover:bg-elevated rounded-full transition-colors"
+                        className="p-2 hover:bg-gray-50 rounded-full transition-colors"
                     >
-                        <ArrowLeft className="w-5 h-5" />
+                        <ArrowLeft className="w-5 h-5 text-coffee-dark" />
                     </button>
                     <div className="flex items-center gap-2">
-                        <button className="p-2 hover:bg-elevated rounded-full transition-colors">
-                            <Bookmark className="w-5 h-5 text-muted" />
+                        <button className="p-2 hover:bg-gray-50 rounded-full transition-colors">
+                            <Bookmark className="w-5 h-5 text-coffee-light" />
                         </button>
-                        <button className="p-2 hover:bg-elevated rounded-full transition-colors">
-                            <Star className="w-5 h-5 text-muted" />
+                        <button className="p-2 hover:bg-gray-50 rounded-full transition-colors">
+                            <Star className="w-5 h-5 text-coffee-light" />
                         </button>
-                        <button className="p-2 hover:bg-elevated rounded-full transition-colors">
-                            <Search className="w-5 h-5 text-muted" />
+                        <button className="p-2 hover:bg-gray-50 rounded-full transition-colors">
+                            <Search className="w-5 h-5 text-coffee-light" />
                         </button>
                     </div>
                 </div>
@@ -61,19 +60,19 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
             {/* Token Info */}
             <div className="px-4 pt-4 pb-6">
                 <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-elevated flex items-center justify-center">
-                        <span className="text-xs font-bold">{market.name.charAt(0)}</span>
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-xs font-bold text-primary">{market.name.charAt(0)}</span>
                     </div>
-                    <span className="text-sm text-muted">{market.symbol}</span>
+                    <span className="text-sm text-coffee-light">{market.symbol}</span>
                 </div>
-                <h1 className="text-3xl font-bold mb-2">{market.name}</h1>
+                <h1 className="text-3xl font-bold mb-2 text-coffee-dark">{market.name}</h1>
                 
                 {/* Price Chart Placeholder */}
-                <div className="h-64 bg-elevated rounded-xl mb-4 flex items-center justify-center border border-border">
+                <div className="h-64 bg-white rounded-3xl mb-4 flex items-center justify-center border border-gray-200 shadow-soft-lg">
                     <div className="text-center">
-                        <div className="text-4xl font-bold mb-2">{formatCurrency(market.price)}</div>
+                        <div className="text-4xl font-bold mb-2 text-coffee-dark">{formatCurrency(market.price)}</div>
                         <div className={`text-lg font-semibold flex items-center justify-center gap-1 ${
-                            isPositive ? 'text-buy' : 'text-sell'
+                            isPositive ? 'text-bullish' : 'text-bearish'
                         }`}>
                             {isPositive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                             {formatPercent(Math.abs(market?.change24h ?? 0))} Today
@@ -88,8 +87,8 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
                             key={timeframe}
                             className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
                                 timeframe === '1D'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-elevated text-muted hover:bg-card'
+                                    ? 'bg-primary text-white shadow-soft'
+                                    : 'bg-white text-coffee-medium hover:bg-gray-50 border border-gray-200'
                             }`}
                         >
                             {timeframe}
@@ -99,49 +98,49 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
 
                 {/* Stats */}
                 <div className="mb-6">
-                    <h2 className="text-lg font-bold mb-4">Stats</h2>
+                    <h2 className="text-lg font-bold mb-4 text-coffee-dark">Stats</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-elevated border border-border rounded-xl p-4">
+                        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-soft">
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm text-muted">Open Interest</span>
-                                <Info className="w-3 h-3 text-muted" />
+                                <span className="text-sm text-coffee-light">Open Interest</span>
+                                <Info className="w-3 h-3 text-coffee-light" />
                             </div>
-                            <div className="text-xl font-bold">
+                            <div className="text-xl font-bold text-coffee-dark">
                                 ${(stats.openInterest / 1000000).toFixed(1)}M
                             </div>
                         </div>
-                        <div className="bg-elevated border border-border rounded-xl p-4">
+                        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-soft">
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm text-muted">Max Multiplier</span>
-                                <Info className="w-3 h-3 text-muted" />
+                                <span className="text-sm text-coffee-light">Max Multiplier</span>
+                                <Info className="w-3 h-3 text-coffee-light" />
                             </div>
-                            <div className="text-xl font-bold">{stats.maxMultiplier}x</div>
+                            <div className="text-xl font-bold text-coffee-dark">{stats.maxMultiplier}x</div>
                         </div>
-                        <div className="bg-elevated border border-border rounded-xl p-4">
-                            <div className="text-sm text-muted mb-1">24h Volume</div>
-                            <div className="text-xl font-bold">
+                        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-soft">
+                            <div className="text-sm text-coffee-light mb-1">24h Volume</div>
+                            <div className="text-xl font-bold text-coffee-dark">
                                 ${(stats.volume24h / 1000000).toFixed(1)}M
                             </div>
                         </div>
-                        <div className="bg-elevated border border-border rounded-xl p-4">
+                        <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-soft">
                             <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm text-muted">Funding Rate</span>
-                                <Info className="w-3 h-3 text-muted" />
+                                <span className="text-sm text-coffee-light">Funding Rate</span>
+                                <Info className="w-3 h-3 text-coffee-light" />
                             </div>
-                            <div className="text-xl font-bold">{stats.fundingRate.toFixed(4)}%</div>
+                            <div className="text-xl font-bold text-coffee-dark">{stats.fundingRate.toFixed(4)}%</div>
                         </div>
                     </div>
                 </div>
 
                 {/* About Section */}
                 <div className="mb-6">
-                    <h2 className="text-lg font-bold mb-3">About</h2>
-                    <div className="bg-elevated border border-border rounded-xl p-4">
-                        <p className="text-sm text-muted leading-relaxed">
+                    <h2 className="text-lg font-bold mb-3 text-coffee-dark">About</h2>
+                    <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-soft">
+                        <p className="text-sm text-coffee-medium leading-relaxed">
                             {market.name} is a platform engineered to support a vast ecosystem of decentralized applications (dApps) and smart contracts. 
                             It provides high throughput and low latency for trading and DeFi operations.
                         </p>
-                        <button className="mt-3 text-sm text-primary font-semibold">
+                        <button className="mt-3 text-sm text-primary font-semibold hover:text-primary-light transition-colors">
                             Show more
                         </button>
                     </div>
@@ -149,10 +148,10 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
             </div>
 
             {/* Trade Button */}
-            <div className="sticky bottom-0 bg-card border-t border-border p-4">
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 shadow-soft-lg">
                 <button
                     onClick={onTrade}
-                    className="w-full bg-elevated hover:bg-card border border-border rounded-full py-4 text-lg font-bold transition-all active:scale-[0.98]"
+                    className="w-full bg-primary hover:bg-primary-light text-white rounded-full py-5 text-lg font-bold transition-all active:scale-[0.98] shadow-soft-lg"
                 >
                     Trade
                 </button>
@@ -160,4 +159,3 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
         </div>
     );
 }
-

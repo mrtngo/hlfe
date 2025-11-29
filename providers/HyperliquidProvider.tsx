@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, Rea
 import { useLanguage } from '@/hooks/useLanguage';
 import { useMarketData, subscribeToMarketPrices, Market } from '@/lib/hyperliquid/market-data';
 import { createHyperliquidClient, API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
+import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useWalletClient } from 'wagmi';
 
@@ -12,6 +13,7 @@ export type { Market };
 // Define types (copied from useHyperliquid.tsx to ensure compatibility)
 export interface Position {
     symbol: string;
+    name?: string; // Optional: asset name (e.g., "TSLA" for "TSLA-USD")
     side: 'long' | 'short';
     size: number;
     entryPrice: number;
@@ -111,37 +113,110 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [realMarkets]);
 
-    // Subscribe to live price updates
+    // Connect WebSocket and subscribe to updates (replaces polling)
     useEffect(() => {
-        if (markets.length === 0) return;
+        wsManager.connect({
+            onPriceUpdate: (coin, price) => {
+                // Update market prices
+                const symbol = `${coin}-USD`;
+                setMarkets(prev => prev.map(m =>
+                    m.symbol === symbol || m.name === coin ? { ...m, price } : m
+                ));
 
-        const symbols = markets.map(m => m.symbol);
-        const unsubscribe = subscribeToMarketPrices(symbols, (symbol, price) => {
-            setMarkets(prev => prev.map(m =>
-                m.symbol === symbol ? { ...m, price } : m
-            ));
+                // Update positions with new mark prices
+                setPositions(prev => prev.map(position => {
+                    if (position.symbol !== symbol && position.name !== coin) return position;
 
-            // Update positions with new mark prices
-            setPositions(prev => prev.map(position => {
-                if (position.symbol !== symbol) return position;
+                    const pnl = position.side === 'long'
+                        ? (price - position.entryPrice) * position.size
+                        : (position.entryPrice - price) * position.size;
 
-                const pnl = position.side === 'long'
-                    ? (price - position.entryPrice) * position.size
-                    : (position.entryPrice - price) * position.size;
+                    const pnlPercent = (pnl / (position.entryPrice * position.size)) * 100;
 
-                const pnlPercent = (pnl / (position.entryPrice * position.size)) * 100;
+                    return {
+                        ...position,
+                        markPrice: price,
+                        unrealizedPnl: pnl,
+                        unrealizedPnlPercent: pnlPercent,
+                    };
+                }));
+            },
+            onAccountUpdate: (data) => {
+                // Update account data from WebSocket
+                if (data.marginSummary) {
+                    const accountValue = parseFloat(data.marginSummary.accountValue || '0');
+                    const totalMarginUsed = parseFloat(data.marginSummary.totalMarginUsed || '0');
+                    
+                    setAccount(prev => ({
+                        ...prev,
+                        balance: accountValue,
+                        equity: accountValue,
+                        availableMargin: accountValue - totalMarginUsed,
+                        usedMargin: totalMarginUsed,
+                    }));
+                }
+            },
+            onPositionUpdate: (assetPositions) => {
+                // Update positions from WebSocket
+                if (Array.isArray(assetPositions)) {
+                    const activePositions: Position[] = assetPositions
+                        .filter((pos: any) => parseFloat(pos.position?.szi || '0') !== 0)
+                        .map((pos: any) => {
+                            const position = pos.position;
+                            const szi = parseFloat(position.szi || '0');
+                            const entryPx = parseFloat(position.entryPx || '0');
+                            const markPx = parseFloat(position.markPx || '0');
+                            const liqPx = parseFloat(position.liqPx || '0');
+                            const leverage = parseFloat(position.leverage?.value || '1');
+                            const side = szi > 0 ? 'long' : 'short';
+                            const size = Math.abs(szi);
+                            
+                            const pnl = side === 'long'
+                                ? (markPx - entryPx) * size
+                                : (entryPx - markPx) * size;
+                            const pnlPercent = (pnl / (entryPx * size)) * 100;
 
-                return {
-                    ...position,
-                    markPrice: price,
-                    unrealizedPnl: pnl,
-                    unrealizedPnlPercent: pnlPercent,
-                };
-            }));
+                            return {
+                                symbol: `${pos.coin}-USD`,
+                                name: pos.coin,
+                                side,
+                                size,
+                                entryPrice: entryPx,
+                                markPrice: markPx,
+                                liquidationPrice: liqPx,
+                                leverage,
+                                unrealizedPnl: pnl,
+                                unrealizedPnlPercent: pnlPercent,
+                            };
+                        });
+                    
+                    setPositions(activePositions);
+                }
+            },
+            onUserEvent: (event) => {
+                console.log('📢 User event received:', event);
+            },
+            onError: (error) => {
+                console.error('❌ WebSocket error:', error);
+            }
         });
 
-        return unsubscribe;
-    }, [markets.length]); // Only re-subscribe if market list changes size (initially)
+        // Subscribe to price updates
+        wsManager.subscribeToPrices();
+
+        return () => {
+            wsManager.disconnect();
+        };
+    }, []);
+
+    // Subscribe to user data when address is available
+    useEffect(() => {
+        if (address && wsManager.isConnected()) {
+            const normalizedAddress = address.toLowerCase();
+            wsManager.subscribeToUserData(normalizedAddress);
+            wsManager.subscribeToUserEvents(normalizedAddress);
+        }
+    }, [address]);
 
     // Get wallet address from Privy (embedded or external wallet)
     useEffect(() => {
@@ -213,8 +288,38 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 await client.connect();
 
                 // Get user clearinghouse state (account info)
-                // Try with rawResponse to see the actual API response
-                const userState = await client.info.perpetuals.getClearinghouseState(normalizedAddress, false);
+                // Use rawResponse=false to get converted response, but catch errors better
+                let userState;
+                try {
+                    userState = await client.info.perpetuals.getClearinghouseState(normalizedAddress, false);
+                } catch (apiError: any) {
+                    // Check if it's a rate limit error
+                    if (apiError?.code === 'RATE_LIMITED' || apiError?.message?.includes('rate limit') || apiError?.message?.includes('429')) {
+                        setRateLimited(true);
+                        setRetryAfter(Date.now() + 60000); // Wait 60 seconds
+                        console.warn('⚠️ Rate limited, will retry later');
+                        return;
+                    }
+                    
+                    // Check if it's a network error
+                    if (apiError?.code === 'NETWORK_ERROR' || apiError?.message?.includes('network')) {
+                        console.error('🌐 Network error fetching account data:', apiError.message);
+                        throw new Error('Network error. Please check your connection.');
+                    }
+                    
+                    // Check if address might not exist on testnet
+                    if (apiError?.message?.includes('unknown error') || apiError?.code === 'UNKNOWN_ERROR') {
+                        console.warn('⚠️ API returned unknown error. This might mean:');
+                        console.warn('  1. The address has no account on testnet');
+                        console.warn('  2. The address needs to be activated first');
+                        console.warn('  3. There was a temporary API issue');
+                        // Don't throw - just log and return, keeping last known state
+                        return;
+                    }
+                    
+                    // Re-throw other errors
+                    throw apiError;
+                }
                 
                 // Success - reset rate limiting
                 setRateLimited(false);
@@ -242,14 +347,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             availableMargin: accountValue - totalMarginUsed
                         });
 
-                        setAccount({
-                            balance: accountValue,
-                            equity: accountValue,
-                            availableMargin: accountValue - totalMarginUsed,
-                            usedMargin: totalMarginUsed,
-                            unrealizedPnl: 0, // Will be calculated from positions
-                            unrealizedPnlPercent: 0,
-                        });
+                    setAccount({
+                        balance: accountValue,
+                        equity: accountValue,
+                        availableMargin: accountValue - totalMarginUsed,
+                        usedMargin: totalMarginUsed,
+                        unrealizedPnl: 0, // Will be calculated from positions
+                        unrealizedPnlPercent: 0,
+                    });
                     } else {
                         console.warn('⚠️ marginSummary is missing from userState');
                         setAccount({
@@ -320,14 +425,16 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     });
                     setPositions([]);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 console.error('❌ Error fetching account data:', err);
                 
                 // Check if it's a rate limit error (429)
+                const errAny = err as any;
                 const isRateLimited = err instanceof Error && 
-                    (err.message.includes('429') || 
-                     err.message.includes('Too Many Requests') ||
-                     err.message.includes('rate limit'));
+                    (err.message?.includes('429') || 
+                     err.message?.includes('Too Many Requests') ||
+                     err.message?.includes('rate limit') ||
+                     errAny.code === 'RATE_LIMITED');
                 
                 if (isRateLimited) {
                     console.warn('⚠️ Rate limited by API. Backing off...');
@@ -336,12 +443,53 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     const backoffMs = Math.min(30000 * Math.pow(2, retryCount), 120000);
                     setRetryAfter(Date.now() + backoffMs);
                     console.log(`⏳ Will retry after ${backoffMs / 1000}s`);
+                    setFetchingAccount(false);
                     return;
                 }
                 
+                // Check for "unknown error" - this usually means the account doesn't exist on testnet
+                const isUnknownError = err?.message?.includes('unknown error') || 
+                                     err?.code === 'UNKNOWN_ERROR' ||
+                                     (err?.name === 'HyperliquidAPIError' && err?.message?.includes('unknown'));
+                
+                if (isUnknownError) {
+                    console.warn('⚠️ API returned "unknown error". This usually means:');
+                    console.warn('  1. The address has no account on testnet (needs activation)');
+                    console.warn('  2. Visit https://app.hyperliquid-testnet.xyz/ to activate your account');
+                    console.warn('  3. This is normal for new addresses');
+                    // Don't update state - keep last known state or show zero if first fetch
+                    if (retryCount === 0) {
+                        setAccount({
+                            balance: 0,
+                            equity: 0,
+                            availableMargin: 0,
+                            usedMargin: 0,
+                            unrealizedPnl: 0,
+                            unrealizedPnlPercent: 0,
+                        });
+                        setPositions([]);
+                    }
+                    setFetchingAccount(false);
+                    return;
+                }
+                
+                // Check for network errors
+                const isNetworkError = err?.code === 'NETWORK_ERROR' || 
+                                     err?.message?.includes('network') ||
+                                     err?.message?.includes('fetch failed');
+                
+                if (isNetworkError) {
+                    console.error('🌐 Network error:', err.message);
+                    // Don't update state on network errors - keep last known state
+                    setFetchingAccount(false);
+                    return;
+                }
+                
+                // Log other errors for debugging
                 if (err instanceof Error) {
                     console.error('Error message:', err.message);
-                    console.error('Error stack:', err.stack);
+                    console.error('Error code:', (err as any).code);
+                    console.error('Error name:', err.name);
                 }
                 
                 // For other errors, don't update account state (keep last known state)
@@ -362,15 +510,18 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
         };
 
+        // Initial fetch only - subsequent updates via WebSocket
         fetchAccountData();
 
-        // Refresh every 30 seconds (increased from 10s to reduce rate limiting)
-        // If rate limited, the function will skip the fetch
+        // Reduced polling: only refresh if WebSocket is not connected (fallback)
+        // WebSocket provides real-time updates, so we only poll as backup
         const interval = setInterval(() => {
-            if (!rateLimited || (retryAfter && Date.now() >= retryAfter)) {
+            // Only poll if WebSocket is not connected
+            if (!wsManager.isConnected() && (!rateLimited || (retryAfter && Date.now() >= retryAfter))) {
+                console.log('📡 WebSocket disconnected, using HTTP fallback');
                 fetchAccountData();
             }
-        }, 30000);
+        }, 60000); // 1 minute fallback polling (only when WS disconnected)
 
         return () => clearInterval(interval);
     }, [isConnected, address, markets.length, rateLimited, retryAfter, fetchingAccount]); // Removed 'markets' dependency to avoid re-fetching on every price update
@@ -466,23 +617,63 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 throw new Error(`Market not found: ${symbol}. Available markets: ${markets.map(m => m.symbol).join(', ') || 'none loaded yet'}`);
             }
 
-            // Let's fetch meta to get the index
-            const client = createHyperliquidClient();
-            const meta = await client.info.perpetuals.getMeta();
+            // Check if this is a Trade.xyz (DEX) asset
+            const isTradeXyzAsset = market.isStock === true;
+            
+            let meta: any;
+            let assetIndex: number;
+            let assetName: string;
+            const baseCoin = symbol.split('-')[0]; // e.g., "TSLA" from "TSLA-USD"
 
-            // On testnet, assets have a -PERP suffix (e.g., SOL-PERP, BTC-PERP)
-            // Our market symbols are like SOL-USD, BTC-USD
-            const baseCoin = symbol.split('-')[0]; // e.g., "SOL" from "SOL-USD"
-            const assetName = IS_TESTNET ? `${baseCoin}-PERP` : baseCoin;
+            if (isTradeXyzAsset) {
+                // For Trade.xyz assets, fetch meta from DEX endpoint
+                console.log('📊 Trade.xyz asset detected, fetching DEX meta...');
+                const dexMetaResponse = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'meta',
+                        dex: 'xyz'
+                    })
+                });
 
-            console.log('Looking for asset:', assetName);
-            console.log('Available assets in meta.universe:', meta.universe.map((u: any) => u.name));
+                if (!dexMetaResponse.ok) {
+                    throw new Error(`Failed to fetch Trade.xyz meta: ${dexMetaResponse.status}`);
+                }
 
-            const assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+                meta = await dexMetaResponse.json();
+                
+                // Trade.xyz assets have "xyz:" prefix in the meta
+                assetName = `xyz:${baseCoin}`;
+                
+                console.log('Looking for Trade.xyz asset:', assetName);
+                console.log('Available Trade.xyz assets:', meta.universe?.map((u: any) => u.name) || []);
+                
+                assetIndex = meta.universe?.findIndex((u: any) => u.name === assetName) ?? -1;
+                
+                if (assetIndex === -1) {
+                    throw new Error(`Trade.xyz asset index not found for ${assetName}. Available assets: ${meta.universe?.map((u: any) => u.name).slice(0, 10).join(', ') || 'none'}...`);
+                }
+            } else {
+                // For core assets, use standard meta
+                const client = createHyperliquidClient();
+                meta = await client.info.perpetuals.getMeta();
 
-            if (assetIndex === -1) {
-                throw new Error(`Asset index not found for ${assetName}. Available assets: ${meta.universe.map((u: any) => u.name).slice(0, 10).join(', ')}...`);
+                // On testnet, assets have a -PERP suffix (e.g., SOL-PERP, BTC-PERP)
+                // Our market symbols are like SOL-USD, BTC-USD
+                assetName = IS_TESTNET ? `${baseCoin}-PERP` : baseCoin;
+
+                console.log('Looking for core asset:', assetName);
+                console.log('Available core assets:', meta.universe.map((u: any) => u.name));
+
+                assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+
+                if (assetIndex === -1) {
+                    throw new Error(`Asset index not found for ${assetName}. Available assets: ${meta.universe.map((u: any) => u.name).slice(0, 10).join(', ')}...`);
+                }
             }
+            
+            console.log(`✅ Found asset at index ${assetIndex}: ${assetName}`);
 
             // 2. Construct order wire
             const isBuy = side === 'buy';
@@ -492,33 +683,34 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             let finalPx = type === 'market'
                 ? (isBuy ? limitPx * 1.05 : limitPx * 0.95) // 5% slippage for testnet
                 : limitPx;
-            
-            // Round price to reasonable precision (most crypto prices don't need more than 2 decimal places)
-            // For prices > 1000, round to nearest integer; for prices < 1000, round to 2 decimals
-            if (finalPx >= 1000) {
-                finalPx = Math.round(finalPx);
-            } else if (finalPx >= 1) {
-                finalPx = Math.round(finalPx * 100) / 100;
-            } else {
-                finalPx = Math.round(finalPx * 10000) / 10000; // 4 decimals for prices < 1
+
+            // Round size based on asset's szDecimals (HIP-3 markets have specific precision requirements)
+            let roundedSize = size;
+            if (market.szDecimals !== undefined) {
+                const roundingMultiplier = Math.pow(10, market.szDecimals);
+                roundedSize = Math.floor(size * roundingMultiplier) / roundingMultiplier;
             }
 
             // Use the vendor SDK we already have installed
             const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
             const { orderToWire, signL1Action, floatToWire } = hyperliquidSDK;
             
-            // Format price and size using SDK's floatToWire to ensure correct decimal precision
+            // Format price and size using SDK's floatToWire to handle scientific notation and significant figures
             // floatToWire removes trailing zeros and formats according to Hyperliquid requirements
+            // We rely on the SDK's floatToWire instead of manual rounding for price precision
+            // This is critical for stocks like XYZ100 (~$20,000+) and penny stocks with very low prices
             const formattedPrice = floatToWire(finalPx);
-            const formattedSize = floatToWire(size);
+            const formattedSize = floatToWire(roundedSize);
             
             // orderToWire expects numbers, but we need to ensure they're properly formatted
-            // The SDK will format them correctly internally
+            // The SDK will format them correctly internally using floatToWire
+            // For Trade.xyz assets, use the full name with prefix; for core assets, use the standard name
+            const orderCoin = isTradeXyzAsset ? assetName : assetName; // assetName already has the correct format
             const orderRequest = {
-                coin: assetName,
+                coin: orderCoin,
                 is_buy: isBuy,
-                sz: size, // Keep as number, SDK will format
-                limit_px: finalPx, // Keep as number, SDK will format
+                sz: roundedSize, // Use rounded size based on szDecimals
+                limit_px: finalPx, // SDK will format via floatToWire
                 order_type: type === 'market'
                     ? { limit: { tif: 'Ioc' } } as const
                     : { limit: { tif: 'Gtc' } } as const,
@@ -528,6 +720,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // orderToWire formats the price and size correctly according to Hyperliquid requirements
             const wireOrder = orderToWire(orderRequest, assetIndex);
             
+            console.log('📝 Market szDecimals:', market.szDecimals);
+            console.log('📝 Original size:', size, 'Rounded size:', roundedSize);
             console.log('📝 Formatted price:', formattedPrice, 'Formatted size:', formattedSize);
             console.log('📝 Wire order:', JSON.stringify(wireOrder, null, 2));
 
@@ -595,14 +789,25 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 vaultAddress: null,
             };
 
+            // Check if we're already rate limited before making the request
+            if (rateLimited && retryAfter && Date.now() < retryAfter) {
+                const waitTime = Math.ceil((retryAfter - Date.now()) / 1000);
+                throw new Error(`Rate limited. Please wait ${waitTime} seconds before trying again.`);
+            }
+            
             console.log('📤 Sending order to API:', JSON.stringify(payload, null, 2));
+
+            // For Trade.xyz assets, we need to include dex parameter in the exchange request
+            const exchangePayload = isTradeXyzAsset 
+                ? { ...payload, dex: 'xyz' }
+                : payload;
 
             const response = await fetch(`${API_URL}/exchange`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload),
+                body: JSON.stringify(exchangePayload),
             });
 
             console.log('📥 API Response status:', response.status, response.statusText);
@@ -612,8 +817,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 setRateLimited(true);
                 const retryAfterHeader = response.headers.get('Retry-After');
                 const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : 60;
-                setRetryAfter(Date.now() + retryAfterSeconds * 1000);
-                throw new Error(`Rate limited. Please wait ${retryAfterSeconds} seconds before trying again.`);
+                const retryTime = Date.now() + retryAfterSeconds * 1000;
+                setRetryAfter(retryTime);
+                const waitTime = Math.ceil((retryTime - Date.now()) / 1000);
+                throw new Error(`Rate limited. Please wait ${waitTime} seconds before trying again.`);
             }
 
             if (!response.ok) {

@@ -1,7 +1,29 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { publicClient, WS_URL } from './client';
+import { publicClient, WS_URL, API_URL } from './client';
+
+// Known Trade.xyz (Hyperunit) stock tickers
+export const TRADEXYZ_ASSETS = ['XYZ100', 'NVDA', 'MSFT', 'TSLA', 'GOOGL', 'AMZN', 'COIN', 'HOOD', 'PYPL', 'AAPL', 'META', 'NFLX'];
+
+// Helper function to identify Trade.xyz assets
+export function isTradeXyzAsset(name: string, onlyIsolated: boolean): boolean {
+    // Trade.xyz assets are typically:
+    // 1. In our known list of stock tickers
+    // 2. Have onlyIsolated === true (HIP-3 markets)
+    // 3. Are recognizable stock tickers (2-5 uppercase letters, or XYZ100)
+    
+    // Strip -PERP suffix if present (testnet format)
+    const cleanName = name.replace(/-PERP$/i, '').toUpperCase();
+    const isKnownTicker = TRADEXYZ_ASSETS.includes(cleanName);
+    
+    // Stock tickers are typically 2-5 uppercase letters, or special cases like XYZ100
+    const looksLikeStock = /^[A-Z]{2,5}$/.test(cleanName) || cleanName === 'XYZ100';
+    
+    // If it's an isolated market (HIP-3) and looks like a stock ticker, it's likely a Trade.xyz asset
+    // OR if it's in our known list
+    return onlyIsolated && (isKnownTicker || looksLikeStock);
+}
 
 export interface Market {
     symbol: string;
@@ -12,6 +34,10 @@ export interface Market {
     high24h: number;
     low24h: number;
     fundingRate: number;
+    szDecimals: number;
+    maxLeverage: number;
+    onlyIsolated: boolean;
+    isStock?: boolean; // True if this is a Trade.xyz equity market
 }
 
 export interface MarketData {
@@ -32,36 +58,66 @@ export function useMarketData(): MarketData {
             // Initialize the client
             await publicClient.connect();
 
-            // Get meta info (list of available assets)
+            // Get meta info (list of available assets) - Core markets
             const meta = await publicClient.info.perpetuals.getMeta();
 
             // Get all mids (current prices)
             const allMids = await publicClient.info.getAllMids();
 
-            // Get 24h data
+            // Get 24h data - Core markets
             const metaAndAssetCtxs = await publicClient.info.perpetuals.getMetaAndAssetCtxs();
 
             // Process markets
             const processedMarkets: Market[] = [];
 
-            // getMetaAndAssetCtxs returns [Meta, AssetCtx[]]
-            const assetCtxs = Array.isArray(metaAndAssetCtxs) && metaAndAssetCtxs.length === 2 
-                ? metaAndAssetCtxs[1] 
-                : [];
+            // Helper function to process markets from meta and asset contexts
+            const processMarkets = (
+                universe: any[],
+                assetCtxs: any[],
+                isFromDex: boolean = false,
+                dexMids?: any
+            ) => {
+                if (!universe || !assetCtxs || universe.length === 0) return;
 
-            if (meta && meta.universe && assetCtxs.length > 0) {
-                for (let i = 0; i < meta.universe.length; i++) {
-                    const asset = meta.universe[i];
+                for (let i = 0; i < universe.length; i++) {
+                    const asset = universe[i];
                     const assetCtx = assetCtxs[i];
 
                     if (!asset || !assetCtx) continue;
 
-                    const symbol = `${asset.name}-USD`;
-                    const price = parseFloat(allMids[asset.name] || '0');
+                    // Skip delisted assets
+                    if (asset.isDelisted === true) {
+                        console.log(`⏭️ Skipping delisted asset: ${asset.name}`);
+                        continue;
+                    }
+
+                    // Strip DEX prefix (e.g., "xyz:XYZ100" -> "XYZ100")
+                    const cleanName = asset.name.replace(/^xyz:/i, '');
+                    const symbol = `${cleanName}-USD`;
+                    
+                    // Get price: prefer markPx or midPx from asset context (most reliable for DEX assets)
+                    // Fallback to mids lookup, then prevDayPx
+                    let price = 0;
+                    if (assetCtx.markPx) {
+                        price = parseFloat(assetCtx.markPx);
+                    } else if (assetCtx.midPx) {
+                        price = parseFloat(assetCtx.midPx);
+                    } else if (isFromDex && dexMids) {
+                        // Try DEX-specific mids
+                        price = parseFloat(dexMids[asset.name] || dexMids[cleanName] || '0');
+                    } else if (!isFromDex) {
+                        // Try core mids
+                        price = parseFloat(allMids[asset.name] || allMids[cleanName] || '0');
+                    }
+                    
+                    // Final fallback to prevDayPx
+                    if (price === 0 && assetCtx.prevDayPx) {
+                        price = parseFloat(assetCtx.prevDayPx);
+                    }
 
                     // Calculate 24h change
                     const prevDayPx = parseFloat(assetCtx.prevDayPx || '0');
-                    const change24h = prevDayPx > 0 ? ((price - prevDayPx) / prevDayPx) * 100 : 0;
+                    const change24h = prevDayPx > 0 && price > 0 ? ((price - prevDayPx) / prevDayPx) * 100 : 0;
 
                     // Get funding rate (convert to %)
                     const fundingRate = parseFloat(assetCtx.funding || '0') * 100;
@@ -69,17 +125,109 @@ export function useMarketData(): MarketData {
                     // Get 24h volume
                     const volume24h = parseFloat(assetCtx.dayNtlVlm || '0');
 
+                    // Extract HIP-3 metadata from asset object
+                    const szDecimals = asset.szDecimals ?? 0;
+                    const maxLeverage = asset.maxLeverage ?? 1;
+                    const onlyIsolated = asset.onlyIsolated ?? false;
+                    
+                    // Identify Trade.xyz stock markets
+                    // If from DEX "xyz", mark as stock
+                    const isStock = isFromDex || isTradeXyzAsset(cleanName, onlyIsolated);
+                    
+                    // Debug logging for stock identification
+                    if (onlyIsolated || isFromDex) {
+                        console.log(`🔍 ${isFromDex ? 'Trade.xyz' : 'HIP-3'} Asset: ${cleanName} (${asset.name})`, {
+                            price,
+                            prevDayPx,
+                            change24h,
+                            fundingRate,
+                            volume24h,
+                            markPx: assetCtx.markPx,
+                            midPx: assetCtx.midPx,
+                            onlyIsolated,
+                            isStock
+                        });
+                    }
+
                     processedMarkets.push({
                         symbol,
-                        name: asset.name,
+                        name: cleanName, // Use clean name without prefix
                         price,
                         change24h,
                         volume24h,
                         high24h: price, // Will be updated via WebSocket
                         low24h: price,  // Will be updated via WebSocket
                         fundingRate,
+                        szDecimals,
+                        maxLeverage,
+                        onlyIsolated: isFromDex ? true : onlyIsolated, // Trade.xyz markets are always isolated
+                        isStock,
                     });
                 }
+            };
+
+            // Process core markets
+            const assetCtxs = Array.isArray(metaAndAssetCtxs) && metaAndAssetCtxs.length === 2 
+                ? metaAndAssetCtxs[1] 
+                : [];
+
+            if (meta && meta.universe && assetCtxs.length > 0) {
+                processMarkets(meta.universe, assetCtxs, false);
+            }
+
+            // Fetch Trade.xyz (DEX "xyz") markets
+            try {
+                // First, get the meta and asset contexts
+                const tradeXyzResponse = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'metaAndAssetCtxs',
+                        dex: 'xyz'
+                    })
+                });
+
+                if (tradeXyzResponse.ok) {
+                    const tradeXyzData = await tradeXyzResponse.json();
+                    console.log('📊 Trade.xyz DEX response:', tradeXyzData);
+                    
+                    // The response should be [Meta, AssetCtx[]]
+                    if (Array.isArray(tradeXyzData) && tradeXyzData.length === 2) {
+                        const [tradeXyzMeta, tradeXyzAssetCtxs] = tradeXyzData;
+                        if (tradeXyzMeta && tradeXyzMeta.universe && tradeXyzAssetCtxs) {
+                            console.log(`✅ Found ${tradeXyzMeta.universe.length} Trade.xyz assets`);
+                            
+                            // Try to get prices for DEX assets
+                            let dexMids = {};
+                            try {
+                                const dexMidsResponse = await fetch(`${API_URL}/info`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        type: 'allMids',
+                                        dex: 'xyz'
+                                    })
+                                });
+                                
+                                if (dexMidsResponse.ok) {
+                                    const dexMidsData = await dexMidsResponse.json();
+                                    console.log('📊 Trade.xyz DEX mids:', dexMidsData);
+                                    // allMids response format might be { mids: {...} } or just {...}
+                                    dexMids = dexMidsData.mids || dexMidsData || {};
+                                }
+                            } catch (midsError) {
+                                console.warn('⚠️ Could not fetch Trade.xyz prices, will use asset context:', midsError);
+                            }
+                            
+                            processMarkets(tradeXyzMeta.universe, tradeXyzAssetCtxs, true, dexMids);
+                        }
+                    }
+                } else {
+                    console.warn('⚠️ Failed to fetch Trade.xyz markets:', tradeXyzResponse.status);
+                }
+            } catch (dexError) {
+                console.warn('⚠️ Error fetching Trade.xyz DEX markets:', dexError);
+                // Don't fail the whole fetch if DEX request fails
             }
 
             setMarkets(processedMarkets);
@@ -116,6 +264,10 @@ export function useMarketData(): MarketData {
                             high24h: 97000,
                             low24h: 97000,
                             fundingRate: 0,
+                            szDecimals: 0,
+                            maxLeverage: 20,
+                            onlyIsolated: false,
+                            isStock: false,
                         },
                         {
                             symbol: 'ETH-USD',
@@ -126,6 +278,10 @@ export function useMarketData(): MarketData {
                             high24h: 3450,
                             low24h: 3450,
                             fundingRate: 0,
+                            szDecimals: 0,
+                            maxLeverage: 20,
+                            onlyIsolated: false,
+                            isStock: false,
                         },
                     ];
                 }
@@ -137,13 +293,20 @@ export function useMarketData(): MarketData {
     }, []);
 
     useEffect(() => {
+        // Initial fetch only - updates will come via WebSocket
         fetchMarketData();
 
-        // Refresh market data every 30 seconds
-        const interval = setInterval(fetchMarketData, 30000);
+        // Reduced polling: only refresh market metadata (not prices) every 5 minutes
+        // Prices and volumes are updated via WebSocket in real-time
+        const interval = setInterval(() => {
+            // Only refetch if we have no markets (initial load failed)
+            if (markets.length === 0) {
+                fetchMarketData();
+            }
+        }, 300000); // 5 minutes
 
         return () => clearInterval(interval);
-    }, [fetchMarketData]);
+    }, [fetchMarketData, markets.length]);
 
     return { markets, loading, error };
 }

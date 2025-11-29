@@ -18,21 +18,21 @@ export default function Home() {
     const [selectedToken, setSelectedToken] = useState<string | null>(null);
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-slate-50">
             {/* Header */}
-            <header className="border-b border-border bg-card backdrop-blur-md sticky top-0 z-50">
-                <div className="container mx-auto px-4 py-3">
+            <header className="border-b border-gray-200 bg-white backdrop-blur-md sticky top-0 z-50 shadow-soft">
+                <div className="container mx-auto px-4 py-4 max-w-[1920px]">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                                <TrendingUp className="w-6 h-6 text-white" />
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-soft">
+                                <TrendingUp className="w-7 h-7 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold text-primary">Hyperliquid</h1>
+                                <h1 className="text-2xl font-bold text-primary">Hyperliquid</h1>
                                 <div className="flex items-center gap-2">
-                                    <p className="text-xs text-muted">LATAM Trading</p>
-                                    <span className="badge badge-warning text-xs rounded-full">Testnet</span>
+                                    <p className="text-sm text-muted">LATAM Trading</p>
+                                    <span className="badge badge-warning text-xs rounded-full bg-secondary/20 text-secondary-dark border-secondary/30">Testnet</span>
                                 </div>
                             </div>
                         </div>
@@ -41,13 +41,13 @@ export default function Home() {
                         <div className="flex items-center gap-3">
                             {/* View Switcher - Only show on home and trading views */}
                             {view !== 'token' && (
-                                <div className="flex items-center gap-2 bg-elevated rounded-full p-1 border border-border">
+                                <div className="flex items-center gap-2 bg-gray-100 rounded-full p-1 border border-gray-200">
                                     <button
                                         onClick={() => setView('home')}
                                         className={`px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 min-h-[40px] ${
                                             view === 'home'
-                                                ? 'bg-primary text-white'
-                                                : 'text-muted hover:text-foreground'
+                                                ? 'bg-primary text-white shadow-soft'
+                                                : 'text-coffee-medium hover:text-coffee-dark'
                                         }`}
                                     >
                                         <HomeIcon className="w-4 h-4" />
@@ -57,8 +57,8 @@ export default function Home() {
                                         onClick={() => setView('trading')}
                                         className={`px-4 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 min-h-[40px] ${
                                             view === 'trading'
-                                                ? 'bg-primary text-white'
-                                                : 'text-muted hover:text-foreground'
+                                                ? 'bg-primary text-white shadow-soft'
+                                                : 'text-coffee-medium hover:text-coffee-dark'
                                         }`}
                                     >
                                         <BarChart3 className="w-4 h-4" />
@@ -84,9 +84,9 @@ export default function Home() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 container mx-auto px-4 py-4">
+            <main className="flex-1 container mx-auto px-4 py-6 max-w-[1920px]">
                 {view === 'home' ? (
-                    <div className="h-[calc(100vh-120px)] overflow-y-auto">
+                    <div className="h-[calc(100vh-140px)] overflow-y-auto">
                         <HomeScreen 
                             onTokenClick={(symbol) => {
                                 setSelectedToken(symbol);
@@ -96,7 +96,7 @@ export default function Home() {
                         />
                     </div>
                 ) : view === 'token' ? (
-                    <div className="h-[calc(100vh-120px)]">
+                    <div className="h-[calc(100vh-140px)] max-w-6xl mx-auto">
                         <TokenDetail
                             symbol={selectedToken || selectedMarket}
                             onBack={() => setView('home')}
@@ -106,9 +106,9 @@ export default function Home() {
                         />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-120px)]">
-                        {/* Left Sidebar - Markets */}
-                        <div className="lg:col-span-4 h-full overflow-hidden">
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 h-[calc(100vh-140px)]">
+                        {/* Left Sidebar - Markets (Desktop: 3 columns, Large: 4 columns) */}
+                        <div className="xl:col-span-3 2xl:col-span-3 h-full overflow-hidden">
                             <MarketOverview 
                                 onTokenClick={(symbol) => {
                                     setSelectedToken(symbol);
@@ -118,13 +118,13 @@ export default function Home() {
                             />
                         </div>
 
-                        {/* Center - Positions */}
-                        <div className="lg:col-span-4 h-full overflow-hidden">
+                        {/* Center - Positions (Desktop: 5 columns, Large: 4 columns) */}
+                        <div className="xl:col-span-5 2xl:col-span-4 h-full overflow-hidden">
                             <PositionsPanel />
                         </div>
 
-                        {/* Right Sidebar - Order Panel */}
-                        <div className="lg:col-span-4 h-full overflow-hidden">
+                        {/* Right Sidebar - Order Panel (Desktop: 4 columns, Large: 5 columns) */}
+                        <div className="xl:col-span-4 2xl:col-span-5 h-full overflow-hidden">
                             <OrderPanel />
                         </div>
                     </div>
@@ -132,9 +132,9 @@ export default function Home() {
             </main>
 
             {/* Footer */}
-            <footer className="border-t border-border bg-secondary/30 py-4">
+            <footer className="border-t border-gray-200 bg-white/50 py-4">
                 <div className="container mx-auto px-4">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-muted">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-2 text-xs text-coffee-light">
                         <div className="flex items-center gap-4">
                             <span>© 2024 Hyperliquid LATAM</span>
                             <span className="hidden md:inline">•</span>
