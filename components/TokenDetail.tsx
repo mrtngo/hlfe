@@ -64,7 +64,7 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-xs font-bold text-primary">{market.name.charAt(0)}</span>
                     </div>
-                    <span className="text-sm text-coffee-light">{market.symbol}</span>
+                    <span className="text-sm text-coffee-light">{market.name}</span>
                 </div>
                 <h1 className="text-3xl font-bold mb-2 text-coffee-dark">{market.name}</h1>
                 

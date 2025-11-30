@@ -66,7 +66,8 @@ interface HyperliquidContextType {
         type: 'market' | 'limit',
         size: number,
         price?: number,
-        leverage?: number
+        leverage?: number,
+        reduceOnly?: boolean
     ) => Promise<any>;
     cancelOrder: (orderId: string) => Promise<void>;
     closePosition: (symbol: string) => Promise<void>;
@@ -120,27 +121,27 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Strip -PERP suffix and xyz: prefix from coin name for matching
                 const cleanCoin = coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
                 const symbol = `${cleanCoin}-USD`;
-                setMarkets(prev => prev.map(m =>
+            setMarkets(prev => prev.map(m =>
                     m.symbol === symbol || m.name === cleanCoin || m.name === coin ? { ...m, price } : m
-                ));
+            ));
 
-                // Update positions with new mark prices
-                setPositions(prev => prev.map(position => {
+            // Update positions with new mark prices
+            setPositions(prev => prev.map(position => {
                     if (position.symbol !== symbol && position.name !== coin) return position;
 
-                    const pnl = position.side === 'long'
-                        ? (price - position.entryPrice) * position.size
-                        : (position.entryPrice - price) * position.size;
+                const pnl = position.side === 'long'
+                    ? (price - position.entryPrice) * position.size
+                    : (position.entryPrice - price) * position.size;
 
-                    const pnlPercent = (pnl / (position.entryPrice * position.size)) * 100;
+                const pnlPercent = (pnl / (position.entryPrice * position.size)) * 100;
 
-                    return {
-                        ...position,
-                        markPrice: price,
-                        unrealizedPnl: pnl,
-                        unrealizedPnlPercent: pnlPercent,
-                    };
-                }));
+                return {
+                    ...position,
+                    markPrice: price,
+                    unrealizedPnl: pnl,
+                    unrealizedPnlPercent: pnlPercent,
+                };
+            }));
             },
             onAccountUpdate: (data) => {
                 // Update account data from WebSocket
@@ -177,9 +178,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 : (entryPx - markPx) * size;
                             const pnlPercent = (pnl / (entryPx * size)) * 100;
 
+                            // Normalize coin name to match market symbols (strip -PERP and xyz: prefix)
+                            const cleanCoin = pos.coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                            const symbol = `${cleanCoin}-USD`;
+
                             return {
-                                symbol: `${pos.coin}-USD`,
-                                name: pos.coin,
+                                symbol,
+                                name: cleanCoin,
                                 side,
                                 size,
                                 entryPrice: entryPx,
@@ -302,8 +307,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         })
                         .map((p: any) => {
                             const position = p.position || p;
-                            const coin = position.coin?.replace('-PERP', '').replace('xyz:', '') || '';
-                            const market = markets.find(m => m.name === coin || m.symbol === `${coin}-USD`);
+                            // Normalize coin name to match market symbols (strip -PERP and xyz: prefix)
+                            // Use regex to ensure we only strip at the end/start, not in the middle
+                            const cleanCoin = (position.coin || '').replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                            const market = markets.find(m => m.name === cleanCoin || m.symbol === `${cleanCoin}-USD`);
                             const entryPrice = parseFloat(position.entryPx || '0');
                             const markPrice = parseFloat(position.markPx || '0');
                             const size = parseFloat(position.szi || '0');
@@ -311,8 +318,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const pnlPercent = entryPrice > 0 ? (pnl / (entryPrice * Math.abs(size))) * 100 : 0;
 
                             return {
-                                symbol: `${coin}-USD`,
-                                name: coin,
+                                symbol: `${cleanCoin}-USD`,
+                                name: cleanCoin,
                                 side: size > 0 ? 'long' : 'short',
                                 size: Math.abs(size),
                                 entryPrice,
@@ -472,7 +479,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                         for (const pos of userState.assetPositions) {
                             const position = pos.position;
-                            const coin = position.coin;
+                            // Normalize coin name to match market symbols (strip -PERP and xyz: prefix)
+                            const cleanCoin = (position.coin || '').replace(/-PERP$/i, '').replace(/^xyz:/i, '');
                             const szi = parseFloat(position.szi);
 
                             if (szi === 0) continue; // Skip closed positions
@@ -484,12 +492,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 : (position.leverage?.value || 1);
                             const liquidationPx = parseFloat(position.liquidationPx || '0');
 
-                            // Get current mark price
-                            const market = markets.find(m => m.name === coin);
+                            // Get current mark price - use normalized coin name
+                            const market = markets.find(m => m.name === cleanCoin || m.symbol === `${cleanCoin}-USD`);
                             const markPrice = market?.price || entryPx;
 
                             activePositions.push({
-                                symbol: `${coin}-USD`,
+                                symbol: `${cleanCoin}-USD`,
+                                name: cleanCoin,
                                 side: szi > 0 ? 'long' : 'short',
                                 size: Math.abs(szi),
                                 entryPrice: entryPx,
@@ -706,6 +715,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             console.log('markets array:', markets.map(m => m.symbol));
             console.log('markets length:', markets.length);
 
+            if (markets.length === 0) {
+                throw new Error('Markets not loaded yet. Please wait a moment and try again.');
+            }
+
             const market = markets.find(m => m.symbol === symbol);
             if (!market) {
                 throw new Error(`Market not found: ${symbol}. Available markets: ${markets.map(m => m.symbol).join(', ') || 'none loaded yet'}`);
@@ -750,11 +763,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
             } else {
                 // For core assets, use standard meta
-                const client = createHyperliquidClient();
+            const client = createHyperliquidClient();
                 meta = await client.info.perpetuals.getMeta();
 
-                // On testnet, assets have a -PERP suffix (e.g., SOL-PERP, BTC-PERP)
-                // Our market symbols are like SOL-USD, BTC-USD
+            // On testnet, assets have a -PERP suffix (e.g., SOL-PERP, BTC-PERP)
+            // Our market symbols are like SOL-USD, BTC-USD
                 assetName = IS_TESTNET ? `${baseCoin}-PERP` : baseCoin;
 
                 console.log('Looking for core asset:', assetName);
@@ -762,8 +775,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                 assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
 
-                if (assetIndex === -1) {
-                    throw new Error(`Asset index not found for ${assetName}. Available assets: ${meta.universe.map((u: any) => u.name).slice(0, 10).join(', ')}...`);
+            if (assetIndex === -1) {
+                throw new Error(`Asset index not found for ${assetName}. Available assets: ${meta.universe.map((u: any) => u.name).slice(0, 10).join(', ')}...`);
                 }
             }
             
@@ -771,14 +784,38 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             // 2. Construct order wire
             const isBuy = side === 'buy';
-            const limitPx = price || market.price; // For market orders, we need a price (usually with slippage)
+            
+            // For market orders with IOC, we need an aggressive price to ensure immediate execution
+            // For sells: use a price slightly below market (more aggressive for selling)
+            // For buys: use a price slightly above market (more aggressive for buying)
+            // For limit orders, use the provided price
+            let finalPx: number;
+            if (type === 'market') {
+                const currentPrice = market.price || price || 0;
+                if (currentPrice <= 0) {
+                    throw new Error('Invalid price: Market price must be greater than 0');
+                }
+                
+                // Apply small slippage to ensure immediate execution with IOC
+                // For sells (closing longs): price slightly below market (0.5% below)
+                // For buys (closing shorts): price slightly above market (0.5% above)
+                // This ensures the order can match immediately while still being reasonable
+                if (isBuy) {
+                    finalPx = currentPrice * 1.005; // 0.5% above for buys
+                } else {
+                    finalPx = currentPrice * 0.995; // 0.5% below for sells
+                }
+            } else {
+                finalPx = price || market.price;
+            }
 
-            // Adjust price for slippage if market order
-            let finalPx = type === 'market'
-                ? (isBuy ? limitPx * 1.05 : limitPx * 0.95) // 5% slippage for testnet
-                : limitPx;
+            if (finalPx <= 0) {
+                throw new Error('Invalid price: Price must be greater than 0');
+            }
 
             // Round size based on asset's szDecimals (HIP-3 markets have specific precision requirements)
+            // Note: We don't manually round the price - let the SDK's orderToWire handle it
+            // The SDK knows the correct tick size for each asset and will format the price correctly
             let roundedSize = size;
             if (market.szDecimals !== undefined) {
                 const roundingMultiplier = Math.pow(10, market.szDecimals);

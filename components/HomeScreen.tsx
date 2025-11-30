@@ -74,27 +74,32 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
     }
 
     return (
-        <div className="space-y-8 p-6 max-w-7xl mx-auto">
+        <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto">
             {/* Wallet Address Section */}
             {address && (
-                <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-soft-lg">
-                    <div className="flex items-center gap-3 mb-4">
-                        <Wallet className="w-5 h-5 text-primary" />
-                        <h2 className="text-xl font-bold text-coffee-dark">Hyperliquid Wallet Address</h2>
+                <div className="glass-card p-6 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+
+                    <div className="flex items-center gap-3 mb-4 relative z-10">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                            <Wallet className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">Hyperliquid Wallet</h2>
+                            <p className="text-xs text-coffee-medium">Arbitrum Sepolia Network</p>
+                        </div>
                     </div>
-                    <p className="text-sm text-coffee-medium mb-4">
-                        Send USDC to this address on Arbitrum Sepolia to fund your trading account. This is your Hyperliquid wallet address.
-                    </p>
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                            <div className="text-xs text-coffee-light mb-1">Wallet Address</div>
-                            <div className="text-sm font-mono break-all text-primary">
+
+                    <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
+                        <div className="flex-1 min-w-0 w-full">
+                            <div className="text-xs text-coffee-medium mb-1 uppercase tracking-wider font-semibold">Wallet Address</div>
+                            <div className="text-sm md:text-base font-mono break-all text-white/90">
                                 {address}
                             </div>
                         </div>
                         <button
                             onClick={copyAddress}
-                            className="shrink-0 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-full transition-all flex items-center gap-2 min-h-[44px] shadow-soft"
+                            className="shrink-0 w-full md:w-auto px-6 py-2.5 bg-bg-secondary hover:bg-bg-hover border border-white/10 rounded-full transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md group/btn"
                         >
                             {copied ? (
                                 <>
@@ -103,29 +108,30 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                 </>
                             ) : (
                                 <>
-                                    <Copy className="w-4 h-4 text-coffee-light" />
-                                    <span className="text-sm font-semibold text-coffee-dark">Copy</span>
+                                    <Copy className="w-4 h-4 text-coffee-medium group-hover/btn:text-white transition-colors" />
+                                    <span className="text-sm font-semibold text-coffee-medium group-hover/btn:text-white transition-colors">Copy Address</span>
                                 </>
                             )}
                         </button>
                     </div>
-                    <div className="mt-4 flex items-center gap-2 text-xs text-coffee-light">
-                        <ExternalLink className="w-3 h-3" />
-                        <a 
+
+                    <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-coffee-medium relative z-10">
+                        <a
                             href={`https://sepolia.arbiscan.io/address/${address}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hover:text-primary transition-colors underline"
+                            className="flex items-center gap-1.5 hover:text-primary transition-colors px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5"
                         >
+                            <ExternalLink className="w-3 h-3" />
                             View on Arbiscan
                         </a>
-                        <span>•</span>
-                        <a 
+                        <a
                             href="https://app.hyperliquid-testnet.xyz/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="hover:text-primary transition-colors underline"
+                            className="flex items-center gap-1.5 hover:text-primary transition-colors px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5"
                         >
+                            <ExternalLink className="w-3 h-3" />
                             Hyperliquid Testnet
                         </a>
                     </div>
@@ -133,32 +139,36 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
             )}
 
             {/* Portfolio Overview */}
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-soft-lg">
-                <h2 className="text-2xl font-bold mb-6 text-coffee-dark">Portfolio</h2>
+            <div className="glass-card p-6">
+                <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
+                    Portfolio
+                    <span className="text-xs font-normal text-coffee-medium bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Overview</span>
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-soft">
-                        <div className="text-sm text-coffee-light mb-2">Total Value</div>
-                        <div className="text-3xl font-bold text-coffee-dark">
+                    <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
+                        <div className="text-sm text-coffee-medium mb-1">Total Value</div>
+                        <div className="text-3xl font-bold text-white tracking-tight">
                             ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-soft">
-                        <div className="text-sm text-coffee-light mb-2">Unrealized P&L</div>
-                        <div className={`text-3xl font-bold flex items-center gap-2 ${
-                            totalUnrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish'
-                        }`}>
+                    <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-5 relative overflow-hidden">
+                        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none ${totalUnrealizedPnl >= 0 ? 'bg-bullish/5' : 'bg-bearish/5'}`} />
+                        <div className="text-sm text-coffee-medium mb-1">Unrealized P&L</div>
+                        <div className={`text-3xl font-bold flex items-center gap-2 tracking-tight ${totalUnrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish'
+                            }`}>
                             {totalUnrealizedPnl >= 0 ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
-                            ${totalUnrealizedPnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ${Math.abs(totalUnrealizedPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                         {account.equity > 0 && (
-                            <div className="text-xs text-coffee-light mt-1">
-                                {((totalUnrealizedPnl / account.equity) * 100).toFixed(2)}%
+                            <div className={`text-xs mt-1 font-medium ${totalUnrealizedPnl >= 0 ? 'text-bullish/80' : 'text-bearish/80'}`}>
+                                {totalUnrealizedPnl >= 0 ? '+' : ''}{((totalUnrealizedPnl / account.equity) * 100).toFixed(2)}%
                             </div>
                         )}
                     </div>
-                    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-soft">
-                        <div className="text-sm text-coffee-light mb-2">Available Margin</div>
-                        <div className="text-3xl font-bold text-coffee-dark">
+                    <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-5 relative overflow-hidden">
+                        <div className="text-sm text-coffee-medium mb-1">Available Margin</div>
+                        <div className="text-3xl font-bold text-white tracking-tight">
                             ${account.availableMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
@@ -167,10 +177,10 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Positions */}
-                <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-soft-lg">
-                    <h2 className="text-2xl font-bold mb-6 text-coffee-dark">Open Positions</h2>
+                <div className="glass-card p-6">
+                    <h2 className="text-2xl font-bold mb-6 text-white">Open Positions</h2>
                     {positions.length === 0 ? (
-                        <div className="text-center py-8 text-coffee-light">
+                        <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
                             <p>No open positions</p>
                         </div>
                     ) : (
@@ -178,21 +188,24 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                             {positions.map((position) => {
                                 const isLong = position.side === 'long';
                                 const pnlColor = position.unrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish';
-                                
+
                                 return (
                                     <div
                                         key={position.symbol}
-                                        className="bg-gray-50 border border-gray-200 rounded-2xl p-4 hover:bg-white transition-all cursor-pointer active:scale-[0.98] shadow-soft hover:shadow-soft-lg"
+                                        className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-4 hover:bg-bg-hover transition-all cursor-pointer active:scale-[0.98] group"
                                         onClick={() => {
                                             setSelectedMarket(position.symbol);
                                             onTokenClick?.(position.symbol);
                                         }}
                                     >
-                                        <div className="flex items-start justify-between mb-2">
+                                        <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <div className="font-semibold text-lg text-coffee-dark">{position.symbol}</div>
-                                                <div className="text-sm text-coffee-light">
-                                                    {isLong ? 'Long' : 'Short'} • {position.leverage}x
+                                                <div className="flex items-center gap-2">
+                                                    <div className="font-bold text-lg text-white">{position.symbol}</div>
+                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${isLong ? 'bg-bullish/10 text-bullish border-bullish/20' : 'bg-bearish/10 text-bearish border-bearish/20'}`}>
+                                                        {isLong ? 'LONG' : 'SHORT'}
+                                                    </span>
+                                                    <span className="text-xs text-coffee-medium bg-white/5 px-1.5 py-0.5 rounded border border-white/5">{position.leverage}x</span>
                                                 </div>
                                             </div>
                                             <div className={`flex items-center gap-1 ${pnlColor}`}>
@@ -201,27 +214,27 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                                 ) : (
                                                     <ArrowDownRight className="w-4 h-4" />
                                                 )}
-                                                <span className="font-semibold">
+                                                <span className="font-bold font-mono text-lg">
                                                     ${position.unrealizedPnl.toFixed(2)}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-2 text-sm">
-                                            <div>
-                                                <span className="text-coffee-light">Size:</span>{' '}
-                                                <span className="font-medium text-coffee-dark">{position.size.toFixed(4)}</span>
+                                        <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-coffee-medium">Size</span>
+                                                <span className="font-mono text-white">{position.size.toFixed(4)}</span>
                                             </div>
-                                            <div>
-                                                <span className="text-coffee-light">Entry:</span>{' '}
-                                                <span className="font-medium text-coffee-dark">${position.entryPrice.toFixed(2)}</span>
+                                            <div className="flex justify-between">
+                                                <span className="text-coffee-medium">Entry</span>
+                                                <span className="font-mono text-white">${position.entryPrice.toFixed(2)}</span>
                                             </div>
-                                            <div>
-                                                <span className="text-coffee-light">Mark:</span>{' '}
-                                                <span className="font-medium text-coffee-dark">${position.markPrice.toFixed(2)}</span>
+                                            <div className="flex justify-between">
+                                                <span className="text-coffee-medium">Mark</span>
+                                                <span className="font-mono text-white">${position.markPrice.toFixed(2)}</span>
                                             </div>
-                                            <div>
-                                                <span className="text-coffee-light">Liq:</span>{' '}
-                                                <span className="font-medium text-bearish">${position.liquidationPrice.toFixed(2)}</span>
+                                            <div className="flex justify-between">
+                                                <span className="text-coffee-medium">Liq</span>
+                                                <span className="font-mono text-bearish">${position.liquidationPrice.toFixed(2)}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -232,15 +245,15 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                 </div>
 
                 {/* Watchlist */}
-                <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-soft-lg">
+                <div className="glass-card p-6">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-2xl font-bold text-coffee-dark">Watchlist</h2>
+                        <h2 className="text-2xl font-bold text-white">Watchlist</h2>
                     </div>
-                    
+
                     {/* Add to watchlist */}
-                    <div className="mb-4">
+                    <div className="mb-4 relative">
                         <select
-                            className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm min-h-[52px] shadow-soft focus:border-primary focus:ring-2 focus:ring-primary/20"
+                            className="w-full bg-bg-tertiary/50 border border-white/5 rounded-xl px-4 py-3 text-sm min-h-[52px] text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 appearance-none cursor-pointer hover:bg-bg-hover transition-colors"
                             value=""
                             onChange={(e) => {
                                 if (e.target.value) {
@@ -249,23 +262,26 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                 }
                             }}
                         >
-                            <option value="">Add token to watchlist...</option>
+                            <option value="">+ Add token to watchlist...</option>
                             {markets
                                 .filter(m => !watchlist.includes(m.name))
                                 .slice(0, 50)
                                 .map(market => (
-                                    <option key={market.name} value={market.name}>
+                                    <option key={market.name} value={market.name} className="bg-bg-secondary text-white">
                                         {market.name} - ${market.price?.toFixed(2) || '0.00'}
                                     </option>
                                 ))}
                         </select>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <Plus className="w-4 h-4 text-coffee-medium" />
+                        </div>
                     </div>
 
                     {/* Watchlist items */}
                     {watchlistMarkets.length === 0 ? (
-                        <div className="text-center py-8 text-coffee-light">
+                        <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
                             <p>No tokens in watchlist</p>
-                            <p className="text-xs mt-2">Add tokens using the dropdown above</p>
+                            <p className="text-xs mt-2 opacity-60">Add tokens using the dropdown above</p>
                         </div>
                     ) : (
                         <div className="space-y-2">
@@ -276,7 +292,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                 return (
                                     <div
                                         key={market.name}
-                                        className="bg-gray-50 border border-gray-200 rounded-2xl p-4 hover:bg-white transition-all cursor-pointer group active:scale-[0.98] shadow-soft hover:shadow-soft-lg"
+                                        className="bg-bg-tertiary/50 border border-white/5 rounded-xl p-4 hover:bg-bg-hover transition-all cursor-pointer group active:scale-[0.98]"
                                         onClick={() => {
                                             setSelectedMarket(market.symbol);
                                             onTokenClick?.(market.symbol);
@@ -284,13 +300,13 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1">
-                                                <div className="font-semibold text-coffee-dark">{market.name}</div>
-                                                <div className="text-sm text-coffee-light">
+                                                <div className="font-bold text-white">{market.name}</div>
+                                                <div className="text-sm text-coffee-medium font-mono">
                                                     ${market.price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                <div className={`text-sm font-semibold ${isPositive ? 'text-bullish' : 'text-bearish'}`}>
+                                                <div className={`text-sm font-bold font-mono px-2 py-1 rounded ${isPositive ? 'bg-bullish/10 text-bullish' : 'bg-bearish/10 text-bearish'}`}>
                                                     {isPositive ? '+' : ''}{priceChangePercent.toFixed(2)}%
                                                 </div>
                                                 <button
@@ -298,9 +314,9 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                                         e.stopPropagation();
                                                         removeFromWatchlist(market.name);
                                                     }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-red-50 rounded-full"
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-white/10 rounded-full"
                                                 >
-                                                    <X className="w-4 h-4 text-coffee-light hover:text-bearish" />
+                                                    <X className="w-4 h-4 text-coffee-medium hover:text-white" />
                                                 </button>
                                             </div>
                                         </div>

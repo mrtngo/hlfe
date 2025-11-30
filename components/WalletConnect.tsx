@@ -56,7 +56,7 @@ export default function WalletConnect() {
                             </div>
                         </div>
                     </div>
-                    
+
                     {account.equity === 0 && (
                         <div className="hidden md:block text-xs text-coffee-light px-2">
                             Check console for details
@@ -82,21 +82,19 @@ export default function WalletConnect() {
             <button
                 onClick={handleConnect}
                 disabled={!ready}
-                className={`btn ${authenticated ? 'btn-secondary' : 'btn-primary'} flex items-center gap-2`}
+                className={`btn ${authenticated ? 'btn-secondary' : 'btn-primary'} flex items-center gap-2 px-4 py-2 min-h-[36px] text-sm font-medium rounded-full transition-all shadow-sm hover:shadow-md`}
             >
                 {!ready ? (
                     <>
-                        <div className="spinner" />
-                        Loading...
+                        <div className="spinner w-4 h-4 border-2" />
                     </>
                 ) : authenticated ? (
                     <>
                         <LogOut className="w-4 h-4" />
-                        {t.wallet.disconnect}
+                        <span className="hidden sm:inline">{t.wallet.disconnect}</span>
                     </>
                 ) : (
                     <>
-                        <Mail className="w-4 h-4" />
                         {t.wallet.connect}
                     </>
                 )}

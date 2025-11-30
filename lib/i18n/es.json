@@ -27,7 +27,7 @@
     "settings": "Configuración"
   },
   "wallet": {
-    "connect": "Conectar Billetera",
+    "connect": "Conectar",
     "disconnect": "Desconectar",
     "connected": "Conectado",
     "balance": "Balance",

@@ -33,10 +33,10 @@ module.exports = {
         "coffee-light": "#808080", // Medium gray
 
         // Dark Theme Background Colors
-        "bg-primary": "#0A0E1A", // Very dark blue-black (main background)
-        "bg-secondary": "#131722", // Dark gray-blue (cards)
-        "bg-tertiary": "#1A1F2E", // Slightly lighter for elevated surfaces
-        "bg-hover": "#1E2332", // Hover states
+        "bg-primary": "#050505", // Almost black
+        "bg-secondary": "#0F1114", // Dark gray-blue
+        "bg-tertiary": "#181A1F", // Slightly lighter
+        "bg-hover": "#22252B", // Hover states
 
         // Legacy support (mapping old colors to new)
         buy: "#00D9FF",

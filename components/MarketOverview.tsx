@@ -70,8 +70,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="font-semibold text-base text-white">{currentMarket.symbol}</div>
-                                <div className="text-xs text-coffee-medium">{currentMarket.name}</div>
+                                <div className="font-semibold text-base text-white">{currentMarket.name}</div>
                             </div>
                             <div className="text-right">
                                 <div className="font-mono font-bold text-base text-white">
@@ -173,7 +172,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2">
-                                                <div className="font-semibold text-sm text-white">{market.symbol}</div>
+                                                <div className="font-semibold text-sm text-white">{market.name}</div>
                                                 {market.onlyIsolated && (
                                                     <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">
                                                         Isolated
@@ -185,7 +184,6 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-xs text-coffee-medium mt-0.5">{market.name}</div>
                                         </div>
                                         <div className="text-right">
                                             <div className="font-mono font-semibold text-sm text-white">

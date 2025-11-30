@@ -5,51 +5,62 @@
 @tailwind utilities;
 
 :root {
-  /* Hyperliquid Dark Theme Color Palette */
-  --color-primary: #00D9FF; /* Teal - Primary action/brand */
+  /* Hyperliquid Dark Theme Color Palette - Refined */
+  --color-primary: #00D9FF;
+  /* Teal - Primary action/brand */
   --color-primary-light: #33E1FF;
   --color-primary-dark: #00B8D9;
-  
-  --color-secondary: #FFD166; /* Solar Yellow */
+
+  --color-secondary: #FFD166;
+  /* Solar Yellow */
   --color-secondary-light: #FFDC7A;
   --color-secondary-dark: #E6BC5C;
-  
+
   /* Trading Colors */
-  --color-bullish: #00D9FF; /* Teal for bullish */
+  --color-bullish: #00D9FF;
+  /* Teal for bullish */
   --color-bullish-light: #33E1FF;
   --color-bullish-dark: #00B8D9;
-  
-  --color-bearish: #FF4444; /* Red for bearish */
+
+  --color-bearish: #FF4444;
+  /* Red for bearish */
   --color-bearish-light: #FF6666;
   --color-bearish-dark: #CC0000;
-  
+
   /* Dark Theme Text Colors */
-  --color-coffee-dark: #FFFFFF; /* White - Main text */
-  --color-coffee-medium: #B0B0B0; /* Light gray */
-  --color-coffee-light: #808080; /* Medium gray */
-  
-  /* Dark Theme Background Colors */
-  --bg-primary: #0A0E1A; /* Very dark blue-black */
-  --bg-secondary: #131722; /* Dark gray-blue for cards */
-  --bg-tertiary: #1A1F2E; /* Slightly lighter for elevated surfaces */
-  --bg-hover: #1E2332; /* Hover states */
-  --bg-glass: rgba(19, 23, 34, 0.9);
-  
+  --color-coffee-dark: #FFFFFF;
+  /* White - Main text */
+  --color-coffee-medium: #A0A0A0;
+  /* Light gray */
+  --color-coffee-light: #666666;
+  /* Medium gray */
+
+  /* Dark Theme Background Colors - Deeper & Richer */
+  --bg-primary: #050505;
+  /* Almost black */
+  --bg-secondary: #0F1114;
+  /* Dark gray-blue for cards */
+  --bg-tertiary: #181A1F;
+  /* Slightly lighter for elevated surfaces */
+  --bg-hover: #22252B;
+  /* Hover states */
+  --bg-glass: rgba(15, 17, 20, 0.85);
+
   /* Shadows - Soft and Diffuse */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.3);
+
   /* Border Radius - Heavy Rounding */
-  --radius-sm: 0.75rem;
-  --radius-md: 1rem;
-  --radius-lg: 1.5rem;
-  --radius-xl: 2rem;
-  --radius-2xl: 2.5rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
   --radius-3xl: 3rem;
   --radius-full: 9999px;
-  
+
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -80,18 +91,40 @@ body {
 }
 
 /* Typography */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.2;
   color: var(--color-coffee-dark);
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.125rem; }
-h6 { font-size: 1rem; }
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+}
+
+h5 {
+  font-size: 1.125rem;
+}
+
+h6 {
+  font-size: 1rem;
+}
 
 .mono {
   font-family: 'Roboto Mono', monospace;
@@ -100,23 +133,24 @@ h6 { font-size: 1rem; }
 /* Glass Morphism Effect - Dark theme */
 .glass {
   background: var(--bg-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .glass-card {
-  background: var(--bg-secondary);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-2xl);
+  background: rgba(24, 26, 31, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
   transition: all var(--transition-base);
 }
 
 .glass-card:hover {
   box-shadow: var(--shadow-lg);
+  border-color: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
 }
 
@@ -334,6 +368,7 @@ h6 { font-size: 1rem; }
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -355,8 +390,13 @@ h6 { font-size: 1rem; }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Utility Classes */
@@ -369,28 +409,38 @@ h6 { font-size: 1rem; }
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
-  h1 { font-size: 1.75rem; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.25rem; }
-  
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
   .btn {
     padding: 0.875rem 1.5rem;
     font-size: 1rem;
     min-height: 52px;
   }
-  
-  .btn-buy, .btn-sell {
+
+  .btn-buy,
+  .btn-sell {
     padding: 1.25rem 2rem;
     font-size: 1.125rem;
     min-height: 64px;
   }
-  
+
   .input {
     min-height: 56px;
     font-size: 1.0625rem;
   }
-  
-  .card, .glass-card {
+
+  .card,
+  .glass-card {
     border-radius: var(--radius-2xl);
   }
 }
@@ -401,8 +451,9 @@ h6 { font-size: 1rem; }
     min-height: 52px;
     min-width: 52px;
   }
-  
-  .btn-buy, .btn-sell {
+
+  .btn-buy,
+  .btn-sell {
     min-height: 64px;
   }
 }

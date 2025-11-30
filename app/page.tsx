@@ -10,6 +10,7 @@ import PositionsPanel from '@/components/PositionsPanel';
 import HomeScreen from '@/components/HomeScreen';
 import TokenDetail from '@/components/TokenDetail';
 import TradingChart from '@/components/TradingChart';
+import MarketSelector from '@/components/MarketSelector';
 import { TrendingUp, Globe, Home as HomeIcon, BarChart3 } from 'lucide-react';
 
 export default function Home() {
@@ -26,84 +27,76 @@ export default function Home() {
     return (
         <div className="min-h-screen flex flex-col bg-bg-primary">
             {/* Header */}
-            <header className="border-b border-white/10 bg-bg-secondary backdrop-blur-md sticky top-0 z-50 shadow-soft">
-                <div className="container mx-auto px-4 py-4 max-w-[1920px]">
+            <header className="border-b border-white/5 bg-bg-secondary/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+                <div className="container mx-auto px-4 py-3 max-w-[1920px]">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
-                        <div className="flex items-center gap-4">
-                            <button className="p-2 hover:bg-bg-hover rounded-lg transition-colors">
-                                <svg className="w-6 h-6 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                                </svg>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => {
+                                    setView('home');
+                                    setSelectedToken(null);
+                                }}
+                                className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/20 hover:opacity-80 transition-opacity cursor-pointer"
+                            >
+                                <span className="text-white font-bold text-lg">H</span>
                             </button>
-                            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">M</span>
-                            </div>
-                            <div>
-                                <h1 className="text-xl font-bold text-white">Hyperliquid</h1>
-                            </div>
+                            <h1 className="text-lg font-bold text-white hidden sm:block tracking-tight">Hyperliquid</h1>
                         </div>
 
                         {/* Right Section */}
                         <div className="flex items-center gap-3">
+                            {/* Home Button - Always visible */}
+                            <button
+                                onClick={() => {
+                                    setView('home');
+                                    setSelectedToken(null);
+                                }}
+                                className="px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 bg-bg-tertiary/50 hover:bg-bg-hover border border-white/5 text-coffee-medium hover:text-white"
+                            >
+                                <HomeIcon className="w-4 h-4" />
+                                <span className="hidden sm:inline">Home</span>
+                            </button>
+
                             {/* View Switcher - Only show on home and trading views */}
                             {view !== 'token' && (
-                                <div className="flex items-center gap-2 bg-bg-tertiary rounded-lg p-1 border border-white/10">
+                                <div className="hidden md:flex items-center gap-1 bg-bg-tertiary/50 rounded-full p-1 border border-white/5">
                                     <button
                                         onClick={() => setView('home')}
-                                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 min-h-[40px] ${
-                                            view === 'home'
-                                                ? 'bg-primary text-white shadow-soft'
+                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${view === 'home'
+                                                ? 'bg-bg-secondary text-white shadow-sm border border-white/5'
                                                 : 'text-coffee-medium hover:text-white'
-                                        }`}
+                                            }`}
                                     >
                                         <HomeIcon className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Home</span>
+                                        <span className="hidden lg:inline">Home</span>
                                     </button>
                                     <button
                                         onClick={() => setView('trading')}
-                                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 min-h-[40px] ${
-                                            view === 'trading'
-                                                ? 'bg-primary text-white shadow-soft'
+                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${view === 'trading'
+                                                ? 'bg-bg-secondary text-white shadow-sm border border-white/5'
                                                 : 'text-coffee-medium hover:text-white'
-                                        }`}
+                                            }`}
                                     >
                                         <BarChart3 className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Trading</span>
+                                        <span className="hidden lg:inline">Trading</span>
                                     </button>
                                 </div>
                             )}
 
-                            {/* Welcome Banner */}
-                            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary/20 rounded-lg border border-primary/30">
-                                <p className="text-sm text-primary font-medium">Welcome to Hyperliquid! Deposit Arbitrum USDC to get started.</p>
-                            </div>
-
-                            {/* Account Info - Use actual wallet address */}
+                            {/* Account Info */}
                             {address && (
-                                <div className="flex items-center gap-2 px-3 py-2 bg-bg-tertiary rounded-lg hover:bg-bg-hover transition-colors cursor-pointer">
-                                    <span className="text-sm text-coffee-medium font-mono">{formatAddress(address)}</span>
-                                    <svg className="w-4 h-4 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-bg-tertiary/50 rounded-full border border-white/5 hover:bg-bg-hover transition-colors cursor-pointer">
+                                    <span className="text-xs text-coffee-medium font-mono">{formatAddress(address)}</span>
                                 </div>
                             )}
 
                             {/* Language Switcher */}
                             <button
                                 onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-                                className="p-2 hover:bg-bg-hover rounded-lg transition-colors"
-                                title={t.settings.language}
+                                className="p-2 hover:bg-bg-hover rounded-full transition-colors text-coffee-medium hover:text-white"
                             >
-                                <Globe className="w-5 h-5 text-coffee-medium" />
-                            </button>
-
-                            {/* Settings */}
-                            <button className="p-2 hover:bg-bg-hover rounded-lg transition-colors">
-                                <svg className="w-5 h-5 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
+                                <Globe className="w-5 h-5" />
                             </button>
 
                             <WalletConnect />
@@ -116,7 +109,7 @@ export default function Home() {
             <main className="flex-1 container mx-auto px-4 py-6 max-w-[1920px]">
                 {view === 'home' ? (
                     <div className="h-[calc(100vh-140px)] overflow-y-auto">
-                        <HomeScreen 
+                        <HomeScreen
                             onTokenClick={(symbol) => {
                                 setSelectedToken(symbol);
                                 setSelectedMarket(symbol);
@@ -136,41 +129,9 @@ export default function Home() {
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4 h-[calc(100vh-140px)]">
-                        {/* Market Info Section */}
-                        <div className="flex items-center justify-between px-4 py-3 bg-bg-secondary border-b border-white/10">
-                            <div className="flex items-center gap-3">
-                                <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
-                                    <span className="text-white text-xs font-bold">M</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-lg font-semibold text-white">{selectedMarket?.replace('-PERP', '') || 'BTC'}-USDC</span>
-                                    <svg className="w-4 h-4 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                    <div className="text-xl font-bold text-white">0.032544</div>
-                                    <div className="text-sm text-bearish">-0.001765 / -5.14%</div>
-                                </div>
-                                <svg className="w-5 h-5 text-coffee-medium" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </div>
-                        </div>
-
-                        {/* Navigation Tabs */}
-                        <div className="flex items-center gap-1 px-4 border-b border-white/10">
-                            <button className="px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary">
-                                Chart
-                            </button>
-                            <button className="px-4 py-2 text-sm font-medium text-coffee-medium hover:text-white transition-colors">
-                                Order Book
-                            </button>
-                            <button className="px-4 py-2 text-sm font-medium text-coffee-medium hover:text-white transition-colors">
-                                Trades
-                            </button>
+                        {/* Market Selector */}
+                        <div className="px-4 pt-4">
+                            <MarketSelector />
                         </div>
 
                         {/* Chart Section - Full Width */}
@@ -182,7 +143,7 @@ export default function Home() {
                         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
                             {/* Left Sidebar - Markets (Desktop: 3 columns, Large: 3 columns) */}
                             <div className="xl:col-span-3 2xl:col-span-3 h-full overflow-hidden">
-                                <MarketOverview 
+                                <MarketOverview
                                     onTokenClick={(symbol) => {
                                         setSelectedToken(symbol);
                                         setSelectedMarket(symbol);

@@ -5,7 +5,6 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { TrendingUp, TrendingDown, AlertCircle, Info, Plus } from 'lucide-react';
 
-type OrderType = 'market' | 'limit' | 'twap';
 type OrderSide = 'long' | 'short';
 type MarginMode = 'isolated' | 'cross';
 
@@ -14,9 +13,7 @@ export default function OrderPanel() {
     const { connected, getMarket, selectedMarket, placeOrder, account } = useHyperliquid();
 
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
-    const [orderType, setOrderType] = useState<OrderType>('market');
     const [size, setSize] = useState<string>('');
-    const [price, setPrice] = useState<string>('');
     const [leverage, setLeverage] = useState<number>(1);
     const [advanced, setAdvanced] = useState<boolean>(false);
     const [marginMode, setMarginMode] = useState<MarginMode>('isolated');
@@ -27,7 +24,7 @@ export default function OrderPanel() {
     const market = getMarket(selectedMarket);
     const currentPrice = market?.price || 0;
     const maxLeverage = market?.maxLeverage || 20; // Default to 20 if not set
-    const orderPrice = orderType === 'market' ? currentPrice : (parseFloat(price) || currentPrice);
+    const orderPrice = currentPrice;
     const orderSize = parseFloat(size) || 0;
     const notionalValue = orderSize * orderPrice;
     const requiredMargin = notionalValue / leverage;
@@ -60,10 +57,6 @@ export default function OrderPanel() {
             return;
         }
 
-        if (orderType === 'limit' && orderPrice <= 0) {
-            setError(t.order.invalidPrice);
-            return;
-        }
 
         if (totalRequired > account.availableMargin) {
             setError(`${t.errors.insufficientFunds}. Required: ${formatCurrency(totalRequired)}, Available: ${formatCurrency(account.availableMargin)}`);
@@ -75,14 +68,13 @@ export default function OrderPanel() {
             await placeOrder(
                 selectedMarket,
                 apiSide,
-                orderType === 'twap' ? 'market' : orderType,
+                'market',
                 orderSize,
-                orderType === 'limit' ? orderPrice : undefined,
+                undefined,
                 leverage
             );
             setSuccess(t.order.orderPlaced);
             setSize('');
-            setPrice('');
         } catch (err) {
             setError(err instanceof Error ? err.message : t.errors.unknown);
         } finally {
@@ -142,39 +134,6 @@ export default function OrderPanel() {
                     </button>
                 </div>
 
-                {/* Order Type */}
-                <div>
-                    <div className="grid grid-cols-3 gap-2">
-                        {(['market', 'limit', 'twap'] as OrderType[]).map((type) => (
-                        <button
-                                key={type}
-                                onClick={() => setOrderType(type)}
-                                className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all min-h-[48px] capitalize ${
-                                    orderType === type
-                                        ? 'bg-primary text-white border-2 border-primary shadow-soft'
-                                        : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
-                                }`}
-                            >
-                                {type}
-                        </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Price (for limit orders) */}
-                {orderType === 'limit' && (
-                    <div>
-                        <label className="text-sm text-coffee-medium mb-2 block font-semibold">{t.order.price}</label>
-                        <input
-                            type="number"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            placeholder={formatCurrency(currentPrice)}
-                            className="input bg-bg-tertiary border-white/10 rounded-lg"
-                            step="0.01"
-                        />
-                    </div>
-                )}
 
                 {/* Amount */}
                 <div>
@@ -188,18 +147,32 @@ export default function OrderPanel() {
                         step="0.001"
                     />
                     <div className="mt-3">
-                        <input
-                            type="range"
-                            min="0"
-                            max={account.availableMargin > 0 ? (account.availableMargin * leverage / currentPrice).toFixed(2) : "100"}
-                            value={orderSize || 0}
-                            onChange={(e) => setSize(e.target.value)}
-                            className="w-full h-2 bg-bg-tertiary rounded-full appearance-none cursor-pointer accent-primary"
-                        />
-                        <div className="flex justify-between text-xs text-coffee-medium mt-1">
-                            <span>$0.00</span>
-                            <span>${((account.availableMargin * leverage / currentPrice) || 0.01).toFixed(2)}</span>
-                        </div>
+                        {(() => {
+                            // Calculate max amount: available balance * leverage (dollar amount)
+                            const maxAmount = account.availableMargin * leverage;
+                            
+                            return (
+                                <>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max={maxAmount > 0 ? maxAmount.toFixed(2) : "0"}
+                                        value={notionalValue || 0}
+                                        onChange={(e) => {
+                                            const dollarAmount = parseFloat(e.target.value) || 0;
+                                            // Convert dollar amount to size (units)
+                                            const newSize = currentPrice > 0 ? (dollarAmount / currentPrice) : 0;
+                                            setSize(newSize.toFixed(6));
+                                        }}
+                                        className="w-full h-2 bg-bg-tertiary rounded-full appearance-none cursor-pointer accent-primary"
+                                    />
+                                    <div className="flex justify-between text-xs text-coffee-medium mt-1">
+                                        <span>$0.00</span>
+                                        <span>${maxAmount.toFixed(2)}</span>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
                 </div>
 

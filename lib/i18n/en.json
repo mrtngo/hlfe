@@ -27,7 +27,7 @@
         "settings": "Settings"
     },
     "wallet": {
-        "connect": "Connect Wallet",
+        "connect": "Connect",
         "disconnect": "Disconnect",
         "connected": "Connected",
         "balance": "Balance",
