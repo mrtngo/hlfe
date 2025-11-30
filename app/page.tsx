@@ -11,7 +11,7 @@ import HomeScreen from '@/components/HomeScreen';
 import TokenDetail from '@/components/TokenDetail';
 import TradingChart from '@/components/TradingChart';
 import MarketSelector from '@/components/MarketSelector';
-import { TrendingUp, Globe, Home as HomeIcon, BarChart3 } from 'lucide-react';
+import { TrendingUp, Home as HomeIcon, BarChart3 } from 'lucide-react';
 
 export default function Home() {
     const { t, language, setLanguage } = useLanguage();
@@ -90,14 +90,6 @@ export default function Home() {
                                     <span className="text-xs text-coffee-medium font-mono">{formatAddress(address)}</span>
                                 </div>
                             )}
-
-                            {/* Language Switcher */}
-                            <button
-                                onClick={() => setLanguage(language === 'es' ? 'en' : 'es')}
-                                className="p-2 hover:bg-bg-hover rounded-full transition-colors text-coffee-medium hover:text-white"
-                            >
-                                <Globe className="w-5 h-5" />
-                            </button>
 
                             <WalletConnect />
                         </div>

@@ -3,6 +3,7 @@
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import TradingChart from '@/components/TradingChart';
+import TokenLogo from '@/components/TokenLogo';
 import { ArrowLeft, TrendingUp, TrendingDown, Info, Star, Bookmark, Search } from 'lucide-react';
 
 interface TokenDetailProps {
@@ -61,9 +62,7 @@ export default function TokenDetail({ symbol, onBack, onTrade }: TokenDetailProp
             {/* Token Info */}
             <div className="px-4 pt-4 pb-6">
                 <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-xs font-bold text-primary">{market.name.charAt(0)}</span>
-                    </div>
+                    <TokenLogo symbol={market.symbol} size={32} />
                     <span className="text-sm text-coffee-light">{market.name}</span>
                 </div>
                 <h1 className="text-3xl font-bold mb-2 text-coffee-dark">{market.name}</h1>

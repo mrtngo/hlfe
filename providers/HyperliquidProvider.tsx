@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode, startTransition } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useMarketData, subscribeToMarketPrices, Market } from '@/lib/hyperliquid/market-data';
 import { createHyperliquidClient, API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
@@ -105,12 +105,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
     // Use real market data - This is now the ONLY place calling useMarketData
     const { markets: realMarkets, loading: marketsLoading } = useMarketData();
-    const [markets, setMarkets] = useState<Market[]>(realMarkets);
+    const [markets, setMarkets] = useState<Market[]>([]);
 
     // Update markets from real data
+    // Use startTransition to defer state updates and avoid hydration issues
     useEffect(() => {
         if (realMarkets.length > 0) {
+            startTransition(() => {
             setMarkets(realMarkets);
+            });
         }
     }, [realMarkets]);
 
@@ -812,6 +815,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             if (finalPx <= 0) {
                 throw new Error('Invalid price: Price must be greater than 0');
             }
+
+            // Round price to valid tick size (typically 0.01 for most assets)
+            // Round to 2 decimal places to ensure divisibility by tick size
+            // This is necessary because slippage calculations can create prices with too many decimals
+            finalPx = Math.round(finalPx * 100) / 100;
 
             // Round size based on asset's szDecimals (HIP-3 markets have specific precision requirements)
             // Note: We don't manually round the price - let the SDK's orderToWire handle it

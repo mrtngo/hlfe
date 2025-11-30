@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Search, ChevronDown, TrendingUp, TrendingDown, X } from 'lucide-react';
+import TokenLogo from '@/components/TokenLogo';
 
 export default function MarketSelector() {
     const { markets, selectedMarket, setSelectedMarket } = useHyperliquid();
@@ -56,11 +57,7 @@ export default function MarketSelector() {
                 className="flex items-center justify-between w-full px-4 py-3 bg-bg-secondary hover:bg-bg-hover border border-white/10 rounded-lg transition-all group"
             >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs font-bold">
-                            {currentMarket.name.charAt(0)}
-                        </span>
-                    </div>
+                    <TokenLogo symbol={currentMarket.symbol} size={32} />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                             <span className="text-base font-semibold text-white">
@@ -133,11 +130,7 @@ export default function MarketSelector() {
                                             }`}
                                         >
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                <div className="w-8 h-8 rounded-lg bg-bg-tertiary flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-white text-xs font-bold">
-                                                        {market.name.charAt(0)}
-                                                    </span>
-                                                </div>
+                                                <TokenLogo symbol={market.symbol} size={32} />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-sm font-semibold text-white">

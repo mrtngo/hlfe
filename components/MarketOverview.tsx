@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { Search, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
+import TokenLogo from '@/components/TokenLogo';
 
 interface MarketOverviewProps {
     onTokenClick?: (symbol: string) => void;
@@ -170,7 +171,8 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                     style={{ minWidth: 0 }}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <div className="flex-1">
+                                        <div className="flex-1 flex items-center gap-2">
+                                            <TokenLogo symbol={market.symbol} size={24} />
                                             <div className="flex items-center gap-2">
                                                 <div className="font-semibold text-sm text-white">{market.name}</div>
                                                 {market.onlyIsolated && (

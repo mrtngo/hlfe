@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { TrendingUp, TrendingDown, Plus, X, ArrowUpRight, ArrowDownRight, Copy, Check, Wallet, ExternalLink } from 'lucide-react';
+import { TrendingUp, TrendingDown, Plus, X, ArrowUpRight, ArrowDownRight, Copy, Check, Wallet } from 'lucide-react';
 
 const WATCHLIST_STORAGE_KEY = 'hyperliquid_watchlist';
 
@@ -56,11 +56,6 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
         }
     };
 
-    const formatAddress = (addr: string) => {
-        if (!addr) return '';
-        return `${addr.slice(0, 8)}...${addr.slice(-6)}`;
-    };
-
     const watchlistMarkets = markets.filter(m => watchlist.includes(m.name));
     const totalUnrealizedPnl = positions.reduce((sum, pos) => sum + pos.unrealizedPnl, 0);
     const portfolioValue = account.equity || account.balance;
@@ -74,21 +69,12 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
     }
 
     return (
-        <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto">
+        <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto px-8">
             {/* Wallet Address Section */}
             {address && (
                 <div className="glass-card p-6 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
 
-                    <div className="flex items-center gap-3 mb-4 relative z-10">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
-                            <Wallet className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-white">Hyperliquid Wallet</h2>
-                            <p className="text-xs text-coffee-medium">Arbitrum Sepolia Network</p>
-                        </div>
-                    </div>
 
                     <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 relative z-10">
                         <div className="flex-1 min-w-0 w-full">
@@ -114,40 +100,17 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                             )}
                         </button>
                     </div>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-coffee-medium relative z-10">
-                        <a
-                            href={`https://sepolia.arbiscan.io/address/${address}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 hover:text-primary transition-colors px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5"
-                        >
-                            <ExternalLink className="w-3 h-3" />
-                            View on Arbiscan
-                        </a>
-                        <a
-                            href="https://app.hyperliquid-testnet.xyz/"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 hover:text-primary transition-colors px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/5"
-                        >
-                            <ExternalLink className="w-3 h-3" />
-                            Hyperliquid Testnet
-                        </a>
-                    </div>
                 </div>
             )}
 
             {/* Portfolio Overview */}
             <div className="glass-card p-6">
-                <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
+                <h2 className="text-2xl font-bold mb-6 text-white">
                     Portfolio
-                    <span className="text-xs font-normal text-coffee-medium bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Overview</span>
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-5 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
-                        <div className="text-sm text-coffee-medium mb-1">Total Value</div>
                         <div className="text-3xl font-bold text-white tracking-tight">
                             ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
