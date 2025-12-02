@@ -12,13 +12,14 @@ export interface CandleData {
     volume: number;
 }
 
-export type Timeframe = '1m' | '5m' | '15m' | '1h' | '4h' | '1d';
+export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
 
 // Map our timeframe strings to Hyperliquid interval format
 const TIMEFRAME_MAP: Record<Timeframe, string> = {
     '1m': '1m',
     '5m': '5m',
     '15m': '15m',
+    '30m': '30m',
     '1h': '1h',
     '4h': '4h',
     '1d': '1d',
@@ -28,7 +29,8 @@ const TIMEFRAME_MAP: Record<Timeframe, string> = {
 export function useCandleData(
     symbol: string | null,
     timeframe: Timeframe = '1h',
-    isStock: boolean = false
+    isStock: boolean = false,
+    dateRangeDays: number = 7 // Number of days of historical data to fetch
 ) {
     const [candles, setCandles] = useState<CandleData[]>([]);
     const [loading, setLoading] = useState(false);
@@ -45,9 +47,11 @@ export function useCandleData(
         // For Trade.xyz stocks, use xyz: prefix
         const restApiCoin = isStock ? `xyz:${baseCoin}` : baseCoin;
         
-        // Calculate time range - last 7 days
+        // Calculate time range based on dateRangeDays parameter
         const endTime = Date.now(); // milliseconds
-        const startTime = endTime - (7 * 24 * 60 * 60 * 1000); // Last 7 days in milliseconds
+        const startTime = endTime - (dateRangeDays * 24 * 60 * 60 * 1000); // Historical data range
+        
+        console.log(`📅 Fetching ${dateRangeDays} days of historical data (${new Date(startTime).toLocaleDateString()} to ${new Date(endTime).toLocaleDateString()})`);
         
         const tryFetch = async (coinName: string) => {
             const payload = {
@@ -305,7 +309,7 @@ export function useCandleData(
                 }, 300);
             }
         };
-    }, [symbol, timeframe, isStock]);
+    }, [symbol, timeframe, isStock, dateRangeDays]);
 
     // Debug: log candles state
     useEffect(() => {

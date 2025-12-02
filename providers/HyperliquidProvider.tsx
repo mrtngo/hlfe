@@ -706,7 +706,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         price?: number,
         leverage?: number,
         reduceOnly?: boolean
-    ) => {
+    ): Promise<{
+        filled: boolean;
+        filledSize: number;
+        filledPrice: number;
+        side: 'buy' | 'sell';
+        symbol: string;
+        isClosing: boolean;
+        pnl?: number;
+    }> => {
         if (!isConnected || !address) {
             throw new Error(t.errors.walletNotConnected);
         }
@@ -733,16 +741,17 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             let meta: any;
             let assetIndex: number;
             let assetName: string;
+            let referencePrice: number | null = null; // Store reference price for Trade.xyz assets
             const baseCoin = symbol.split('-')[0]; // e.g., "TSLA" from "TSLA-USD"
 
             if (isTradeXyzAsset) {
-                // For Trade.xyz assets, fetch meta from DEX endpoint
+                // For Trade.xyz assets, fetch meta and asset contexts from DEX endpoint
                 console.log('📊 Trade.xyz asset detected, fetching DEX meta...');
                 const dexMetaResponse = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        type: 'meta',
+                        type: 'metaAndAssetCtxs',
                         dex: 'xyz'
                     })
                 });
@@ -751,7 +760,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     throw new Error(`Failed to fetch Trade.xyz meta: ${dexMetaResponse.status}`);
                 }
 
-                meta = await dexMetaResponse.json();
+                const dexData = await dexMetaResponse.json();
+                // Response is [Meta, AssetCtx[]]
+                meta = dexData[0];
+                const assetCtxs = dexData[1];
                 
                 // Trade.xyz assets have "xyz:" prefix in the meta
                 assetName = `xyz:${baseCoin}`;
@@ -763,6 +775,20 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 
                 if (assetIndex === -1) {
                     throw new Error(`Trade.xyz asset index not found for ${assetName}. Available assets: ${meta.universe?.map((u: any) => u.name).slice(0, 10).join(', ') || 'none'}...`);
+                }
+                
+                // Get current reference price from asset context for accurate market orders
+                const assetCtx = assetCtxs?.[assetIndex];
+                if (assetCtx?.markPx) {
+                    referencePrice = parseFloat(assetCtx.markPx);
+                    console.log('📊 Trade.xyz reference price (markPx):', referencePrice);
+                    console.log('📊 Market price before update:', market.price);
+                    // Update market price with reference price for more accurate orders
+                    if (referencePrice > 0) {
+                        market.price = referencePrice;
+                    }
+                } else {
+                    console.warn('⚠️ No markPx found in asset context for Trade.xyz asset');
                 }
             } else {
                 // For core assets, use standard meta
@@ -789,24 +815,53 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const isBuy = side === 'buy';
             
             // For market orders with IOC, we need an aggressive price to ensure immediate execution
-            // For sells: use a price slightly below market (more aggressive for selling)
-            // For buys: use a price slightly above market (more aggressive for buying)
+            // For Trade.xyz assets, use reference price directly or with minimal slippage to stay within 80% limit
             // For limit orders, use the provided price
             let finalPx: number;
             if (type === 'market') {
-                const currentPrice = market.price || price || 0;
+                // For Trade.xyz assets, prefer reference price if available
+                const currentPrice = (isTradeXyzAsset && referencePrice) ? referencePrice : (market.price || price || 0);
+                
                 if (currentPrice <= 0) {
                     throw new Error('Invalid price: Market price must be greater than 0');
                 }
                 
-                // Apply small slippage to ensure immediate execution with IOC
-                // For sells (closing longs): price slightly below market (0.5% below)
-                // For buys (closing shorts): price slightly above market (0.5% above)
-                // This ensures the order can match immediately while still being reasonable
-                if (isBuy) {
-                    finalPx = currentPrice * 1.005; // 0.5% above for buys
+                console.log('💰 Price calculation:', {
+                    isTradeXyzAsset,
+                    referencePrice,
+                    marketPrice: market.price,
+                    currentPrice,
+                    isBuy
+                });
+                
+                if (isTradeXyzAsset && referencePrice) {
+                    // For Trade.xyz assets, use reference price with minimal slippage (0.01%) or directly
+                    // The exchange requires price to be within 80% of reference, so we use reference price directly
+                    // with a tiny adjustment to ensure execution
+                    const minimalSlippage = 0.0001; // 0.01% - very minimal
+                    if (isBuy) {
+                        finalPx = referencePrice * (1 + minimalSlippage);
+                    } else {
+                        finalPx = referencePrice * (1 - minimalSlippage);
+                    }
+                    console.log('💰 Using Trade.xyz reference price with minimal slippage:', {
+                        referencePrice,
+                        finalPx,
+                        slippage: minimalSlippage * 100 + '%'
+                    });
                 } else {
-                    finalPx = currentPrice * 0.995; // 0.5% below for sells
+                    // For regular assets, use standard slippage
+                    const slippagePercent = 0.005; // 0.5% for regular assets
+                    if (isBuy) {
+                        finalPx = currentPrice * (1 + slippagePercent);
+                    } else {
+                        finalPx = currentPrice * (1 - slippagePercent);
+                    }
+                    console.log('💰 Using standard slippage:', {
+                        currentPrice,
+                        finalPx,
+                        slippage: slippagePercent * 100 + '%'
+                    });
                 }
             } else {
                 finalPx = price || market.price;
@@ -843,8 +898,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             
             // orderToWire expects numbers, but we need to ensure they're properly formatted
             // The SDK will format them correctly internally using floatToWire
-            // For Trade.xyz assets, use the full name with prefix; for core assets, use the standard name
-            const orderCoin = isTradeXyzAsset ? assetName : assetName; // assetName already has the correct format
+            // For Trade.xyz assets, use the full asset name (xyz:TSLA) to match the DEX meta universe
+            // The wire format only contains the asset index, but orderToWire may validate coin name
+            const orderCoin = assetName; // Use assetName which matches the meta universe (xyz:TSLA for Trade.xyz)
             const orderRequest = {
                 coin: orderCoin,
                 is_buy: isBuy,
@@ -857,6 +913,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             };
             
             // orderToWire formats the price and size correctly according to Hyperliquid requirements
+            console.log('📝 Order Request before orderToWire:', JSON.stringify(orderRequest, null, 2));
+            console.log('📝 Asset Index:', assetIndex, 'Asset Name:', assetName);
             const wireOrder = orderToWire(orderRequest, assetIndex);
             
             console.log('📝 Market szDecimals:', market.szDecimals);
@@ -936,17 +994,17 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             
             console.log('📤 Sending order to API:', JSON.stringify(payload, null, 2));
 
-            // For Trade.xyz assets, we need to include dex parameter in the exchange request
-            const exchangePayload = isTradeXyzAsset 
-                ? { ...payload, dex: 'xyz' }
-                : payload;
+            // For Trade.xyz assets, include dex parameter as query string
+            const exchangeUrl = isTradeXyzAsset 
+                ? `${API_URL}/exchange?dex=xyz`
+                : `${API_URL}/exchange`;
 
-            const response = await fetch(`${API_URL}/exchange`, {
+            const response = await fetch(exchangeUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(exchangePayload),
+                body: JSON.stringify(payload),
             });
 
             console.log('📥 API Response status:', response.status, response.statusText);
@@ -980,6 +1038,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 console.log('✅ Order successful:', JSON.stringify(result.response, null, 2));
                 
                 // Check if there are any errors in the order statuses
+                let orderFilled = false;
+                let filledSize = 0;
+                let filledPrice = finalPx;
+                
+                // Initialize PnL tracking variables (will be calculated if closing position)
+                let realizedPnl: number | undefined = undefined;
+                let isClosingPosition = false;
+                
                 if (result.response?.type === 'order' && result.response?.data?.statuses) {
                     const statuses = result.response.data.statuses;
                     for (const status of statuses) {
@@ -992,12 +1058,195 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         }
                         if (status.filled) {
                             console.log('✅ Order filled:', status.filled);
+                            orderFilled = true;
+                            // Extract filled size and price from status if available
+                            if (status.filled.totalSz) {
+                                filledSize = parseFloat(status.filled.totalSz);
+                            }
+                            if (status.filled.avgPx) {
+                                filledPrice = parseFloat(status.filled.avgPx);
+                            }
                         }
                     }
                 }
+
+                // Optimistic update: Immediately update account and positions
+                // This provides instant feedback before WebSocket confirms
+                if (orderFilled || type === 'market') {
+                    // For market orders, assume immediate fill
+                    if (!orderFilled) {
+                        filledSize = roundedSize;
+                        filledPrice = finalPx;
+                    }
+
+                    const orderValue = filledSize * filledPrice;
+                    const marginUsed = orderValue / (leverage || market.maxLeverage || 1);
+                    
+                    // Update account balance optimistically
+                    setAccount(prev => {
+                        const newAvailableMargin = Math.max(0, prev.availableMargin - marginUsed);
+                        const newUsedMargin = prev.usedMargin + marginUsed;
+                        const newEquity = prev.equity; // Equity stays same, just margin allocation changes
+                        
+                        return {
+                            ...prev,
+                            availableMargin: newAvailableMargin,
+                            usedMargin: newUsedMargin,
+                            equity: newEquity,
+                        };
+                    });
+
+                    // Calculate PnL if closing position (before updating positions)
+                    const existingPositionBeforeUpdate = positions.find(p => p.symbol === symbol);
+                    isClosingPosition = existingPositionBeforeUpdate ? (
+                        reduceOnly || 
+                        (existingPositionBeforeUpdate.side === 'long' && side === 'sell') ||
+                        (existingPositionBeforeUpdate.side === 'short' && side === 'buy')
+                    ) : false;
+
+                    if (isClosingPosition && existingPositionBeforeUpdate) {
+                        // Calculate realized PnL
+                        const entryPrice = existingPositionBeforeUpdate.entryPrice;
+                        const closePrice = filledPrice;
+                        const closedSize = Math.min(filledSize, existingPositionBeforeUpdate.size);
+                        
+                        if (existingPositionBeforeUpdate.side === 'long') {
+                            // Long position: profit = (closePrice - entryPrice) * size
+                            realizedPnl = (closePrice - entryPrice) * closedSize;
+                        } else {
+                            // Short position: profit = (entryPrice - closePrice) * size
+                            realizedPnl = (entryPrice - closePrice) * closedSize;
+                        }
+                    }
+
+                    // Update or create position optimistically
+                    setPositions(prev => {
+                        const existingPosition = prev.find(p => p.symbol === symbol);
+                        const cleanCoin = baseCoin; // Already extracted from symbol
+                        
+                        if (existingPosition) {
+                            // Update existing position
+                            if (reduceOnly) {
+                                // Reducing position
+                                const newSize = Math.max(0, existingPosition.size - filledSize);
+                                if (newSize === 0) {
+                                    // Position closed
+                                    return prev.filter(p => p.symbol !== symbol);
+                                }
+                                return prev.map(p => 
+                                    p.symbol === symbol 
+                                        ? {
+                                            ...p,
+                                            size: newSize,
+                                            // Recalculate PnL with new size
+                                            unrealizedPnl: p.side === 'long'
+                                                ? (p.markPrice - p.entryPrice) * newSize
+                                                : (p.entryPrice - p.markPrice) * newSize,
+                                        }
+                                        : p
+                                );
+                            } else {
+                                // Adding to position (same side)
+                                if (existingPosition.side === (isBuy ? 'long' : 'short')) {
+                                    // Same direction - average entry price
+                                    const totalValue = (existingPosition.size * existingPosition.entryPrice) + (filledSize * filledPrice);
+                                    const totalSize = existingPosition.size + filledSize;
+                                    const avgEntryPrice = totalValue / totalSize;
+                                    
+                                    return prev.map(p =>
+                                        p.symbol === symbol
+                                            ? {
+                                                ...p,
+                                                size: totalSize,
+                                                entryPrice: avgEntryPrice,
+                                                // Recalculate PnL
+                                                unrealizedPnl: p.side === 'long'
+                                                    ? (p.markPrice - avgEntryPrice) * totalSize
+                                                    : (avgEntryPrice - p.markPrice) * totalSize,
+                                            }
+                                            : p
+                                    );
+                                } else {
+                                    // Opposite direction - reduce position
+                                    const sizeDiff = existingPosition.size - filledSize;
+                                    if (sizeDiff <= 0) {
+                                        // Position flipped or closed
+                                        if (sizeDiff === 0) {
+                                            return prev.filter(p => p.symbol !== symbol);
+                                        } else {
+                                            // Flipped to opposite side
+                                            return prev.map(p =>
+                                                p.symbol === symbol
+                                                    ? {
+                                                        ...p,
+                                                        side: isBuy ? 'long' : 'short',
+                                                        size: Math.abs(sizeDiff),
+                                                        entryPrice: filledPrice,
+                                                        markPrice: market.price || filledPrice,
+                                                        unrealizedPnl: 0,
+                                                        unrealizedPnlPercent: 0,
+                                                    }
+                                                    : p
+                                            );
+                                        }
+                                    } else {
+                                        // Just reduced
+                                        return prev.map(p =>
+                                            p.symbol === symbol
+                                                ? {
+                                                    ...p,
+                                                    size: sizeDiff,
+                                                    unrealizedPnl: p.side === 'long'
+                                                        ? (p.markPrice - p.entryPrice) * sizeDiff
+                                                        : (p.entryPrice - p.markPrice) * sizeDiff,
+                                                }
+                                                : p
+                                        );
+                                    }
+                                }
+                            }
+                        } else {
+                            // Create new position
+                            if (!reduceOnly) {
+                                const newPosition: Position = {
+                                    symbol,
+                                    name: cleanCoin,
+                                    side: isBuy ? 'long' : 'short',
+                                    size: filledSize,
+                                    entryPrice: filledPrice,
+                                    markPrice: market.price || filledPrice,
+                                    leverage: leverage || market.maxLeverage || 1,
+                                    unrealizedPnl: 0,
+                                    unrealizedPnlPercent: 0,
+                                };
+                                return [...prev, newPosition];
+                            }
+                        }
+                        return prev;
+                    });
+                }
+
+                // Return order details for notification
+                return {
+                    filled: orderFilled || type === 'market',
+                    filledSize: filledSize || roundedSize,
+                    filledPrice: filledPrice || finalPx,
+                    side,
+                    symbol,
+                    isClosing: isClosingPosition || false,
+                    pnl: realizedPnl,
+                };
             }
 
-            return result;
+            // If order didn't fill immediately, return pending status
+            return {
+                filled: false,
+                filledSize: 0,
+                filledPrice: finalPx,
+                side,
+                symbol,
+                isClosing: false,
+            };
 
         } catch (error) {
             console.error('Order placement failed:', error);

@@ -8,16 +8,16 @@ import MarketOverview from '@/components/MarketOverview';
 import OrderPanel from '@/components/OrderPanel';
 import PositionsPanel from '@/components/PositionsPanel';
 import HomeScreen from '@/components/HomeScreen';
-import TokenDetail from '@/components/TokenDetail';
 import TradingChart from '@/components/TradingChart';
 import MarketSelector from '@/components/MarketSelector';
-import { TrendingUp, Home as HomeIcon, BarChart3 } from 'lucide-react';
+import OrderHistory from '@/components/OrderHistory';
+import Settings from '@/components/Settings';
+import { TrendingUp, Home as HomeIcon, BarChart3, Zap, Menu, History, Settings as SettingsIcon } from 'lucide-react';
 
 export default function Home() {
     const { t, language, setLanguage } = useLanguage();
     const { selectedMarket, setSelectedMarket, address } = useHyperliquid();
-    const [view, setView] = useState<'home' | 'token' | 'trading'>('home');
-    const [selectedToken, setSelectedToken] = useState<string | null>(null);
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'settings'>('home');
 
     const formatAddress = (addr: string | null) => {
         if (!addr) return null;
@@ -28,20 +28,19 @@ export default function Home() {
         <div className="min-h-screen flex flex-col bg-bg-primary">
             {/* Header */}
             <header className="border-b border-white/5 bg-bg-secondary/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-                <div className="container mx-auto px-4 py-3 max-w-[1920px]">
+                <div className="container px-4 py-3 max-w-[1920px] w-[90%] mx-auto">
                     <div className="flex items-center justify-between">
-                        {/* Logo */}
+                        {/* Logo - Rayo Lightning Bolt */}
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => {
                                     setView('home');
-                                    setSelectedToken(null);
                                 }}
-                                className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-lg shadow-primary/20 hover:opacity-80 transition-opacity cursor-pointer"
+                                className="w-8 h-8 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 hover:opacity-80 transition-opacity cursor-pointer"
                             >
-                                <span className="text-white font-bold text-lg">H</span>
+                                <Zap className="text-primary-foreground h-5 w-5" />
                             </button>
-                            <h1 className="text-lg font-bold text-white hidden sm:block tracking-tight">Hyperliquid</h1>
+                            <h1 className="text-lg font-heading font-bold text-white hidden sm:block tracking-tight">Rayo</h1>
                         </div>
 
                         {/* Right Section */}
@@ -50,9 +49,8 @@ export default function Home() {
                             <button
                                 onClick={() => {
                                     setView('home');
-                                    setSelectedToken(null);
                                 }}
-                                className="px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 bg-bg-tertiary/50 hover:bg-bg-hover border border-white/5 text-coffee-medium hover:text-white"
+                                className="px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 bg-primary text-primary-foreground hover:opacity-90"
                             >
                                 <HomeIcon className="w-4 h-4" />
                                 <span className="hidden sm:inline">Home</span>
@@ -63,9 +61,9 @@ export default function Home() {
                                 <div className="hidden md:flex items-center gap-1 bg-bg-tertiary/50 rounded-full p-1 border border-white/5">
                                     <button
                                         onClick={() => setView('home')}
-                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${view === 'home'
-                                                ? 'bg-bg-secondary text-white shadow-sm border border-white/5'
-                                                : 'text-coffee-medium hover:text-white'
+                                        className={`px-4 py-1.5 rounded-2xl text-sm font-medium transition-all flex items-center gap-2 ${view === 'home'
+                                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                                : 'text-coffee-medium hover:text-primary'
                                             }`}
                                     >
                                         <HomeIcon className="w-4 h-4" />
@@ -73,9 +71,9 @@ export default function Home() {
                                     </button>
                                     <button
                                         onClick={() => setView('trading')}
-                                        className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${view === 'trading'
-                                                ? 'bg-bg-secondary text-white shadow-sm border border-white/5'
-                                                : 'text-coffee-medium hover:text-white'
+                                        className={`px-4 py-1.5 rounded-2xl text-sm font-medium transition-all flex items-center gap-2 ${view === 'trading'
+                                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                                : 'text-coffee-medium hover:text-primary'
                                             }`}
                                     >
                                         <BarChart3 className="w-4 h-4" />
@@ -91,6 +89,34 @@ export default function Home() {
                                 </div>
                             )}
 
+                            {/* Menu Button */}
+                            <div className="relative group">
+                                <button 
+                                    className="p-2 rounded-2xl transition-colors"
+                                    style={{ backgroundColor: '#FFD60A' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFE033'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFD60A'}
+                                >
+                                    <Menu className="w-5 h-5 text-black" />
+                                </button>
+                                <div className="absolute right-0 top-full mt-2 w-48 bg-bg-secondary border border-white/10 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                    <button
+                                        onClick={() => setView('history')}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-bg-hover transition-colors text-left rounded-t-xl"
+                                    >
+                                        <History className="w-4 h-4 text-white" />
+                                        <span className="text-sm text-white">Order History</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setView('settings')}
+                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-bg-hover transition-colors text-left rounded-b-xl"
+                                    >
+                                        <SettingsIcon className="w-4 h-4 text-white" />
+                                        <span className="text-sm text-white">Settings</span>
+                                    </button>
+                                </div>
+                            </div>
+
                             <WalletConnect />
                         </div>
                     </div>
@@ -98,26 +124,24 @@ export default function Home() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 container mx-auto px-4 py-6 max-w-[1920px]">
+            <main className="flex-1 container px-4 py-6 max-w-[1920px] w-[90%] mx-auto">
                 {view === 'home' ? (
                     <div className="h-[calc(100vh-140px)] overflow-y-auto">
                         <HomeScreen
                             onTokenClick={(symbol) => {
-                                setSelectedToken(symbol);
                                 setSelectedMarket(symbol);
-                                setView('token');
-                            }}
-                        />
-                    </div>
-                ) : view === 'token' ? (
-                    <div className="h-[calc(100vh-140px)] max-w-6xl mx-auto">
-                        <TokenDetail
-                            symbol={selectedToken || selectedMarket}
-                            onBack={() => setView('home')}
-                            onTrade={() => {
                                 setView('trading');
                             }}
+                            onTradeClick={() => setView('trading')}
                         />
+                    </div>
+                ) : view === 'history' ? (
+                    <div className="h-[calc(100vh-140px)] max-w-4xl mx-auto">
+                        <OrderHistory />
+                    </div>
+                ) : view === 'settings' ? (
+                    <div className="h-[calc(100vh-140px)] max-w-4xl mx-auto">
+                        <Settings />
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4 h-[calc(100vh-140px)]">
@@ -137,9 +161,7 @@ export default function Home() {
                             <div className="xl:col-span-3 2xl:col-span-3 h-full overflow-hidden">
                                 <MarketOverview
                                     onTokenClick={(symbol) => {
-                                        setSelectedToken(symbol);
                                         setSelectedMarket(symbol);
-                                        setView('token');
                                     }}
                                 />
                             </div>
@@ -161,7 +183,7 @@ export default function Home() {
             {/* Footer Navigation */}
             {view === 'trading' && (
                 <footer className="border-t border-white/10 bg-bg-secondary py-3">
-                    <div className="container mx-auto px-4 max-w-[1920px]">
+                    <div className="container px-4 max-w-[1920px] w-[90%] mx-auto">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-6">
                                 <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
@@ -176,7 +198,10 @@ export default function Home() {
                                 <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
                                     TWAP
                                 </button>
-                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
+                                <button 
+                                    onClick={() => setView('history')}
+                                    className="text-sm font-medium text-coffee-medium hover:text-white transition-colors"
+                                >
                                     Trade History
                                 </button>
                                 <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
@@ -184,13 +209,13 @@ export default function Home() {
                                 </button>
                             </div>
                             <div className="flex items-center gap-2">
-                                <button className="text-xs text-coffee-medium hover:text-white transition-colors px-3 py-1.5 bg-bg-tertiary rounded hover:bg-bg-hover">
+                                <button className="text-xs text-primary-foreground transition-colors px-3 py-1.5 bg-primary rounded hover:opacity-90">
                                     Sort by
                                 </button>
-                                <button className="text-xs text-coffee-medium hover:text-white transition-colors px-3 py-1.5 bg-bg-tertiary rounded hover:bg-bg-hover">
+                                <button className="text-xs text-primary-foreground transition-colors px-3 py-1.5 bg-primary rounded hover:opacity-90">
                                     Collapse All Positions
                                 </button>
-                                <button className="text-xs text-bearish hover:text-bearish-light transition-colors px-3 py-1.5 bg-bg-tertiary rounded hover:bg-bg-hover">
+                                <button className="text-xs text-primary-foreground transition-colors px-3 py-1.5 bg-primary rounded hover:opacity-90">
                                     Close All Positions
                                 </button>
                             </div>

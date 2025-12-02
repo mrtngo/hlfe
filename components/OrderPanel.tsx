@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { TrendingUp, TrendingDown, AlertCircle, Info, Plus } from 'lucide-react';
+import OrderNotification, { OrderNotificationData } from '@/components/OrderNotification';
 
 type OrderSide = 'long' | 'short';
 type MarginMode = 'isolated' | 'cross';
@@ -20,6 +21,7 @@ export default function OrderPanel() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
+    const [orderNotification, setOrderNotification] = useState<OrderNotificationData | null>(null);
 
     const market = getMarket(selectedMarket);
     const currentPrice = market?.price || 0;
@@ -65,7 +67,7 @@ export default function OrderPanel() {
 
         setLoading(true);
         try {
-            await placeOrder(
+            const orderResult = await placeOrder(
                 selectedMarket,
                 apiSide,
                 'market',
@@ -73,6 +75,19 @@ export default function OrderPanel() {
                 undefined,
                 leverage
             );
+            
+            // Show notification if order was filled
+            if (orderResult.filled) {
+                setOrderNotification({
+                    symbol: orderResult.symbol,
+                    side: orderResult.side,
+                    size: orderResult.filledSize,
+                    price: orderResult.filledPrice,
+                    pnl: orderResult.pnl,
+                    isClosing: orderResult.isClosing,
+                });
+            }
+            
             setSuccess(t.order.orderPlaced);
             setSize('');
         } catch (err) {
@@ -95,8 +110,8 @@ export default function OrderPanel() {
                         onClick={() => setOrderSide('long')}
                         className={`py-4 rounded-lg font-bold transition-all min-h-[64px] border-2 shadow-soft ${
                             orderSide === 'long'
-                                ? 'bg-bullish text-white border-bullish shadow-soft-lg scale-105'
-                                : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border-white/10'
+                                ? 'bg-primary text-primary-foreground border-primary shadow-soft-lg scale-105'
+                                : 'bg-primary/30 text-primary-foreground hover:bg-primary/50 border-primary/30'
                         }`}
                     >
                         <div className="flex items-center justify-center gap-2">
@@ -109,7 +124,7 @@ export default function OrderPanel() {
                         className={`py-4 rounded-lg font-bold transition-all min-h-[64px] border-2 shadow-soft ${
                             orderSide === 'short'
                                 ? 'bg-bearish text-white border-bearish shadow-soft-lg scale-105'
-                                : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border-white/10'
+                                : 'bg-bearish/30 text-white hover:bg-bearish/50 border-bearish/30'
                         }`}
                     >
                         <div className="flex items-center justify-center gap-2">
@@ -137,38 +152,38 @@ export default function OrderPanel() {
 
                 {/* Amount */}
                 <div>
-                    <label className="text-sm font-semibold mb-2 block text-white">Amount</label>
+                    <label className="text-sm font-semibold mb-2 block text-white">Amount (tokens)</label>
                     <input
                         type="number"
                         value={size}
                         onChange={(e) => setSize(e.target.value)}
-                        placeholder="$0.00"
+                        placeholder="0.000000"
                         className="input text-lg font-bold bg-bg-tertiary border-white/10 rounded-lg"
                         step="0.001"
                     />
                     <div className="mt-3">
                         {(() => {
-                            // Calculate max amount: available balance * leverage (dollar amount)
-                            const maxAmount = account.availableMargin * leverage;
+                            // Calculate max token amount: available margin / current price
+                            // This represents the maximum number of tokens you can buy with available margin
+                            // Leverage doesn't affect max tokens, only margin requirement per token
+                            const maxTokens = currentPrice > 0 ? (account.availableMargin / currentPrice) : 0;
                             
                             return (
                                 <>
                                     <input
                                         type="range"
                                         min="0"
-                                        max={maxAmount > 0 ? maxAmount.toFixed(2) : "0"}
-                                        value={notionalValue || 0}
+                                        max={maxTokens > 0 ? maxTokens.toFixed(6) : "0"}
+                                        value={orderSize || 0}
                                         onChange={(e) => {
-                                            const dollarAmount = parseFloat(e.target.value) || 0;
-                                            // Convert dollar amount to size (units)
-                                            const newSize = currentPrice > 0 ? (dollarAmount / currentPrice) : 0;
-                                            setSize(newSize.toFixed(6));
+                                            const tokenAmount = parseFloat(e.target.value) || 0;
+                                            setSize(tokenAmount.toFixed(6));
                                         }}
                                         className="w-full h-2 bg-bg-tertiary rounded-full appearance-none cursor-pointer accent-primary"
                                     />
                                     <div className="flex justify-between text-xs text-coffee-medium mt-1">
-                                        <span>$0.00</span>
-                                        <span>${maxAmount.toFixed(2)}</span>
+                                        <span>0</span>
+                                        <span>{maxTokens.toFixed(4)} tokens</span>
                                     </div>
                                 </>
                             );
@@ -226,10 +241,10 @@ export default function OrderPanel() {
                                     disabled={market?.onlyIsolated === true && mode === 'cross'}
                                     className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all min-h-[48px] capitalize ${
                                         marginMode === mode
-                                            ? 'bg-primary text-white border-2 border-primary shadow-soft'
+                                            ? 'bg-primary text-primary-foreground border-2 border-primary shadow-soft'
                                             : market?.onlyIsolated === true && mode === 'cross'
-                                            ? 'bg-bg-tertiary text-coffee-light cursor-not-allowed'
-                                            : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
+                                            ? 'bg-primary/30 text-primary-foreground/50 cursor-not-allowed'
+                                            : 'bg-primary text-primary-foreground hover:opacity-90'
                                     }`}
                                 >
                                     {mode}
@@ -320,6 +335,12 @@ export default function OrderPanel() {
                     )}
                 </button>
             </div>
+
+            {/* Order Completion Notification */}
+            <OrderNotification 
+                order={orderNotification} 
+                onClose={() => setOrderNotification(null)} 
+            />
         </div>
     );
 }

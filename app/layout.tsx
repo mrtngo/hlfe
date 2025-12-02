@@ -1,20 +1,22 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { LanguageProvider } from '@/hooks/useLanguage';
 import { HyperliquidProvider } from '@/providers/HyperliquidProvider';
 import { PrivyProvider } from '@/providers/PrivyProvider';
 
-const inter = Inter({ subsets: ['latin'] });
+// Rayo Typography System - Variable Fonts
+import "@fontsource-variable/plus-jakarta-sans";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
 
 export const metadata: Metadata = {
-    title: 'Hyperliquid LATAM - Trading de Futuros Cripto',
-    description: 'Plataforma de trading de derivados cripto optimizada para traders hispanohablantes. Opera futuros de Bitcoin, Ethereum y más con apalancamiento.',
-    keywords: 'trading, cripto, futuros, apalancamiento, bitcoin, ethereum, latam, español',
-    authors: [{ name: 'Hyperliquid LATAM' }],
+    title: 'Rayo - Trade at the Speed of Light',
+    description: 'Fast, simple, and secure on-chain trading. Trade futures with lightning speed.',
+    keywords: 'trading, crypto, futures, leverage, bitcoin, ethereum, on-chain, defi',
+    authors: [{ name: 'Rayo' }],
     openGraph: {
-        title: 'Hyperliquid LATAM - Trading de Futuros Cripto',
-        description: 'Plataforma de trading optimizada para LATAM',
+        title: 'Rayo - Trade at the Speed of Light',
+        description: 'Fast, simple, and secure on-chain trading',
         type: 'website',
     },
 };
@@ -25,8 +27,12 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="es">
-            <body className={inter.className}>
+        <html lang="en" className="dark" style={{
+            '--font-plus-jakarta': '"Plus Jakarta Sans Variable", sans-serif',
+            '--font-inter': '"Inter Variable", sans-serif',
+            '--font-jetbrains': '"JetBrains Mono Variable", monospace',
+        } as React.CSSProperties}>
+            <body className="min-h-screen bg-background font-sans antialiased overscroll-none font-inter">
                 <PrivyProvider>
                     <LanguageProvider>
                         <HyperliquidProvider>

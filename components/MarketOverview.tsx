@@ -100,7 +100,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                 <div className="flex flex-col flex-1 overflow-hidden">
                     {/* Crypto/Stocks Tabs */}
                     <div className="p-4 border-b border-white/10">
-                        <div className="flex items-center gap-2 bg-bg-tertiary rounded-lg p-1">
+                        <div className="flex items-center gap-2 bg-primary/20 rounded-lg p-1">
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -108,8 +108,8 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                 }}
                                 className={`flex-1 py-2 px-4 rounded font-semibold text-sm transition-all ${
                                     activeTab === 'crypto'
-                                        ? 'bg-bg-secondary text-primary shadow-soft'
-                                        : 'text-coffee-medium hover:text-white'
+                                        ? 'bg-primary text-primary-foreground shadow-soft'
+                                        : 'bg-primary/50 text-primary-foreground hover:bg-primary'
                                 }`}
                             >
                                 Crypto
@@ -121,13 +121,9 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                 }}
                                 className={`flex-1 py-2 px-4 rounded font-semibold text-sm transition-all ${
                                     activeTab === 'stocks'
-                                        ? 'bg-bg-secondary text-indigo-400 shadow-soft'
-                                        : 'text-coffee-medium hover:text-white'
+                                        ? 'bg-primary text-primary-foreground shadow-soft'
+                                        : 'bg-primary/50 text-primary-foreground hover:bg-primary'
                                 }`}
-                                style={activeTab === 'stocks' ? {
-                                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                                    color: 'white'
-                                } : {}}
                             >
                                 Stocks
                             </button>
