@@ -85,6 +85,10 @@ interface HyperliquidContextType {
     account: AccountState;
     positions: Position[];
     orders: Order[];
+
+    // Agent Wallet
+    agentWalletEnabled: boolean;
+    setupAgentWallet: () => Promise<{ success: boolean; message: string }>;
 }
 
 const HyperliquidContext = createContext<HyperliquidContextType | undefined>(undefined);
