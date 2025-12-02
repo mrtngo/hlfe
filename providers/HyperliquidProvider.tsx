@@ -1341,6 +1341,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     size: filledSize,
                                     entryPrice: filledPrice,
                                     markPrice: market.price || filledPrice,
+                                    liquidationPrice: 0, // Will be updated by WebSocket position updates
                                     leverage: leverage || market.maxLeverage || 1,
                                     unrealizedPnl: 0,
                                     unrealizedPnlPercent: 0,
