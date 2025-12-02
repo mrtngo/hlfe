@@ -2,12 +2,38 @@
 
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Wallet, Shield, HelpCircle, Zap } from 'lucide-react';
+import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function Settings() {
     const { t } = useLanguage();
+    const { address, agentWalletEnabled, setupAgentWallet } = useHyperliquid();
     const [connectWallet, setConnectWallet] = useState(false);
     const [notifications, setNotifications] = useState(true);
+    const [settingUpAgent, setSettingUpAgent] = useState(false);
+    const [agentSetupError, setAgentSetupError] = useState<string | null>(null);
+    const [agentSetupSuccess, setAgentSetupSuccess] = useState(false);
+
+    const handleSetupAgentWallet = async () => {
+        if (!address) {
+            setAgentSetupError('Please connect your wallet first');
+            return;
+        }
+
+        setSettingUpAgent(true);
+        setAgentSetupError(null);
+        setAgentSetupSuccess(false);
+
+        try {
+            const result = await setupAgentWallet();
+            setAgentSetupSuccess(true);
+            setTimeout(() => setAgentSetupSuccess(false), 5000);
+        } catch (error) {
+            setAgentSetupError(error instanceof Error ? error.message : 'Failed to setup agent wallet');
+        } finally {
+            setSettingUpAgent(false);
+        }
+    };
 
     return (
         <div className="h-full flex flex-col overflow-y-auto bg-bg-primary">
@@ -59,6 +85,59 @@ export default function Settings() {
                         </button>
                     </div>
                 </div>
+
+                {/* Agent Wallet - No Signature Prompts */}
+                {address && (
+                    <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Shield className="w-5 h-5 text-white" />
+                                    <div>
+                                        <span className="font-semibold text-white block">Agent Wallet</span>
+                                        <span className="text-xs text-coffee-medium">
+                                            Trade without signing every transaction
+                                        </span>
+                                    </div>
+                                </div>
+                                {agentWalletEnabled ? (
+                                    <div className="flex items-center gap-2 text-bullish">
+                                        <CheckCircle2 className="w-5 h-5" />
+                                        <span className="text-sm font-semibold">Active</span>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleSetupAgentWallet}
+                                        disabled={settingUpAgent}
+                                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {settingUpAgent ? 'Setting up...' : 'Enable'}
+                                    </button>
+                                )}
+                            </div>
+                            
+                            {agentSetupError && (
+                                <div className="flex items-center gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
+                                    <AlertCircle className="w-4 h-4 shrink-0" />
+                                    <span>{agentSetupError}</span>
+                                </div>
+                            )}
+                            
+                            {agentSetupSuccess && (
+                                <div className="flex items-center gap-2 p-3 bg-bullish/10 border border-bullish/20 rounded-lg text-sm text-bullish">
+                                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                    <span>Agent wallet enabled! You can now trade without signing each transaction.</span>
+                                </div>
+                            )}
+                            
+                            {!agentWalletEnabled && !settingUpAgent && (
+                                <p className="text-xs text-coffee-medium mt-2">
+                                    Approve once to enable automatic signing. You'll sign ONE transaction to approve the agent, then all future trades will be signed automatically.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Security */}
                 <div className="bg-bg-secondary border border-white/10 rounded-xl p-4 cursor-pointer hover:bg-bg-hover transition-colors">

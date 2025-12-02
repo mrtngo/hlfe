@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { useWallets } from '@privy-io/react-auth';
 import { TrendingUp, TrendingDown, AlertCircle, Info, Plus } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from '@/components/OrderNotification';
 
@@ -26,6 +27,10 @@ export default function OrderPanel() {
     const market = getMarket(selectedMarket);
     const currentPrice = market?.price || 0;
     const maxLeverage = market?.maxLeverage || 20; // Default to 20 if not set
+    
+    // Check if using Privy embedded wallet (better UX, fewer signature prompts)
+    const { wallets } = useWallets();
+    const isUsingEmbeddedWallet = wallets.some((w: any) => w.walletClientType === 'privy');
     const orderPrice = currentPrice;
     const orderSize = parseFloat(size) || 0;
     const notionalValue = orderSize * orderPrice;
@@ -100,7 +105,14 @@ export default function OrderPanel() {
     return (
         <div className="glass-card h-full flex flex-col bg-bg-secondary rounded-lg shadow-soft-lg min-w-0 border border-white/10">
             <div className="p-4 border-b border-white/10">
-                <h3 className="text-sm font-semibold text-white">{t.order.title}</h3>
+                <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-white">{t.order.title}</h3>
+                    {!isUsingEmbeddedWallet && (
+                        <div className="text-xs text-coffee-medium bg-primary/10 px-2 py-1 rounded border border-primary/20">
+                            💡 Use Privy wallet for fewer prompts
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">

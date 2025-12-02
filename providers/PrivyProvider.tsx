@@ -37,6 +37,7 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
         config.embeddedWallets = {
             ethereum: {
                 createOnLogin: 'users-without-wallets',
+                noPromptOnSignature: false, // Set to true to reduce prompts, but less secure
             },
         };
     }

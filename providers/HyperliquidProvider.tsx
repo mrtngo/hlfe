@@ -4,6 +4,15 @@ import React, { createContext, useContext, useEffect, useState, useCallback, Rea
 import { useLanguage } from '@/hooks/useLanguage';
 import { useMarketData, subscribeToMarketPrices, Market } from '@/lib/hyperliquid/market-data';
 import { createHyperliquidClient, API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
+import { 
+    getAgentWallet, 
+    saveAgentWallet, 
+    generateAgentWallet, 
+    isAgentApproved, 
+    setAgentApproved,
+    getAgentSigner,
+    approveAgentWallet
+} from '@/lib/agent-wallet';
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useWalletClient } from 'wagmi';
@@ -252,6 +261,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [retryAfter, setRetryAfter] = useState<number | null>(null);
     const [fetchingAccount, setFetchingAccount] = useState(false);
     const initialFetchDone = React.useRef(false);
+    const [agentWalletEnabled, setAgentWalletEnabled] = useState(false);
 
     // WebSocket-based account data updates
     useEffect(() => {
@@ -697,6 +707,71 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         setIsConnected(false);
     }, []);
 
+    // Setup agent wallet function
+    const setupAgentWallet = useCallback(async () => {
+        if (!address) {
+            throw new Error('Please connect your wallet first');
+        }
+
+        try {
+            // Check if already approved
+            if (isAgentApproved(address)) {
+                const agent = getAgentWallet();
+                if (agent) {
+                    setAgentWalletEnabled(true);
+                    return { success: true, message: 'Agent wallet already approved' };
+                }
+            }
+
+            // Generate or get agent wallet
+            let agent = getAgentWallet();
+            if (!agent) {
+                agent = generateAgentWallet();
+                saveAgentWallet(agent);
+            } else {
+                // Ensure existing agent has a valid name (1-16 characters)
+                if (!agent.name || agent.name.length > 16 || agent.name.length === 0) {
+                    agent.name = 'Rayo Agent';
+                    saveAgentWallet(agent);
+                }
+            }
+
+            // Get user's wallet for signing the approval
+            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+            let userSigner = null;
+            
+            if (embeddedWallet) {
+                userSigner = await embeddedWallet.getEthereumProvider();
+            } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                userSigner = (window as any).ethereum;
+            } else {
+                throw new Error('No wallet available for signing approval');
+            }
+
+            // Approve the agent (requires ONE signature from user)
+            const approved = await approveAgentWallet(address, userSigner, agent.address, agent.name);
+            
+            if (approved) {
+                setAgentWalletEnabled(true);
+                return { success: true, message: 'Agent wallet approved! You can now trade without signing each transaction.' };
+            } else {
+                throw new Error('Failed to approve agent wallet');
+            }
+        } catch (error) {
+            console.error('Error setting up agent wallet:', error);
+            throw error;
+        }
+    }, [address, wallets]);
+
+    // Check and initialize agent wallet
+    useEffect(() => {
+        if (address) {
+            const agent = getAgentWallet();
+            const approved = isAgentApproved(address);
+            setAgentWalletEnabled(approved && !!agent);
+        }
+    }, [address]);
+
     // Place order
     const placeOrder = useCallback(async (
         symbol: string,
@@ -929,34 +1004,76 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             };
 
             // 4. Sign action
-            // Try to use Privy's embedded wallet first, fall back to external wallet
-            let signingProvider = null;
-            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
-            
-            if (embeddedWallet) {
-                // Use Privy embedded wallet if available
-                signingProvider = await embeddedWallet.getEthereumProvider();
-                console.log('Using Privy embedded wallet for signing');
-            } else {
-                // Fall back to external wallet (MetaMask, etc.) via window.ethereum
-                if (typeof window !== 'undefined' && (window as any).ethereum) {
-                    signingProvider = (window as any).ethereum;
-                    console.log('Using external wallet (MetaMask, etc.) for signing');
-                } else {
-                    throw new Error('No wallet found. Please connect a wallet (MetaMask or Privy embedded wallet).');
-                }
-            }
-            
-            if (!signingProvider) {
-                throw new Error('Could not get Ethereum provider from wallet');
-            }
-            
-            const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
-            // Docs say to lowercase addresses before signing and sending
-            const lowercasedAddress = address.toLowerCase();
-            // Pass the provider directly (not wagmi wrapper) to ensure SDK compatibility
-            const browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
+            // Try to use agent wallet first (NO signature prompts!), then fall back to user wallet
+            let browserWallet: any = null;
+            let lowercasedAddress = address.toLowerCase();
             const nonce = Date.now();
+            
+            // Check if agent wallet is available and approved
+            // Check directly rather than relying on state variable
+            const agent = getAgentWallet();
+            const agentSigner = getAgentSigner();
+            const isApproved = isAgentApproved(address);
+            
+            console.log('🔍 Agent wallet check:', {
+                agentWalletEnabled,
+                hasAgent: !!agent,
+                hasSigner: !!agentSigner,
+                isApproved,
+                agentAddress: agent?.address,
+            });
+            
+            if (agent && agentSigner && isApproved) {
+                // Use agent wallet - no user signature needed!
+                console.log('✅ Using approved agent wallet - NO signature prompt needed!');
+                lowercasedAddress = agent.address.toLowerCase();
+                
+                // Create a BrowserWallet-like interface for the agent
+                browserWallet = {
+                    address: agent.address,
+                    getAddress: async () => agent.address.toLowerCase(),
+                    signTypedData: async (domain: any, types: any, value: any) => {
+                        // Remove EIP712Domain from types
+                        const { EIP712Domain, ...restTypes } = types;
+                        const primaryType = Object.keys(restTypes)[0] || 'Agent';
+                        
+                        console.log('🔐 Signing with agent wallet (no user prompt)');
+                        // Sign with ethers wallet
+                        return await agentSigner.signTypedData(domain, restTypes, value);
+                    },
+                };
+            } else {
+                console.log('⚠️ Agent wallet not available, will use user wallet:', {
+                    missingAgent: !agent,
+                    missingSigner: !agentSigner,
+                    notApproved: !isApproved,
+                });
+            }
+            
+            // Fall back to user wallet if agent not available
+            if (!browserWallet) {
+                let signingProvider = null;
+                const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+                
+                if (embeddedWallet) {
+                    signingProvider = await embeddedWallet.getEthereumProvider();
+                    console.log('⚠️ Using user wallet - signature prompt required');
+                } else {
+                    if (typeof window !== 'undefined' && (window as any).ethereum) {
+                        signingProvider = (window as any).ethereum;
+                        console.log('⚠️ Using external wallet - signature prompt required');
+                    } else {
+                        throw new Error('No wallet found. Please connect a wallet (MetaMask or Privy embedded wallet).');
+                    }
+                }
+                
+                if (!signingProvider) {
+                    throw new Error('Could not get Ethereum provider from wallet');
+                }
+                
+                const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+                browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
+            }
 
             console.log('=== DEBUG: Action Before Signing ===');
             console.log('Action Payload:', JSON.stringify(actionPayload, null, 2));
@@ -966,6 +1083,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             console.log('Wire Order:', JSON.stringify(wireOrder, null, 2));
             console.log('===================================');
 
+            // Sign with either agent wallet (no prompt) or user wallet (prompt)
             const signature = await signL1Action(
                 browserWallet as any,
                 actionPayload,
@@ -973,6 +1091,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 nonce,
                 !IS_TESTNET // Pass isMainnet (opposite of IS_TESTNET): false for testnet
             );
+            
+            if (agentWalletEnabled && browserWallet.address !== address.toLowerCase()) {
+                console.log('✅ Order signed with agent wallet - no user signature prompt!');
+            }
 
             console.log('Connected wallet address:', address);
             console.log('Action payload:', actionPayload);
@@ -1315,6 +1437,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         markets,
         selectedMarket,
         setSelectedMarket,
+        agentWalletEnabled,
+        setupAgentWallet,
         getMarket,
         placeOrder,
         cancelOrder,
