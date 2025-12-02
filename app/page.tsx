@@ -57,7 +57,7 @@ export default function Home() {
                             </button>
 
                             {/* View Switcher - Only show on home and trading views */}
-                            {view !== 'token' && (
+                            {(view === 'home' || view === 'trading') && (
                                 <div className="hidden md:flex items-center gap-1 bg-bg-tertiary/50 rounded-full p-1 border border-white/5">
                                     <button
                                         onClick={() => setView('home')}
