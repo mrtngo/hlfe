@@ -3,7 +3,6 @@ import './globals.css';
 import { LanguageProvider } from '@/hooks/useLanguage';
 import { HyperliquidProvider } from '@/providers/HyperliquidProvider';
 import { PrivyProvider } from '@/providers/PrivyProvider';
-import MobileOnlyNotice from '@/components/MobileOnlyNotice';
 
 // Rayo Typography System - Variable Fonts
 import "@fontsource-variable/plus-jakarta-sans";
@@ -37,7 +36,6 @@ export default function RootLayout({
                 <PrivyProvider>
                     <LanguageProvider>
                         <HyperliquidProvider>
-                            <MobileOnlyNotice />
                             {children}
                         </HyperliquidProvider>
                     </LanguageProvider>
