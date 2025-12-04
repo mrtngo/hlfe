@@ -32,90 +32,27 @@ export default function Home() {
                     <div className="flex items-center justify-between">
                         {/* Logo - Rayo Lightning Bolt */}
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => {
-                                    setView('home');
-                                }}
-                                className="w-8 h-8 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 hover:opacity-80 transition-opacity cursor-pointer"
-                            >
-                                <Zap className="text-primary-foreground h-5 w-5" />
-                            </button>
+                            <div className="w-8 h-8 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path 
+                                        d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" 
+                                        fill="black"
+                                        stroke="black"
+                                        strokeWidth="0.5"
+                                    />
+                                </svg>
+                            </div>
                             <h1 className="text-lg font-heading font-bold text-white hidden sm:block tracking-tight">Rayo</h1>
                         </div>
 
                         {/* Right Section */}
                         <div className="flex items-center gap-3">
-                            {/* Home Button - Always visible */}
-                            <button
-                                onClick={() => {
-                                    setView('home');
-                                }}
-                                className="px-3 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 bg-primary text-primary-foreground hover:opacity-90"
-                            >
-                                <HomeIcon className="w-4 h-4" />
-                                <span className="hidden sm:inline">Home</span>
-                            </button>
-
-                            {/* View Switcher - Only show on home and trading views */}
-                            {(view === 'home' || view === 'trading') && (
-                                <div className="hidden md:flex items-center gap-1 bg-bg-tertiary/50 rounded-full p-1 border border-white/5">
-                                    <button
-                                        onClick={() => setView('home')}
-                                        className={`px-4 py-1.5 rounded-2xl text-sm font-medium transition-all flex items-center gap-2 ${view === 'home'
-                                                ? 'bg-primary text-primary-foreground shadow-sm'
-                                                : 'text-coffee-medium hover:text-primary'
-                                            }`}
-                                    >
-                                        <HomeIcon className="w-4 h-4" />
-                                        <span className="hidden lg:inline">Home</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setView('trading')}
-                                        className={`px-4 py-1.5 rounded-2xl text-sm font-medium transition-all flex items-center gap-2 ${view === 'trading'
-                                                ? 'bg-primary text-primary-foreground shadow-sm'
-                                                : 'text-coffee-medium hover:text-primary'
-                                            }`}
-                                    >
-                                        <BarChart3 className="w-4 h-4" />
-                                        <span className="hidden lg:inline">Trading</span>
-                                    </button>
-                                </div>
-                            )}
-
                             {/* Account Info */}
                             {address && (
                                 <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-bg-tertiary/50 rounded-full border border-white/5 hover:bg-bg-hover transition-colors cursor-pointer">
                                     <span className="text-xs text-coffee-medium font-mono">{formatAddress(address)}</span>
                                 </div>
                             )}
-
-                            {/* Menu Button */}
-                            <div className="relative group">
-                                <button 
-                                    className="p-2 rounded-2xl transition-colors"
-                                    style={{ backgroundColor: '#FFD60A' }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFE033'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFD60A'}
-                                >
-                                    <Menu className="w-5 h-5 text-black" />
-                                </button>
-                                <div className="absolute right-0 top-full mt-2 w-48 bg-bg-secondary border border-white/10 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                                    <button
-                                        onClick={() => setView('history')}
-                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-bg-hover transition-colors text-left rounded-t-xl"
-                                    >
-                                        <History className="w-4 h-4 text-white" />
-                                        <span className="text-sm text-white">Order History</span>
-                                    </button>
-                                    <button
-                                        onClick={() => setView('settings')}
-                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-bg-hover transition-colors text-left rounded-b-xl"
-                                    >
-                                        <SettingsIcon className="w-4 h-4 text-white" />
-                                        <span className="text-sm text-white">Settings</span>
-                                    </button>
-                                </div>
-                            </div>
 
                             <WalletConnect />
                         </div>
@@ -124,9 +61,9 @@ export default function Home() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 container px-4 py-6 max-w-[1920px] w-[90%] mx-auto">
+            <main className="flex-1 container px-4 py-6 max-w-[1920px] w-[90%] mx-auto" style={{ paddingBottom: '120px' }}>
                 {view === 'home' ? (
-                    <div className="h-[calc(100vh-140px)] overflow-y-auto">
+                    <div className="overflow-y-auto" style={{ paddingBottom: '100px' }}>
                         <HomeScreen
                             onTokenClick={(symbol) => {
                                 setSelectedMarket(symbol);
@@ -136,15 +73,15 @@ export default function Home() {
                         />
                     </div>
                 ) : view === 'history' ? (
-                    <div className="h-[calc(100vh-140px)] max-w-4xl mx-auto">
+                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                         <OrderHistory />
                     </div>
                 ) : view === 'settings' ? (
-                    <div className="h-[calc(100vh-140px)] max-w-4xl mx-auto">
+                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                         <Settings />
                     </div>
                 ) : (
-                    <div className="flex flex-col gap-4 h-[calc(100vh-140px)]">
+                    <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
                         {/* Market Selector */}
                         <div className="px-4 pt-4">
                             <MarketSelector />
@@ -180,49 +117,74 @@ export default function Home() {
                 )}
             </main>
 
+
             {/* Footer Navigation */}
-            {view === 'trading' && (
-                <footer className="border-t border-white/10 bg-bg-secondary py-3">
-                    <div className="container px-4 max-w-[1920px] w-[90%] mx-auto">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-6">
-                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
-                                    Balances
-                                </button>
-                                <button className="text-sm font-medium text-primary border-b-2 border-primary pb-1">
-                                    Positions
-                                </button>
-                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
-                                    Open Orders
-                                </button>
-                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
-                                    TWAP
-                                </button>
-                                <button 
-                                    onClick={() => setView('history')}
-                                    className="text-sm font-medium text-coffee-medium hover:text-white transition-colors"
-                                >
-                                    Trade History
-                                </button>
-                                <button className="text-sm font-medium text-coffee-medium hover:text-white transition-colors">
-                                    Funding
-                                </button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <button className="text-xs text-primary-foreground transition-colors px-3 py-1.5 bg-primary rounded hover:opacity-90">
-                                    Sort by
-                                </button>
-                                <button className="text-xs text-primary-foreground transition-colors px-3 py-1.5 bg-primary rounded hover:opacity-90">
-                                    Collapse All Positions
-                                </button>
-                                <button className="text-xs text-primary-foreground transition-colors px-3 py-1.5 bg-primary rounded hover:opacity-90">
-                                    Close All Positions
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-            )}
+            <nav 
+                style={{ 
+                    position: 'fixed', 
+                    bottom: 0, 
+                    left: 0, 
+                    right: 0, 
+                    top: 'auto',
+                    zIndex: 9999,
+                    backgroundColor: '#000000'
+                }}
+                className="border-t border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.8)]"
+            >
+                <div className="flex items-center justify-center gap-8 py-4">
+                    {/* Home */}
+                    <button
+                        onClick={() => setView('home')}
+                        className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${
+                            view === 'home'
+                                ? 'text-primary bg-primary/10'
+                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        <HomeIcon className="w-7 h-7" />
+                        <span className="text-sm font-medium">Home</span>
+                    </button>
+
+                    {/* Trading */}
+                    <button
+                        onClick={() => setView('trading')}
+                        className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${
+                            view === 'trading'
+                                ? 'text-primary bg-primary/10'
+                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        <BarChart3 className="w-7 h-7" />
+                        <span className="text-sm font-medium">Trade</span>
+                    </button>
+
+                    {/* History */}
+                    <button
+                        onClick={() => setView('history')}
+                        className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${
+                            view === 'history'
+                                ? 'text-primary bg-primary/10'
+                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        <History className="w-7 h-7" />
+                        <span className="text-sm font-medium">History</span>
+                    </button>
+
+                    {/* Settings */}
+                    <button
+                        onClick={() => setView('settings')}
+                        className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${
+                            view === 'settings'
+                                ? 'text-primary bg-primary/10'
+                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        <SettingsIcon className="w-7 h-7" />
+                        <span className="text-sm font-medium">Settings</span>
+                    </button>
+                </div>
+            </nav>
         </div>
     );
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check } from 'lucide-react';
 
 export default function Settings() {
     const { t } = useLanguage();
@@ -13,6 +13,7 @@ export default function Settings() {
     const [settingUpAgent, setSettingUpAgent] = useState(false);
     const [agentSetupError, setAgentSetupError] = useState<string | null>(null);
     const [agentSetupSuccess, setAgentSetupSuccess] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     const handleSetupAgentWallet = async () => {
         if (!address) {
@@ -49,6 +50,42 @@ export default function Settings() {
 
             {/* Settings Content */}
             <div className="flex-1 p-4 space-y-4">
+                {/* Wallet Address */}
+                {address && (
+                    <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                                <Wallet className="w-5 h-5 text-white" />
+                                <span className="font-semibold text-white">Wallet Address</span>
+                            </div>
+                        </div>
+                        <div className="bg-bg-tertiary/50 border border-white/5 rounded-xl p-4 flex items-center justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs text-coffee-medium mb-1 uppercase tracking-wider font-semibold">Address</div>
+                                <div className="text-sm md:text-base font-mono break-all text-white/90">
+                                    {address}
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (address) {
+                                        navigator.clipboard.writeText(address);
+                                        setCopied(true);
+                                        setTimeout(() => setCopied(false), 2000);
+                                    }
+                                }}
+                                className="shrink-0 p-2 rounded-xl transition-all flex items-center justify-center bg-primary hover:opacity-90"
+                            >
+                                {copied ? (
+                                    <Check className="w-4 h-4 text-black" />
+                                ) : (
+                                    <Copy className="w-4 h-4 text-black" />
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Connect Wallet */}
                 <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
                     <div className="flex items-center justify-between">

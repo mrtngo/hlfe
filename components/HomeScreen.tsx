@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, useCallback } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { TrendingUp, TrendingDown, Plus, X, ArrowUpRight, ArrowDownRight, Copy, Check, Wallet, Search, BarChart3 } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
+import TokenLogo from '@/components/TokenLogo';
+import PortfolioChart from '@/components/PortfolioChart';
+import { createHyperliquidClient } from '@/lib/hyperliquid/client';
+import type { Market } from '@/hooks/useHyperliquid';
 
 const WATCHLIST_STORAGE_KEY = 'hyperliquid_watchlist';
 
@@ -18,7 +22,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const { account, positions, markets, setSelectedMarket, address } = useHyperliquid();
     const [watchlist, setWatchlist] = useState<string[]>([]);
     const [mounted, setMounted] = useState(false);
-    const [copied, setCopied] = useState(false);
+    const [thirtyDayPnl, setThirtyDayPnl] = useState(0);
 
     useEffect(() => {
         setMounted(true);
@@ -46,24 +50,67 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
         }
     };
 
-    const removeFromWatchlist = (symbol: string) => {
-        setWatchlist(watchlist.filter(s => s !== symbol));
-    };
+    const removeFromWatchlist = useCallback((symbol: string) => {
+        setWatchlist(prev => prev.filter(s => s !== symbol));
+    }, []);
 
-    const copyAddress = () => {
-        if (address) {
-            navigator.clipboard.writeText(address);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        }
-    };
+    const handleTokenClick = useCallback((symbol: string) => {
+        setSelectedMarket(symbol);
+        onTokenClick?.(symbol);
+    }, [setSelectedMarket, onTokenClick]);
 
     // Default watchlist tokens if empty
     const defaultWatchlist = ['BTC', 'ETH', 'SOL'];
     const watchlistToShow = watchlist.length > 0 ? watchlist : defaultWatchlist;
     const watchlistMarkets = markets.filter(m => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol));
-    const totalUnrealizedPnl = positions.reduce((sum, pos) => sum + pos.unrealizedPnl, 0);
     const portfolioValue = account.equity || account.balance;
+    
+    // Format username from address
+    const getUsername = () => {
+        if (!address) return 'Guest';
+        return `${address.slice(0, 4)}...${address.slice(-4)}`;
+    };
+
+    // Fetch and calculate 30-day PnL from order history
+    useEffect(() => {
+        const fetch30DayPnl = async () => {
+            if (!address) {
+                setThirtyDayPnl(0);
+                return;
+            }
+
+            try {
+                const client = createHyperliquidClient();
+                const fills = await client.info.getUserFills(address.toLowerCase());
+
+                if (!fills || fills.length === 0) {
+                    setThirtyDayPnl(0);
+                    return;
+                }
+
+                // Calculate PnL from fills in the last 30 days
+                const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+                const recentFills = fills.filter((fill: any) => fill.time >= thirtyDaysAgo);
+                
+                const totalPnl = recentFills.reduce((sum: number, fill: any) => {
+                    const closedPnl = parseFloat(fill.closedPnl || '0');
+                    return sum + closedPnl;
+                }, 0);
+
+                setThirtyDayPnl(totalPnl);
+            } catch (error) {
+                console.error('Error fetching 30-day PnL:', error);
+                setThirtyDayPnl(0);
+            }
+        };
+
+        if (mounted) {
+            fetch30DayPnl();
+        }
+    }, [address, mounted]);
+
+    // Calculate 30-day movement percentage
+    const thirtyDayMovement = account.equity > 0 ? ((thirtyDayPnl / account.equity) * 100) : 0;
 
     if (!mounted) {
         return (
@@ -74,93 +121,45 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     }
 
     return (
-        <div className="space-y-8 p-4 md:p-6 max-w-7xl mx-auto px-8">
-            {/* Trade Button - Hero CTA */}
-            <div className="glass-card p-6 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
-                <div className="relative z-10 flex flex-col items-center justify-center py-8 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Start Trading</h2>
-                    <p className="text-coffee-medium mb-6 max-w-md">Access all markets and trade with advanced tools</p>
-                    <button
-                        onClick={onTradeClick}
-                        className="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-bold text-lg flex items-center gap-3 hover:opacity-90 transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-105 active:scale-95"
-                    >
-                        <BarChart3 className="w-5 h-5" />
-                        <span>Trade All Markets</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Wallet Address Section */}
-            {address && (
-                <div className="glass-card p-6 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
-
-
-                    <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-4 flex items-center justify-between gap-3 relative z-10">
-                        <div className="flex-1 min-w-0">
-                            <div className="text-xs text-coffee-medium mb-1 uppercase tracking-wider font-semibold">Wallet Address</div>
-                            <div className="text-sm md:text-base font-mono break-all text-white/90">
-                                {address}
+        <div className="space-y-6 max-w-2xl mx-auto">
+            {/* Hero Section - Greeting and Portfolio */}
+            <div className="glass-card p-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
+                <div className="relative z-10">
+                    {/* Greeting */}
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 text-center">
+                        Hi, {getUsername()}
+                    </h1>
+                    
+                    {/* Portfolio Value and 30-day Movement */}
+                    <div className="space-y-6">
+                        <div className="text-center">
+                            <div className="text-sm text-coffee-medium mb-2">Portfolio Value</div>
+                            <div className="text-5xl md:text-6xl font-bold text-white tracking-tight">
+                                ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </div>
+                            <div className="text-sm text-coffee-medium mt-2">
+                                30d: <span className={thirtyDayMovement >= 0 ? 'text-bullish' : 'text-bearish'}>
+                                    {thirtyDayMovement >= 0 ? '+' : ''}{thirtyDayMovement.toFixed(2)}%
+                                    {thirtyDayPnl !== 0 && ` (${thirtyDayPnl >= 0 ? '+' : ''}$${Math.abs(thirtyDayPnl).toFixed(2)})`}
+                                </span>
                             </div>
                         </div>
-                        <button
-                            onClick={copyAddress}
-                            className="shrink-0 p-2 rounded-2xl transition-all flex items-center justify-center shadow-sm hover:shadow-md group/btn"
-                            style={{ backgroundColor: '#FFD60A' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFE033'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFD60A'}
-                        >
-                            {copied ? (
-                                <Check className="w-4 h-4 text-black" />
-                            ) : (
-                                <Copy className="w-4 h-4 text-black transition-colors" />
-                            )}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Portfolio Overview */}
-            <div className="glass-card p-6">
-                <h2 className="text-2xl font-bold mb-6 text-white">
-                    Portfolio
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-5 relative overflow-hidden">
-                        <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none ${totalUnrealizedPnl >= 0 ? 'bg-bullish/5' : 'bg-bearish/5'}`} />
-                        <div className="text-sm text-coffee-medium mb-1">Unrealized P&L</div>
-                        <div className={`text-3xl font-bold flex items-center gap-2 tracking-tight ${totalUnrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish'
-                            }`}>
-                            {totalUnrealizedPnl >= 0 ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />}
-                            ${Math.abs(totalUnrealizedPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
-                        {account.equity > 0 && (
-                            <div className={`text-xs mt-1 font-medium ${totalUnrealizedPnl >= 0 ? 'text-bullish/80' : 'text-bearish/80'}`}>
-                                {totalUnrealizedPnl >= 0 ? '+' : ''}{((totalUnrealizedPnl / account.equity) * 100).toFixed(2)}%
-                            </div>
-                        )}
-                    </div>
-                    <div className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-5 relative overflow-hidden">
-                        <div className="text-sm text-coffee-medium mb-1">Available Margin</div>
-                        <div className="text-3xl font-bold text-white tracking-tight">
-                            ${account.availableMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        
+                        {/* Portfolio Chart */}
+                        <div className="pt-4">
+                            <PortfolioChart />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Positions */}
+            {/* Open Positions */}
+            {positions.length > 0 && (
                 <div className="glass-card p-6">
                     <h2 className="text-2xl font-bold mb-6 text-white">Open Positions</h2>
-                    {positions.length === 0 ? (
-                        <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
-                            <p>No open positions</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {positions.map((position) => {
+                    <div className="space-y-3">
+                        {positions.map((position) => {
                                 const isLong = position.side === 'long';
                                 const pnlColor = position.unrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish';
 
@@ -213,25 +212,57 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             </div>
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                            );
+                        })}
+                    </div>
                 </div>
+            )}
 
-                {/* Watchlist */}
-                <div className="glass-card p-6">
+            {/* Watchlist */}
+            <div className="glass-card p-6">
+                    {/* Header with back button, title, and add button */}
                     <div className="flex items-center justify-between mb-6">
+                        <button 
+                            className="p-3 hover:bg-white/5 rounded-2xl transition-colors"
+                            onClick={() => window.history.back()}
+                        >
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
                         <h2 className="text-2xl font-bold text-white">Watchlist</h2>
-                        <button className="p-2 hover:bg-bg-hover rounded-full transition-colors">
-                            <Search className="w-5 h-5 text-primary" />
+                        <button 
+                            className="p-3 hover:bg-white/5 rounded-2xl transition-colors"
+                            onClick={() => document.getElementById('add-token-select')?.focus()}
+                        >
+                            <Plus className="w-6 h-6 text-white" />
                         </button>
                     </div>
 
-                    {/* Add to watchlist */}
-                    <div className="mb-4 relative">
+                    {/* Watchlist items */}
+                    {watchlistMarkets.length === 0 ? (
+                        <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
+                            <p>No tokens available</p>
+                            <p className="text-xs mt-2 opacity-60">Add tokens using the button below</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4 mb-4">
+                            {watchlistMarkets.map((market) => (
+                                <WatchlistItem
+                                    key={market.name}
+                                    market={market}
+                                    onTokenClick={handleTokenClick}
+                                    onRemove={removeFromWatchlist}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Add new asset button */}
+                    <div className="relative">
                         <select
-                            className="w-full bg-bg-tertiary/50 border border-white/5 rounded-xl px-4 py-3 text-sm min-h-[52px] text-white focus:border-primary/50 focus:ring-1 focus:ring-primary/50 appearance-none cursor-pointer hover:bg-bg-hover transition-colors"
+                            id="add-token-select"
+                            className="w-full bg-transparent border-2 border-[#FFD60A] rounded-2xl px-6 py-4 text-base font-semibold text-[#FFD60A] focus:border-[#FFD60A] focus:ring-2 focus:ring-[#FFD60A]/20 appearance-none cursor-pointer hover:bg-[#FFD60A]/5 transition-colors"
                             value=""
                             onChange={(e) => {
                                 if (e.target.value) {
@@ -240,7 +271,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                 }
                             }}
                         >
-                            <option value="">+ Add token to watchlist...</option>
+                            <option value="">Add new asset</option>
                             {markets
                                 .filter(m => !watchlist.includes(m.name))
                                 .slice(0, 50)
@@ -250,70 +281,67 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                     </option>
                                 ))}
                         </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <Plus className="w-4 h-4 text-coffee-medium" />
+                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <svg className="w-5 h-5 text-[#FFD60A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                         </div>
                     </div>
-
-                    {/* Watchlist items */}
-                    {watchlistMarkets.length === 0 ? (
-                        <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
-                            <p>No tokens available</p>
-                            <p className="text-xs mt-2 opacity-60">Add tokens using the dropdown above</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-2">
-                            {watchlistMarkets.map((market) => {
-                                const priceChangePercent = market.change24h || 0;
-                                const isPositive = priceChangePercent >= 0;
-
-                                return (
-                                    <div
-                                        key={market.name}
-                                        className="bg-bg-tertiary/50 border border-white/5 rounded-xl p-4 hover:bg-bg-hover transition-all cursor-pointer group active:scale-[0.98]"
-                                        onClick={() => {
-                                            setSelectedMarket(market.symbol);
-                                            onTokenClick?.(market.symbol);
-                                        }}
-                                    >
-                                        <div className="flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                                                {/* Small chart preview */}
-                                                <div className="w-16 h-10 shrink-0 bg-primary/10 rounded border border-primary/20 flex items-center justify-center overflow-hidden">
-                                                    <MiniChart 
-                                                        symbol={market.symbol} 
-                                                        isStock={market.isStock === true}
-                                                    />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-bold text-white">{market.name}</div>
-                                                    <div className="text-sm text-coffee-medium font-mono">
-                                                        ${market.price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3 shrink-0">
-                                                <div className={`text-sm font-bold font-mono ${isPositive ? 'text-bullish' : 'text-bearish'}`}>
-                                                    ({isPositive ? '+' : ''}{priceChangePercent.toFixed(2)}%)
-                                                </div>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        removeFromWatchlist(market.name);
-                                                    }}
-                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-white/10 rounded-full"
-                                                >
-                                                    <X className="w-4 h-4 text-coffee-medium hover:text-white" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );
 }
+
+// Memoized watchlist item to prevent unnecessary re-renders
+interface WatchlistItemProps {
+    market: Market;
+    onTokenClick: (symbol: string) => void;
+    onRemove: (name: string) => void;
+}
+
+const WatchlistItem = memo(({ market, onTokenClick, onRemove }: WatchlistItemProps) => {
+    const priceChangePercent = market.change24h || 0;
+    const isPositive = priceChangePercent >= 0;
+    const cleanTicker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+
+    return (
+        <div
+            className="bg-gradient-to-br from-[#2C2C2E] to-[#1C1C1E] rounded-3xl p-4 md:p-5 hover:from-[#3C3C3E] hover:to-[#2C2C2E] transition-all cursor-pointer group active:scale-[0.98] shadow-lg"
+            onClick={() => onTokenClick(market.symbol)}
+        >
+            <div className="flex items-center gap-2 md:gap-4">
+                {/* Token Logo */}
+                <div className="shrink-0">
+                    <TokenLogo symbol={market.symbol} size={48} className="rounded-full md:w-14 md:h-14" />
+                </div>
+                
+                {/* Token Name */}
+                <div className="flex-1 min-w-0">
+                    <div className="font-bold text-white text-lg md:text-xl">{cleanTicker}</div>
+                </div>
+                
+                {/* Mini Chart - Hidden on small mobile, visible on larger screens */}
+                <div className="hidden sm:block w-20 md:w-28 h-10 md:h-12 shrink-0 opacity-90">
+                    <MiniChart 
+                        symbol={market.symbol} 
+                        isStock={market.isStock === true}
+                        width={112}
+                        height={48}
+                    />
+                </div>
+                
+                {/* Price and Change - Right aligned, responsive sizing */}
+                <div className="flex flex-col items-end shrink-0">
+                    <div className="text-[#FFD60A] font-bold text-base md:text-xl font-mono mb-0.5 whitespace-nowrap">
+                        ${market.price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                    </div>
+                    <div className={`text-sm md:text-base font-semibold whitespace-nowrap ${isPositive ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
+                        {isPositive ? '+' : ''}{priceChangePercent.toFixed(2)}%
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+});
+
+WatchlistItem.displayName = 'WatchlistItem';
