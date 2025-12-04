@@ -35,8 +35,8 @@ export default function Home() {
 
     return (
         <div className="min-h-screen flex flex-col bg-bg-primary">
-            {/* Main Content - No header */}
-            <main className="flex-1 container px-4 py-6 max-w-[1920px] w-[90%] mx-auto" style={{ paddingBottom: '120px' }}>
+            {/* Main Content - No header, extra top padding for breathing room */}
+            <main className="flex-1 container px-4 pt-12 pb-6 max-w-[1920px] w-[90%] mx-auto" style={{ paddingBottom: '120px' }}>
                 {view === 'home' ? (
                     <div className="overflow-y-auto" style={{ paddingBottom: '100px' }}>
                         <HomeScreen
