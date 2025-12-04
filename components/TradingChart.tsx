@@ -156,8 +156,8 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                 </div>
             </div>
 
-            {/* Chart Container */}
-            <div className="flex-1 relative min-h-0 w-full p-4" style={{ minHeight: '400px', minWidth: 0 }}>
+            {/* Chart Container - Fixed height to avoid ResponsiveContainer dimension issues */}
+            <div className="relative w-full p-4" style={{ height: '400px' }}>
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80 z-10 rounded-b-lg">
                         <div className="text-center">

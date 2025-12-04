@@ -10,6 +10,9 @@ import OrderNotification, { OrderNotificationData } from '@/components/OrderNoti
 type OrderSide = 'long' | 'short';
 type MarginMode = 'isolated' | 'cross';
 
+// Hyperliquid minimum notional value requirement
+const MIN_NOTIONAL_VALUE = 10;
+
 export default function OrderPanel() {
     const { t, formatCurrency, formatPercent } = useLanguage();
     const { connected, getMarket, selectedMarket, placeOrder, account } = useHyperliquid();
@@ -64,6 +67,11 @@ export default function OrderPanel() {
             return;
         }
 
+        // Hyperliquid requires minimum $10 notional value
+        if (notionalValue < MIN_NOTIONAL_VALUE) {
+            setError(`Minimum order size is $${MIN_NOTIONAL_VALUE} notional. Current: ${formatCurrency(notionalValue)}`);
+            return;
+        }
 
         if (totalRequired > account.availableMargin) {
             setError(`${t.errors.insufficientFunds}. Required: ${formatCurrency(totalRequired)}, Available: ${formatCurrency(account.availableMargin)}`);
@@ -327,10 +335,18 @@ export default function OrderPanel() {
                     </div>
                 )}
 
+                {/* Minimum Notional Warning */}
+                {orderSize > 0 && notionalValue < MIN_NOTIONAL_VALUE && (
+                    <div className="flex items-center gap-2 p-3 bg-secondary/10 border border-secondary/20 rounded-lg text-sm text-secondary">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>Minimum order size is ${MIN_NOTIONAL_VALUE} notional (currently {formatCurrency(notionalValue)})</span>
+                    </div>
+                )}
+
                 {/* Place Order Button - Large, Distinct, Bottom Position */}
                 <button
                     onClick={handlePlaceOrder}
-                    disabled={!connected || loading || orderSize <= 0}
+                    disabled={!connected || loading || orderSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE}
                     className={`w-full rounded-lg py-4 text-base font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-soft-lg ${
                         orderSide === 'long'
                             ? 'bg-bullish hover:bg-bullish-light text-white'
@@ -342,6 +358,8 @@ export default function OrderPanel() {
                             <div className="spinner" />
                             {t.common.loading}
                         </div>
+                    ) : notionalValue > 0 && notionalValue < MIN_NOTIONAL_VALUE ? (
+                        `Min $${MIN_NOTIONAL_VALUE} required`
                     ) : (
                         `Place ${orderSide === 'long' ? 'Long' : 'Short'} Order`
                     )}

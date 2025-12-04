@@ -1,10 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { IS_TESTNET, API_URL } from '@/lib/hyperliquid/client';
 
+// Conditional logging
+const isDev = process.env.NODE_ENV === 'development';
+const log = {
+    info: (...args: any[]) => isDev && console.log(...args),
+    warn: (...args: any[]) => isDev && console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+};
+
 export interface CandleData {
-    time: number; // Unix timestamp in seconds
+    time: number;
     open: number;
     high: number;
     low: number;
@@ -14,7 +22,6 @@ export interface CandleData {
 
 export type Timeframe = '1m' | '5m' | '15m' | '30m' | '1h' | '4h' | '1d';
 
-// Map our timeframe strings to Hyperliquid interval format
 const TIMEFRAME_MAP: Record<Timeframe, string> = {
     '1m': '1m',
     '5m': '5m',
@@ -47,41 +54,26 @@ export function useCandleData(
         // For Trade.xyz stocks, use xyz: prefix
         const restApiCoin = isStock ? `xyz:${baseCoin}` : baseCoin;
         
-        // Calculate time range based on dateRangeDays parameter
-        const endTime = Date.now(); // milliseconds
-        const startTime = endTime - (dateRangeDays * 24 * 60 * 60 * 1000); // Historical data range
-        
-        console.log(`📅 Fetching ${dateRangeDays} days of historical data (${new Date(startTime).toLocaleDateString()} to ${new Date(endTime).toLocaleDateString()})`);
+        const endTime = Date.now();
+        const startTime = endTime - (dateRangeDays * 24 * 60 * 60 * 1000);
         
         const tryFetch = async (coinName: string) => {
-            const payload = {
-                type: 'candleSnapshot',
-                req: {
-                    coin: coinName,
-                    interval: interval,
-                    startTime: startTime,
-                    endTime: endTime
-                }
-            };
-            
-            console.log(`🔄 Fetching candles via REST API for ${coinName} (${interval})...`, payload);
-            
             const response = await fetch(`${API_URL}/info`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    type: 'candleSnapshot',
+                    req: { coin: coinName, interval, startTime, endTime }
+                })
             });
             
             if (!response.ok) {
-                // Try to get error details
                 let errorDetails = '';
                 try {
-                    const errorData = await response.json();
-                    errorDetails = JSON.stringify(errorData);
+                    errorDetails = JSON.stringify(await response.json());
                 } catch (e) {
                     errorDetails = await response.text();
                 }
-                console.error(`❌ REST API error for ${coinName} (${response.status}):`, errorDetails);
                 throw new Error(`HTTP ${response.status}: ${errorDetails}`);
             }
             
@@ -89,40 +81,26 @@ export function useCandleData(
         };
         
         try {
-            // Try with base coin name first
             const candleData = await tryFetch(restApiCoin);
             processCandleData(candleData);
         } catch (err: any) {
             // If it fails and we're on testnet with a crypto asset, try with -PERP suffix
             if (IS_TESTNET && !isStock && err.message?.includes('500')) {
-                console.log('🔄 Retrying with -PERP suffix for testnet...');
                 try {
                     const candleData = await tryFetch(`${baseCoin}-PERP`);
                     processCandleData(candleData);
-                } catch (retryErr) {
-                    console.error('❌ Failed to fetch candles via REST API (both attempts):', retryErr);
+                } catch (retryErr: any) {
+                    log.warn('Failed to fetch candles via REST API');
                 }
-            } else {
-                console.error('❌ Failed to fetch candles via REST API:', err);
             }
             // Don't set error here - let WebSocket try for real-time updates
         }
     };
     
-    // Helper function to process candle data
     const processCandleData = (candleData: any) => {
-        console.log(`📊 REST API returned:`, { 
-            isArray: Array.isArray(candleData), 
-            length: Array.isArray(candleData) ? candleData.length : 'N/A',
-            type: typeof candleData,
-            sample: Array.isArray(candleData) && candleData.length > 0 ? candleData[0] : candleData
-        });
-        
         if (Array.isArray(candleData) && candleData.length > 0) {
             const processedCandles: CandleData[] = candleData.map((candle: any) => {
-                // Candle format: { t: milliseconds, T: milliseconds, s: coin, i: interval, o, c, h, l, v, n }
                 const time = candle.t || candle.T;
-                // Convert milliseconds to seconds
                 const timeSeconds = time ? Math.floor(time / 1000) : Math.floor(Date.now() / 1000);
                 
                 return {
@@ -136,15 +114,10 @@ export function useCandleData(
             }).filter((c: CandleData) => c.time > 0 && c.open > 0);
             
             if (processedCandles.length > 0) {
-                console.log(`✅ Loaded ${processedCandles.length} candles via REST API`);
                 setCandles(processedCandles.sort((a, b) => a.time - b.time));
                 setLoading(false);
                 setError(null);
-            } else {
-                console.warn('⚠️ REST API returned candles but none passed validation');
             }
-        } else {
-            console.warn('⚠️ REST API returned empty or invalid candle data');
         }
     };
 
@@ -166,9 +139,7 @@ export function useCandleData(
         const loadingTimeout = setTimeout(() => {
             setCandles(prev => {
                 if (prev.length === 0) {
-                    console.warn('⚠️ No candle data received after 10 seconds');
                     setLoading(false);
-                    // Don't set error - just show empty state
                     return [];
                 }
                 return prev;
@@ -182,30 +153,17 @@ export function useCandleData(
             : (require('@/lib/hyperliquid/client').IS_TESTNET ? `${baseCoin}-PERP` : baseCoin);
         const interval = TIMEFRAME_MAP[timeframe];
 
-        console.log(`📊 Subscribing to candles for ${assetName}, interval: ${interval}`);
-
-        // Handle candle updates from WebSocket
-        // The WebSocket sends an array of candles when you subscribe (historical + new)
         const handleCandleUpdate = (coin: string, candleInterval: string, candleData: any) => {
-            console.log(`🕯️ handleCandleUpdate called:`, { coin, candleInterval, assetName, interval, candleDataLength: Array.isArray(candleData) ? candleData.length : 1 });
-            
-            // Normalize coin name for comparison (strip -PERP suffix if present)
             const normalizeCoin = (name: string) => name.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
             const normalizedAssetName = normalizeCoin(assetName);
             const normalizedCoin = normalizeCoin(coin);
             
-            console.log(`🕯️ Comparing: "${normalizedCoin}" === "${normalizedAssetName}" && "${candleInterval}" === "${interval}"`);
-            
             if (normalizedCoin === normalizedAssetName && candleInterval === interval) {
-                console.log('✅ Match! Processing candles...');
-                // candleData is an array of candles from WebSocket
                 const candlesToProcess = Array.isArray(candleData) ? candleData : [candleData];
                 
                 const processedCandles: CandleData[] = candlesToProcess
                     .map((candle: any) => {
-                        // WebSocket format: { t: milliseconds, T: milliseconds, s: coin, i: interval, o, c, h, l, v, n }
                         const time = candle.t || candle.T;
-                        // Convert milliseconds to seconds
                         const timeSeconds = time ? Math.floor(time / 1000) : Math.floor(Date.now() / 1000);
                         
                         return {
@@ -221,29 +179,17 @@ export function useCandleData(
 
                 if (processedCandles.length > 0) {
                     setCandles(prev => {
-                        // If this is the first batch (prev is empty), replace entirely
-                        // Otherwise merge with existing candles
                         if (prev.length === 0) {
-                            const sorted = processedCandles.sort((a, b) => a.time - b.time);
-                            console.log(`✅ Loaded ${sorted.length} candles from WebSocket`);
                             setLoading(false);
-                            return sorted;
+                            return processedCandles.sort((a, b) => a.time - b.time);
                         }
                         
-                        // Merge new candles with existing ones
                         const candleMap = new Map<number, CandleData>();
-                        
-                        // Add existing candles
                         prev.forEach(c => candleMap.set(c.time, c));
-                        
-                        // Update/add new candles
                         processedCandles.forEach(c => candleMap.set(c.time, c));
                         
-                        // Convert back to array and sort by time
-                        const merged = Array.from(candleMap.values()).sort((a, b) => a.time - b.time);
-                        console.log(`✅ Updated candles: ${merged.length} total (${processedCandles.length} new/updated)`);
                         setLoading(false);
-                        return merged;
+                        return Array.from(candleMap.values()).sort((a, b) => a.time - b.time);
                     });
                 }
             }
@@ -295,33 +241,19 @@ export function useCandleData(
             clearTimeout(subscribeDelay);
             
             // Only unsubscribe if we actually subscribed
-            // Use a longer delay to ensure subscription was processed
             if (subscribed) {
                 setTimeout(() => {
                     if (wsManager.isConnected()) {
                         try {
                             wsManager.unsubscribeFromCandles(assetName, interval);
                         } catch (error) {
-                            // Silently ignore unsubscribe errors (already unsubscribed, etc.)
-                            console.log('Unsubscribe note (safe to ignore):', error);
+                            // Silently ignore
                         }
                     }
                 }, 300);
             }
         };
     }, [symbol, timeframe, isStock, dateRangeDays]);
-
-    // Debug: log candles state
-    useEffect(() => {
-        console.log(`📊 useCandleData state:`, { 
-            symbol, 
-            timeframe, 
-            isStock, 
-            candlesCount: candles.length, 
-            loading, 
-            error 
-        });
-    }, [symbol, timeframe, isStock, candles.length, loading, error]);
 
     return { candles, loading, error };
 }

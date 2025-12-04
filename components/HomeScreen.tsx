@@ -7,7 +7,6 @@ import { Plus, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import PortfolioChart from '@/components/PortfolioChart';
-import { createHyperliquidClient } from '@/lib/hyperliquid/client';
 import type { Market } from '@/hooks/useHyperliquid';
 
 const WATCHLIST_STORAGE_KEY = 'hyperliquid_watchlist';
@@ -19,10 +18,9 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenProps = {}) {
     const { t } = useLanguage();
-    const { account, positions, markets, setSelectedMarket, address } = useHyperliquid();
+    const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl } = useHyperliquid();
     const [watchlist, setWatchlist] = useState<string[]>([]);
     const [mounted, setMounted] = useState(false);
-    const [thirtyDayPnl, setThirtyDayPnl] = useState(0);
 
     useEffect(() => {
         setMounted(true);
@@ -32,7 +30,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 try {
                     setWatchlist(JSON.parse(saved));
                 } catch (e) {
-                    console.error('Error parsing watchlist:', e);
+                    // Silently fail on parse error
                 }
             }
         }
@@ -71,44 +69,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
         return `${address.slice(0, 4)}...${address.slice(-4)}`;
     };
 
-    // Fetch and calculate 30-day PnL from order history
-    useEffect(() => {
-        const fetch30DayPnl = async () => {
-            if (!address) {
-                setThirtyDayPnl(0);
-                return;
-            }
-
-            try {
-                const client = createHyperliquidClient();
-                const fills = await client.info.getUserFills(address.toLowerCase());
-
-                if (!fills || fills.length === 0) {
-                    setThirtyDayPnl(0);
-                    return;
-                }
-
-                // Calculate PnL from fills in the last 30 days
-                const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-                const recentFills = fills.filter((fill: any) => fill.time >= thirtyDaysAgo);
-                
-                const totalPnl = recentFills.reduce((sum: number, fill: any) => {
-                    const closedPnl = parseFloat(fill.closedPnl || '0');
-                    return sum + closedPnl;
-                }, 0);
-
-                setThirtyDayPnl(totalPnl);
-            } catch (error) {
-                console.error('Error fetching 30-day PnL:', error);
-                setThirtyDayPnl(0);
-            }
-        };
-
-        if (mounted) {
-            fetch30DayPnl();
-        }
-    }, [address, mounted]);
-
+    // 30-day PnL now comes from the provider (cached)
     // Calculate 30-day movement percentage
     const thirtyDayMovement = account.equity > 0 ? ((thirtyDayPnl / account.equity) * 100) : 0;
 

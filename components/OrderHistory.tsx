@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { createHyperliquidClient } from '@/lib/hyperliquid/client';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface OrderHistoryEntry {
@@ -19,71 +18,36 @@ interface OrderHistoryEntry {
 
 export default function OrderHistory() {
     const { t, formatCurrency } = useLanguage();
-    const { address } = useHyperliquid();
-    const [orderHistory, setOrderHistory] = useState<OrderHistoryEntry[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const { address, fills, userDataLoading } = useHyperliquid();
 
-    useEffect(() => {
-        const fetchOrderHistory = async () => {
-            if (!address) {
-                setOrderHistory([]);
-                return;
-            }
+    // Process fills into order history entries - memoized for performance
+    const orderHistory = useMemo<OrderHistoryEntry[]>(() => {
+        if (!fills || fills.length === 0) return [];
 
-            setLoading(true);
-            setError(null);
+        // Process fills and sort by time (most recent first)
+        return fills
+            .map((fill: any, index: number) => {
+                const coin = fill.coin?.replace('-PERP', '').replace('xyz:', '') || 'UNKNOWN';
+                const symbol = `${coin}-USD`;
+                const price = parseFloat(fill.px || '0');
+                const size = parseFloat(fill.sz || '0');
+                const isBuy = fill.side === 'B' || fill.dir === 'Open Long' || fill.dir === 'Close Short';
+                const side = isBuy ? 'long' : 'short';
+                const closedPnl = parseFloat(fill.closedPnl || '0');
 
-            try {
-                const client = createHyperliquidClient();
-                const fills = await client.info.getUserFills(address.toLowerCase());
-
-                if (!fills || fills.length === 0) {
-                    setOrderHistory([]);
-                    setLoading(false);
-                    return;
-                }
-
-                // Process fills and group by order to calculate entry/exit prices
-                // For simplicity, we'll show each fill as a separate entry
-                // In a more sophisticated implementation, you'd group fills by order ID
-                const processedFills: OrderHistoryEntry[] = fills.map((fill, index) => {
-                    const coin = fill.coin?.replace('-PERP', '').replace('xyz:', '') || 'UNKNOWN';
-                    const symbol = `${coin}-USD`;
-                    const price = parseFloat(fill.px || '0');
-                    const size = parseFloat(fill.sz || '0');
-                    const isBuy = fill.side === 'B' || fill.dir === 'Open Long' || fill.dir === 'Close Short';
-                    const side = isBuy ? 'long' : 'short';
-                    const closedPnl = parseFloat(fill.closedPnl || '0');
-
-                    // For fills, we'll use the fill price as both entry and exit
-                    // The closedPnl already accounts for the profit/loss
-                    return {
-                        id: `${fill.oid || fill.tid || index}-${fill.time}`,
-                        side,
-                        symbol,
-                        entryPrice: price, // Simplified - in reality you'd track entry from position
-                        exitPrice: price,
-                        pnl: closedPnl,
-                        size,
-                        time: fill.time || Date.now(),
-                    };
-                });
-
-                // Sort by time (most recent first)
-                processedFills.sort((a, b) => b.time - a.time);
-
-                setOrderHistory(processedFills);
-            } catch (err) {
-                console.error('Error fetching order history:', err);
-                setError(err instanceof Error ? err.message : 'Failed to fetch order history');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchOrderHistory();
-    }, [address]);
+                return {
+                    id: `${fill.oid || fill.tid || index}-${fill.time}`,
+                    side,
+                    symbol,
+                    entryPrice: price,
+                    exitPrice: price,
+                    pnl: closedPnl,
+                    size,
+                    time: fill.time || Date.now(),
+                } as OrderHistoryEntry;
+            })
+            .sort((a, b) => b.time - a.time);
+    }, [fills]);
 
     if (!address) {
         return (
@@ -105,16 +69,12 @@ export default function OrderHistory() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {loading ? (
+                {userDataLoading ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="text-center">
                             <div className="spinner mx-auto mb-2"></div>
                             <p className="text-coffee-medium">Loading order history...</p>
                         </div>
-                    </div>
-                ) : error ? (
-                    <div className="flex items-center justify-center h-full">
-                        <p className="text-bearish text-center">{error}</p>
                     </div>
                 ) : orderHistory.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
@@ -186,5 +146,3 @@ export default function OrderHistory() {
         </div>
     );
 }
-
-

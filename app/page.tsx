@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import WalletConnect from '@/components/WalletConnect';
+import { usePrivy } from '@privy-io/react-auth';
 import MarketOverview from '@/components/MarketOverview';
 import OrderPanel from '@/components/OrderPanel';
 import PositionsPanel from '@/components/PositionsPanel';
@@ -12,55 +12,30 @@ import TradingChart from '@/components/TradingChart';
 import MarketSelector from '@/components/MarketSelector';
 import OrderHistory from '@/components/OrderHistory';
 import Settings from '@/components/Settings';
-import { TrendingUp, Home as HomeIcon, BarChart3, Zap, Menu, History, Settings as SettingsIcon } from 'lucide-react';
+import { Home as HomeIcon, BarChart3, History, Settings as SettingsIcon, User, LogOut } from 'lucide-react';
 
 export default function Home() {
-    const { t, language, setLanguage } = useLanguage();
+    const { t } = useLanguage();
     const { selectedMarket, setSelectedMarket, address } = useHyperliquid();
+    const { ready, authenticated, login, logout } = usePrivy();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'settings'>('home');
 
     const formatAddress = (addr: string | null) => {
         if (!addr) return null;
-        return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+        return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+    };
+
+    const handleWalletClick = () => {
+        if (authenticated) {
+            logout();
+        } else {
+            login();
+        }
     };
 
     return (
         <div className="min-h-screen flex flex-col bg-bg-primary">
-            {/* Header */}
-            <header className="border-b border-white/5 bg-bg-secondary/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
-                <div className="container px-4 py-3 max-w-[1920px] w-[90%] mx-auto">
-                    <div className="flex items-center justify-between">
-                        {/* Logo - Rayo Lightning Bolt */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                    <path 
-                                        d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" 
-                                        fill="black"
-                                        stroke="black"
-                                        strokeWidth="0.5"
-                                    />
-                                </svg>
-                            </div>
-                            <h1 className="text-lg font-heading font-bold text-white hidden sm:block tracking-tight">Rayo</h1>
-                        </div>
-
-                        {/* Right Section */}
-                        <div className="flex items-center gap-3">
-                            {/* Account Info */}
-                            {address && (
-                                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-bg-tertiary/50 rounded-full border border-white/5 hover:bg-bg-hover transition-colors cursor-pointer">
-                                    <span className="text-xs text-coffee-medium font-mono">{formatAddress(address)}</span>
-                                </div>
-                            )}
-
-                            <WalletConnect />
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
+            {/* Main Content - No header */}
             <main className="flex-1 container px-4 py-6 max-w-[1920px] w-[90%] mx-auto" style={{ paddingBottom: '120px' }}>
                 {view === 'home' ? (
                     <div className="overflow-y-auto" style={{ paddingBottom: '100px' }}>
@@ -131,57 +106,87 @@ export default function Home() {
                 }}
                 className="border-t border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.8)]"
             >
-                <div className="flex items-center justify-center gap-8 py-4">
+                <div className="flex items-center justify-center gap-4 py-3 px-2">
                     {/* Home */}
                     <button
                         onClick={() => setView('home')}
-                        className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${
+                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
                             view === 'home'
                                 ? 'text-primary bg-primary/10'
                                 : 'text-coffee-medium hover:text-white hover:bg-white/5'
                         }`}
                     >
-                        <HomeIcon className="w-7 h-7" />
-                        <span className="text-sm font-medium">Home</span>
+                        <HomeIcon className="w-6 h-6" />
+                        <span className="text-xs font-medium">Home</span>
                     </button>
 
                     {/* Trading */}
                     <button
                         onClick={() => setView('trading')}
-                        className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${
+                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
                             view === 'trading'
                                 ? 'text-primary bg-primary/10'
                                 : 'text-coffee-medium hover:text-white hover:bg-white/5'
                         }`}
                     >
-                        <BarChart3 className="w-7 h-7" />
-                        <span className="text-sm font-medium">Trade</span>
+                        <BarChart3 className="w-6 h-6" />
+                        <span className="text-xs font-medium">Trade</span>
                     </button>
 
                     {/* History */}
                     <button
                         onClick={() => setView('history')}
-                        className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${
+                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
                             view === 'history'
                                 ? 'text-primary bg-primary/10'
                                 : 'text-coffee-medium hover:text-white hover:bg-white/5'
                         }`}
                     >
-                        <History className="w-7 h-7" />
-                        <span className="text-sm font-medium">History</span>
+                        <History className="w-6 h-6" />
+                        <span className="text-xs font-medium">History</span>
                     </button>
 
                     {/* Settings */}
                     <button
                         onClick={() => setView('settings')}
-                        className={`flex flex-col items-center gap-2 px-6 py-3 rounded-2xl transition-all ${
+                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
                             view === 'settings'
                                 ? 'text-primary bg-primary/10'
                                 : 'text-coffee-medium hover:text-white hover:bg-white/5'
                         }`}
                     >
-                        <SettingsIcon className="w-7 h-7" />
-                        <span className="text-sm font-medium">Settings</span>
+                        <SettingsIcon className="w-6 h-6" />
+                        <span className="text-xs font-medium">Settings</span>
+                    </button>
+
+                    {/* Wallet/Account */}
+                    <button
+                        onClick={handleWalletClick}
+                        disabled={!ready}
+                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
+                            authenticated
+                                ? 'text-primary bg-primary/10'
+                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        {!ready ? (
+                            <>
+                                <div className="w-6 h-6 flex items-center justify-center">
+                                    <div className="spinner w-5 h-5 border-2" />
+                                </div>
+                                <span className="text-xs font-medium">...</span>
+                            </>
+                        ) : authenticated ? (
+                            <>
+                                <User className="w-6 h-6" />
+                                <span className="text-xs font-medium font-mono">{formatAddress(address)}</span>
+                            </>
+                        ) : (
+                            <>
+                                <User className="w-6 h-6" />
+                                <span className="text-xs font-medium">Sign In</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </nav>

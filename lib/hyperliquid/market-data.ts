@@ -1,7 +1,15 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { publicClient, WS_URL, API_URL } from './client';
+
+// Conditional logging
+const isDev = process.env.NODE_ENV === 'development';
+const log = {
+    info: (...args: any[]) => isDev && console.log(...args),
+    warn: (...args: any[]) => isDev && console.warn(...args),
+    error: (...args: any[]) => console.error(...args),
+};
 
 // Known Trade.xyz (Hyperunit) stock tickers
 export const TRADEXYZ_ASSETS = ['XYZ100', 'NVDA', 'MSFT', 'TSLA', 'GOOGL', 'AMZN', 'COIN', 'HOOD', 'PYPL', 'AAPL', 'META', 'NFLX'];
@@ -87,7 +95,6 @@ export function useMarketData(): MarketData {
 
                     // Skip delisted assets
                     if (asset.isDelisted === true) {
-                        console.log(`⏭️ Skipping delisted asset: ${asset.name}`);
                         continue;
                     }
 
@@ -135,20 +142,6 @@ export function useMarketData(): MarketData {
                     // If from DEX "xyz", mark as stock
                     const isStock = isFromDex || isTradeXyzAsset(cleanName, onlyIsolated);
                     
-                    // Debug logging for stock identification
-                    if (onlyIsolated || isFromDex) {
-                        console.log(`🔍 ${isFromDex ? 'Trade.xyz' : 'HIP-3'} Asset: ${cleanName} (${asset.name})`, {
-                            price,
-                            prevDayPx,
-                            change24h,
-                            fundingRate,
-                            volume24h,
-                            markPx: assetCtx.markPx,
-                            midPx: assetCtx.midPx,
-                            onlyIsolated,
-                            isStock
-                        });
-                    }
 
                     processedMarkets.push({
                         symbol,
@@ -190,44 +183,31 @@ export function useMarketData(): MarketData {
 
                 if (tradeXyzResponse.ok) {
                     const tradeXyzData = await tradeXyzResponse.json();
-                    console.log('📊 Trade.xyz DEX response:', tradeXyzData);
                     
-                    // The response should be [Meta, AssetCtx[]]
                     if (Array.isArray(tradeXyzData) && tradeXyzData.length === 2) {
                         const [tradeXyzMeta, tradeXyzAssetCtxs] = tradeXyzData;
                         if (tradeXyzMeta && tradeXyzMeta.universe && tradeXyzAssetCtxs) {
-                            console.log(`✅ Found ${tradeXyzMeta.universe.length} Trade.xyz assets`);
-                            
-                            // Try to get prices for DEX assets
                             let dexMids = {};
                             try {
                                 const dexMidsResponse = await fetch(`${API_URL}/info`, {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({
-                                        type: 'allMids',
-                                        dex: 'xyz'
-                                    })
+                                    body: JSON.stringify({ type: 'allMids', dex: 'xyz' })
                                 });
                                 
                                 if (dexMidsResponse.ok) {
                                     const dexMidsData = await dexMidsResponse.json();
-                                    console.log('📊 Trade.xyz DEX mids:', dexMidsData);
-                                    // allMids response format might be { mids: {...} } or just {...}
                                     dexMids = dexMidsData.mids || dexMidsData || {};
                                 }
                             } catch (midsError) {
-                                console.warn('⚠️ Could not fetch Trade.xyz prices, will use asset context:', midsError);
+                                // Continue without DEX mids
                             }
                             
                             processMarkets(tradeXyzMeta.universe, tradeXyzAssetCtxs, true, dexMids);
                         }
                     }
-                } else {
-                    console.warn('⚠️ Failed to fetch Trade.xyz markets:', tradeXyzResponse.status);
                 }
             } catch (dexError) {
-                console.warn('⚠️ Error fetching Trade.xyz DEX markets:', dexError);
                 // Don't fail the whole fetch if DEX request fails
             }
 

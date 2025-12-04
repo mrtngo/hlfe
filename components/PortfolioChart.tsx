@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef, memo } from 'react';
+import { useEffect, useState, useCallback, useRef, memo, useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { createHyperliquidClient } from '@/lib/hyperliquid/client';
 import { ComposedChart, Line, Area, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
 import { ChevronDown } from 'lucide-react';
 
@@ -18,246 +17,137 @@ interface PortfolioDataPoint {
 type TimeframeOption = '1D' | '7D' | '30D' | '90D' | '1Y' | 'All';
 
 function PortfolioChart() {
-    const { address, account } = useHyperliquid();
-    const [portfolioData, setPortfolioData] = useState<PortfolioDataPoint[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Use cached fills from the provider - no additional API calls!
+    const { address, account, fills, userDataLoading } = useHyperliquid();
     const [timeframe, setTimeframe] = useState<TimeframeOption>('30D');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    // Debounce the fetch to avoid rate limits when rapidly changing timeframes
-    useEffect(() => {
-        // Clear any pending fetch
-        if (fetchTimeoutRef.current) {
-            clearTimeout(fetchTimeoutRef.current);
-        }
-
-        // Set loading immediately
-        setLoading(true);
-
-        // Debounce the actual fetch by 300ms
-        fetchTimeoutRef.current = setTimeout(() => {
-            fetchPortfolioHistory();
-        }, 300);
-
-        return () => {
-            if (fetchTimeoutRef.current) {
-                clearTimeout(fetchTimeoutRef.current);
-            }
-        };
-    }, [address, timeframe]); // Removed account.equity to prevent unnecessary refetches
-
-    const fetchPortfolioHistory = async () => {
-            if (!address) {
-                setPortfolioData([]);
-                setLoading(false);
-                return;
-            }
-
-            try {
-                const client = createHyperliquidClient();
-                
-                // Fetch user funding history - this gives us account value snapshots
-                let accountSnapshots: any[] = [];
-                try {
-                    accountSnapshots = await client.info.perpetuals.getUserFunding(address.toLowerCase());
-                } catch (err: any) {
-                    console.log('Funding history not available:', err.message || err);
-                    accountSnapshots = [];
-                }
-
-                // If we have funding history, use that for more accurate snapshots
-                if (accountSnapshots && accountSnapshots.length > 0) {
-                    console.log('Using funding history for portfolio chart:', accountSnapshots.length, 'snapshots');
-                    
-                    // Group by day and take last value of each day
-                    const dailySnapshots: { [key: string]: { value: number; time: number } } = {};
-                    
-                    accountSnapshots.forEach((snapshot: any) => {
-                        const time = snapshot.time;
-                        const date = new Date(time);
-                        const dayKey = date.toISOString().split('T')[0];
-                        
-                        // funding history has account value snapshots
-                        const accountValue = parseFloat(snapshot.usdc || '0');
-                        
-                        if (!dailySnapshots[dayKey] || time > dailySnapshots[dayKey].time) {
-                            dailySnapshots[dayKey] = { value: accountValue, time };
-                        }
-                    });
-                    
-                    const dataPoints: PortfolioDataPoint[] = Object.keys(dailySnapshots)
-                        .sort()
-                        .map(dateKey => ({
-                            time: new Date(dateKey).getTime(),
-                            value: dailySnapshots[dateKey].value,
-                            timestamp: Math.floor(dailySnapshots[dateKey].time / 1000)
-                        }));
-                    
-                    // Add current value
-                    dataPoints.push({
-                        time: Date.now(),
-                        value: account.equity,
-                        timestamp: Math.floor(Date.now() / 1000)
-                    });
-                    
-                    // Filter by timeframe
-                    const now = Date.now();
-                    let cutoffTime = getTimeframeCutoff(now, timeframe);
-                    
-                    const filteredData = dataPoints.filter(d => d.time >= cutoffTime);
-                    setPortfolioData(filteredData.length > 0 ? filteredData : dataPoints);
-                    setLoading(false);
-                    return;
-                }
-                
-                // Fallback: reconstruct from fills
-                let fills: any[] = [];
-                try {
-                    fills = await client.info.getUserFills(address.toLowerCase());
-                } catch (err: any) {
-                    console.log('User fills not available:', err.message || err);
-                    fills = [];
-                }
-
-                if (!fills || fills.length === 0) {
-                    // No history, show flat line at current value
-                    const now = Date.now();
-                    setPortfolioData([
-                        {
-                            time: now - (24 * 60 * 60 * 1000),
-                            value: account.equity,
-                            timestamp: Math.floor((now - (24 * 60 * 60 * 1000)) / 1000)
-                        },
-                        {
-                            time: now,
-                            value: account.equity,
-                            timestamp: Math.floor(now / 1000)
-                        }
-                    ]);
-                    setLoading(false);
-                    return;
-                }
-
-                console.log('Reconstructing portfolio from fills:', fills.length, 'fills');
-                
-                // Sort fills chronologically
-                const sortedFills = [...fills].sort((a: any, b: any) => a.time - b.time);
-                
-                // Calculate total realized PnL from all fills
-                const totalRealizedPnl = sortedFills.reduce((sum: number, fill: any) => {
-                    return sum + parseFloat(fill.closedPnl || '0');
-                }, 0);
-                
-                // Starting portfolio value = current equity - total realized PnL
-                const startingValue = Math.max(0, account.equity - totalRealizedPnl);
-                
-                console.log('Portfolio reconstruction:', {
-                    currentEquity: account.equity,
-                    totalRealizedPnl: totalRealizedPnl,
-                    calculatedStartingValue: startingValue
-                });
-                
-                // Build portfolio value over time
-                const dataPoints: PortfolioDataPoint[] = [];
-                let runningPnl = 0;
-                
-                // Add starting point (first trade date)
-                const firstTradeTime = sortedFills[0].time;
-                dataPoints.push({
-                    time: firstTradeTime,
-                    value: startingValue,
-                    timestamp: Math.floor(firstTradeTime / 1000)
-                });
-                
-                // Group fills by hour for smoother line
-                const hourlyData: { [key: string]: { pnl: number; timestamp: number } } = {};
-                
-                sortedFills.forEach((fill: any) => {
-                    const date = new Date(fill.time);
-                    // Round to nearest hour
-                    date.setMinutes(0, 0, 0);
-                    const hourKey = date.toISOString();
-                    
-                    const pnl = parseFloat(fill.closedPnl || '0');
-                    
-                    if (!hourlyData[hourKey]) {
-                        hourlyData[hourKey] = { pnl: 0, timestamp: fill.time };
-                    }
-                    
-                    hourlyData[hourKey].pnl += pnl;
-                });
-                
-                // Build cumulative portfolio value
-                Object.keys(hourlyData).sort().forEach(hourKey => {
-                    runningPnl += hourlyData[hourKey].pnl;
-                    const portfolioValue = Math.max(0, startingValue + runningPnl);
-                    
-                    dataPoints.push({
-                        time: new Date(hourKey).getTime(),
-                        value: portfolioValue,
-                        timestamp: Math.floor(hourlyData[hourKey].timestamp / 1000)
-                    });
-                });
-
-                // Add current value as the last point
-                dataPoints.push({
-                    time: Date.now(),
-                    value: account.equity,
-                    timestamp: Math.floor(Date.now() / 1000)
-                });
-
-                // Filter based on selected timeframe
-                const now = Date.now();
-                let cutoffTime = getTimeframeCutoff(now, timeframe);
-                
-                const filteredData = dataPoints.filter(d => d.time >= cutoffTime);
-                setPortfolioData(filteredData.length > 0 ? filteredData : dataPoints);
-            } catch (error: any) {
-                console.error('Error fetching portfolio history:', error.message || error);
-                // Fallback to flat line at current value showing last 7 days
-                const now = Date.now();
-                const dataPoints: PortfolioDataPoint[] = [];
-                
-                // Create a simple line showing current value over the selected timeframe
-                const daysToShow = timeframe === '1D' ? 1 : timeframe === '7D' ? 7 : timeframe === '30D' ? 30 : timeframe === '90D' ? 90 : timeframe === '1Y' ? 365 : 7;
-                const startTime = now - (daysToShow * 24 * 60 * 60 * 1000);
-                
-                // Add a few points to show a flat line
-                for (let i = 0; i <= 3; i++) {
-                    const pointTime = startTime + ((now - startTime) * i / 3);
-                    dataPoints.push({
-                        time: pointTime,
-                        value: account.equity,
-                        timestamp: Math.floor(pointTime / 1000)
-                    });
-                }
-                
-                setPortfolioData(dataPoints);
-            } finally {
-                setLoading(false);
-            }
-    };
 
     // Helper function to calculate timeframe cutoff
-    const getTimeframeCutoff = (now: number, tf: TimeframeOption): number => {
+    const getTimeframeCutoff = useCallback((now: number, tf: TimeframeOption): number => {
         switch (tf) {
-            case '1D':
-                return now - (1 * 24 * 60 * 60 * 1000);
-            case '7D':
-                return now - (7 * 24 * 60 * 60 * 1000);
-            case '30D':
-                return now - (30 * 24 * 60 * 60 * 1000);
-            case '90D':
-                return now - (90 * 24 * 60 * 60 * 1000);
-            case '1Y':
-                return now - (365 * 24 * 60 * 60 * 1000);
-            case 'All':
-                return 0;
-            default:
-                return now - (30 * 24 * 60 * 60 * 1000);
+            case '1D': return now - (1 * 24 * 60 * 60 * 1000);
+            case '7D': return now - (7 * 24 * 60 * 60 * 1000);
+            case '30D': return now - (30 * 24 * 60 * 60 * 1000);
+            case '90D': return now - (90 * 24 * 60 * 60 * 1000);
+            case '1Y': return now - (365 * 24 * 60 * 60 * 1000);
+            case 'All': return 0;
+            default: return now - (30 * 24 * 60 * 60 * 1000);
         }
-    };
+    }, []);
+
+    // Compute portfolio data from fills - memoized for performance
+    // Note: Hyperliquid doesn't provide historical account value snapshots,
+    // so we reconstruct the portfolio history from trade fills
+    const portfolioData = useMemo<PortfolioDataPoint[]>(() => {
+        if (!address || account.equity === 0) return [];
+
+        const now = Date.now();
+        const cutoffTime = getTimeframeCutoff(now, timeframe);
+        const currentEquity = account.equity;
+
+        // If no fills, show a flat line at current value for the timeframe
+        if (!fills || fills.length === 0) {
+            // Generate points for a flat line across the timeframe
+            const startTime = cutoffTime || (now - 30 * 24 * 60 * 60 * 1000);
+            return [
+                {
+                    time: startTime,
+                    value: currentEquity,
+                    timestamp: Math.floor(startTime / 1000)
+                },
+                {
+                    time: now,
+                    value: currentEquity,
+                    timestamp: Math.floor(now / 1000)
+                }
+            ];
+        }
+
+        // Sort fills chronologically (oldest first)
+        const sortedFills = [...fills].sort((a: any, b: any) => a.time - b.time);
+        
+        // Filter fills within timeframe (or use all if 'All' selected)
+        const relevantFills = cutoffTime > 0 
+            ? sortedFills.filter((f: any) => f.time >= cutoffTime)
+            : sortedFills;
+
+        // Calculate total realized PnL from ALL fills (not just filtered)
+        const totalRealizedPnl = sortedFills.reduce((sum: number, fill: any) => {
+            return sum + parseFloat(fill.closedPnl || '0');
+        }, 0);
+
+        // Calculate PnL from fills BEFORE the cutoff time
+        const pnlBeforeCutoff = sortedFills
+            .filter((f: any) => f.time < cutoffTime)
+            .reduce((sum: number, fill: any) => sum + parseFloat(fill.closedPnl || '0'), 0);
+
+        // Initial deposit = current equity - total realized PnL
+        // This is the original capital before any trading
+        const initialDeposit = Math.max(0, currentEquity - totalRealizedPnl);
+        
+        // Portfolio value at start of timeframe = initial deposit + PnL accumulated before cutoff
+        const startingValue = initialDeposit + pnlBeforeCutoff;
+
+        // Build portfolio value over time
+        const dataPoints: PortfolioDataPoint[] = [];
+        
+        // Add starting point at cutoff time (or first fill time if All)
+        const startTime = cutoffTime > 0 ? cutoffTime : (relevantFills[0]?.time || now - 30 * 24 * 60 * 60 * 1000);
+        dataPoints.push({
+            time: startTime,
+            value: Math.max(0, startingValue),
+            timestamp: Math.floor(startTime / 1000)
+        });
+
+        // Group fills by day for cleaner visualization
+        const dailyData: { [key: string]: { pnl: number; timestamp: number } } = {};
+        
+        relevantFills.forEach((fill: any) => {
+            const date = new Date(fill.time);
+            const dayKey = date.toISOString().split('T')[0];
+            const pnl = parseFloat(fill.closedPnl || '0');
+            
+            if (!dailyData[dayKey]) {
+                dailyData[dayKey] = { pnl: 0, timestamp: fill.time };
+            }
+            dailyData[dayKey].pnl += pnl;
+            // Keep the latest timestamp for the day
+            if (fill.time > dailyData[dayKey].timestamp) {
+                dailyData[dayKey].timestamp = fill.time;
+            }
+        });
+
+        // Build cumulative portfolio value
+        let runningValue = startingValue;
+        Object.keys(dailyData).sort().forEach(dayKey => {
+            runningValue += dailyData[dayKey].pnl;
+            const portfolioValue = Math.max(0, runningValue);
+            
+            dataPoints.push({
+                time: new Date(dayKey).getTime() + 12 * 60 * 60 * 1000, // Midday for cleaner display
+                value: portfolioValue,
+                timestamp: Math.floor(dailyData[dayKey].timestamp / 1000)
+            });
+        });
+
+        // Add current value as the last point
+        dataPoints.push({
+            time: now,
+            value: currentEquity,
+            timestamp: Math.floor(now / 1000)
+        });
+
+        // Remove duplicates and sort by time
+        const uniquePoints = dataPoints.reduce((acc: PortfolioDataPoint[], point) => {
+            const existing = acc.find(p => Math.abs(p.time - point.time) < 3600000); // Within 1 hour
+            if (!existing) {
+                acc.push(point);
+            }
+            return acc;
+        }, []);
+
+        return uniquePoints.sort((a, b) => a.time - b.time);
+    }, [address, account.equity, fills, timeframe, getTimeframeCutoff]);
 
     // Timeframe options
     const timeframeOptions: TimeframeOption[] = ['1D', '7D', '30D', '90D', '1Y', 'All'];
@@ -353,7 +243,7 @@ function PortfolioChart() {
 
             {/* Chart */}
             <div className="w-full relative" style={{ height: '200px' }}>
-                {loading && (
+                {userDataLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80 z-10 rounded-lg">
                         <div className="text-center">
                             <div className="spinner mx-auto mb-2"></div>
@@ -361,12 +251,12 @@ function PortfolioChart() {
                         </div>
                     </div>
                 )}
-                {!loading && portfolioData.length === 0 && (
+                {!userDataLoading && portfolioData.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80 z-10 rounded-lg">
                         <p className="text-sm text-coffee-medium">No data available</p>
                     </div>
                 )}
-                {!loading && chartData.length > 0 && (
+                {!userDataLoading && chartData.length > 0 && (
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart 
                             data={chartData} 

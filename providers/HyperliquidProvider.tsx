@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode, startTransition } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode, startTransition, useRef } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useMarketData, subscribeToMarketPrices, Market } from '@/lib/hyperliquid/market-data';
+import { useMarketData, Market } from '@/lib/hyperliquid/market-data';
 import { createHyperliquidClient, API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
 import { 
     getAgentWallet, 
@@ -16,6 +16,7 @@ import {
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useWalletClient } from 'wagmi';
+import { cachedFetch, apiCache } from '@/lib/api-cache';
 
 export type { Market };
 
@@ -54,6 +55,31 @@ export interface AccountState {
     unrealizedPnlPercent: number;
 }
 
+// Fill type for order history (flexible to match SDK's UserFills type)
+interface Fill {
+    oid?: string | number;
+    tid?: string | number;
+    time: number;
+    coin: string;
+    px: string;
+    sz: string;
+    side: string;
+    dir?: string;
+    closedPnl: string;
+    fee?: string;
+    crossed?: boolean;
+    [key: string]: any; // Allow extra fields from SDK
+}
+
+// Funding entry type
+interface FundingEntry {
+    time: number;
+    usdc: string;
+    coin?: string;
+    fundingRate?: string;
+    [key: string]: any; // Allow extra fields from SDK
+}
+
 interface HyperliquidContextType {
     // Connection
     connected: boolean;
@@ -85,6 +111,13 @@ interface HyperliquidContextType {
     account: AccountState;
     positions: Position[];
     orders: Order[];
+
+    // User Data (cached)
+    fills: Fill[];
+    funding: FundingEntry[];
+    thirtyDayPnl: number;
+    userDataLoading: boolean;
+    refreshUserData: () => Promise<void>;
 
     // Agent Wallet
     agentWalletEnabled: boolean;
@@ -264,8 +297,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [rateLimited, setRateLimited] = useState(false);
     const [retryAfter, setRetryAfter] = useState<number | null>(null);
     const [fetchingAccount, setFetchingAccount] = useState(false);
-    const initialFetchDone = React.useRef(false);
+    const initialFetchDone = useRef(false);
     const [agentWalletEnabled, setAgentWalletEnabled] = useState(false);
+
+    // Cached user data (fills, funding)
+    const [fills, setFills] = useState<Fill[]>([]);
+    const [funding, setFunding] = useState<FundingEntry[]>([]);
+    const [thirtyDayPnl, setThirtyDayPnl] = useState(0);
+    const [userDataLoading, setUserDataLoading] = useState(false);
+    const userDataFetchedRef = useRef<string | null>(null);
 
     // WebSocket-based account data updates
     useEffect(() => {
@@ -292,17 +332,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         // Set up WebSocket callbacks for account data
         const callbacks = {
             onAccountUpdate: (data: any) => {
-                // Handle webData3 updates
-                if (data.userState) {
-                    const accountValue = parseFloat(data.userState.cumLedger || '0');
-                    setAccount(prev => ({
-                        ...prev,
-                        balance: accountValue,
-                        equity: accountValue,
-                    }));
-                }
-
-                // Handle clearinghouseState updates
+                // Handle clearinghouseState updates (marginSummary has accurate account value)
+                // This takes priority over userState.cumLedger which only shows initial deposit
                 if (data.marginSummary) {
                     const accountValue = parseFloat(data.marginSummary.accountValue || '0');
                     const totalMarginUsed = parseFloat(data.marginSummary.totalMarginUsed || '0');
@@ -314,6 +345,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         usedMargin: totalMarginUsed,
                     }));
                 }
+                // Note: We intentionally skip data.userState.cumLedger as it only reflects
+                // the initial deposit amount, not the current account value with P&L
             },
             onPositionUpdate: (assetPositions: any[]) => {
                 if (Array.isArray(assetPositions)) {
@@ -646,6 +679,94 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         };
     }, [isConnected, address]); // Only re-run when connection or address changes
 
+    // Fetch cached user data (fills, funding) - shared across all components
+    const fetchUserData = useCallback(async (forceRefresh = false) => {
+        if (!address) {
+            setFills([]);
+            setFunding([]);
+            setThirtyDayPnl(0);
+            return;
+        }
+
+        // Only fetch once per address unless forced
+        if (!forceRefresh && userDataFetchedRef.current === address.toLowerCase()) {
+            return;
+        }
+
+        setUserDataLoading(true);
+
+        try {
+            const normalizedAddress = address.toLowerCase();
+            
+            // Fetch fills with caching
+            const fillsData = await cachedFetch<any[]>(
+                `user_fills:${normalizedAddress}`,
+                async () => {
+                    const client = createHyperliquidClient();
+                    const result = await client.info.getUserFills(normalizedAddress);
+                    return result || [];
+                },
+                60000 // 1 minute cache
+            );
+            setFills(fillsData as Fill[]);
+
+            // Calculate 30-day PnL
+            if (fillsData.length > 0) {
+                const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+                const totalPnl = fillsData
+                    .filter((fill: Fill) => fill.time >= thirtyDaysAgo)
+                    .reduce((sum: number, fill: Fill) => sum + parseFloat(fill.closedPnl || '0'), 0);
+                setThirtyDayPnl(totalPnl);
+            } else {
+                setThirtyDayPnl(0);
+            }
+
+            // Fetch funding with caching (last 90 days)
+            const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+            const fundingData = await cachedFetch<any[]>(
+                `user_funding:${normalizedAddress}`,
+                async () => {
+                    const client = createHyperliquidClient();
+                    const result = await client.info.perpetuals.getUserFunding(normalizedAddress, ninetyDaysAgo);
+                    return result || [];
+                },
+                60000 // 1 minute cache
+            );
+            setFunding(fundingData as FundingEntry[]);
+
+            userDataFetchedRef.current = normalizedAddress;
+        } catch (err) {
+            // Silent fail - user data is nice-to-have
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('Failed to fetch user data:', err);
+            }
+        } finally {
+            setUserDataLoading(false);
+        }
+    }, [address]);
+
+    // Load user data when address changes
+    useEffect(() => {
+        if (address) {
+            fetchUserData();
+        } else {
+            setFills([]);
+            setFunding([]);
+            setThirtyDayPnl(0);
+            userDataFetchedRef.current = null;
+        }
+    }, [address, fetchUserData]);
+
+    // Refresh user data (can be called by components after trades)
+    const refreshUserData = useCallback(async () => {
+        if (address) {
+            // Invalidate cache
+            apiCache.invalidate(`user_fills:${address.toLowerCase()}`);
+            apiCache.invalidate(`user_funding:${address.toLowerCase()}`);
+            await fetchUserData(true);
+        }
+    }, [address, fetchUserData]);
+
     // Helper to get the best provider
     const getProvider = () => {
         if (typeof window === 'undefined') return null;
@@ -929,17 +1050,41 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         slippage: minimalSlippage * 100 + '%'
                     });
                 } else {
-                    // For regular assets, use standard slippage
-                    const slippagePercent = 0.005; // 0.5% for regular assets
+                    // For regular assets, use minimal slippage for market orders
+                    // IOC orders fill at the BEST available price up to your limit
+                    // So we set a small buffer just to ensure execution, not the actual fill price
+                    // The actual fill will be at market price, this is just a safety ceiling
+                    
+                    // Dynamic slippage based on asset volatility/price level
+                    // Higher priced assets can use tighter slippage in dollar terms
+                    let slippagePercent: number;
+                    if (currentPrice >= 10000) {
+                        // BTC-level: 0.05% = ~$46 buffer on $92k (very tight)
+                        slippagePercent = 0.0005;
+                    } else if (currentPrice >= 1000) {
+                        // ETH-level: 0.1% = ~$3 buffer on $3k
+                        slippagePercent = 0.001;
+                    } else if (currentPrice >= 10) {
+                        // Mid-tier: 0.15%
+                        slippagePercent = 0.0015;
+                    } else {
+                        // Small coins: 0.2% (more volatile)
+                        slippagePercent = 0.002;
+                    }
+                    
                     if (isBuy) {
                         finalPx = currentPrice * (1 + slippagePercent);
                     } else {
                         finalPx = currentPrice * (1 - slippagePercent);
                     }
-                    console.log('💰 Using standard slippage:', {
+                    
+                    const slippageDollars = Math.abs(finalPx - currentPrice);
+                    console.log('💰 Market order with minimal slippage:', {
                         currentPrice,
-                        finalPx,
-                        slippage: slippagePercent * 100 + '%'
+                        limitPrice: finalPx,
+                        slippagePercent: (slippagePercent * 100).toFixed(3) + '%',
+                        slippageDollars: '$' + slippageDollars.toFixed(2),
+                        note: 'IOC fills at best available price, this is just max slippage'
                     });
                 }
             } else {
@@ -950,10 +1095,36 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 throw new Error('Invalid price: Price must be greater than 0');
             }
 
-            // Round price to valid tick size (typically 0.01 for most assets)
-            // Round to 2 decimal places to ensure divisibility by tick size
-            // This is necessary because slippage calculations can create prices with too many decimals
-            finalPx = Math.round(finalPx * 100) / 100;
+            // Get tick size from meta to round price correctly
+            // Different assets have different tick sizes (BTC = 1.0, ETH = 0.1, smaller coins = 0.01, etc.)
+            const assetMeta = meta.universe[assetIndex];
+            let tickSize = 1.0; // Default to 1.0 for safety
+            
+            // szDecimals tells us the size precision, but for price we need to check the asset
+            // For most assets, tick size is related to the price level:
+            // - BTC (~$90k+): tick size = 1.0 (whole dollars)
+            // - ETH (~$3k): tick size = 0.1 (10 cents)
+            // - Small coins (<$100): tick size = 0.01 (1 cent) or 0.001
+            // We can estimate from the current price
+            const currentPriceLevel = market.price || finalPx;
+            if (currentPriceLevel >= 10000) {
+                tickSize = 1.0; // BTC-level prices: whole dollars
+            } else if (currentPriceLevel >= 100) {
+                tickSize = 0.1; // ETH-level prices: 10 cents
+            } else if (currentPriceLevel >= 1) {
+                tickSize = 0.01; // Most altcoins: 1 cent
+            } else {
+                tickSize = 0.0001; // Small coins: fractions of cents
+            }
+            
+            console.log('📊 Tick size calculation:', { currentPriceLevel, tickSize, assetName });
+            
+            // Round price to valid tick size
+            finalPx = Math.round(finalPx / tickSize) * tickSize;
+            // Clean up floating point precision issues
+            finalPx = parseFloat(finalPx.toFixed(Math.max(0, -Math.floor(Math.log10(tickSize)))));
+            
+            console.log('📊 Price after tick size rounding:', finalPx);
 
             // Round size based on asset's szDecimals (HIP-3 markets have specific precision requirements)
             // Note: We don't manually round the price - let the SDK's orderToWire handle it
@@ -1183,7 +1354,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             console.log('✅ Order resting with ID:', status.resting.oid);
                         }
                         if (status.filled) {
-                            console.log('✅ Order filled:', status.filled);
                             orderFilled = true;
                             // Extract filled size and price from status if available
                             if (status.filled.totalSz) {
@@ -1192,6 +1362,18 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             if (status.filled.avgPx) {
                                 filledPrice = parseFloat(status.filled.avgPx);
                             }
+                            
+                            // Log fill quality - show user they got market price, not limit price
+                            const improvement = isBuy 
+                                ? finalPx - filledPrice  // For buys, lower is better
+                                : filledPrice - finalPx; // For sells, higher is better
+                            console.log('✅ Order FILLED at market price:', {
+                                limitPrice: finalPx,
+                                actualFillPrice: filledPrice,
+                                filledSize: filledSize,
+                                priceImprovement: improvement > 0 ? `+$${improvement.toFixed(2)} better than limit` : 'at limit',
+                                totalValue: `$${(filledSize * filledPrice).toFixed(2)}`
+                            });
                         }
                     }
                 }
@@ -1375,8 +1557,31 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 isClosing: false,
             };
 
-        } catch (error) {
-            console.error('Order placement failed:', error);
+        } catch (error: any) {
+            console.error('❌ Order placement failed:', error);
+            console.error('❌ Error details:', {
+                message: error?.message,
+                name: error?.name,
+                stack: error?.stack?.split('\n').slice(0, 5),
+            });
+            
+            // Provide more specific error messages
+            const errorMessage = error?.message || 'Unknown error';
+            
+            // Check for common error patterns and provide helpful messages
+            if (errorMessage.includes('User rejected') || errorMessage.includes('user rejected')) {
+                throw new Error('Transaction was rejected. Please approve the transaction in your wallet.');
+            }
+            if (errorMessage.includes('insufficient') || errorMessage.includes('Insufficient')) {
+                throw new Error('Insufficient margin. Please reduce your order size or add more funds.');
+            }
+            if (errorMessage.includes('size too small') || errorMessage.includes('min') || errorMessage.includes('notional')) {
+                throw new Error('Order size too small. Minimum notional value is $10.');
+            }
+            if (errorMessage.includes('Invalid signature') || errorMessage.includes('signature')) {
+                throw new Error('Signature failed. Please try again or reconnect your wallet.');
+            }
+            
             throw error;
         } finally {
             setLoading(false);
@@ -1451,6 +1656,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         account,
         positions,
         orders,
+        // Cached user data
+        fills,
+        funding,
+        thirtyDayPnl,
+        userDataLoading,
+        refreshUserData,
     };
 
     return (
