@@ -1828,7 +1828,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     size: actualFilledSize,
                                     entry_price: actualFilledPrice,
                                     exit_price: actualFilledPrice,
-                                    pnl: realizedPnl,
+                                    pnl: realizedPnl ?? null,
                                     status: 'closed',
                                 });
                                 console.log('📊 Closed trade result:', result);
