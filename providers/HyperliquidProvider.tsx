@@ -1489,14 +1489,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 
                 // Check if it's an agent wallet issue - if so, disable agent and notify user
                 const errorMsg = result.response || '';
-                if (errorMsg.includes('does not exist') && usingAgentWallet) {
+                if (errorMsg.includes('does not exist') || errorMsg.includes('API Wallet')) {
                     console.warn('⚠️ Agent wallet not registered with Hyperliquid. Disabling agent wallet.');
                     setAgentWalletEnabled(false);
-                    // Clear the approval so user needs to re-approve
+                    // Clear the approval AND the agent wallet so user needs to start fresh
                     if (typeof window !== 'undefined') {
                         localStorage.removeItem('hyperliquid_agent_approved');
+                        localStorage.removeItem('hyperliquid_agent_wallet');
                     }
-                    throw new Error('Agent wallet expired or invalid. Please re-enable it in Settings, then try again.');
+                    throw new Error('Agent wallet issue detected. It has been disabled. Please try again - your order will now use normal signing.');
                 }
                 
                 throw new Error(result.response);
