@@ -6,12 +6,13 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
+import { clearAgentWallet } from '@/lib/agent-wallet';
 import { LogOut, Copy, Check, User as UserIcon, Wallet, TrendingUp, Package, Loader2, AlertCircle, Gift, Users, DollarSign, Settings, ChevronRight, Share2 } from 'lucide-react';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 
 export default function Profile() {
-    const { t } = useLanguage();
-    const { address, account, builderFeeApproved, approveBuilderFee } = useHyperliquid();
+    const { t, language, setLanguage } = useLanguage();
+    const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet } = useHyperliquid();
     const { logout } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
 
@@ -31,6 +32,11 @@ export default function Profile() {
     // Settings state
     const [approvingFee, setApprovingFee] = useState(false);
     const [feeError, setFeeError] = useState<string | null>(null);
+
+    // Agent wallet state
+    const [settingUpAgent, setSettingUpAgent] = useState(false);
+    const [agentSetupError, setAgentSetupError] = useState<string | null>(null);
+    const [agentSetupSuccess, setAgentSetupSuccess] = useState(false);
 
     const referralLink = user?.referral_code
         ? `${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${user.referral_code}`
@@ -95,6 +101,27 @@ export default function Profile() {
             await navigator.clipboard.writeText(referralLink);
             setReferralCopied(true);
             setTimeout(() => setReferralCopied(false), 2000);
+        }
+    };
+
+    const handleSetupAgentWallet = async () => {
+        if (!address) {
+            setAgentSetupError('Please connect your wallet first');
+            return;
+        }
+
+        setSettingUpAgent(true);
+        setAgentSetupError(null);
+        setAgentSetupSuccess(false);
+
+        try {
+            await setupAgentWallet();
+            setAgentSetupSuccess(true);
+            setTimeout(() => setAgentSetupSuccess(false), 5000);
+        } catch (error) {
+            setAgentSetupError(error instanceof Error ? error.message : 'Failed to setup agent wallet');
+        } finally {
+            setSettingUpAgent(false);
         }
     };
 
@@ -302,34 +329,125 @@ export default function Profile() {
                     Settings
                 </h2>
 
-                {/* Builder Fee Setting */}
-                <div className="bg-white/5 rounded-2xl p-4">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <div className="font-semibold text-white">Builder Fee</div>
-                            <div className="text-sm text-coffee-medium">
-                                {BUILDER_CONFIG.fee / 100} bps ({(BUILDER_CONFIG.fee / 1000).toFixed(2)}%)
+                <div className="space-y-4">
+                    {/* Language Selector */}
+                    <div className="bg-white/5 rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="font-semibold text-white">{t.settings?.language || 'Language'}</div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setLanguage('en')}
+                                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${language === 'en'
+                                        ? 'bg-[#FFFF00] text-black'
+                                        : 'bg-white/10 text-coffee-medium hover:bg-white/20'
+                                        }`}
+                                >
+                                    English
+                                </button>
+                                <button
+                                    onClick={() => setLanguage('es')}
+                                    className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${language === 'es'
+                                        ? 'bg-[#FFFF00] text-black'
+                                        : 'bg-white/10 text-coffee-medium hover:bg-white/20'
+                                        }`}
+                                >
+                                    Español
+                                </button>
                             </div>
                         </div>
-                        {builderFeeApproved ? (
-                            <div className="flex items-center gap-2 text-[#FFFF00] text-sm">
-                                <Check className="w-4 h-4" />
-                                Approved
+                    </div>
+
+                    {/* Agent Wallet */}
+                    <div className="bg-white/5 rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="font-semibold text-white">Agent Wallet</div>
+                                <div className="text-sm text-coffee-medium">
+                                    Trade without signing every transaction
+                                </div>
                             </div>
-                        ) : (
+                            {agentWalletEnabled ? (
+                                <div className="flex items-center gap-2 text-green-400 text-sm font-semibold">
+                                    <Check className="w-4 h-4" />
+                                    Active
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleSetupAgentWallet}
+                                    disabled={settingUpAgent}
+                                    className="px-4 py-2 bg-[#FFFF00] text-black rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {settingUpAgent && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    Enable
+                                </button>
+                            )}
+                        </div>
+                        {agentSetupError && (
+                            <div className="mt-3 space-y-2">
+                                <div className="text-sm text-red-400">{agentSetupError}</div>
+                                {agentSetupError.includes('already') && (
+                                    <button
+                                        onClick={() => {
+                                            clearAgentWallet();
+                                            setAgentSetupError(null);
+                                            window.location.reload();
+                                        }}
+                                        className="text-xs text-coffee-medium hover:text-white"
+                                    >
+                                        Reset local agent data
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                        {agentSetupSuccess && (
+                            <div className="mt-2 text-sm text-green-400">
+                                Agent wallet enabled! You can now trade without signing each transaction.
+                            </div>
+                        )}
+                        {agentWalletEnabled && (
                             <button
-                                onClick={handleApproveBuilderFee}
-                                disabled={approvingFee}
-                                className="px-4 py-2 bg-[#FFFF00] text-black rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                                onClick={() => {
+                                    if (confirm('Disable automatic signing? You will need to sign each transaction manually.')) {
+                                        clearAgentWallet();
+                                        window.location.reload();
+                                    }
+                                }}
+                                className="mt-2 text-xs text-coffee-medium hover:text-white"
                             >
-                                {approvingFee && <Loader2 className="w-4 h-4 animate-spin" />}
-                                Approve
+                                Disable agent wallet
                             </button>
                         )}
                     </div>
-                    {feeError && (
-                        <div className="mt-2 text-sm text-red-400">{feeError}</div>
-                    )}
+
+                    {/* Builder Fee Setting */}
+                    <div className="bg-white/5 rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="font-semibold text-white">Builder Fee</div>
+                                <div className="text-sm text-coffee-medium">
+                                    {BUILDER_CONFIG.fee / 100} bps ({(BUILDER_CONFIG.fee / 1000).toFixed(2)}%)
+                                </div>
+                            </div>
+                            {builderFeeApproved ? (
+                                <div className="flex items-center gap-2 text-[#FFFF00] text-sm">
+                                    <Check className="w-4 h-4" />
+                                    Approved
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleApproveBuilderFee}
+                                    disabled={approvingFee}
+                                    className="px-4 py-2 bg-[#FFFF00] text-black rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {approvingFee && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    Approve
+                                </button>
+                            )}
+                        </div>
+                        {feeError && (
+                            <div className="mt-2 text-sm text-red-400">{feeError}</div>
+                        )}
+                    </div>
                 </div>
             </div>
 
