@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, memo, useCallback } from 'react';
+import { useState, useEffect, memo, useCallback, useRef } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Plus, X, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { usePrivy } from '@privy-io/react-auth';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import PortfolioChart from '@/components/PortfolioChart';
@@ -19,8 +20,11 @@ interface HomeScreenProps {
 export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenProps = {}) {
     const { t } = useLanguage();
     const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl } = useHyperliquid();
+    const { ready, authenticated, login } = usePrivy();
     const [watchlist, setWatchlist] = useState<string[]>([]);
     const [mounted, setMounted] = useState(false);
+    const [showAddDropdown, setShowAddDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -42,10 +46,22 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
         }
     }, [watchlist, mounted]);
 
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowAddDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     const addToWatchlist = (symbol: string) => {
         if (!watchlist.includes(symbol)) {
             setWatchlist([...watchlist, symbol]);
         }
+        setShowAddDropdown(false);
     };
 
     const removeFromWatchlist = useCallback((symbol: string) => {
@@ -81,10 +97,38 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
         );
     }
 
+    // Show login prompt if not authenticated
+    if (ready && !authenticated) {
+        return (
+            <div className="max-w-2xl mx-auto">
+                <div className="glass-card p-8 relative overflow-hidden text-center">
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
+                    <div className="relative z-10">
+                        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+                            <LogIn className="w-10 h-10 text-primary" />
+                        </div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                            Welcome to Rayo
+                        </h1>
+                        <p className="text-coffee-medium mb-8 max-w-md mx-auto">
+                            Connect your wallet to view your portfolio, track positions, and start trading.
+                        </p>
+                        <button
+                            onClick={login}
+                            className="btn btn-primary px-8 py-4 text-lg font-semibold"
+                        >
+                            Sign In to Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6 max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto">
             {/* Hero Section - Greeting and Portfolio */}
-            <div className="glass-card p-8 relative overflow-hidden">
+            <div className="glass-card p-8 relative overflow-hidden" style={{ marginBottom: '32px' }}>
                 <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
                 <div className="relative z-10">
                     {/* Greeting */}
@@ -117,7 +161,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Open Positions */}
             {positions.length > 0 && (
-                <div className="glass-card p-6">
+                <div className="glass-card p-6" style={{ marginBottom: '32px' }}>
                     <h2 className="text-2xl font-bold mb-6 text-white">Open Positions</h2>
                     <div className="space-y-3">
                         {positions.map((position) => {
@@ -181,33 +225,77 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Watchlist */}
             <div className="glass-card p-6">
-                    {/* Header with back button, title, and add button */}
+                    {/* Header with title and add button */}
                     <div className="flex items-center justify-between mb-6">
-                        <button 
-                            className="p-3 hover:bg-white/5 rounded-2xl transition-colors"
-                            onClick={() => window.history.back()}
-                        >
-                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
+                        <div className="w-12" /> {/* Spacer for centering */}
                         <h2 className="text-2xl font-bold text-white">Watchlist</h2>
-                        <button 
-                            className="p-3 hover:bg-white/5 rounded-2xl transition-colors"
-                            onClick={() => document.getElementById('add-token-select')?.focus()}
-                        >
-                            <Plus className="w-6 h-6 text-white" />
-                        </button>
+                        <div className="relative" ref={dropdownRef}>
+                            <button 
+                                className="p-3 hover:bg-[#FFD60A]/10 rounded-2xl transition-colors border border-[#FFD60A]/30"
+                                onClick={() => setShowAddDropdown(!showAddDropdown)}
+                            >
+                                <Plus className="w-6 h-6 text-[#FFD60A]" />
+                            </button>
+                            
+                            {/* Add Token Modal */}
+                            {showAddDropdown && (
+                                <>
+                                    {/* Backdrop */}
+                                    <div 
+                                        className="fixed inset-0 bg-black/60 z-[99]"
+                                        onClick={() => setShowAddDropdown(false)}
+                                    />
+                                    {/* Modal */}
+                                    <div 
+                                        className="fixed z-[100] bg-bg-secondary border border-white/10 rounded-2xl shadow-xl overflow-hidden"
+                                        style={{
+                                            left: '16px',
+                                            right: '16px',
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            maxHeight: '60vh'
+                                        }}
+                                    >
+                                        <div className="p-4">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="text-lg text-white font-bold">Add to Watchlist</div>
+                                                <button 
+                                                    onClick={() => setShowAddDropdown(false)}
+                                                    className="p-2 hover:bg-white/10 rounded-xl"
+                                                >
+                                                    <X className="w-5 h-5 text-coffee-medium" />
+                                                </button>
+                                            </div>
+                                            <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(60vh - 80px)' }}>
+                                                {markets
+                                                    .filter(m => !watchlist.includes(m.name))
+                                                    .slice(0, 30)
+                                                    .map(market => (
+                                                        <button
+                                                            key={market.name}
+                                                            className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left"
+                                                            onClick={() => addToWatchlist(market.name)}
+                                                        >
+                                                            <span className="text-white font-medium">{market.name}</span>
+                                                            <span className="text-[#FFD60A] text-sm font-mono">${market.price?.toFixed(2) || '0.00'}</span>
+                                                        </button>
+                                                    ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
 
                     {/* Watchlist items */}
                     {watchlistMarkets.length === 0 ? (
                         <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
-                            <p>No tokens available</p>
-                            <p className="text-xs mt-2 opacity-60">Add tokens using the button below</p>
+                            <p>No tokens in watchlist</p>
+                            <p className="text-xs mt-2 opacity-60">Tap the + button to add tokens</p>
                         </div>
                     ) : (
-                        <div className="space-y-4 mb-4">
+                        <div className="space-y-4">
                             {watchlistMarkets.map((market) => (
                                 <WatchlistItem
                                     key={market.name}
@@ -218,36 +306,6 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             ))}
                         </div>
                     )}
-
-                    {/* Add new asset button */}
-                    <div className="relative">
-                        <select
-                            id="add-token-select"
-                            className="w-full bg-transparent border-2 border-[#FFD60A] rounded-2xl px-6 py-4 text-base font-semibold text-[#FFD60A] focus:border-[#FFD60A] focus:ring-2 focus:ring-[#FFD60A]/20 appearance-none cursor-pointer hover:bg-[#FFD60A]/5 transition-colors"
-                            value=""
-                            onChange={(e) => {
-                                if (e.target.value) {
-                                    addToWatchlist(e.target.value);
-                                    e.target.value = '';
-                                }
-                            }}
-                        >
-                            <option value="">Add new asset</option>
-                            {markets
-                                .filter(m => !watchlist.includes(m.name))
-                                .slice(0, 50)
-                                .map(market => (
-                                    <option key={market.name} value={market.name} className="bg-bg-secondary text-white">
-                                        {market.name} - ${market.price?.toFixed(2) || '0.00'}
-                                    </option>
-                                ))}
-                        </select>
-                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg className="w-5 h-5 text-[#FFD60A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </div>
-                    </div>
             </div>
         </div>
     );
