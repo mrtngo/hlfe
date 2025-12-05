@@ -219,14 +219,14 @@ export default function OrderPanel() {
                             </div>
                             
                             {/* Quick Amount Buttons - Rayo brand */}
-                            <div className="flex gap-3 mt-4">
+                            <div className="flex gap-2.5 mt-4">
                                 {quickAmounts.map((amount) => {
                                     const isActive = usdAmount === amount.toString();
                                     return (
                                         <button
                                             key={amount}
                                             onClick={() => setUsdAmount(amount.toString())}
-                                            className={`flex-1 py-3 px-3 rounded-2xl text-base font-bold transition-all active:scale-[0.98] ${
+                                            className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${
                                                 isActive
                                                     ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80'
                                                     : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
@@ -242,7 +242,7 @@ export default function OrderPanel() {
                         {/* Simple Leverage Selector */}
                         <div>
                             <label className="text-sm text-coffee-medium mb-2 block">{t.order.leverage}</label>
-                            <div className="flex gap-3">
+                            <div className="flex gap-2.5">
                                 {[1, 2, 5, 10].map((lev) => {
                                     const isActive = leverage === lev;
                                     const isDisabled = lev > maxLeverage;
@@ -251,7 +251,7 @@ export default function OrderPanel() {
                                             key={lev}
                                             onClick={() => setLeverage(Math.min(lev, maxLeverage))}
                                             disabled={isDisabled}
-                                            className={`flex-1 py-3.5 px-3 rounded-2xl text-base font-bold transition-all active:scale-[0.98] ${
+                                            className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${
                                                 isDisabled
                                                     ? 'bg-bg-tertiary/40 text-coffee-medium/50 border border-white/5 cursor-not-allowed'
                                                     : isActive
@@ -268,7 +268,7 @@ export default function OrderPanel() {
 
                         {/* Simple Summary */}
                         {usdValue > 0 && (
-                            <div className="p-4 bg-bg-tertiary/50 rounded-2xl space-y-2">
+                            <div className="p-4 rounded-2xl space-y-2 border border-white/5 bg-transparent">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-coffee-medium">{orderSide === 'long' ? t.order.youWillBuy : t.order.youWillSell}</span>
                                     <span className="text-white font-semibold">{tokenSize.toFixed(6)} {selectedMarket}</span>
@@ -293,7 +293,7 @@ export default function OrderPanel() {
                         )}
 
                         {/* Balance Display */}
-                        <div className="flex justify-between items-center py-2 px-3 bg-bg-tertiary/30 rounded-xl">
+                        <div className="flex justify-between items-center py-2 px-3 rounded-xl border border-white/5 bg-transparent">
                             <span className="text-sm text-coffee-medium">{t.order.available}</span>
                             <span className="text-sm font-bold text-white">{formatCurrency(account.availableMargin)}</span>
                         </div>
@@ -302,7 +302,7 @@ export default function OrderPanel() {
                     /* ========== ADVANCED MODE ========== */
                     <>
                         {/* Order Type Info */}
-                        <div className="flex items-center justify-between p-3 bg-bg-tertiary/30 rounded-xl">
+                        <div className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-transparent">
                             <span className="text-sm text-coffee-medium">{t.order.orderType}</span>
                             <span className="text-sm font-semibold text-primary">{t.order.limitOrder}</span>
                         </div>
@@ -453,7 +453,7 @@ export default function OrderPanel() {
                         </div>
 
                         {/* Order Summary */}
-                        <div className="space-y-2 p-3 bg-bg-tertiary/50 rounded-lg">
+                        <div className="space-y-2 p-3 rounded-lg border border-white/5 bg-transparent">
                             <div className="flex justify-between text-sm">
                                 <span className="text-coffee-medium">{t.order.limitPrice}</span>
                                 <span className="font-semibold text-white">{formatCurrency(parseFloat(limitPrice) || 0)}</span>
@@ -477,7 +477,7 @@ export default function OrderPanel() {
                         </div>
 
                         {/* Balance */}
-                        <div className="flex justify-between text-sm p-3 bg-bg-tertiary/30 rounded-lg">
+                        <div className="flex justify-between text-sm p-3 rounded-lg border border-white/5 bg-transparent">
                             <span className="text-coffee-medium">{t.order.available}</span>
                             <span className="font-semibold text-white">{formatCurrency(account.availableMargin)}</span>
                         </div>
