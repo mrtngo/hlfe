@@ -20,6 +20,19 @@ import { cachedFetch, apiCache } from '@/lib/api-cache';
 
 export type { Market };
 
+// ============================================
+// BUILDER CODE CONFIGURATION
+// ============================================
+// Your builder address - this receives the fee from trades
+// IMPORTANT: This address must have at least 100 USDC in perps account value
+export const BUILDER_ADDRESS = '0x1eC0D939D72e531F6F4450B0B9e7148F62222da0'; // Replace with your address
+
+// Builder fee in tenths of basis points
+// 1 = 0.001% (0.1 bp), 10 = 0.01% (1 bp), 100 = 0.1% (10 bp)
+// Max allowed: 1000 (0.1%) for perps, 10000 (1%) for spot
+export const BUILDER_FEE = 10; // 1 basis point = 0.01%
+// ============================================
+
 // Define types (copied from useHyperliquid.tsx to ensure compatibility)
 export interface Position {
     symbol: string;
@@ -122,6 +135,11 @@ interface HyperliquidContextType {
     // Agent Wallet
     agentWalletEnabled: boolean;
     setupAgentWallet: () => Promise<{ success: boolean; message: string }>;
+
+    // Builder Code
+    builderFeeApproved: boolean;
+    approveBuilderFee: () => Promise<{ success: boolean; message: string }>;
+    checkBuilderFeeApproval: () => Promise<boolean>;
 }
 
 const HyperliquidContext = createContext<HyperliquidContextType | undefined>(undefined);
@@ -299,6 +317,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [fetchingAccount, setFetchingAccount] = useState(false);
     const initialFetchDone = useRef(false);
     const [agentWalletEnabled, setAgentWalletEnabled] = useState(false);
+    const [builderFeeApproved, setBuilderFeeApproved] = useState(false);
 
     // Cached user data (fills, funding)
     const [fills, setFills] = useState<Fill[]>([]);
@@ -897,6 +916,115 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [address]);
 
+    // Check if user has approved builder fee
+    const checkBuilderFeeApproval = useCallback(async (): Promise<boolean> => {
+        if (!address) return false;
+        
+        try {
+            const response = await fetch(`${API_URL}/info`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'maxBuilderFee',
+                    user: address,
+                    builder: BUILDER_ADDRESS
+                })
+            });
+            
+            if (!response.ok) return false;
+            
+            const maxFee = await response.json();
+            // If maxFee is > 0, the user has approved a builder fee
+            const isApproved = maxFee > 0;
+            setBuilderFeeApproved(isApproved);
+            return isApproved;
+        } catch (error) {
+            console.error('Error checking builder fee approval:', error);
+            return false;
+        }
+    }, [address]);
+
+    // Check builder fee approval on address change
+    useEffect(() => {
+        if (address) {
+            checkBuilderFeeApproval();
+        }
+    }, [address, checkBuilderFeeApproval]);
+
+    // Approve builder fee (users need to do this once)
+    const approveBuilderFee = useCallback(async (): Promise<{ success: boolean; message: string }> => {
+        if (!address) {
+            return { success: false, message: 'Please connect your wallet first' };
+        }
+
+        try {
+            // This must be signed by the main wallet, not agent wallet
+            let signingProvider = null;
+            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+            
+            if (embeddedWallet) {
+                signingProvider = await embeddedWallet.getEthereumProvider();
+            } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                signingProvider = (window as any).ethereum;
+            }
+            
+            if (!signingProvider) {
+                return { success: false, message: 'No wallet found' };
+            }
+
+            const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+            const browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
+
+            const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
+            const { signL1Action } = hyperliquidSDK;
+
+            const nonce = Date.now();
+            
+            // Max fee rate as a string percentage (e.g., "0.01%" for 1 basis point)
+            // We set a higher max than what we actually charge to give flexibility
+            const maxFeeRate = '0.1%'; // 10 basis points max approval
+
+            const actionPayload = {
+                type: 'approveBuilderFee',
+                hyperliquidChain: IS_TESTNET ? 'Testnet' : 'Mainnet',
+                signatureChainId: IS_TESTNET ? '0x66eee' : '0xa4b1',
+                maxFeeRate,
+                builder: BUILDER_ADDRESS
+            };
+
+            const signature = await signL1Action(
+                browserWallet as any,
+                actionPayload,
+                null,
+                nonce,
+                !IS_TESTNET
+            );
+
+            const response = await fetch(`${API_URL}/exchange`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: actionPayload,
+                    nonce,
+                    signature,
+                    vaultAddress: null
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.status === 'ok') {
+                setBuilderFeeApproved(true);
+                return { success: true, message: 'Builder fee approved successfully!' };
+            } else {
+                return { success: false, message: result.response || 'Failed to approve builder fee' };
+            }
+        } catch (error) {
+            console.error('Error approving builder fee:', error);
+            return { success: false, message: error instanceof Error ? error.message : 'Unknown error' };
+        }
+    }, [address, wallets]);
+
     // Place order
     const placeOrder = useCallback(async (
         symbol: string,
@@ -1175,7 +1303,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const actionPayload = {
                 type: 'order',
                 orders: [wireOrder],
-                grouping: 'na'
+                grouping: 'na',
+                // Builder code - earns fee on fills sent through this app
+                // User must approve builder fee first via ApproveBuilderFee action
+                builder: {
+                    b: BUILDER_ADDRESS,
+                    f: BUILDER_FEE  // Fee in tenths of basis points (10 = 1bp = 0.01%)
+                }
             };
 
             // 4. Sign action
@@ -1655,6 +1789,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         setSelectedMarket,
         agentWalletEnabled,
         setupAgentWallet,
+        builderFeeApproved,
+        approveBuilderFee,
+        checkBuilderFeeApproval,
         getMarket,
         placeOrder,
         cancelOrder,

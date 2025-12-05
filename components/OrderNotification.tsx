@@ -239,7 +239,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                             padding: '16px',
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.order?.side || 'Side'}</span>
+                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.side || 'Side'}</span>
                                 <span style={{ 
                                     fontSize: '14px', 
                                     fontWeight: 'bold', 
@@ -250,7 +250,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                             </div>
                             
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.order?.size || 'Size'}</span>
+                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.size || 'Size'}</span>
                                 <span style={{ fontSize: '14px', fontFamily: 'monospace', fontWeight: '600', color: '#FFFFFF' }}>
                                     {order.size.toFixed(4)}
                                 </span>
@@ -271,7 +271,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                                     borderTop: '1px solid rgba(255, 255, 255, 0.1)' 
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.realizedPnl || 'Realized P&L'}</span>
+                                        <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.pnl || 'Realized P&L'}</span>
                                         <span style={{ 
                                             fontSize: '14px', 
                                             fontFamily: 'monospace', 

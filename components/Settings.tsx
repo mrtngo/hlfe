@@ -3,17 +3,20 @@
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe } from 'lucide-react';
+import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, Coins } from 'lucide-react';
 
 export default function Settings() {
     const { t, language, setLanguage } = useLanguage();
-    const { address, agentWalletEnabled, setupAgentWallet } = useHyperliquid();
+    const { address, agentWalletEnabled, setupAgentWallet, builderFeeApproved, approveBuilderFee } = useHyperliquid();
     const [connectWallet, setConnectWallet] = useState(false);
     const [notifications, setNotifications] = useState(true);
     const [settingUpAgent, setSettingUpAgent] = useState(false);
     const [agentSetupError, setAgentSetupError] = useState<string | null>(null);
     const [agentSetupSuccess, setAgentSetupSuccess] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [approvingBuilder, setApprovingBuilder] = useState(false);
+    const [builderError, setBuilderError] = useState<string | null>(null);
+    const [builderSuccess, setBuilderSuccess] = useState(false);
 
     const handleSetupAgentWallet = async () => {
         if (!address) {
@@ -33,6 +36,31 @@ export default function Settings() {
             setAgentSetupError(error instanceof Error ? error.message : 'Failed to setup agent wallet');
         } finally {
             setSettingUpAgent(false);
+        }
+    };
+
+    const handleApproveBuilderFee = async () => {
+        if (!address) {
+            setBuilderError('Please connect your wallet first');
+            return;
+        }
+
+        setApprovingBuilder(true);
+        setBuilderError(null);
+        setBuilderSuccess(false);
+
+        try {
+            const result = await approveBuilderFee();
+            if (result.success) {
+                setBuilderSuccess(true);
+                setTimeout(() => setBuilderSuccess(false), 5000);
+            } else {
+                setBuilderError(result.message);
+            }
+        } catch (error) {
+            setBuilderError(error instanceof Error ? error.message : 'Failed to approve builder fee');
+        } finally {
+            setApprovingBuilder(false);
         }
     };
 
@@ -202,6 +230,59 @@ export default function Settings() {
                             {!agentWalletEnabled && !settingUpAgent && (
                                 <p className="text-xs text-coffee-medium mt-2">
                                     Approve once to enable automatic signing. You'll sign ONE transaction to approve the agent, then all future trades will be signed automatically.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Builder Fee - Support the App */}
+                {address && (
+                    <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <Coins className="w-5 h-5 text-white" />
+                                    <div>
+                                        <span className="font-semibold text-white block">Support Rayo</span>
+                                        <span className="text-xs text-coffee-medium">
+                                            Enable 0.01% fee to support development
+                                        </span>
+                                    </div>
+                                </div>
+                                {builderFeeApproved ? (
+                                    <div className="flex items-center gap-2 text-bullish">
+                                        <CheckCircle2 className="w-5 h-5" />
+                                        <span className="text-sm font-semibold">Enabled</span>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleApproveBuilderFee}
+                                        disabled={approvingBuilder}
+                                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {approvingBuilder ? 'Approving...' : 'Enable'}
+                                    </button>
+                                )}
+                            </div>
+                            
+                            {builderError && (
+                                <div className="flex items-center gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
+                                    <AlertCircle className="w-4 h-4 shrink-0" />
+                                    <span>{builderError}</span>
+                                </div>
+                            )}
+                            
+                            {builderSuccess && (
+                                <div className="flex items-center gap-2 p-3 bg-bullish/10 border border-bullish/20 rounded-lg text-sm text-bullish">
+                                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                    <span>Thank you for supporting Rayo! ⚡</span>
+                                </div>
+                            )}
+                            
+                            {!builderFeeApproved && !approvingBuilder && (
+                                <p className="text-xs text-coffee-medium mt-2">
+                                    A tiny 0.01% fee (1 basis point) on trades helps fund ongoing development. This is completely optional and goes directly to supporting this app.
                                 </p>
                             )}
                         </div>
