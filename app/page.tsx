@@ -12,22 +12,23 @@ import TradingChart from '@/components/TradingChart';
 import MarketSelector from '@/components/MarketSelector';
 import OrderHistory from '@/components/OrderHistory';
 import Settings from '@/components/Settings';
-import { Home as HomeIcon, BarChart3, History, Settings as SettingsIcon, User, LogOut } from 'lucide-react';
+import Profile from '@/components/Profile';
+import { BarChart3, History, Settings as SettingsIcon, User } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
     const { selectedMarket, setSelectedMarket, address } = useHyperliquid();
-    const { ready, authenticated, login, logout } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'settings'>('home');
+    const { ready, authenticated, login } = usePrivy();
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'settings' | 'profile'>('home');
 
     const formatAddress = (addr: string | null) => {
         if (!addr) return null;
         return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
     };
 
-    const handleWalletClick = () => {
+    const handleProfileClick = () => {
         if (authenticated) {
-            logout();
+            setView('profile');
         } else {
             login();
         }
@@ -54,6 +55,10 @@ export default function Home() {
                 ) : view === 'settings' ? (
                     <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                         <Settings />
+                    </div>
+                ) : view === 'profile' ? (
+                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
+                        <Profile />
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
@@ -102,69 +107,74 @@ export default function Home() {
                     right: 0, 
                     top: 'auto',
                     zIndex: 9999,
-                    backgroundColor: '#000000'
+                    backgroundColor: '#000000',
+                    height: '75px'
                 }}
                 className="border-t border-[#FFFF00]/20"
             >
-                <div className="flex items-center justify-around py-2 px-4 max-w-lg mx-auto">
+                <div className="flex items-center justify-between h-full w-[90%] max-w-2xl mx-auto">
                     {/* Home */}
                     <button
                         onClick={() => setView('home')}
-                        className="flex flex-col items-center gap-1 p-3 transition-all"
-                        style={{ color: view === 'home' ? '#FFFF00' : '#555555' }}
+                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
+                        style={{ color: '#FFFF00', background: 'transparent' }}
                     >
-                        <HomeIcon className="w-6 h-6" strokeWidth={view === 'home' ? 2.5 : 1.5} />
-                        <span className="text-[10px] font-semibold">{t.nav.home}</span>
+                        <img 
+                            src="/logo.svg" 
+                            alt="Home" 
+                            className="w-7 h-7"
+                        />
+                        <span className="text-[11px] font-semibold">{t.nav.home}</span>
                     </button>
 
                     {/* Trading */}
                     <button
                         onClick={() => setView('trading')}
-                        className="flex flex-col items-center gap-1 p-3 transition-all"
-                        style={{ color: view === 'trading' ? '#FFFF00' : '#555555' }}
+                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
+                        style={{ color: '#FFFF00', background: 'transparent' }}
                     >
-                        <BarChart3 className="w-6 h-6" strokeWidth={view === 'trading' ? 2.5 : 1.5} />
-                        <span className="text-[10px] font-semibold">{t.nav.trade}</span>
+                        <BarChart3 className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">{t.nav.trade}</span>
                     </button>
 
                     {/* History */}
                     <button
                         onClick={() => setView('history')}
-                        className="flex flex-col items-center gap-1 p-3 transition-all"
-                        style={{ color: view === 'history' ? '#FFFF00' : '#555555' }}
+                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
+                        style={{ color: '#FFFF00', background: 'transparent' }}
                     >
-                        <History className="w-6 h-6" strokeWidth={view === 'history' ? 2.5 : 1.5} />
-                        <span className="text-[10px] font-semibold">{t.nav.history}</span>
+                        <History className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">{t.nav.history}</span>
                     </button>
 
                     {/* Settings */}
                     <button
                         onClick={() => setView('settings')}
-                        className="flex flex-col items-center gap-1 p-3 transition-all"
-                        style={{ color: view === 'settings' ? '#FFFF00' : '#555555' }}
+                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
+                        style={{ color: '#FFFF00', background: 'transparent' }}
                     >
-                        <SettingsIcon className="w-6 h-6" strokeWidth={view === 'settings' ? 2.5 : 1.5} />
-                        <span className="text-[10px] font-semibold">{t.nav.settings}</span>
+                        <SettingsIcon className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">{t.nav.settings}</span>
                     </button>
 
                     {/* Profile/Account */}
                     <button
-                        onClick={handleWalletClick}
+                        onClick={handleProfileClick}
                         disabled={!ready}
-                        className="flex flex-col items-center gap-1 p-3 transition-all"
-                        style={{ color: authenticated ? '#FFFF00' : '#555555' }}
+                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
+                        style={{ color: '#FFFF00', background: 'transparent' }}
                     >
                         {!ready ? (
                             <>
-                                <div className="w-6 h-6 flex items-center justify-center">
+                                <div className="w-7 h-7 flex items-center justify-center">
                                     <div className="spinner w-5 h-5 border-2" style={{ borderTopColor: '#FFFF00' }} />
                                 </div>
-                                <span className="text-[10px] font-semibold">...</span>
+                                <span className="text-[11px] font-semibold">...</span>
                             </>
                         ) : (
                             <>
-                                <User className="w-6 h-6" strokeWidth={authenticated ? 2.5 : 1.5} />
-                                <span className="text-[10px] font-semibold">
+                                <User className="w-7 h-7" strokeWidth={2} />
+                                <span className="text-[11px] font-semibold">
                                     {authenticated ? formatAddress(address) : t.nav.profile}
                                 </span>
                             </>

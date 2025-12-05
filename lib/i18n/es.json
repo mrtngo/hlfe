@@ -289,6 +289,15 @@
     "hi": "Hola",
     "thirtyDayPnl": "G/P 30 días"
   },
+  "profile": {
+    "title": "Perfil",
+    "enterUsername": "Ingresa nombre de usuario",
+    "tapToSetUsername": "Toca para establecer nombre",
+    "accountOverview": "Resumen de Cuenta",
+    "spotHoldings": "Tenencias Spot",
+    "comingSoon": "Próximamente",
+    "spotComingSoonDesc": "El trading spot y las tenencias estarán disponibles pronto"
+  },
   "tooltips": {
     "leverage": "El apalancamiento multiplica tu exposición. Mayor apalancamiento = Mayor riesgo.",
     "liquidationPrice": "Si el precio llega a este nivel, tu posición será liquidada automáticamente.",

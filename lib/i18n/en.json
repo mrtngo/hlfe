@@ -289,6 +289,15 @@
     "hi": "Hi",
     "thirtyDayPnl": "30d PnL"
   },
+  "profile": {
+    "title": "Profile",
+    "enterUsername": "Enter username",
+    "tapToSetUsername": "Tap to set username",
+    "accountOverview": "Account Overview",
+    "spotHoldings": "Spot Holdings",
+    "comingSoon": "Coming Soon",
+    "spotComingSoonDesc": "Spot trading and holdings will be available soon"
+  },
   "tooltips": {
     "leverage": "Leverage multiplies your exposure. Higher leverage = Higher risk.",
     "liquidationPrice": "If price reaches this level, your position will be automatically liquidated.",
