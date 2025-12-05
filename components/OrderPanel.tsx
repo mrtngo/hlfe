@@ -218,44 +218,51 @@ export default function OrderPanel() {
                                 />
                             </div>
                             
-                            {/* Quick Amount Buttons */}
-                            <div className="flex gap-2 mt-3">
-                                {quickAmounts.map((amount) => (
-                                    <button
-                                        key={amount}
-                                        onClick={() => setUsdAmount(amount.toString())}
-                                        className={`flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${
-                                            usdAmount === amount.toString()
-                                                ? 'bg-primary text-primary-foreground'
-                                                : 'bg-bg-tertiary text-coffee-medium hover:bg-white/10'
-                                        }`}
-                                    >
-                                        ${amount}
-                                    </button>
-                                ))}
+                            {/* Quick Amount Buttons - Rayo brand */}
+                            <div className="flex gap-3 mt-4">
+                                {quickAmounts.map((amount) => {
+                                    const isActive = usdAmount === amount.toString();
+                                    return (
+                                        <button
+                                            key={amount}
+                                            onClick={() => setUsdAmount(amount.toString())}
+                                            className={`flex-1 py-3 px-3 rounded-2xl text-base font-bold transition-all active:scale-[0.98] ${
+                                                isActive
+                                                    ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80'
+                                                    : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
+                                            }`}
+                                        >
+                                            ${amount}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
                         {/* Simple Leverage Selector */}
                         <div>
                             <label className="text-sm text-coffee-medium mb-2 block">{t.order.leverage}</label>
-                            <div className="flex gap-2">
-                                {[1, 2, 5, 10].map((lev) => (
-                                    <button
-                                        key={lev}
-                                        onClick={() => setLeverage(Math.min(lev, maxLeverage))}
-                                        disabled={lev > maxLeverage}
-                                        className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-                                            leverage === lev
-                                                ? 'bg-primary text-primary-foreground'
-                                                : lev > maxLeverage
-                                                ? 'bg-bg-tertiary/50 text-coffee-medium/50 cursor-not-allowed'
-                                                : 'bg-bg-tertiary text-coffee-medium hover:bg-white/10'
-                                        }`}
-                                    >
-                                        {lev}x
-                                    </button>
-                                ))}
+                            <div className="flex gap-3">
+                                {[1, 2, 5, 10].map((lev) => {
+                                    const isActive = leverage === lev;
+                                    const isDisabled = lev > maxLeverage;
+                                    return (
+                                        <button
+                                            key={lev}
+                                            onClick={() => setLeverage(Math.min(lev, maxLeverage))}
+                                            disabled={isDisabled}
+                                            className={`flex-1 py-3.5 px-3 rounded-2xl text-base font-bold transition-all active:scale-[0.98] ${
+                                                isDisabled
+                                                    ? 'bg-bg-tertiary/40 text-coffee-medium/50 border border-white/5 cursor-not-allowed'
+                                                    : isActive
+                                                    ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80'
+                                                    : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
+                                            }`}
+                                        >
+                                            {lev}x
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
