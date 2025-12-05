@@ -19,6 +19,7 @@ import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useWalletClient } from 'wagmi';
 import { cachedFetch, apiCache } from '@/lib/api-cache';
+import { db } from '@/lib/supabase/client';
 
 export type { Market };
 
@@ -1762,6 +1763,65 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         }
                         return prev;
                     });
+                }
+
+                // Record trade to database (async, don't block UI)
+                if ((orderFilled || type === 'market') && address) {
+                    (async () => {
+                        try {
+                            // Get user from database
+                            const userData = await db.users.getByWallet(address);
+                            if (!userData) {
+                                console.warn('⚠️ Could not find user in database for trade recording');
+                                return;
+                            }
+
+                            const actualFilledSize = filledSize || roundedSize;
+                            const actualFilledPrice = filledPrice || finalPx;
+
+                            if (isClosingPosition && realizedPnl !== undefined) {
+                                // For closing trades, record as a closed trade with PnL
+                                await db.trades.create({
+                                    user_id: userData.id,
+                                    symbol: symbol,
+                                    side: isBuy ? 'long' : 'short',
+                                    size: actualFilledSize,
+                                    entry_price: actualFilledPrice, // This is actually exit price for closes
+                                    exit_price: actualFilledPrice,
+                                    pnl: realizedPnl,
+                                    status: 'closed',
+                                });
+                                console.log('📊 Recorded closed trade to database:', {
+                                    symbol,
+                                    side: isBuy ? 'long' : 'short',
+                                    size: actualFilledSize,
+                                    price: actualFilledPrice,
+                                    pnl: realizedPnl,
+                                });
+                            } else {
+                                // For opening trades, record as an open trade
+                                await db.trades.create({
+                                    user_id: userData.id,
+                                    symbol: symbol,
+                                    side: isBuy ? 'long' : 'short',
+                                    size: actualFilledSize,
+                                    entry_price: actualFilledPrice,
+                                    exit_price: null,
+                                    pnl: null,
+                                    status: 'open',
+                                });
+                                console.log('📊 Recorded open trade to database:', {
+                                    symbol,
+                                    side: isBuy ? 'long' : 'short',
+                                    size: actualFilledSize,
+                                    entryPrice: actualFilledPrice,
+                                });
+                            }
+                        } catch (err) {
+                            console.error('❌ Failed to record trade to database:', err);
+                            // Don't throw - trade recording failure shouldn't block the order
+                        }
+                    })();
                 }
 
                 // Return order details for notification
