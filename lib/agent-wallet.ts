@@ -100,6 +100,54 @@ export function setAgentApproved(userAddress: string): void {
 }
 
 /**
+ * Clear agent wallet and approval (for resetting)
+ */
+export function clearAgentWallet(): void {
+    if (typeof window === 'undefined') return;
+    
+    try {
+        localStorage.removeItem(AGENT_WALLET_KEY);
+        localStorage.removeItem(AGENT_APPROVAL_KEY);
+        console.log('🗑️ Agent wallet cleared');
+    } catch (e) {
+        console.error('Failed to clear agent wallet:', e);
+    }
+}
+
+/**
+ * Check if user has an existing agent registered on-chain
+ */
+export async function checkExistingAgent(userAddress: string): Promise<{ hasAgent: boolean; agentAddress?: string }> {
+    try {
+        const response = await fetch(`${API_URL}/info`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'extraAgents',
+                user: userAddress.toLowerCase()
+            })
+        });
+        
+        if (!response.ok) {
+            return { hasAgent: false };
+        }
+        
+        const agents = await response.json();
+        console.log('📋 Existing agents:', agents);
+        
+        // agents is an array of { address, name } objects
+        if (Array.isArray(agents) && agents.length > 0) {
+            return { hasAgent: true, agentAddress: agents[0].address };
+        }
+        
+        return { hasAgent: false };
+    } catch (error) {
+        console.error('Failed to check existing agents:', error);
+        return { hasAgent: false };
+    }
+}
+
+/**
  * Custom wallet adapter for SDK that uses browser wallet signing
  */
 class CustomSDKWallet {

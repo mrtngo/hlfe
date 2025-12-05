@@ -11,7 +11,9 @@ import {
     isAgentApproved, 
     setAgentApproved,
     getAgentSigner,
-    approveAgentWallet
+    approveAgentWallet,
+    clearAgentWallet,
+    checkExistingAgent
 } from '@/lib/agent-wallet';
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
@@ -893,13 +895,42 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             // Approve the agent (requires ONE signature from user)
-            const approved = await approveAgentWallet(address, userSigner, agent.address, agent.name);
-            
-            if (approved) {
-                setAgentWalletEnabled(true);
-                return { success: true, message: 'Agent wallet approved! You can now trade without signing each transaction.' };
-            } else {
-                throw new Error('Failed to approve agent wallet');
+            try {
+                const approved = await approveAgentWallet(address, userSigner, agent.address, agent.name);
+                
+                if (approved) {
+                    setAgentWalletEnabled(true);
+                    return { success: true, message: 'Agent wallet approved! You can now trade without signing each transaction.' };
+                } else {
+                    throw new Error('Failed to approve agent wallet');
+                }
+            } catch (approvalError: any) {
+                // Check if the error is "Extra agent already used"
+                if (approvalError.message?.includes('Extra agent already used') || 
+                    approvalError.message?.includes('already used')) {
+                    console.log('⚠️ Agent already registered on-chain, checking existing agents...');
+                    
+                    // Check if there's an existing agent on-chain
+                    const existingAgent = await checkExistingAgent(address);
+                    
+                    if (existingAgent.hasAgent) {
+                        // User has an agent registered but we don't have the private key
+                        // Clear local storage and inform user
+                        clearAgentWallet();
+                        throw new Error(
+                            'You already have an agent wallet registered on Hyperliquid. ' +
+                            'Unfortunately, the private key for that agent is not stored locally. ' +
+                            'Please trade normally with signature prompts, or contact support.'
+                        );
+                    } else {
+                        // Clear local storage and try fresh
+                        clearAgentWallet();
+                        throw new Error(
+                            'Agent setup conflict detected. Please try again.'
+                        );
+                    }
+                }
+                throw approvalError;
             }
         } catch (error) {
             console.error('Error setting up agent wallet:', error);

@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, Coins } from 'lucide-react';
+import { clearAgentWallet } from '@/lib/agent-wallet';
+import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, Coins, RotateCcw } from 'lucide-react';
 
 export default function Settings() {
     const { t, language, setLanguage } = useLanguage();
@@ -214,9 +215,24 @@ export default function Settings() {
                             </div>
                             
                             {agentSetupError && (
-                                <div className="flex items-center gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
-                                    <AlertCircle className="w-4 h-4 shrink-0" />
-                                    <span>{agentSetupError}</span>
+                                <div className="space-y-2">
+                                    <div className="flex items-start gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
+                                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                        <span>{agentSetupError}</span>
+                                    </div>
+                                    {agentSetupError.includes('already') && (
+                                        <button
+                                            onClick={() => {
+                                                clearAgentWallet();
+                                                setAgentSetupError(null);
+                                                window.location.reload();
+                                            }}
+                                            className="flex items-center gap-2 px-3 py-2 bg-bg-tertiary text-coffee-medium rounded-lg text-xs hover:bg-bg-hover transition-colors"
+                                        >
+                                            <RotateCcw className="w-3 h-3" />
+                                            Reset local agent data
+                                        </button>
+                                    )}
                                 </div>
                             )}
                             
@@ -227,10 +243,25 @@ export default function Settings() {
                                 </div>
                             )}
                             
-                            {!agentWalletEnabled && !settingUpAgent && (
+                            {!agentWalletEnabled && !settingUpAgent && !agentSetupError && (
                                 <p className="text-xs text-coffee-medium mt-2">
                                     Approve once to enable automatic signing. You'll sign ONE transaction to approve the agent, then all future trades will be signed automatically.
                                 </p>
+                            )}
+                            
+                            {agentWalletEnabled && (
+                                <button
+                                    onClick={() => {
+                                        if (confirm('This will disable automatic signing. You will need to sign each transaction manually. Continue?')) {
+                                            clearAgentWallet();
+                                            window.location.reload();
+                                        }
+                                    }}
+                                    className="flex items-center gap-2 px-3 py-2 bg-bg-tertiary text-coffee-medium rounded-lg text-xs hover:bg-bg-hover transition-colors mt-2"
+                                >
+                                    <RotateCcw className="w-3 h-3" />
+                                    Disable agent wallet
+                                </button>
                             )}
                         </div>
                     </div>
