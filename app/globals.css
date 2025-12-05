@@ -434,6 +434,12 @@ h6 { font-size: 1rem; }
   100% { transform: rotate(360deg); }
 }
 
+/* Pulse Animation for Order Notification */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
 /* Text Gradient */
 .text-gradient {
   background: linear-gradient(135deg, #FFFF00, #FFD700);
