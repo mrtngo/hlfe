@@ -15,6 +15,7 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/plus-jakarta-sans": "^5.2.8",
+    "@moonpay/moonpay-js": "^0.7.6",
     "@privy-io/react-auth": "^3.8.0",
     "@privy-io/wagmi": "^2.0.3",
     "@react-native-async-storage/async-storage": "^1.24.0",

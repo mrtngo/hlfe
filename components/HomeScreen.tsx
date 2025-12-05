@@ -5,10 +5,11 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import PortfolioChart from '@/components/PortfolioChart';
+import DepositModal from '@/components/DepositModal';
 import type { Market } from '@/hooks/useHyperliquid';
 
 const WATCHLIST_STORAGE_KEY = 'hyperliquid_watchlist';
@@ -26,6 +27,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const [watchlist, setWatchlist] = useState<string[]>([]);
     const [mounted, setMounted] = useState(false);
     const [showAddDropdown, setShowAddDropdown] = useState(false);
+    const [showDepositModal, setShowDepositModal] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -161,6 +163,17 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Deposit Button - Standalone */}
+            <div style={{ marginBottom: '32px' }}>
+                <button
+                    onClick={() => setShowDepositModal(true)}
+                    className="w-full py-4 bg-[#FFFF00] text-black font-bold rounded-2xl hover:bg-[#FFFF33] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                >
+                    <CreditCard className="w-5 h-5" />
+                    Deposit
+                </button>
             </div>
 
             {/* Open Positions */}
@@ -311,6 +324,12 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     </div>
                 )}
             </div>
+
+            {/* Deposit Modal */}
+            <DepositModal
+                isOpen={showDepositModal}
+                onClose={() => setShowDepositModal(false)}
+            />
         </div>
     );
 }
