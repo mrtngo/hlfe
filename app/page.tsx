@@ -11,17 +11,15 @@ import HomeScreen from '@/components/HomeScreen';
 import TradingChart from '@/components/TradingChart';
 import MarketSelector from '@/components/MarketSelector';
 import OrderHistory from '@/components/OrderHistory';
-import Settings from '@/components/Settings';
-import Profile from '@/components/Profile';
 import Leaderboard from '@/components/Leaderboard';
-import ReferralPage from '@/components/ReferralPage';
-import { BarChart3, History, Settings as SettingsIcon, User, Trophy, Gift } from 'lucide-react';
+import Profile from '@/components/Profile';
+import { BarChart3, History, User, Trophy } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
     const { selectedMarket, setSelectedMarket, address } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'settings' | 'profile' | 'leaderboard' | 'referrals'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard'>('home');
 
     const formatAddress = (addr: string | null) => {
         if (!addr) return null;
@@ -54,10 +52,6 @@ export default function Home() {
                     <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                         <OrderHistory />
                     </div>
-                ) : view === 'settings' ? (
-                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                        <Settings />
-                    </div>
                 ) : view === 'profile' ? (
                     <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                         <Profile />
@@ -65,10 +59,6 @@ export default function Home() {
                 ) : view === 'leaderboard' ? (
                     <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                         <Leaderboard />
-                    </div>
-                ) : view === 'referrals' ? (
-                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                        <ReferralPage />
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
@@ -157,34 +147,14 @@ export default function Home() {
                         <span className="text-[11px] font-semibold">{t.nav.history}</span>
                     </button>
 
-                    {/* Settings */}
-                    <button
-                        onClick={() => setView('settings')}
-                        className="flex flex-col items-center gap-1 px-3 py-3 transition-all border-none outline-none"
-                        style={{ color: view === 'settings' ? '#FFFF00' : '#888888', background: 'transparent' }}
-                    >
-                        <SettingsIcon className="w-6 h-6" strokeWidth={2} />
-                        <span className="text-[10px] font-semibold">{t.nav.settings}</span>
-                    </button>
-
                     {/* Leaderboard */}
                     <button
                         onClick={() => setView('leaderboard')}
-                        className="flex flex-col items-center gap-1 px-3 py-3 transition-all border-none outline-none"
+                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
                         style={{ color: view === 'leaderboard' ? '#FFFF00' : '#888888', background: 'transparent' }}
                     >
-                        <Trophy className="w-6 h-6" strokeWidth={2} />
-                        <span className="text-[10px] font-semibold">Ranks</span>
-                    </button>
-
-                    {/* Referrals */}
-                    <button
-                        onClick={() => setView('referrals')}
-                        className="flex flex-col items-center gap-1 px-3 py-3 transition-all border-none outline-none"
-                        style={{ color: view === 'referrals' ? '#FFFF00' : '#888888', background: 'transparent' }}
-                    >
-                        <Gift className="w-6 h-6" strokeWidth={2} />
-                        <span className="text-[10px] font-semibold">Invite</span>
+                        <Trophy className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">Ranks</span>
                     </button>
 
                     {/* Profile/Account */}

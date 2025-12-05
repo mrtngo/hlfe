@@ -1,24 +1,63 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { LogOut, Copy, Check, User, Wallet, TrendingUp, Package, Loader2, AlertCircle } from 'lucide-react';
+import { db, User } from '@/lib/supabase/client';
+import { LogOut, Copy, Check, User as UserIcon, Wallet, TrendingUp, Package, Loader2, AlertCircle, Gift, Users, DollarSign, Settings, ChevronRight, Share2 } from 'lucide-react';
+import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 
 export default function Profile() {
     const { t } = useLanguage();
-    const { address, account } = useHyperliquid();
+    const { address, account, builderFeeApproved, approveBuilderFee } = useHyperliquid();
     const { logout } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
 
     const [copied, setCopied] = useState(false);
+    const [referralCopied, setReferralCopied] = useState(false);
     const [isEditingUsername, setIsEditingUsername] = useState(false);
     const [tempUsername, setTempUsername] = useState('');
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+
+    // Referral data
+    const [referredUsers, setReferredUsers] = useState<User[]>([]);
+    const [totalEarnings, setTotalEarnings] = useState(0);
+    const [loadingReferrals, setLoadingReferrals] = useState(true);
+
+    // Settings state
+    const [approvingFee, setApprovingFee] = useState(false);
+    const [feeError, setFeeError] = useState<string | null>(null);
+
+    const referralLink = user?.referral_code
+        ? `${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${user.referral_code}`
+        : '';
+
+    // Fetch referral data
+    useEffect(() => {
+        const fetchReferralData = async () => {
+            if (!user?.id) return;
+
+            setLoadingReferrals(true);
+            try {
+                const [users, earnings] = await Promise.all([
+                    db.referrals.getReferredUsers(user.id),
+                    db.referrals.getTotalEarnings(user.id),
+                ]);
+                setReferredUsers(users);
+                setTotalEarnings(earnings);
+            } catch (err) {
+                console.error('Error fetching referral data:', err);
+            } finally {
+                setLoadingReferrals(false);
+            }
+        };
+
+        fetchReferralData();
+    }, [user?.id]);
 
     const saveUsername = async () => {
         if (!tempUsername.trim()) {
@@ -51,6 +90,26 @@ export default function Profile() {
         }
     };
 
+    const copyReferralLink = async () => {
+        if (referralLink) {
+            await navigator.clipboard.writeText(referralLink);
+            setReferralCopied(true);
+            setTimeout(() => setReferralCopied(false), 2000);
+        }
+    };
+
+    const handleApproveBuilderFee = async () => {
+        setApprovingFee(true);
+        setFeeError(null);
+        try {
+            await approveBuilderFee();
+        } catch (err: any) {
+            setFeeError(err?.message || 'Failed to approve builder fee');
+        } finally {
+            setApprovingFee(false);
+        }
+    };
+
     const formatAddress = (addr: string) => {
         return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
     };
@@ -68,7 +127,7 @@ export default function Profile() {
                         {userLoading ? (
                             <Loader2 className="w-8 h-8 text-[#FFFF00] animate-spin" />
                         ) : (
-                            <User className="w-12 h-12 text-[#FFFF00]" />
+                            <UserIcon className="w-12 h-12 text-[#FFFF00]" />
                         )}
                     </div>
 
@@ -189,6 +248,91 @@ export default function Profile() {
                 </div>
             </div>
 
+            {/* Referrals Section */}
+            <div className="glass-card p-6">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <Gift className="w-5 h-5 text-[#FFFF00]" />
+                    Invite Friends
+                </h2>
+
+                {/* Referral Link */}
+                <div className="bg-black/40 rounded-2xl p-4 flex items-center gap-3 mb-4">
+                    <code className="flex-1 text-sm text-[#FFFF00] font-mono truncate">
+                        {referralLink || 'Loading...'}
+                    </code>
+                    <button
+                        onClick={copyReferralLink}
+                        className="flex-shrink-0 p-3 bg-[#FFFF00] text-black rounded-xl hover:opacity-90 transition-all"
+                    >
+                        {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    </button>
+                </div>
+
+                <div className="text-sm text-coffee-medium text-center mb-4">
+                    Share your link & earn <span className="text-[#FFFF00] font-bold">10%</span> of their trading fees
+                </div>
+
+                {/* Referral Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white/5 rounded-2xl p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Users className="w-4 h-4 text-[#FFFF00]" />
+                            <span className="text-coffee-medium text-sm">Referrals</span>
+                        </div>
+                        <div className="text-2xl font-bold text-white">
+                            {loadingReferrals ? '...' : referredUsers.length}
+                        </div>
+                    </div>
+                    <div className="bg-white/5 rounded-2xl p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <DollarSign className="w-4 h-4 text-[#FFFF00]" />
+                            <span className="text-coffee-medium text-sm">Earned</span>
+                        </div>
+                        <div className="text-2xl font-bold text-bullish font-mono">
+                            ${loadingReferrals ? '...' : totalEarnings.toFixed(2)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Settings Section */}
+            <div className="glass-card p-6">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-[#FFFF00]" />
+                    Settings
+                </h2>
+
+                {/* Builder Fee Setting */}
+                <div className="bg-white/5 rounded-2xl p-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <div className="font-semibold text-white">Builder Fee</div>
+                            <div className="text-sm text-coffee-medium">
+                                {BUILDER_CONFIG.fee / 100} bps ({(BUILDER_CONFIG.fee / 1000).toFixed(2)}%)
+                            </div>
+                        </div>
+                        {builderFeeApproved ? (
+                            <div className="flex items-center gap-2 text-[#FFFF00] text-sm">
+                                <Check className="w-4 h-4" />
+                                Approved
+                            </div>
+                        ) : (
+                            <button
+                                onClick={handleApproveBuilderFee}
+                                disabled={approvingFee}
+                                className="px-4 py-2 bg-[#FFFF00] text-black rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {approvingFee && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Approve
+                            </button>
+                        )}
+                    </div>
+                    {feeError && (
+                        <div className="mt-2 text-sm text-red-400">{feeError}</div>
+                    )}
+                </div>
+            </div>
+
             {/* Spot Holdings - Coming Soon */}
             <div className="glass-card p-6 opacity-60">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -215,3 +359,4 @@ export default function Profile() {
         </div>
     );
 }
+
