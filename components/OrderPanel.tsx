@@ -195,8 +195,8 @@ export default function OrderPanel() {
                                 onClick={() => setOrderSide('short')}
                                 className={`py-5 rounded-full font-bold text-lg transition-all ${
                                     orderSide === 'short'
-                                        ? 'bg-[#1A1A1A] text-white border-2 border-white/40 scale-[1.02]'
-                                        : 'bg-[#1A1A1A] text-white/60 border-2 border-white/10 hover:border-white/30'
+                                        ? 'bg-[#FF4444] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)] scale-[1.02]'
+                                        : 'bg-[#1A1A1A] text-[#FF4444] border-2 border-[#FF4444]/30 hover:border-[#FF4444]/60'
                                 }`}
                             >
                                 <TrendingDown className="w-6 h-6 mx-auto mb-1" />
@@ -507,12 +507,12 @@ export default function OrderPanel() {
                     className={`w-full rounded-full py-4 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
                         orderSide === 'long'
                             ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
-                            : 'bg-[#1A1A1A] hover:bg-[#252525] text-white border-2 border-white/20'
+                            : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'
                     }`}
                 >
                     {loading ? (
                         <div className="flex items-center justify-center gap-2">
-                            <div className="spinner" style={{ borderTopColor: orderSide === 'long' ? '#000' : '#FFFF00' }} />
+                            <div className="spinner" style={{ borderTopColor: orderSide === 'long' ? '#000' : '#FFF' }} />
                             Processing...
                         </div>
                     ) : notionalValue > 0 && notionalValue < MIN_NOTIONAL_VALUE ? (
