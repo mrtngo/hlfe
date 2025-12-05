@@ -16,15 +16,19 @@
     "yes": "Sí",
     "no": "No",
     "ok": "OK",
-    "copy": "Copiar"
+    "copy": "Copiar",
+    "processing": "Procesando..."
   },
   "nav": {
+    "home": "Inicio",
     "trade": "Tradear",
     "markets": "Mercados",
     "portfolio": "Portafolio",
     "history": "Historial",
     "tutorial": "Tutorial",
-    "settings": "Configuración"
+    "settings": "Ajustes",
+    "profile": "Perfil",
+    "signIn": "Iniciar Sesión"
   },
   "wallet": {
     "connect": "Conectar",
@@ -82,20 +86,40 @@
     "short": "Short",
     "market": "Mercado",
     "limit": "Límite",
+    "basic": "Básico",
+    "advanced": "Avanzado",
     "stopLoss": "Stop Loss",
     "takeProfit": "Take Profit",
     "price": "Precio",
     "amount": "Cantidad",
+    "amountUSD": "Cantidad (USD)",
+    "amountTokens": "Cantidad (tokens)",
     "total": "Total",
     "leverage": "Apalancamiento",
     "size": "Tamaño",
+    "positionSize": "Tamaño de Posición",
+    "marginNeeded": "Margen Requerido",
+    "liqPrice": "Precio de Liq.",
+    "limitPrice": "Precio Límite",
+    "orderType": "Tipo de Orden",
+    "limitOrder": "Orden Límite",
+    "marginMode": "Modo de Margen",
+    "isolated": "Aislado",
+    "cross": "Cruzado",
+    "notional": "Nocional",
     "availableBalance": "Balance Disponible",
+    "available": "Disponible",
     "estLiquidation": "Precio de Liquidación Est.",
     "fee": "Comisión",
     "slippage": "Deslizamiento",
     "placeOrder": "Colocar Orden",
     "placeBuyOrder": "Confirmar Compra",
     "placeSellOrder": "Confirmar Venta",
+    "youWillBuy": "Comprarás",
+    "youWillSell": "Venderás",
+    "useCurrent": "Usar actual",
+    "current": "Actual",
+    "max": "máx",
     "orderTypes": {
       "market": "Orden de Mercado",
       "limit": "Orden Límite",
@@ -118,7 +142,8 @@
     "insufficientBalance": "Balance insuficiente",
     "invalidPrice": "Precio inválido",
     "invalidAmount": "Cantidad inválida",
-    "minOrderSize": "Tamaño mínimo de orden"
+    "minOrderSize": "Tamaño mínimo de orden",
+    "minRequired": "Mínimo ${amount} requerido"
   },
   "positions": {
     "title": "Posiciones",
@@ -185,7 +210,8 @@
     "statistics": "Estadísticas",
     "tradingHistory": "Historial de Operaciones",
     "deposits": "Depósitos",
-    "withdrawals": "Retiros"
+    "withdrawals": "Retiros",
+    "historyTitle": "Historial del Portafolio"
   },
   "tutorial": {
     "title": "Cómo Empezar a Tradear",
@@ -207,7 +233,7 @@
     "faq": "Preguntas Frecuentes"
   },
   "settings": {
-    "title": "Configuración",
+    "title": "Ajustes",
     "language": "Idioma",
     "theme": "Tema",
     "dark": "Oscuro",
@@ -220,7 +246,18 @@
     "apiKeys": "Claves API",
     "security": "Seguridad",
     "about": "Acerca de",
-    "version": "Versión"
+    "version": "Versión",
+    "walletAddress": "Dirección de Billetera",
+    "address": "Dirección",
+    "agentWallet": "Billetera Agente",
+    "tradeWithoutSigning": "Tradea sin firmar cada transacción",
+    "active": "Activo",
+    "enable": "Activar",
+    "settingUp": "Configurando...",
+    "agentWalletEnabledMessage": "¡Billetera agente activada! Ahora puedes tradear sin firmar.",
+    "agentWalletDescription": "La billetera agente firma transacciones automáticamente. Solo necesitas aprobar una vez.",
+    "helpAndSupport": "Ayuda y Soporte",
+    "poweredByHyperliquid": "Potenciado por Hyperliquid"
   },
   "errors": {
     "networkError": "Error de red. Por favor verifica tu conexión.",
@@ -235,7 +272,8 @@
     "connectionLost": "Conexión perdida. Reconectando...",
     "retry": "Reintentar",
     "minNotional": "Mínimo nocional es $10",
-    "minNotionalWarning": "Hyperliquid requiere mínimo $10 de valor nocional"
+    "minNotionalWarning": "Hyperliquid requiere mínimo $10 de valor nocional",
+    "agentWalletExpired": "Billetera agente expirada. Por favor reactívala en Ajustes."
   },
   "home": {
     "welcome": "Bienvenido a Rayo",
@@ -248,7 +286,8 @@
     "addToWatchlist": "Agregar a Lista",
     "noTokensInWatchlist": "No hay tokens en la lista",
     "tapToAddTokens": "Toca el botón + para agregar tokens",
-    "hi": "Hola"
+    "hi": "Hola",
+    "thirtyDayPnl": "G/P 30 días"
   },
   "tooltips": {
     "leverage": "El apalancamiento multiplica tu exposición. Mayor apalancamiento = Mayor riesgo.",

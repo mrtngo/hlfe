@@ -150,7 +150,7 @@ export default function OrderPanel() {
                         }`}
                     >
                         <Zap className="w-4 h-4" />
-                        Basic
+                        {t.order.basic}
                     </button>
                     <button
                         onClick={() => setMode('advanced')}
@@ -161,7 +161,7 @@ export default function OrderPanel() {
                         }`}
                     >
                         <Settings2 className="w-4 h-4" />
-                        Advanced
+                        {t.order.advanced}
                     </button>
                 </div>
             </div>
@@ -189,7 +189,7 @@ export default function OrderPanel() {
                                 }`}
                             >
                                 <TrendingUp className="w-6 h-6 mx-auto mb-1" />
-                                Buy
+                                {t.order.buy}
                             </button>
                             <button
                                 onClick={() => setOrderSide('short')}
@@ -200,13 +200,13 @@ export default function OrderPanel() {
                                 }`}
                             >
                                 <TrendingDown className="w-6 h-6 mx-auto mb-1" />
-                                Sell
+                                {t.order.sell}
                             </button>
                         </div>
 
                         {/* USD Amount Input - Simple and Clear */}
                         <div>
-                            <label className="text-sm text-coffee-medium mb-2 block">Amount (USD)</label>
+                            <label className="text-sm text-coffee-medium mb-2 block">{t.order.amountUSD}</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-coffee-medium">$</span>
                                 <input
@@ -238,7 +238,7 @@ export default function OrderPanel() {
 
                         {/* Simple Leverage Selector */}
                         <div>
-                            <label className="text-sm text-coffee-medium mb-2 block">Leverage</label>
+                            <label className="text-sm text-coffee-medium mb-2 block">{t.order.leverage}</label>
                             <div className="flex gap-2">
                                 {[1, 2, 5, 10].map((lev) => (
                                     <button
@@ -263,23 +263,23 @@ export default function OrderPanel() {
                         {usdValue > 0 && (
                             <div className="p-4 bg-bg-tertiary/50 rounded-2xl space-y-2">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-coffee-medium">You'll {orderSide === 'long' ? 'buy' : 'sell'}</span>
+                                    <span className="text-coffee-medium">{orderSide === 'long' ? t.order.youWillBuy : t.order.youWillSell}</span>
                                     <span className="text-white font-semibold">{tokenSize.toFixed(6)} {selectedMarket}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-coffee-medium">Position size</span>
+                                    <span className="text-coffee-medium">{t.order.positionSize}</span>
                                     <span className="text-white font-semibold">{formatCurrency(usdValue)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-coffee-medium">Leverage</span>
+                                    <span className="text-coffee-medium">{t.order.leverage}</span>
                                     <span className="text-white font-semibold">{leverage}x</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-coffee-medium">Margin needed</span>
+                                    <span className="text-coffee-medium">{t.order.marginNeeded}</span>
                                     <span className="text-white font-semibold">{formatCurrency(usdValue / leverage)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-coffee-medium">Liq. price</span>
+                                    <span className="text-coffee-medium">{t.order.liqPrice}</span>
                                     <span className="text-bearish font-semibold">{formatCurrency(liquidationPrice)}</span>
                                 </div>
                             </div>
@@ -287,7 +287,7 @@ export default function OrderPanel() {
 
                         {/* Balance Display */}
                         <div className="flex justify-between items-center py-2 px-3 bg-bg-tertiary/30 rounded-xl">
-                            <span className="text-sm text-coffee-medium">Available</span>
+                            <span className="text-sm text-coffee-medium">{t.order.available}</span>
                             <span className="text-sm font-bold text-white">{formatCurrency(account.availableMargin)}</span>
                         </div>
                     </>
@@ -296,8 +296,8 @@ export default function OrderPanel() {
                     <>
                         {/* Order Type Info */}
                         <div className="flex items-center justify-between p-3 bg-bg-tertiary/30 rounded-xl">
-                            <span className="text-sm text-coffee-medium">Order Type</span>
-                            <span className="text-sm font-semibold text-primary">Limit Order</span>
+                            <span className="text-sm text-coffee-medium">{t.order.orderType}</span>
+                            <span className="text-sm font-semibold text-primary">{t.order.limitOrder}</span>
                         </div>
 
                         {/* Long/Short Tabs */}
@@ -312,7 +312,7 @@ export default function OrderPanel() {
                             >
                                 <div className="flex items-center justify-center gap-2">
                                     <TrendingUp className="w-5 h-5" />
-                                    Long
+                                    {t.order.long}
                                 </div>
                             </button>
                             <button
@@ -325,14 +325,14 @@ export default function OrderPanel() {
                             >
                                 <div className="flex items-center justify-center gap-2">
                                     <TrendingDown className="w-5 h-5" />
-                                    Short
+                                    {t.order.short}
                                 </div>
                             </button>
                         </div>
 
                         {/* Limit Price */}
                         <div>
-                            <label className="text-sm font-semibold mb-2 block text-white">Limit Price</label>
+                            <label className="text-sm font-semibold mb-2 block text-white">{t.order.limitPrice}</label>
                             <input
                                 type="number"
                                 value={limitPrice}
@@ -342,19 +342,19 @@ export default function OrderPanel() {
                                 step="0.01"
                             />
                             <div className="flex justify-between text-xs text-coffee-medium mt-1">
-                                <span>Current: {formatCurrency(currentPrice)}</span>
+                                <span>{t.order.current}: {formatCurrency(currentPrice)}</span>
                                 <button 
                                     onClick={() => setLimitPrice(currentPrice.toFixed(2))}
                                     className="text-primary hover:underline"
                                 >
-                                    Use current
+                                    {t.order.useCurrent}
                                 </button>
                             </div>
                         </div>
 
                         {/* Token Amount */}
                         <div>
-                            <label className="text-sm font-semibold mb-2 block text-white">Amount (tokens)</label>
+                            <label className="text-sm font-semibold mb-2 block text-white">{t.order.amountTokens}</label>
                             <input
                                 type="number"
                                 value={size}
@@ -378,7 +378,7 @@ export default function OrderPanel() {
                                             />
                                             <div className="flex justify-between text-xs text-coffee-medium mt-1">
                                                 <span>0</span>
-                                                <span>{maxTokens.toFixed(4)} max</span>
+                                                <span>{maxTokens.toFixed(4)} {t.order.max}</span>
                                             </div>
                                         </>
                                     );
@@ -388,7 +388,7 @@ export default function OrderPanel() {
 
                         {/* Leverage */}
                         <div>
-                            <label className="text-sm font-semibold mb-2 block text-white">Leverage</label>
+                            <label className="text-sm font-semibold mb-2 block text-white">{t.order.leverage}</label>
                             <input
                                 type="text"
                                 value={`x${Math.min(leverage, maxLeverage)}`}
@@ -418,7 +418,7 @@ export default function OrderPanel() {
                         {/* Margin Mode */}
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <label className="text-sm font-semibold text-white">Margin Mode</label>
+                                <label className="text-sm font-semibold text-white">{t.order.marginMode}</label>
                                 {market?.onlyIsolated && (
                                     <span className="text-xs text-secondary bg-secondary/20 px-2 py-0.5 rounded font-semibold">
                                         HIP-3
@@ -448,30 +448,30 @@ export default function OrderPanel() {
                         {/* Order Summary */}
                         <div className="space-y-2 p-3 bg-bg-tertiary/50 rounded-lg">
                             <div className="flex justify-between text-sm">
-                                <span className="text-coffee-medium">Limit Price</span>
+                                <span className="text-coffee-medium">{t.order.limitPrice}</span>
                                 <span className="font-semibold text-white">{formatCurrency(parseFloat(limitPrice) || 0)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-coffee-medium">Notional</span>
+                                <span className="text-coffee-medium">{t.order.notional}</span>
                                 <span className="font-semibold text-white">{formatCurrency(notionalValue)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-coffee-medium">Margin ({leverage}x)</span>
+                                <span className="text-coffee-medium">{t.order.marginNeeded} ({leverage}x)</span>
                                 <span className="font-semibold text-white">{formatCurrency(requiredMargin)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                                <span className="text-coffee-medium">Fee</span>
+                                <span className="text-coffee-medium">{t.order.fee}</span>
                                 <span className="text-white">{formatCurrency(fee)}</span>
                             </div>
                             <div className="flex justify-between text-sm pt-2 border-t border-white/10">
-                                <span className="text-coffee-medium">Est. Liq. Price</span>
+                                <span className="text-coffee-medium">{t.order.estLiquidation}</span>
                                 <span className="font-semibold text-bearish">{formatCurrency(liquidationPrice)}</span>
                             </div>
                         </div>
 
                         {/* Balance */}
                         <div className="flex justify-between text-sm p-3 bg-bg-tertiary/30 rounded-lg">
-                            <span className="text-coffee-medium">Available</span>
+                            <span className="text-coffee-medium">{t.order.available}</span>
                             <span className="font-semibold text-white">{formatCurrency(account.availableMargin)}</span>
                         </div>
                     </>
@@ -513,14 +513,14 @@ export default function OrderPanel() {
                     {loading ? (
                         <div className="flex items-center justify-center gap-2">
                             <div className="spinner" style={{ borderTopColor: orderSide === 'long' ? '#000' : '#FFF' }} />
-                            Processing...
+                            {t.common.processing}
                         </div>
                     ) : notionalValue > 0 && notionalValue < MIN_NOTIONAL_VALUE ? (
-                        `Min $${MIN_NOTIONAL_VALUE} required`
+                        `Min $${MIN_NOTIONAL_VALUE}`
                     ) : (
                         mode === 'basic' 
-                            ? `${orderSide === 'long' ? 'Buy' : 'Sell'} ${selectedMarket}`
-                            : `Place ${orderSide === 'long' ? 'Long' : 'Short'} Limit Order`
+                            ? `${orderSide === 'long' ? t.order.buy : t.order.sell} ${selectedMarket}`
+                            : `${t.order.placeOrder} ${orderSide === 'long' ? t.order.long : t.order.short}`
                     )}
                 </button>
             </div>

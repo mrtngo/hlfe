@@ -114,7 +114,7 @@ export default function Home() {
                         style={{ color: view === 'home' ? '#FFFF00' : '#555555' }}
                     >
                         <HomeIcon className="w-6 h-6" strokeWidth={view === 'home' ? 2.5 : 1.5} />
-                        <span className="text-[10px] font-semibold">Home</span>
+                        <span className="text-[10px] font-semibold">{t.nav.home}</span>
                     </button>
 
                     {/* Trading */}
@@ -124,7 +124,7 @@ export default function Home() {
                         style={{ color: view === 'trading' ? '#FFFF00' : '#555555' }}
                     >
                         <BarChart3 className="w-6 h-6" strokeWidth={view === 'trading' ? 2.5 : 1.5} />
-                        <span className="text-[10px] font-semibold">Trade</span>
+                        <span className="text-[10px] font-semibold">{t.nav.trade}</span>
                     </button>
 
                     {/* History */}
@@ -134,7 +134,7 @@ export default function Home() {
                         style={{ color: view === 'history' ? '#FFFF00' : '#555555' }}
                     >
                         <History className="w-6 h-6" strokeWidth={view === 'history' ? 2.5 : 1.5} />
-                        <span className="text-[10px] font-semibold">History</span>
+                        <span className="text-[10px] font-semibold">{t.nav.history}</span>
                     </button>
 
                     {/* Settings */}
@@ -144,7 +144,7 @@ export default function Home() {
                         style={{ color: view === 'settings' ? '#FFFF00' : '#555555' }}
                     >
                         <SettingsIcon className="w-6 h-6" strokeWidth={view === 'settings' ? 2.5 : 1.5} />
-                        <span className="text-[10px] font-semibold">Settings</span>
+                        <span className="text-[10px] font-semibold">{t.nav.settings}</span>
                     </button>
 
                     {/* Profile/Account */}
@@ -165,7 +165,7 @@ export default function Home() {
                             <>
                                 <User className="w-6 h-6" strokeWidth={authenticated ? 2.5 : 1.5} />
                                 <span className="text-[10px] font-semibold">
-                                    {authenticated ? formatAddress(address) : 'Profile'}
+                                    {authenticated ? formatAddress(address) : t.nav.profile}
                                 </span>
                             </>
                         )}
