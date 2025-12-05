@@ -4,6 +4,7 @@ import { useState, useEffect, memo, useCallback, useRef } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
+import { useUser } from '@/hooks/useUser';
 import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
@@ -21,6 +22,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const { t } = useLanguage();
     const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
+    const { user } = useUser();
     const [watchlist, setWatchlist] = useState<string[]>([]);
     const [mounted, setMounted] = useState(false);
     const [showAddDropdown, setShowAddDropdown] = useState(false);
@@ -78,9 +80,11 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const watchlistToShow = watchlist.length > 0 ? watchlist : defaultWatchlist;
     const watchlistMarkets = markets.filter(m => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol));
     const portfolioValue = account.equity || account.balance;
-    
-    // Format username from address
+
+    // Format username from address or use saved username
     const getUsername = () => {
+        if (user?.username) return `@${user.username}`;
+        if (user?.display_name) return user.display_name;
         if (!address) return 'Guest';
         return `${address.slice(0, 4)}...${address.slice(-4)}`;
     };
@@ -135,7 +139,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 text-center">
                         {t.home.hi}, {getUsername()}
                     </h1>
-                    
+
                     {/* Portfolio Value and 30-day Movement */}
                     <div className="space-y-6">
                         <div className="text-center">
@@ -150,7 +154,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                 </span>
                             </div>
                         </div>
-                        
+
                         {/* Portfolio Chart */}
                         <div className="pt-4">
                             <PortfolioChart />
@@ -165,58 +169,58 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     <h2 className="text-2xl font-bold mb-6 text-white">{t.home.openPositions}</h2>
                     <div className="space-y-3">
                         {positions.map((position) => {
-                                const isLong = position.side === 'long';
-                                const pnlColor = position.unrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish';
+                            const isLong = position.side === 'long';
+                            const pnlColor = position.unrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish';
 
-                                return (
-                                    <div
-                                        key={position.symbol}
-                                        className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-4 hover:bg-bg-hover transition-all cursor-pointer active:scale-[0.98] group"
-                                        onClick={() => {
-                                            setSelectedMarket(position.symbol);
-                                            onTokenClick?.(position.symbol);
-                                        }}
-                                    >
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="font-bold text-lg text-white">{position.symbol}</div>
-                                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${isLong ? 'bg-bullish/10 text-bullish border-bullish/20' : 'bg-bearish/10 text-bearish border-bearish/20'}`}>
-                                                        {isLong ? 'LONG' : 'SHORT'}
-                                                    </span>
-                                                    <span className="text-xs text-coffee-medium bg-white/5 px-1.5 py-0.5 rounded border border-white/5">{position.leverage}x</span>
-                                                </div>
-                                            </div>
-                                            <div className={`flex items-center gap-1 ${pnlColor}`}>
-                                                {position.unrealizedPnl >= 0 ? (
-                                                    <ArrowUpRight className="w-4 h-4" />
-                                                ) : (
-                                                    <ArrowDownRight className="w-4 h-4" />
-                                                )}
-                                                <span className="font-bold font-mono text-lg">
-                                                    ${position.unrealizedPnl.toFixed(2)}
+                            return (
+                                <div
+                                    key={position.symbol}
+                                    className="bg-bg-tertiary/50 border border-white/5 rounded-2xl p-4 hover:bg-bg-hover transition-all cursor-pointer active:scale-[0.98] group"
+                                    onClick={() => {
+                                        setSelectedMarket(position.symbol);
+                                        onTokenClick?.(position.symbol);
+                                    }}
+                                >
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="font-bold text-lg text-white">{position.symbol}</div>
+                                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${isLong ? 'bg-bullish/10 text-bullish border-bullish/20' : 'bg-bearish/10 text-bearish border-bearish/20'}`}>
+                                                    {isLong ? 'LONG' : 'SHORT'}
                                                 </span>
+                                                <span className="text-xs text-coffee-medium bg-white/5 px-1.5 py-0.5 rounded border border-white/5">{position.leverage}x</span>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-                                            <div className="flex justify-between">
-                                                <span className="text-coffee-medium">Size</span>
-                                                <span className="font-mono text-white">{position.size.toFixed(4)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-coffee-medium">Entry</span>
-                                                <span className="font-mono text-white">${position.entryPrice.toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-coffee-medium">Mark</span>
-                                                <span className="font-mono text-white">${position.markPrice.toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-coffee-medium">Liq</span>
-                                                <span className="font-mono text-bearish">${position.liquidationPrice.toFixed(2)}</span>
-                                            </div>
+                                        <div className={`flex items-center gap-1 ${pnlColor}`}>
+                                            {position.unrealizedPnl >= 0 ? (
+                                                <ArrowUpRight className="w-4 h-4" />
+                                            ) : (
+                                                <ArrowDownRight className="w-4 h-4" />
+                                            )}
+                                            <span className="font-bold font-mono text-lg">
+                                                ${position.unrealizedPnl.toFixed(2)}
+                                            </span>
                                         </div>
                                     </div>
+                                    <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-coffee-medium">Size</span>
+                                            <span className="font-mono text-white">{position.size.toFixed(4)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-coffee-medium">Entry</span>
+                                            <span className="font-mono text-white">${position.entryPrice.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-coffee-medium">Mark</span>
+                                            <span className="font-mono text-white">${position.markPrice.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-coffee-medium">Liq</span>
+                                            <span className="font-mono text-bearish">${position.liquidationPrice.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             );
                         })}
                     </div>
@@ -225,87 +229,87 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Watchlist */}
             <div className="glass-card p-6">
-                    {/* Header with title and add button */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div className="w-12" /> {/* Spacer for centering */}
-                        <h2 className="text-2xl font-bold text-white">{t.home.watchlist}</h2>
-                        <div className="relative" ref={dropdownRef}>
-                            <button 
-                                className="p-3 hover:bg-[#FFD60A]/10 rounded-2xl transition-colors border border-[#FFD60A]/30"
-                                onClick={() => setShowAddDropdown(!showAddDropdown)}
-                            >
-                                <Plus className="w-6 h-6 text-[#FFD60A]" />
-                            </button>
-                            
-                            {/* Add Token Modal */}
-                            {showAddDropdown && (
-                                <>
-                                    {/* Backdrop */}
-                                    <div 
-                                        className="fixed inset-0 bg-black/60 z-[99]"
-                                        onClick={() => setShowAddDropdown(false)}
-                                    />
-                                    {/* Modal */}
-                                    <div 
-                                        className="fixed z-[100] bg-bg-secondary border border-white/10 rounded-2xl shadow-xl overflow-hidden"
-                                        style={{
-                                            left: '16px',
-                                            right: '16px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            maxHeight: '60vh'
-                                        }}
-                                    >
-                                        <div className="p-4">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <div className="text-lg text-white font-bold">{t.home.addToWatchlist}</div>
-                                                <button 
-                                                    onClick={() => setShowAddDropdown(false)}
-                                                    className="p-2 hover:bg-white/10 rounded-xl"
-                                                >
-                                                    <X className="w-5 h-5 text-coffee-medium" />
-                                                </button>
-                                            </div>
-                                            <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(60vh - 80px)' }}>
-                                                {markets
-                                                    .filter(m => !watchlist.includes(m.name))
-                                                    .slice(0, 30)
-                                                    .map(market => (
-                                                        <button
-                                                            key={market.name}
-                                                            className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left"
-                                                            onClick={() => addToWatchlist(market.name)}
-                                                        >
-                                                            <span className="text-white font-medium">{market.name}</span>
-                                                            <span className="text-[#FFD60A] text-sm font-mono">${market.price?.toFixed(2) || '0.00'}</span>
-                                                        </button>
-                                                    ))}
-                                            </div>
+                {/* Header with title and add button */}
+                <div className="flex items-center justify-between mb-6">
+                    <div className="w-12" /> {/* Spacer for centering */}
+                    <h2 className="text-2xl font-bold text-white">{t.home.watchlist}</h2>
+                    <div className="relative" ref={dropdownRef}>
+                        <button
+                            className="p-3 hover:bg-[#FFD60A]/10 rounded-2xl transition-colors border border-[#FFD60A]/30"
+                            onClick={() => setShowAddDropdown(!showAddDropdown)}
+                        >
+                            <Plus className="w-6 h-6 text-[#FFD60A]" />
+                        </button>
+
+                        {/* Add Token Modal */}
+                        {showAddDropdown && (
+                            <>
+                                {/* Backdrop */}
+                                <div
+                                    className="fixed inset-0 bg-black/60 z-[99]"
+                                    onClick={() => setShowAddDropdown(false)}
+                                />
+                                {/* Modal */}
+                                <div
+                                    className="fixed z-[100] bg-bg-secondary border border-white/10 rounded-2xl shadow-xl overflow-hidden"
+                                    style={{
+                                        left: '16px',
+                                        right: '16px',
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        maxHeight: '60vh'
+                                    }}
+                                >
+                                    <div className="p-4">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="text-lg text-white font-bold">{t.home.addToWatchlist}</div>
+                                            <button
+                                                onClick={() => setShowAddDropdown(false)}
+                                                className="p-2 hover:bg-white/10 rounded-xl"
+                                            >
+                                                <X className="w-5 h-5 text-coffee-medium" />
+                                            </button>
+                                        </div>
+                                        <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(60vh - 80px)' }}>
+                                            {markets
+                                                .filter(m => !watchlist.includes(m.name))
+                                                .slice(0, 30)
+                                                .map(market => (
+                                                    <button
+                                                        key={market.name}
+                                                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left"
+                                                        onClick={() => addToWatchlist(market.name)}
+                                                    >
+                                                        <span className="text-white font-medium">{market.name}</span>
+                                                        <span className="text-[#FFD60A] text-sm font-mono">${market.price?.toFixed(2) || '0.00'}</span>
+                                                    </button>
+                                                ))}
                                         </div>
                                     </div>
-                                </>
-                            )}
-                        </div>
+                                </div>
+                            </>
+                        )}
                     </div>
+                </div>
 
-                    {/* Watchlist items */}
-                    {watchlistMarkets.length === 0 ? (
-                        <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
-                            <p>{t.home.noTokensInWatchlist}</p>
-                            <p className="text-xs mt-2 opacity-60">{t.home.tapToAddTokens}</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {watchlistMarkets.map((market) => (
-                                <WatchlistItem
-                                    key={market.name}
-                                    market={market}
-                                    onTokenClick={handleTokenClick}
-                                    onRemove={removeFromWatchlist}
-                                />
-                            ))}
-                        </div>
-                    )}
+                {/* Watchlist items */}
+                {watchlistMarkets.length === 0 ? (
+                    <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
+                        <p>{t.home.noTokensInWatchlist}</p>
+                        <p className="text-xs mt-2 opacity-60">{t.home.tapToAddTokens}</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {watchlistMarkets.map((market) => (
+                            <WatchlistItem
+                                key={market.name}
+                                market={market}
+                                onTokenClick={handleTokenClick}
+                                onRemove={removeFromWatchlist}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -333,22 +337,22 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove }: WatchlistItemPro
                 <div className="shrink-0">
                     <TokenLogo symbol={market.symbol} size={48} className="rounded-full md:w-14 md:h-14" />
                 </div>
-                
+
                 {/* Token Name */}
                 <div className="flex-1 min-w-0">
                     <div className="font-bold text-white text-lg md:text-xl">{cleanTicker}</div>
                 </div>
-                
+
                 {/* Mini Chart - Hidden on small mobile, visible on larger screens */}
                 <div className="hidden sm:block w-20 md:w-28 h-10 md:h-12 shrink-0 opacity-90">
-                    <MiniChart 
-                        symbol={market.symbol} 
+                    <MiniChart
+                        symbol={market.symbol}
                         isStock={market.isStock === true}
                         width={112}
                         height={48}
                     />
                 </div>
-                
+
                 {/* Price and Change - Right aligned, responsive sizing */}
                 <div className="flex flex-col items-end shrink-0">
                     <div className="text-[#FFD60A] font-bold text-base md:text-xl font-mono mb-0.5 whitespace-nowrap">
