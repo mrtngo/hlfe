@@ -20,14 +20,14 @@ export default function OrderPanel() {
 
     const [mode, setMode] = useState<OrderMode>('basic');
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
-    
+
     // Basic mode state (USD amount)
     const [usdAmount, setUsdAmount] = useState<string>('');
-    
+
     // Advanced mode state (token amount)
     const [size, setSize] = useState<string>('');
     const [limitPrice, setLimitPrice] = useState<string>('');
-    
+
     // Shared state
     const [leverage, setLeverage] = useState<number>(1);
     const [marginMode, setMarginMode] = useState<MarginMode>('isolated');
@@ -40,25 +40,25 @@ export default function OrderPanel() {
     const displaySymbol = selectedMarket?.replace(/-(USD|PERP)$/i, '') || selectedMarket;
     const currentPrice = market?.price || 0;
     const maxLeverage = market?.maxLeverage || 20;
-    
+
     const { wallets } = useWallets();
     const isUsingEmbeddedWallet = wallets.some((w: any) => w.walletClientType === 'privy');
 
     // Calculate values based on mode
     const usdValue = parseFloat(usdAmount) || 0;
-    const tokenSize = mode === 'basic' 
+    const tokenSize = mode === 'basic'
         ? (currentPrice > 0 ? usdValue / currentPrice : 0)
         : (parseFloat(size) || 0);
-    
+
     const notionalValue = mode === 'basic' ? usdValue : tokenSize * currentPrice;
     const requiredMargin = notionalValue / leverage;
     const fee = notionalValue * 0.0005;
     const totalRequired = requiredMargin + fee;
-    
+
     const liquidationPrice = orderSide === 'long'
         ? currentPrice * (1 - 1 / leverage)
         : currentPrice * (1 + 1 / leverage);
-    
+
     const apiSide = orderSide === 'long' ? 'buy' : 'sell';
 
     // Set margin mode for HIP-3 markets
@@ -103,7 +103,7 @@ export default function OrderPanel() {
         try {
             const orderType = mode === 'basic' ? 'market' : 'limit';
             const price = mode === 'advanced' ? parseFloat(limitPrice) : undefined;
-            
+
             const orderResult = await placeOrder(
                 selectedMarket,
                 apiSide,
@@ -112,7 +112,7 @@ export default function OrderPanel() {
                 price,
                 leverage
             );
-            
+
             if (orderResult.filled) {
                 setOrderNotification({
                     symbol: orderResult.symbol,
@@ -123,7 +123,7 @@ export default function OrderPanel() {
                     isClosing: orderResult.isClosing,
                 });
             }
-            
+
             setSuccess(t.order.orderPlaced);
             setUsdAmount('');
             setSize('');
@@ -138,28 +138,26 @@ export default function OrderPanel() {
     const quickAmounts = [10, 25, 50, 100];
 
     return (
-        <div className="h-full flex flex-col bg-[#1A1A1A] rounded-2xl shadow-soft-lg min-w-0 border border-[#FFFF00]/10">
+        <div className="h-full flex flex-col min-w-0">
             {/* Mode Toggle Header */}
-            <div className="p-3 border-b border-white/10">
+            <div className="p-3">
                 <div className="flex items-center justify-center gap-1 p-1 bg-bg-tertiary rounded-xl">
                     <button
                         onClick={() => setMode('basic')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
-                            mode === 'basic'
-                                ? 'bg-primary text-primary-foreground shadow-md'
-                                : 'text-coffee-medium hover:text-white'
-                        }`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${mode === 'basic'
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'text-coffee-medium hover:text-white'
+                            }`}
                     >
                         <Zap className="w-4 h-4" />
                         {t.order.basic}
                     </button>
                     <button
                         onClick={() => setMode('advanced')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${
-                            mode === 'advanced'
-                                ? 'bg-primary text-primary-foreground shadow-md'
-                                : 'text-coffee-medium hover:text-white'
-                        }`}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${mode === 'advanced'
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'text-coffee-medium hover:text-white'
+                            }`}
                     >
                         <Settings2 className="w-4 h-4" />
                         {t.order.advanced}
@@ -179,31 +177,29 @@ export default function OrderPanel() {
                             </div>
                         </div>
 
-                        {/* Buy/Sell Selection - Rayo Brand Style */}
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* Buy/Sell Selection - Casino/Slots Style */}
+                        <div className="flex gap-2 px-2">
                             <button
                                 onClick={() => setOrderSide('long')}
-                                className={`py-5 rounded-full font-bold text-lg transition-all ${
-                                    orderSide === 'long'
-                                        ? 'bg-[#FFFF00] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)] scale-[1.02] active:text-black focus:text-black'
-                                        : 'bg-[#1A1A1A] text-[#FFFF00] border-2 border-[#FFFF00]/30 hover:border-[#FFFF00]/60'
-                                }`}
+                                className={`flex-1 py-6 rounded-2xl font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'long'
+                                    ? 'bg-gradient-to-b from-[#FFFF00] to-[#FFD700] text-black shadow-[0_0_30px_rgba(255,255,0,0.5),0_4px_15px_rgba(0,0,0,0.3)] scale-[1.02] border-2 border-[#FFFF33]'
+                                    : 'bg-[#0D0D0D] text-[#FFFF00] border-2 border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:bg-[#FFFF00]/5'
+                                    }`}
                                 style={orderSide === 'long' ? { color: '#000' } : undefined}
                             >
-                                <TrendingUp className="w-6 h-6 mx-auto mb-1" />
-                                {t.order.buy}
+                                <TrendingUp className="w-8 h-8" strokeWidth={3} />
+                                <span className="tracking-wide">{t.order.buy}</span>
                             </button>
                             <button
                                 onClick={() => setOrderSide('short')}
-                                className={`py-5 rounded-full font-bold text-lg transition-all ${
-                                    orderSide === 'short'
-                                        ? 'bg-[#FF4444] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)] scale-[1.02] active:text-white focus:text-white'
-                                        : 'bg-[#1A1A1A] text-[#FF4444] border-2 border-[#FF4444]/30 hover:border-[#FF4444]/60'
-                                }`}
+                                className={`flex-1 py-6 rounded-2xl font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'short'
+                                    ? 'bg-gradient-to-b from-[#FF4444] to-[#CC0000] text-white shadow-[0_0_30px_rgba(255,68,68,0.5),0_4px_15px_rgba(0,0,0,0.3)] scale-[1.02] border-2 border-[#FF6666]'
+                                    : 'bg-[#0D0D0D] text-[#FF4444] border-2 border-[#FF4444]/20 hover:border-[#FF4444]/50 hover:bg-[#FF4444]/5'
+                                    }`}
                                 style={orderSide === 'short' ? { color: '#FFFFFF' } : undefined}
                             >
-                                <TrendingDown className="w-6 h-6 mx-auto mb-1" />
-                                {t.order.sell}
+                                <TrendingDown className="w-8 h-8" strokeWidth={3} />
+                                <span className="tracking-wide">{t.order.sell}</span>
                             </button>
                         </div>
 
@@ -219,7 +215,7 @@ export default function OrderPanel() {
                                     className="w-full px-4 py-4 text-2xl font-bold text-white bg-bg-tertiary border border-white/10 rounded-2xl focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                 />
                             </div>
-                            
+
                             {/* Quick Amount Buttons - Rayo brand */}
                             <div className="flex gap-2.5 mt-4">
                                 {quickAmounts.map((amount) => {
@@ -228,11 +224,10 @@ export default function OrderPanel() {
                                         <button
                                             key={amount}
                                             onClick={() => setUsdAmount(amount.toString())}
-                                            className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${
-                                                isActive
-                                                    ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80 active:text-black focus:text-black'
-                                                    : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
-                                            }`}
+                                            className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${isActive
+                                                ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80 active:text-black focus:text-black'
+                                                : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
+                                                }`}
                                             style={isActive ? { color: '#000' } : undefined}
                                         >
                                             ${amount}
@@ -254,13 +249,12 @@ export default function OrderPanel() {
                                             key={lev}
                                             onClick={() => setLeverage(Math.min(lev, maxLeverage))}
                                             disabled={isDisabled}
-                                            className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${
-                                                isDisabled
-                                                    ? 'bg-bg-tertiary/40 text-coffee-medium/50 border border-white/5 cursor-not-allowed'
-                                                    : isActive
+                                            className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${isDisabled
+                                                ? 'bg-bg-tertiary/40 text-coffee-medium/50 border border-white/5 cursor-not-allowed'
+                                                : isActive
                                                     ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80 active:text-black focus:text-black'
                                                     : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
-                                            }`}
+                                                }`}
                                             style={isActive ? { color: '#000' } : undefined}
                                         >
                                             {lev}x
@@ -315,11 +309,10 @@ export default function OrderPanel() {
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => setOrderSide('long')}
-                                className={`py-4 rounded-lg font-bold transition-all border-2 ${
-                                    orderSide === 'long'
-                                        ? 'bg-primary text-primary-foreground border-primary shadow-lg'
-                                        : 'bg-primary/30 text-primary-foreground border-primary/30 hover:bg-primary/50'
-                                }`}
+                                className={`py-4 rounded-lg font-bold transition-all border-2 ${orderSide === 'long'
+                                    ? 'bg-primary text-primary-foreground border-primary shadow-lg'
+                                    : 'bg-primary/30 text-primary-foreground border-primary/30 hover:bg-primary/50'
+                                    }`}
                             >
                                 <div className="flex items-center justify-center gap-2">
                                     <TrendingUp className="w-5 h-5" />
@@ -328,11 +321,10 @@ export default function OrderPanel() {
                             </button>
                             <button
                                 onClick={() => setOrderSide('short')}
-                                className={`py-4 rounded-lg font-bold transition-all border-2 ${
-                                    orderSide === 'short'
-                                        ? 'bg-bearish text-white border-bearish shadow-lg'
-                                        : 'bg-bearish/30 text-white border-bearish/30 hover:bg-bearish/50'
-                                }`}
+                                className={`py-4 rounded-lg font-bold transition-all border-2 ${orderSide === 'short'
+                                    ? 'bg-bearish text-white border-bearish shadow-lg'
+                                    : 'bg-bearish/30 text-white border-bearish/30 hover:bg-bearish/50'
+                                    }`}
                             >
                                 <div className="flex items-center justify-center gap-2">
                                     <TrendingDown className="w-5 h-5" />
@@ -354,7 +346,7 @@ export default function OrderPanel() {
                             />
                             <div className="flex justify-between text-xs text-coffee-medium mt-1">
                                 <span>{t.order.current}: {formatCurrency(currentPrice)}</span>
-                                <button 
+                                <button
                                     onClick={() => setLimitPrice(currentPrice.toFixed(2))}
                                     className="text-primary hover:underline"
                                 >
@@ -442,13 +434,12 @@ export default function OrderPanel() {
                                         key={m}
                                         onClick={() => setMarginMode(m)}
                                         disabled={market?.onlyIsolated && m === 'cross'}
-                                        className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all capitalize ${
-                                            marginMode === m
-                                                ? 'bg-primary text-primary-foreground'
-                                                : market?.onlyIsolated && m === 'cross'
+                                        className={`py-3 px-4 rounded-lg text-sm font-semibold transition-all capitalize ${marginMode === m
+                                            ? 'bg-primary text-primary-foreground'
+                                            : market?.onlyIsolated && m === 'cross'
                                                 ? 'bg-bg-tertiary/50 text-coffee-medium/50 cursor-not-allowed'
                                                 : 'bg-bg-tertiary text-coffee-medium hover:bg-white/10'
-                                        }`}
+                                            }`}
                                     >
                                         {m}
                                     </button>
@@ -504,22 +495,21 @@ export default function OrderPanel() {
 
                 {/* Minimum Notional Warning */}
                 {((mode === 'basic' && usdValue > 0 && usdValue < MIN_NOTIONAL_VALUE) ||
-                  (mode === 'advanced' && tokenSize > 0 && notionalValue < MIN_NOTIONAL_VALUE)) && (
-                    <div className="flex items-center gap-2 p-3 bg-secondary/10 border border-secondary/20 rounded-lg text-sm text-secondary">
-                        <AlertCircle className="w-4 h-4 shrink-0" />
-                        <span>Minimum ${MIN_NOTIONAL_VALUE} required</span>
-                    </div>
-                )}
+                    (mode === 'advanced' && tokenSize > 0 && notionalValue < MIN_NOTIONAL_VALUE)) && (
+                        <div className="flex items-center gap-2 p-3 bg-secondary/10 border border-secondary/20 rounded-lg text-sm text-secondary">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            <span>Minimum ${MIN_NOTIONAL_VALUE} required</span>
+                        </div>
+                    )}
 
                 {/* Place Order Button - Rayo Style */}
                 <button
                     onClick={handlePlaceOrder}
                     disabled={!connected || loading || tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE}
-                    className={`w-full rounded-full py-4 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
-                        orderSide === 'long'
-                            ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)] active:text-black focus:text-black'
-                            : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)] active:text-white focus:text-white'
-                    }`}
+                    className={`w-full rounded-full py-4 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${orderSide === 'long'
+                        ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)] active:text-black focus:text-black'
+                        : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)] active:text-white focus:text-white'
+                        }`}
                     style={orderSide === 'long' ? { color: '#000' } : undefined}
                 >
                     {loading ? (
@@ -530,7 +520,7 @@ export default function OrderPanel() {
                     ) : notionalValue > 0 && notionalValue < MIN_NOTIONAL_VALUE ? (
                         `Min $${MIN_NOTIONAL_VALUE}`
                     ) : (
-                        mode === 'basic' 
+                        mode === 'basic'
                             ? `${orderSide === 'long' ? t.order.buy : t.order.sell} ${displaySymbol}`
                             : `${t.order.placeOrder} ${orderSide === 'long' ? t.order.long : t.order.short}`
                     )}
@@ -538,9 +528,9 @@ export default function OrderPanel() {
             </div>
 
             {/* Order Notification */}
-            <OrderNotification 
-                order={orderNotification} 
-                onClose={() => setOrderNotification(null)} 
+            <OrderNotification
+                order={orderNotification}
+                onClose={() => setOrderNotification(null)}
             />
         </div>
     );

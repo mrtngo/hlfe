@@ -42,22 +42,22 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
 
     // Track selected display label separately for ranges
     const [selectedLabel, setSelectedLabel] = useState<string>('1h');
-    
+
     // Get the selected option to determine date range
     const selectedOption = timeframeOptions.find(opt => opt.label === selectedLabel);
     const dateRangeDays = selectedOption?.days || 7; // Default to 7 days if not specified
-    
+
     // Fetch candle data with date range
     const { candles, loading, error } = useCandleData(marketSymbol, timeframe, isStock, dateRangeDays);
-    
+
     const currentTimeframeLabel = selectedLabel;
 
     // Format data for recharts - simple line chart with OHLC
     const chartData = candles.map(candle => ({
-        time: new Date(candle.time * 1000).toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
+        time: new Date(candle.time * 1000).toLocaleTimeString('en-US', {
+            hour: '2-digit',
             minute: '2-digit',
-            hour12: false 
+            hour12: false
         }),
         timestamp: candle.time,
         open: candle.open,
@@ -81,17 +81,17 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             const date = new Date(data.timestamp * 1000);
-            const dateStr = date.toLocaleDateString('en-US', { 
-                day: 'numeric', 
-                month: 'short', 
-                year: 'numeric' 
+            const dateStr = date.toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
             });
-            const timeStr = date.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
+            const timeStr = date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
                 minute: '2-digit',
-                hour12: false 
+                hour12: false
             });
-            
+
             return (
                 <div className="bg-bg-tertiary px-4 py-2 rounded-xl shadow-lg border border-white/10">
                     <p className="text-xs text-coffee-medium mb-1">{dateStr} at {timeStr}</p>
@@ -103,8 +103,8 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
     };
 
     return (
-        <div className="glass-card h-full flex flex-col bg-bg-secondary rounded-lg shadow-soft-lg min-w-0 border border-white/10">
-            <div className="p-4 border-b border-white/10 flex items-center">
+        <div className="h-full flex flex-col min-w-0">
+            <div className="p-4 flex items-center">
                 <div className="flex items-center gap-4">
                     <h3 className="text-sm font-semibold text-white">
                         {marketSymbol?.replace('-USD', '').replace('-PERP', '') || 'BTC'} · {currentTimeframeLabel} · Hyperliquid
@@ -116,7 +116,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
             {/* Chart Container - Fixed height to avoid ResponsiveContainer dimension issues */}
             <div className="relative w-full p-4" style={{ height: '340px' }}>
                 {loading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80 z-10 rounded-b-lg">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-10">
                         <div className="text-center">
                             <div className="spinner mx-auto mb-2"></div>
                             <p className="text-sm text-coffee-medium">Loading chart data...</p>
@@ -124,7 +124,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                     </div>
                 )}
                 {error && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80 z-10 rounded-b-lg">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-10">
                         <div className="text-center">
                             <p className="text-sm text-bearish">{error}</p>
                             <button
@@ -137,18 +137,18 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                     </div>
                 )}
                 {!loading && !error && candles.length === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80 z-10 rounded-b-lg">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-10">
                         <div className="text-center p-6">
                             <BarChart3 className="w-12 h-12 mx-auto mb-4 text-coffee-light" />
                             <p className="text-sm font-medium text-coffee-medium mb-2">No chart data available</p>
                             <p className="text-xs text-coffee-light">Chart data will appear here when trading activity is detected</p>
+                        </div>
                     </div>
-                </div>
                 )}
                 {!loading && !error && chartData.length > 0 && (
                     <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart 
-                            data={chartData} 
+                        <ComposedChart
+                            data={chartData}
                             margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                         >
                             <defs>
@@ -161,7 +161,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             {/* Hidden YAxis to set domain without showing it */}
                             <YAxis hide domain={[yDomainMin, yDomainMax]} />
                             {/* No grid, no visible axes - clean minimal chart */}
-                            <Tooltip 
+                            <Tooltip
                                 content={<CustomTooltip />}
                                 cursor={{ stroke: RAYO_YELLOW, strokeWidth: 1, strokeDasharray: '5 5' }}
                             />
@@ -173,10 +173,10 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                 stroke="none"
                             />
                             {/* Main price line - Rayo Yellow */}
-                            <Line 
-                                type="monotone" 
-                                dataKey="price" 
-                                stroke={RAYO_YELLOW} 
+                            <Line
+                                type="monotone"
+                                dataKey="price"
+                                stroke={RAYO_YELLOW}
                                 strokeWidth={2}
                                 dot={false}
                                 activeDot={{ r: 5, fill: RAYO_YELLOW, stroke: RAYO_YELLOW, strokeWidth: 2 }}
@@ -198,8 +198,8 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                 setSelectedLabel(option.label);
                             }}
                             className="flex flex-col items-center px-2 py-2 transition-all border-none outline-none"
-                            style={{ 
-                                color: '#FFFF00', 
+                            style={{
+                                color: '#FFFF00',
                                 background: 'transparent',
                                 opacity: isSelected ? 1 : 0.5
                             }}

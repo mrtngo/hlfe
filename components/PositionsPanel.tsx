@@ -16,7 +16,7 @@ export default function PositionsPanel() {
 
     if (positions.length === 0) {
         return (
-            <div className="glass-card p-6 bg-bg-secondary rounded-lg shadow-soft-lg h-full flex flex-col min-w-0 border border-white/10">
+            <div className="p-6 h-full flex flex-col min-w-0">
                 <h3 className="text-sm font-semibold mb-4 text-white">{t.positions.title}</h3>
                 <div className="text-center py-8 text-coffee-medium flex-1 flex flex-col items-center justify-center">
                     <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-30" />
@@ -27,7 +27,7 @@ export default function PositionsPanel() {
     }
 
     return (
-        <div className="glass-card overflow-hidden bg-bg-secondary rounded-lg shadow-soft-lg h-full flex flex-col min-w-0 border border-white/10">
+        <div className="overflow-hidden h-full flex flex-col min-w-0">
             <div className="p-4 border-b border-white/10">
                 <h3 className="text-sm font-semibold text-white">{t.positions.title}</h3>
             </div>
@@ -52,14 +52,12 @@ export default function PositionsPanel() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className={`font-mono font-semibold text-sm ${
-                                            isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
-                                        }`}>
+                                        <div className={`font-mono font-semibold text-sm ${isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
+                                            }`}>
                                             {formatCurrency(position.unrealizedPnl)}
                                         </div>
-                                        <div className={`text-xs font-semibold ${
-                                            isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
-                                        }`}>
+                                        <div className={`text-xs font-semibold ${isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
+                                            }`}>
                                             {formatPercent(Math.abs(position.unrealizedPnlPercent))}
                                         </div>
                                     </div>
