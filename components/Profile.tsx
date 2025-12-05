@@ -1,48 +1,46 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
-import { LogOut, Copy, Check, User, Wallet, TrendingUp, Package } from 'lucide-react';
-
-const PROFILE_STORAGE_KEY = 'rayo_user_profile';
-
-interface UserProfile {
-    username: string;
-}
+import { useUser } from '@/hooks/useUser';
+import { LogOut, Copy, Check, User, Wallet, TrendingUp, Package, Loader2, AlertCircle } from 'lucide-react';
 
 export default function Profile() {
     const { t } = useLanguage();
     const { address, account } = useHyperliquid();
     const { logout } = usePrivy();
+    const { user, loading: userLoading, updateUsername } = useUser();
+
     const [copied, setCopied] = useState(false);
-    const [username, setUsername] = useState('');
     const [isEditingUsername, setIsEditingUsername] = useState(false);
     const [tempUsername, setTempUsername] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
-    // Load saved profile
-    useEffect(() => {
-        if (typeof window !== 'undefined' && address) {
-            const saved = localStorage.getItem(`${PROFILE_STORAGE_KEY}_${address}`);
-            if (saved) {
-                try {
-                    const profile: UserProfile = JSON.parse(saved);
-                    setUsername(profile.username || '');
-                } catch (e) {
-                    // Silently fail
-                }
-            }
+    const saveUsername = async () => {
+        if (!tempUsername.trim()) {
+            setError('Username cannot be empty');
+            return;
         }
-    }, [address]);
 
-    const saveUsername = () => {
-        if (typeof window !== 'undefined' && address) {
-            const profile: UserProfile = { username: tempUsername };
-            localStorage.setItem(`${PROFILE_STORAGE_KEY}_${address}`, JSON.stringify(profile));
-            setUsername(tempUsername);
+        setSaving(true);
+        setError(null);
+        setSuccess(null);
+
+        const result = await updateUsername(tempUsername);
+
+        if (result.success) {
+            setSuccess(result.message);
             setIsEditingUsername(false);
+            setTimeout(() => setSuccess(null), 3000);
+        } else {
+            setError(result.message);
         }
+
+        setSaving(false);
     };
 
     const copyAddress = async () => {
@@ -57,7 +55,7 @@ export default function Profile() {
         return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
     };
 
-    const displayName = username || (address ? formatAddress(address) : 'User');
+    const displayName = user?.username || user?.display_name || (address ? formatAddress(address) : 'User');
 
     return (
         <div className="max-w-2xl mx-auto space-y-6">
@@ -67,48 +65,80 @@ export default function Profile() {
                 <div className="relative z-10">
                     {/* Avatar */}
                     <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-[#FFFF00]/10 border-2 border-[#FFFF00]/30 flex items-center justify-center">
-                        <User className="w-12 h-12 text-[#FFFF00]" />
+                        {userLoading ? (
+                            <Loader2 className="w-8 h-8 text-[#FFFF00] animate-spin" />
+                        ) : (
+                            <User className="w-12 h-12 text-[#FFFF00]" />
+                        )}
                     </div>
-                    
+
                     {/* Username */}
                     {isEditingUsername ? (
-                        <div className="flex items-center justify-center gap-2 mb-2">
+                        <div className="space-y-3 mb-4">
                             <input
                                 type="text"
                                 value={tempUsername}
-                                onChange={(e) => setTempUsername(e.target.value)}
-                                placeholder={t.profile?.enterUsername || "Enter username"}
-                                className="input text-center text-xl font-bold max-w-[200px]"
+                                onChange={(e) => {
+                                    setTempUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+                                    setError(null);
+                                }}
+                                placeholder="username"
+                                className="input text-center text-xl font-bold max-w-[250px] mx-auto lowercase"
+                                maxLength={20}
                                 autoFocus
                             />
-                            <button
-                                onClick={saveUsername}
-                                className="btn btn-primary px-4 py-2"
-                            >
-                                {t.common.save}
-                            </button>
-                            <button
-                                onClick={() => setIsEditingUsername(false)}
-                                className="btn btn-secondary px-4 py-2"
-                            >
-                                {t.common.cancel}
-                            </button>
+                            <p className="text-xs text-coffee-medium">
+                                3-20 characters, lowercase letters, numbers, underscores only
+                            </p>
+                            <div className="flex items-center justify-center gap-2">
+                                <button
+                                    onClick={saveUsername}
+                                    disabled={saving || tempUsername.length < 3}
+                                    className="btn bg-[#FFFF00] text-black px-6 py-2 rounded-full font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {t.common.save}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setIsEditingUsername(false);
+                                        setError(null);
+                                    }}
+                                    className="btn bg-white/10 text-white px-6 py-2 rounded-full font-bold hover:bg-white/20"
+                                >
+                                    {t.common.cancel}
+                                </button>
+                            </div>
                         </div>
                     ) : (
-                        <h1 
-                            className="text-3xl font-bold text-white mb-2 cursor-pointer hover:text-[#FFFF00] transition-colors"
+                        <h1
+                            className="text-3xl font-bold text-white mb-2 cursor-pointer hover:text-[#FFFF00] transition-colors flex items-center justify-center gap-2"
                             onClick={() => {
-                                setTempUsername(username);
+                                setTempUsername(user?.username || '');
                                 setIsEditingUsername(true);
                             }}
                         >
-                            {displayName}
+                            {user?.username ? `@${displayName}` : displayName}
                         </h1>
                     )}
-                    
-                    {!isEditingUsername && !username && (
+
+                    {/* Error/Success Messages */}
+                    {error && (
+                        <div className="flex items-center justify-center gap-2 text-red-400 text-sm mb-3">
+                            <AlertCircle className="w-4 h-4" />
+                            {error}
+                        </div>
+                    )}
+                    {success && (
+                        <div className="flex items-center justify-center gap-2 text-[#FFFF00] text-sm mb-3">
+                            <Check className="w-4 h-4" />
+                            {success}
+                        </div>
+                    )}
+
+                    {!isEditingUsername && !user?.username && !userLoading && (
                         <p className="text-coffee-medium text-sm mb-4">
-                            {t.profile?.tapToSetUsername || "Tap to set username"}
+                            {t.profile?.tapToSetUsername || "Tap to set a username"}
                         </p>
                     )}
 
@@ -125,6 +155,14 @@ export default function Profile() {
                                 <Copy className="w-4 h-4" />
                             )}
                         </button>
+                    )}
+
+                    {/* Database status indicator */}
+                    {user && (
+                        <div className="mt-3 text-xs text-coffee-light flex items-center justify-center gap-1">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                            Synced to cloud
+                        </div>
                     )}
                 </div>
             </div>
@@ -177,4 +215,3 @@ export default function Profile() {
         </div>
     );
 }
-

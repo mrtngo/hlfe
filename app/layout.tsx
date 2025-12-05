@@ -3,6 +3,7 @@ import './globals.css';
 import { LanguageProvider } from '@/hooks/useLanguage';
 import { HyperliquidProvider } from '@/providers/HyperliquidProvider';
 import { PrivyProvider } from '@/providers/PrivyProvider';
+import { UserProvider } from '@/hooks/useUser';
 
 // Rayo Typography System - Variable Fonts
 import "@fontsource-variable/plus-jakarta-sans";
@@ -36,7 +37,9 @@ export default function RootLayout({
                 <PrivyProvider>
                     <LanguageProvider>
                         <HyperliquidProvider>
-                            {children}
+                            <UserProvider>
+                                {children}
+                            </UserProvider>
                         </HyperliquidProvider>
                     </LanguageProvider>
                 </PrivyProvider>
@@ -44,3 +47,4 @@ export default function RootLayout({
         </html>
     );
 }
+
