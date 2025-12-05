@@ -1179,15 +1179,45 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             };
 
             // 4. Sign action
-            // Always use user wallet for now - agent wallet has registration issues
+            // Try agent wallet first (no signature prompts), fall back to user wallet
             let browserWallet: any = null;
-            const lowercasedAddress = address.toLowerCase();
+            let lowercasedAddress = address.toLowerCase();
             const nonce = Date.now();
+            let usingAgentWallet = false;
             
-            console.log('🔐 Using user wallet for signing (address:', lowercasedAddress, ')');
+            // Check if agent wallet is available and approved
+            const agent = getAgentWallet();
+            const agentSigner = getAgentSigner();
+            const isApproved = isAgentApproved(address);
             
-            // Use user wallet for signing
-            {
+            if (agentWalletEnabled && agent && agentSigner && isApproved) {
+                // Use agent wallet - no user signature needed!
+                console.log('✅ Using approved agent wallet - NO signature prompt needed!');
+                console.log('Agent address:', agent.address);
+                usingAgentWallet = true;
+                
+                // Create a BrowserWallet-like interface for the agent
+                browserWallet = {
+                    address: agent.address,
+                    getAddress: async () => agent.address.toLowerCase(),
+                    signTypedData: async (domain: any, types: any, value: any) => {
+                        // Remove EIP712Domain from types if present
+                        const { EIP712Domain, ...restTypes } = types;
+                        console.log('🔐 Signing with agent wallet (no user prompt)');
+                        return await agentSigner.signTypedData(domain, restTypes, value);
+                    },
+                };
+            } else {
+                console.log('⚠️ Agent wallet not available, using user wallet:', {
+                    agentWalletEnabled,
+                    hasAgent: !!agent,
+                    hasSigner: !!agentSigner,
+                    isApproved,
+                });
+            }
+            
+            // Fall back to user wallet if agent not available
+            if (!browserWallet) {
                 let signingProvider = null;
                 const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
                 
@@ -1228,7 +1258,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 !IS_TESTNET // Pass isMainnet (opposite of IS_TESTNET): false for testnet
             );
             
-            console.log('✅ Order signed with user wallet');
+            if (usingAgentWallet) {
+                console.log('✅ Order signed with agent wallet - no user prompt!');
+            } else {
+                console.log('✅ Order signed with user wallet');
+            }
 
             console.log('Connected wallet address:', address);
             console.log('Action payload:', actionPayload);
@@ -1287,6 +1321,19 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             if (result.status === 'err') {
                 console.error('❌ Order failed:', result.response);
+                
+                // Check if it's an agent wallet issue - if so, disable agent and notify user
+                const errorMsg = result.response || '';
+                if (errorMsg.includes('does not exist') && usingAgentWallet) {
+                    console.warn('⚠️ Agent wallet not registered with Hyperliquid. Disabling agent wallet.');
+                    setAgentWalletEnabled(false);
+                    // Clear the approval so user needs to re-approve
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('hyperliquid_agent_approved');
+                    }
+                    throw new Error('Agent wallet expired or invalid. Please re-enable it in Settings, then try again.');
+                }
+                
                 throw new Error(result.response);
             }
 
