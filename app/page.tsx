@@ -93,7 +93,7 @@ export default function Home() {
             </main>
 
 
-            {/* Footer Navigation */}
+            {/* Footer Navigation - Rayo Style */}
             <nav 
                 style={{ 
                     position: 'fixed', 
@@ -104,87 +104,69 @@ export default function Home() {
                     zIndex: 9999,
                     backgroundColor: '#000000'
                 }}
-                className="border-t border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.8)]"
+                className="border-t border-[#FFFF00]/20"
             >
-                <div className="flex items-center justify-center gap-4 py-3 px-2">
+                <div className="flex items-center justify-around py-2 px-4 max-w-lg mx-auto">
                     {/* Home */}
                     <button
                         onClick={() => setView('home')}
-                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
-                            view === 'home'
-                                ? 'text-primary bg-primary/10'
-                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
-                        }`}
+                        className="flex flex-col items-center gap-1 p-3 transition-all"
+                        style={{ color: view === 'home' ? '#FFFF00' : '#555555' }}
                     >
-                        <HomeIcon className="w-6 h-6" />
-                        <span className="text-xs font-medium">Home</span>
+                        <HomeIcon className="w-6 h-6" strokeWidth={view === 'home' ? 2.5 : 1.5} />
+                        <span className="text-[10px] font-semibold">Home</span>
                     </button>
 
                     {/* Trading */}
                     <button
                         onClick={() => setView('trading')}
-                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
-                            view === 'trading'
-                                ? 'text-primary bg-primary/10'
-                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
-                        }`}
+                        className="flex flex-col items-center gap-1 p-3 transition-all"
+                        style={{ color: view === 'trading' ? '#FFFF00' : '#555555' }}
                     >
-                        <BarChart3 className="w-6 h-6" />
-                        <span className="text-xs font-medium">Trade</span>
+                        <BarChart3 className="w-6 h-6" strokeWidth={view === 'trading' ? 2.5 : 1.5} />
+                        <span className="text-[10px] font-semibold">Trade</span>
                     </button>
 
                     {/* History */}
                     <button
                         onClick={() => setView('history')}
-                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
-                            view === 'history'
-                                ? 'text-primary bg-primary/10'
-                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
-                        }`}
+                        className="flex flex-col items-center gap-1 p-3 transition-all"
+                        style={{ color: view === 'history' ? '#FFFF00' : '#555555' }}
                     >
-                        <History className="w-6 h-6" />
-                        <span className="text-xs font-medium">History</span>
+                        <History className="w-6 h-6" strokeWidth={view === 'history' ? 2.5 : 1.5} />
+                        <span className="text-[10px] font-semibold">History</span>
                     </button>
 
                     {/* Settings */}
                     <button
                         onClick={() => setView('settings')}
-                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
-                            view === 'settings'
-                                ? 'text-primary bg-primary/10'
-                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
-                        }`}
+                        className="flex flex-col items-center gap-1 p-3 transition-all"
+                        style={{ color: view === 'settings' ? '#FFFF00' : '#555555' }}
                     >
-                        <SettingsIcon className="w-6 h-6" />
-                        <span className="text-xs font-medium">Settings</span>
+                        <SettingsIcon className="w-6 h-6" strokeWidth={view === 'settings' ? 2.5 : 1.5} />
+                        <span className="text-[10px] font-semibold">Settings</span>
                     </button>
 
-                    {/* Wallet/Account */}
+                    {/* Profile/Account */}
                     <button
                         onClick={handleWalletClick}
                         disabled={!ready}
-                        className={`flex flex-col items-center gap-1 px-4 py-2 rounded-2xl transition-all ${
-                            authenticated
-                                ? 'text-primary bg-primary/10'
-                                : 'text-coffee-medium hover:text-white hover:bg-white/5'
-                        }`}
+                        className="flex flex-col items-center gap-1 p-3 transition-all"
+                        style={{ color: authenticated ? '#FFFF00' : '#555555' }}
                     >
                         {!ready ? (
                             <>
                                 <div className="w-6 h-6 flex items-center justify-center">
-                                    <div className="spinner w-5 h-5 border-2" />
+                                    <div className="spinner w-5 h-5 border-2" style={{ borderTopColor: '#FFFF00' }} />
                                 </div>
-                                <span className="text-xs font-medium">...</span>
-                            </>
-                        ) : authenticated ? (
-                            <>
-                                <User className="w-6 h-6" />
-                                <span className="text-xs font-medium font-mono">{formatAddress(address)}</span>
+                                <span className="text-[10px] font-semibold">...</span>
                             </>
                         ) : (
                             <>
-                                <User className="w-6 h-6" />
-                                <span className="text-xs font-medium">Sign In</span>
+                                <User className="w-6 h-6" strokeWidth={authenticated ? 2.5 : 1.5} />
+                                <span className="text-[10px] font-semibold">
+                                    {authenticated ? formatAddress(address) : 'Profile'}
+                                </span>
                             </>
                         )}
                     </button>

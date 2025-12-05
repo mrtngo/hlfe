@@ -137,7 +137,7 @@ export default function OrderPanel() {
     const quickAmounts = [10, 25, 50, 100];
 
     return (
-        <div className="glass-card h-full flex flex-col bg-bg-secondary rounded-lg shadow-soft-lg min-w-0 border border-white/10">
+        <div className="h-full flex flex-col bg-[#1A1A1A] rounded-2xl shadow-soft-lg min-w-0 border border-[#FFFF00]/10">
             {/* Mode Toggle Header */}
             <div className="p-3 border-b border-white/10">
                 <div className="flex items-center justify-center gap-1 p-1 bg-bg-tertiary rounded-xl">
@@ -178,14 +178,14 @@ export default function OrderPanel() {
                             </div>
                         </div>
 
-                        {/* Long/Short Selection - Big Friendly Buttons */}
+                        {/* Buy/Sell Selection - Rayo Brand Style */}
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => setOrderSide('long')}
-                                className={`py-5 rounded-2xl font-bold text-lg transition-all ${
+                                className={`py-5 rounded-full font-bold text-lg transition-all ${
                                     orderSide === 'long'
-                                        ? 'bg-bullish text-white shadow-lg scale-[1.02]'
-                                        : 'bg-bullish/20 text-bullish hover:bg-bullish/30'
+                                        ? 'bg-[#FFFF00] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)] scale-[1.02]'
+                                        : 'bg-[#1A1A1A] text-[#FFFF00] border-2 border-[#FFFF00]/30 hover:border-[#FFFF00]/60'
                                 }`}
                             >
                                 <TrendingUp className="w-6 h-6 mx-auto mb-1" />
@@ -193,10 +193,10 @@ export default function OrderPanel() {
                             </button>
                             <button
                                 onClick={() => setOrderSide('short')}
-                                className={`py-5 rounded-2xl font-bold text-lg transition-all ${
+                                className={`py-5 rounded-full font-bold text-lg transition-all ${
                                     orderSide === 'short'
-                                        ? 'bg-bearish text-white shadow-lg scale-[1.02]'
-                                        : 'bg-bearish/20 text-bearish hover:bg-bearish/30'
+                                        ? 'bg-[#1A1A1A] text-white border-2 border-white/40 scale-[1.02]'
+                                        : 'bg-[#1A1A1A] text-white/60 border-2 border-white/10 hover:border-white/30'
                                 }`}
                             >
                                 <TrendingDown className="w-6 h-6 mx-auto mb-1" />
@@ -485,7 +485,7 @@ export default function OrderPanel() {
                     </div>
                 )}
                 {success && (
-                    <div className="flex items-center gap-2 p-3 bg-bullish/10 border border-bullish/20 rounded-lg text-sm text-bullish">
+                    <div className="flex items-center gap-2 p-3 bg-[#FFFF00]/10 border border-[#FFFF00]/20 rounded-lg text-sm text-[#FFFF00]">
                         <Info className="w-4 h-4 shrink-0" />
                         <span>{success}</span>
                     </div>
@@ -500,19 +500,19 @@ export default function OrderPanel() {
                     </div>
                 )}
 
-                {/* Place Order Button */}
+                {/* Place Order Button - Rayo Style */}
                 <button
                     onClick={handlePlaceOrder}
                     disabled={!connected || loading || tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE}
-                    className={`w-full rounded-2xl py-4 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed shadow-lg ${
+                    className={`w-full rounded-full py-4 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
                         orderSide === 'long'
-                            ? 'bg-bullish hover:bg-bullish/90 text-white'
-                            : 'bg-bearish hover:bg-bearish/90 text-white'
+                            ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
+                            : 'bg-[#1A1A1A] hover:bg-[#252525] text-white border-2 border-white/20'
                     }`}
                 >
                     {loading ? (
                         <div className="flex items-center justify-center gap-2">
-                            <div className="spinner" />
+                            <div className="spinner" style={{ borderTopColor: orderSide === 'long' ? '#000' : '#FFFF00' }} />
                             Processing...
                         </div>
                     ) : notionalValue > 0 && notionalValue < MIN_NOTIONAL_VALUE ? (

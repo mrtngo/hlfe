@@ -4,71 +4,84 @@
 
 @layer base {
   :root {
-    /* Rayo Dark Mode Theme - Default */
-    --background: 0 0% 7%; /* #121212 */
-    --foreground: 0 0% 100%; /* #FFFFFF */
+    /* Rayo Brand Identity */
+    /* Neon Yellow: #FFFF00, Black: #000000, Dark Grey: #1A1A1A, White: #FFFFFF, Gold: #FFD700 */
+    
+    --background: 0 0% 0%; /* Pure Black #000000 */
+    --foreground: 0 0% 100%; /* White #FFFFFF */
 
-    /* Surface color for cards/inputs */
-    --card: 0 0% 12%; /* #1E1E1E */
+    /* Surface colors */
+    --card: 0 0% 10%; /* Dark Grey #1A1A1A */
     --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 12%; /* #1E1E1E */
+    --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
 
-    /* Rayo Lightning Yellow #FFD60A */
-    --primary: 48 100% 52%;
-    --primary-foreground: 0 0% 0%; /* Black text on yellow button */
+    /* Neon Yellow Primary #FFFF00 */
+    --primary: 60 100% 50%;
+    --primary-foreground: 0 0% 0%; /* Black text on yellow */
 
-    /* Subtle secondary colors */
-    --secondary: 0 0% 16%;
+    /* Gold accent #FFD700 */
+    --gold: 51 100% 50%;
+
+    /* Secondary - Dark surfaces */
+    --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 64%; /* #A0A0A0 */
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 0 0% 16%;
+    --accent: 0 0% 15%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 16%;
-    /* Ring color matches primary yellow */
-    --ring: 48 100% 52%;
+    --border: 0 0% 15%;
+    --input: 0 0% 10%;
+    --ring: 60 100% 50%; /* Neon Yellow */
 
-    /* Base radius for shadcn components - making it larger */
-    --radius: 1rem; /* 16px default for small components */
+    --radius: 1rem;
 
-    /* Legacy variables for backward compatibility */
-    --color-primary: #FFD60A;
-    --color-primary-light: #FFE033;
-    --color-primary-dark: #CCAA08;
-    --color-secondary: #FFD60A;
+    /* Rayo Brand Colors */
+    --color-primary: #FFFF00; /* Neon Yellow */
+    --color-primary-light: #FFFF33;
+    --color-primary-dark: #E6E600;
+    --color-gold: #FFD700;
+    --color-secondary: #FFD700; /* Gold */
     --color-secondary-light: #FFE033;
-    --color-secondary-dark: #CCAA08;
-    --color-bullish: #00D9FF;
-    --color-bullish-light: #33E1FF;
-    --color-bullish-dark: #00B8D9;
+    --color-secondary-dark: #CCAA00;
+    
+    /* Trading colors - Keep cyan for buy to differentiate from primary */
+    --color-bullish: #FFFF00; /* Neon Yellow for Buy */
+    --color-bullish-light: #FFFF33;
+    --color-bullish-dark: #E6E600;
     --color-bearish: #FF4444;
     --color-bearish-light: #FF6666;
     --color-bearish-dark: #CC0000;
+    
+    /* Text colors */
     --color-coffee-dark: #FFFFFF;
-    --color-coffee-medium: #A0A0A0;
-    --color-coffee-light: #666666;
-    --bg-primary: #121212;
-    --bg-secondary: #1E1E1E;
-    --bg-tertiary: #2A2A2A;
-    --bg-hover: #333333;
-    --bg-glass: rgba(30, 30, 30, 0.85);
+    --color-coffee-medium: #888888;
+    --color-coffee-light: #555555;
+    
+    /* Background colors - Pure blacks */
+    --bg-primary: #000000;
+    --bg-secondary: #1A1A1A;
+    --bg-tertiary: #252525;
+    --bg-hover: #303030;
+    --bg-glass: rgba(26, 26, 26, 0.9);
 
-    /* Shadows - Soft and Diffuse */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2);
-    --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.3);
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.7), 0 8px 16px rgba(0, 0, 0, 0.5);
+    
+    /* Neon glow effect */
+    --glow-yellow: 0 0 20px rgba(255, 255, 0, 0.3), 0 0 40px rgba(255, 255, 0, 0.1);
 
-    /* Border Radius - Heavy Rounding */
+    /* Border Radius */
     --radius-sm: 0.5rem;
     --radius-md: 0.75rem;
     --radius-lg: 1rem;
@@ -104,19 +117,19 @@ body {
   max-width: 100vw;
   overflow-x: hidden;
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: #000000;
+  color: #FFFFFF;
 }
 
 body {
   min-height: 100vh;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: #000000;
+  color: #FFFFFF;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Typography - Rayo Heading Font */
+/* Typography - Bold Sans-Serif */
 h1,
 h2,
 h3,
@@ -126,38 +139,21 @@ h6 {
   font-family: var(--font-plus-jakarta);
   font-weight: 700;
   line-height: 1.2;
-  color: var(--foreground);
+  color: #FFFFFF;
 }
 
-h1 {
-  font-size: 2.5rem;
-}
-
-h2 {
-  font-size: 2rem;
-}
-
-h3 {
-  font-size: 1.5rem;
-}
-
-h4 {
-  font-size: 1.25rem;
-}
-
-h5 {
-  font-size: 1.125rem;
-}
-
-h6 {
-  font-size: 1rem;
-}
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.125rem; }
+h6 { font-size: 1rem; }
 
 .mono {
   font-family: var(--font-jetbrains);
 }
 
-/* Glass Morphism Effect - Dark theme */
+/* Glass Morphism - Dark theme */
 .glass {
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
@@ -166,29 +162,27 @@ h6 {
 }
 
 .glass-card {
-  background: rgba(30, 30, 30, 0.6);
+  background: rgba(26, 26, 26, 0.8);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid hsl(var(--border));
-  border-radius: 2rem; /* rounded-3xl - very large rounding */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
   box-shadow: var(--shadow-md);
   transition: all var(--transition-base);
 }
 
 .glass-card:hover {
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 0, 0.15);
 }
 
-/* Buttons - Rayo Style with Very Round Corners */
+/* Buttons - Rayo Style */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0.875rem 1.5rem;
-  font-weight: 600;
-  border-radius: 1.5rem; /* rounded-2xl - very round */
+  font-weight: 700;
+  border-radius: var(--radius-full);
   transition: all var(--transition-base);
   cursor: pointer;
   border: none;
@@ -205,37 +199,39 @@ h6 {
   transform: none !important;
 }
 
+/* Primary Button - Neon Yellow */
 .btn-primary {
-  background: hsl(var(--primary)); /* Rayo Lightning Yellow */
-  color: hsl(var(--primary-foreground)); /* Black text */
+  background: #FFFF00;
+  color: #000000;
   font-weight: 700;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--glow-yellow);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-primary-light);
+  background: #FFFF33;
+  box-shadow: 0 0 30px rgba(255, 255, 0, 0.4), 0 0 60px rgba(255, 255, 0, 0.2);
   transform: scale(1.02);
-  box-shadow: var(--shadow-md);
 }
 
 .btn-primary:active:not(:disabled) {
   transform: scale(0.98);
 }
 
+/* Buy Button - Neon Yellow */
 .btn-buy {
-  background: var(--color-bullish);
-  color: white;
+  background: #FFFF00;
+  color: #000000;
   font-size: 1.125rem;
-  padding: 1.125rem 2rem;
+  padding: 1rem 2rem;
   font-weight: 700;
   border-radius: var(--radius-full);
-  min-height: 56px;
-  box-shadow: var(--shadow-md);
+  min-height: 52px;
+  box-shadow: var(--glow-yellow);
 }
 
 .btn-buy:hover:not(:disabled) {
-  background: var(--color-bullish-light);
-  box-shadow: var(--shadow-lg);
+  background: #FFFF33;
+  box-shadow: 0 0 30px rgba(255, 255, 0, 0.5);
   transform: scale(1.02);
 }
 
@@ -243,20 +239,21 @@ h6 {
   transform: scale(0.98);
 }
 
+/* Sell Button - Dark with border */
 .btn-sell {
-  background: var(--color-bearish);
-  color: white;
+  background: #1A1A1A;
+  color: #FFFFFF;
   font-size: 1.125rem;
-  padding: 1.125rem 2rem;
+  padding: 1rem 2rem;
   font-weight: 700;
   border-radius: var(--radius-full);
-  min-height: 56px;
-  box-shadow: var(--shadow-md);
+  min-height: 52px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-sell:hover:not(:disabled) {
-  background: var(--color-bearish-light);
-  box-shadow: var(--shadow-lg);
+  background: #252525;
+  border-color: rgba(255, 255, 255, 0.4);
   transform: scale(1.02);
 }
 
@@ -264,17 +261,28 @@ h6 {
   transform: scale(0.98);
 }
 
+/* Deposit/Outline Button - Dark with yellow border */
+.btn-outline {
+  background: transparent;
+  color: #FFFF00;
+  border: 2px solid #FFFF00;
+  font-weight: 700;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(255, 255, 0, 0.1);
+  box-shadow: var(--glow-yellow);
+}
+
 .btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--color-coffee-dark);
-  border: 1px solid rgba(38, 70, 83, 0.1);
-  box-shadow: var(--shadow-sm);
+  background: #1A1A1A;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--bg-tertiary);
-  box-shadow: var(--shadow-md);
-  transform: scale(1.01);
+  background: #252525;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btn-ghost {
@@ -284,41 +292,39 @@ h6 {
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--bg-tertiary);
-  border-color: rgba(38, 70, 83, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #FFFFFF;
 }
 
-/* Inputs - Rayo Style with Rounder Corners */
+/* Inputs - Rayo Style */
 .input {
   width: 100%;
   padding: 1rem 1.25rem;
-  background: hsl(var(--card)); /* Darker surface */
-  border: 1px solid hsl(var(--border));
-  border-radius: 1rem; /* rounded-xl - rounder */
-  color: hsl(var(--foreground));
+  background: #1A1A1A;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  color: #FFFFFF;
   font-size: 1rem;
   transition: all var(--transition-base);
   font-family: var(--font-jetbrains);
   min-height: 52px;
-  box-shadow: var(--shadow-sm);
 }
 
 .input:focus {
   outline: none;
-  border-color: hsl(var(--ring)); /* Rayo Yellow focus ring */
-  background: hsl(var(--card));
-  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.1), var(--shadow-md);
+  border-color: #FFFF00;
+  box-shadow: 0 0 0 2px rgba(255, 255, 0, 0.1);
 }
 
 .input::placeholder {
-  color: var(--color-coffee-light);
+  color: #555555;
 }
 
-/* Cards - Rayo Style with Very Large Round Corners */
+/* Cards */
 .card {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
-  border-radius: 2rem; /* rounded-3xl - very large rounding */
+  background: #1A1A1A;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
   padding: 1.5rem;
   box-shadow: var(--shadow-md);
 }
@@ -335,58 +341,52 @@ h6 {
 }
 
 .badge-success {
-  background: rgba(6, 214, 160, 0.15);
-  color: var(--color-bullish-dark);
-  border: 1px solid rgba(6, 214, 160, 0.3);
+  background: rgba(255, 255, 0, 0.15);
+  color: #FFFF00;
+  border: 1px solid rgba(255, 255, 0, 0.3);
 }
 
 .badge-danger {
-  background: rgba(239, 71, 111, 0.15);
-  color: var(--color-bearish-dark);
-  border: 1px solid rgba(239, 71, 111, 0.3);
+  background: rgba(255, 68, 68, 0.15);
+  color: #FF4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
 }
 
 .badge-warning {
-  background: rgba(255, 209, 102, 0.15);
-  color: var(--color-secondary-dark);
-  border: 1px solid rgba(255, 209, 102, 0.3);
-}
-
-.badge-info {
-  background: rgba(0, 109, 119, 0.15);
-  color: var(--color-primary);
-  border: 1px solid rgba(0, 109, 119, 0.3);
+  background: rgba(255, 215, 0, 0.15);
+  color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 /* Price Display */
 .price-positive {
-  color: var(--color-bullish);
+  color: #FFFF00;
   font-weight: 600;
 }
 
 .price-negative {
-  color: var(--color-bearish);
+  color: #FF4444;
   font-weight: 600;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-tertiary);
+  background: #1A1A1A;
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-coffee-light);
+  background: #333333;
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-coffee-medium);
+  background: #444444;
 }
 
 /* Animations */
@@ -395,7 +395,6 @@ h6 {
     opacity: 0;
     transform: translateY(10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -406,10 +405,24 @@ h6 {
   animation: fadeIn var(--transition-base) ease-out;
 }
 
+/* Neon Glow Animation */
+@keyframes neonPulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.3), 0 0 40px rgba(255, 255, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 255, 0, 0.5), 0 0 60px rgba(255, 255, 0, 0.2);
+  }
+}
+
+.neon-glow {
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
 /* Loading Spinner */
 .spinner {
-  border: 3px solid var(--bg-tertiary);
-  border-top: 3px solid var(--color-primary);
+  border: 3px solid #1A1A1A;
+  border-top: 3px solid #FFFF00;
   border-radius: 50%;
   width: 24px;
   height: 24px;
@@ -417,18 +430,13 @@ h6 {
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-/* Utility Classes */
+/* Text Gradient */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-bullish));
+  background: linear-gradient(135deg, #FFFF00, #FFD700);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -436,17 +444,9 @@ h6 {
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
-  h1 {
-    font-size: 1.75rem;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-  }
-
-  h3 {
-    font-size: 1.25rem;
-  }
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
 
   .btn {
     padding: 0.875rem 1.5rem;
@@ -456,23 +456,23 @@ h6 {
 
   .btn-buy,
   .btn-sell {
-    padding: 1.25rem 2rem;
-    font-size: 1.125rem;
-    min-height: 64px;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    min-height: 56px;
   }
 
   .input {
-    min-height: 56px;
-    font-size: 1.0625rem;
+    min-height: 52px;
+    font-size: 1rem;
   }
 
   .card,
   .glass-card {
-    border-radius: var(--radius-2xl);
+    border-radius: var(--radius-xl);
   }
 }
 
-/* Ensure touch targets are large enough on mobile */
+/* Touch targets */
 @media (hover: none) and (pointer: coarse) {
   .btn {
     min-height: 52px;
@@ -481,6 +481,6 @@ h6 {
 
   .btn-buy,
   .btn-sell {
-    min-height: 64px;
+    min-height: 56px;
   }
 }
