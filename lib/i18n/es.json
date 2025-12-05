@@ -233,7 +233,22 @@
     "rateLimited": "Demasiadas solicitudes. Por favor espera.",
     "unknown": "Error desconocido. Por favor intenta nuevamente.",
     "connectionLost": "Conexión perdida. Reconectando...",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "minNotional": "Mínimo nocional es $10",
+    "minNotionalWarning": "Hyperliquid requiere mínimo $10 de valor nocional"
+  },
+  "home": {
+    "welcome": "Bienvenido a Rayo",
+    "welcomeDescription": "Conecta tu billetera para ver tu portafolio, rastrear posiciones y comenzar a tradear.",
+    "signInToContinue": "Iniciar Sesión para Continuar",
+    "portfolioValue": "Valor del Portafolio",
+    "portfolioHistory": "Historial del Portafolio",
+    "openPositions": "Posiciones Abiertas",
+    "watchlist": "Lista de Seguimiento",
+    "addToWatchlist": "Agregar a Lista",
+    "noTokensInWatchlist": "No hay tokens en la lista",
+    "tapToAddTokens": "Toca el botón + para agregar tokens",
+    "hi": "Hola"
   },
   "tooltips": {
     "leverage": "El apalancamiento multiplica tu exposición. Mayor apalancamiento = Mayor riesgo.",

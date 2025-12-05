@@ -233,7 +233,22 @@
         "rateLimited": "Too many requests. Please wait.",
         "unknown": "Unknown error. Please try again.",
         "connectionLost": "Connection lost. Reconnecting...",
-        "retry": "Retry"
+        "retry": "Retry",
+        "minNotional": "Minimum notional is $10",
+        "minNotionalWarning": "Hyperliquid requires minimum $10 notional value"
+    },
+    "home": {
+        "welcome": "Welcome to Rayo",
+        "welcomeDescription": "Connect your wallet to view your portfolio, track positions, and start trading.",
+        "signInToContinue": "Sign In to Continue",
+        "portfolioValue": "Portfolio Value",
+        "portfolioHistory": "Portfolio History",
+        "openPositions": "Open Positions",
+        "watchlist": "Watchlist",
+        "addToWatchlist": "Add to Watchlist",
+        "noTokensInWatchlist": "No tokens in watchlist",
+        "tapToAddTokens": "Tap the + button to add tokens",
+        "hi": "Hi"
     },
     "tooltips": {
         "leverage": "Leverage multiplies your exposure. Higher leverage = Higher risk.",

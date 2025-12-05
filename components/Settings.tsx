@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check } from 'lucide-react';
+import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe } from 'lucide-react';
 
 export default function Settings() {
-    const { t } = useLanguage();
+    const { t, language, setLanguage } = useLanguage();
     const { address, agentWalletEnabled, setupAgentWallet } = useHyperliquid();
     const [connectWallet, setConnectWallet] = useState(false);
     const [notifications, setNotifications] = useState(true);
@@ -106,10 +106,42 @@ export default function Settings() {
                     </div>
                 </div>
 
+                {/* Language Selector */}
+                <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Globe className="w-5 h-5 text-white" />
+                            <span className="font-semibold text-white">{t.settings.language}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setLanguage('en')}
+                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                                    language === 'en' 
+                                        ? 'bg-primary text-primary-foreground' 
+                                        : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
+                                }`}
+                            >
+                                English
+                            </button>
+                            <button
+                                onClick={() => setLanguage('es')}
+                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                                    language === 'es' 
+                                        ? 'bg-primary text-primary-foreground' 
+                                        : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
+                                }`}
+                            >
+                                Español
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Notifications */}
                 <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
                     <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white">Notifications</span>
+                        <span className="font-semibold text-white">{t.settings.notifications}</span>
                         <button
                             onClick={() => setNotifications(!notifications)}
                             className={`relative w-12 h-6 rounded-full transition-colors ${

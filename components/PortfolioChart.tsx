@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, memo, useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { useLanguage } from '@/hooks/useLanguage';
 import { ComposedChart, Line, Area, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
 import { ChevronDown } from 'lucide-react';
 
@@ -19,6 +20,7 @@ type TimeframeOption = '1D' | '7D' | '30D' | '90D' | '1Y' | 'All';
 function PortfolioChart() {
     // Use cached fills from the provider - no additional API calls!
     const { address, account, fills, userDataLoading } = useHyperliquid();
+    const { t } = useLanguage();
     const [timeframe, setTimeframe] = useState<TimeframeOption>('30D');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -201,7 +203,7 @@ function PortfolioChart() {
         <div className="w-full">
             {/* Timeframe selector */}
             <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-semibold text-coffee-medium">Portfolio History</h4>
+                <h4 className="text-sm font-semibold text-coffee-medium">{t.home.portfolioHistory}</h4>
                 <div className="relative">
                     <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}

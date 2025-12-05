@@ -108,16 +108,16 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             <LogIn className="w-10 h-10 text-primary" />
                         </div>
                         <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                            Welcome to Rayo
+                            {t.home.welcome}
                         </h1>
                         <p className="text-coffee-medium mb-8 max-w-md mx-auto">
-                            Connect your wallet to view your portfolio, track positions, and start trading.
+                            {t.home.welcomeDescription}
                         </p>
                         <button
                             onClick={login}
                             className="btn btn-primary px-8 py-4 text-lg font-semibold"
                         >
-                            Sign In to Continue
+                            {t.home.signInToContinue}
                         </button>
                     </div>
                 </div>
@@ -133,13 +133,13 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 <div className="relative z-10">
                     {/* Greeting */}
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 text-center">
-                        Hi, {getUsername()}
+                        {t.home.hi}, {getUsername()}
                     </h1>
                     
                     {/* Portfolio Value and 30-day Movement */}
                     <div className="space-y-6">
                         <div className="text-center">
-                            <div className="text-sm text-coffee-medium mb-2">Portfolio Value</div>
+                            <div className="text-sm text-coffee-medium mb-2">{t.home.portfolioValue}</div>
                             <div className="text-5xl md:text-6xl font-bold text-white tracking-tight">
                                 ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
@@ -162,7 +162,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             {/* Open Positions */}
             {positions.length > 0 && (
                 <div className="glass-card p-6" style={{ marginBottom: '32px' }}>
-                    <h2 className="text-2xl font-bold mb-6 text-white">Open Positions</h2>
+                    <h2 className="text-2xl font-bold mb-6 text-white">{t.home.openPositions}</h2>
                     <div className="space-y-3">
                         {positions.map((position) => {
                                 const isLong = position.side === 'long';
@@ -228,7 +228,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     {/* Header with title and add button */}
                     <div className="flex items-center justify-between mb-6">
                         <div className="w-12" /> {/* Spacer for centering */}
-                        <h2 className="text-2xl font-bold text-white">Watchlist</h2>
+                        <h2 className="text-2xl font-bold text-white">{t.home.watchlist}</h2>
                         <div className="relative" ref={dropdownRef}>
                             <button 
                                 className="p-3 hover:bg-[#FFD60A]/10 rounded-2xl transition-colors border border-[#FFD60A]/30"
@@ -258,7 +258,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                     >
                                         <div className="p-4">
                                             <div className="flex items-center justify-between mb-4">
-                                                <div className="text-lg text-white font-bold">Add to Watchlist</div>
+                                                <div className="text-lg text-white font-bold">{t.home.addToWatchlist}</div>
                                                 <button 
                                                     onClick={() => setShowAddDropdown(false)}
                                                     className="p-2 hover:bg-white/10 rounded-xl"
@@ -291,8 +291,8 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     {/* Watchlist items */}
                     {watchlistMarkets.length === 0 ? (
                         <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
-                            <p>No tokens in watchlist</p>
-                            <p className="text-xs mt-2 opacity-60">Tap the + button to add tokens</p>
+                            <p>{t.home.noTokensInWatchlist}</p>
+                            <p className="text-xs mt-2 opacity-60">{t.home.tapToAddTokens}</p>
                         </div>
                     ) : (
                         <div className="space-y-4">
