@@ -6,6 +6,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
 import { TrendingUp, TrendingDown, AlertCircle, Info, Settings2, Zap } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from '@/components/OrderNotification';
+import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 
 type OrderSide = 'long' | 'short';
 type OrderMode = 'basic' | 'advanced';
@@ -52,7 +53,14 @@ export default function OrderPanel() {
 
     const notionalValue = mode === 'basic' ? usdValue : tokenSize * currentPrice;
     const requiredMargin = notionalValue / leverage;
-    const fee = notionalValue * 0.0005;
+
+    // Fee breakdown for transparency
+    // Exchange fee: ~0.035% for taker orders (market orders)
+    const exchangeFee = notionalValue * 0.00035;
+    // Builder fee: 0.03% (30 tenths of basis points)
+    const builderFee = BUILDER_CONFIG.enabled ? notionalValue * (BUILDER_CONFIG.fee / 100000) : 0;
+    // Total fee
+    const fee = exchangeFee + builderFee;
     const totalRequired = requiredMargin + fee;
 
     const liquidationPrice = orderSide === 'long'
@@ -283,7 +291,26 @@ export default function OrderPanel() {
                                     <span className="text-coffee-medium">{t.order.marginNeeded}</span>
                                     <span className="text-white font-semibold">{formatCurrency(usdValue / leverage)}</span>
                                 </div>
-                                <div className="flex justify-between text-sm">
+
+                                {/* Fee Breakdown */}
+                                <div className="space-y-1 pt-2 border-t border-white/5">
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-coffee-medium/70">Exchange Fee (0.035%)</span>
+                                        <span className="text-coffee-medium">{formatCurrency(exchangeFee)}</span>
+                                    </div>
+                                    {BUILDER_CONFIG.enabled && (
+                                        <div className="flex justify-between text-xs">
+                                            <span className="text-coffee-medium/70">Builder Fee (0.03%)</span>
+                                            <span className="text-coffee-medium">{formatCurrency(builderFee)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between text-sm font-medium">
+                                        <span className="text-coffee-medium">Total Fees</span>
+                                        <span className="text-white">{formatCurrency(fee)}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between text-sm pt-2 border-t border-white/10">
                                     <span className="text-coffee-medium">{t.order.liqPrice}</span>
                                     <span className="text-bearish font-semibold">{formatCurrency(liquidationPrice)}</span>
                                 </div>
@@ -461,10 +488,25 @@ export default function OrderPanel() {
                                 <span className="text-coffee-medium">{t.order.marginNeeded} ({leverage}x)</span>
                                 <span className="font-semibold text-white">{formatCurrency(requiredMargin)}</span>
                             </div>
-                            <div className="flex justify-between text-sm">
-                                <span className="text-coffee-medium">{t.order.fee}</span>
-                                <span className="text-white">{formatCurrency(fee)}</span>
+
+                            {/* Fee Breakdown */}
+                            <div className="space-y-1 pt-2 border-t border-white/5">
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-coffee-medium/70">Exchange Fee (0.035%)</span>
+                                    <span className="text-coffee-medium">{formatCurrency(exchangeFee)}</span>
+                                </div>
+                                {BUILDER_CONFIG.enabled && (
+                                    <div className="flex justify-between text-xs">
+                                        <span className="text-coffee-medium/70">Builder Fee (0.03%)</span>
+                                        <span className="text-coffee-medium">{formatCurrency(builderFee)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-sm font-medium">
+                                    <span className="text-coffee-medium">Total Fees</span>
+                                    <span className="text-white">{formatCurrency(fee)}</span>
+                                </div>
                             </div>
+
                             <div className="flex justify-between text-sm pt-2 border-t border-white/10">
                                 <span className="text-coffee-medium">{t.order.estLiquidation}</span>
                                 <span className="font-semibold text-bearish">{formatCurrency(liquidationPrice)}</span>

@@ -1801,17 +1801,25 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const actualFilledSize = filledSize || roundedSize;
                             const actualFilledPrice = filledPrice || finalPx;
 
+                            // Determine if this is a closing trade
+                            // Use reduceOnly flag as primary indicator, fallback to position check
+                            const isClosing = reduceOnly || isClosingPosition;
+                            const hasPnl = realizedPnl !== undefined && realizedPnl !== null;
+
                             console.log('📝 Creating trade record:', {
                                 user_id: user.id,
                                 symbol,
                                 side: isBuy ? 'long' : 'short',
                                 size: actualFilledSize,
                                 entry_price: actualFilledPrice,
-                                isClosing: isClosingPosition,
+                                reduceOnly,
+                                isClosingPosition,
+                                isClosing,
+                                hasPnl,
                                 pnl: realizedPnl
                             });
 
-                            if (isClosingPosition && realizedPnl !== undefined) {
+                            if (isClosing && hasPnl) {
                                 // For closing trades, record as a closed trade with PnL
                                 const result = await db.trades.create({
                                     user_id: user.id,
@@ -1824,6 +1832,20 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     status: 'closed',
                                 });
                                 console.log('📊 Closed trade result:', result);
+                            } else if (isClosing) {
+                                // Closing but no PnL calculated - still record as closed with estimated PnL
+                                console.log('⚠️ Closing trade but no PnL - recording anyway');
+                                const result = await db.trades.create({
+                                    user_id: user.id,
+                                    symbol: symbol,
+                                    side: isBuy ? 'long' : 'short',
+                                    size: actualFilledSize,
+                                    entry_price: actualFilledPrice,
+                                    exit_price: actualFilledPrice,
+                                    pnl: realizedPnl || 0,
+                                    status: 'closed',
+                                });
+                                console.log('📊 Closed trade (no PnL) result:', result);
                             } else {
                                 // For opening trades, record as an open trade
                                 const result = await db.trades.create({
