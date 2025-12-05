@@ -69,7 +69,7 @@ export default function MarketSelector() {
                                 {formatCurrency(currentMarket.price)}
                             </span>
                             <span className={`text-xs font-medium ${
-                                isPositive ? 'text-bullish' : 'text-bearish'
+                                isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
                             }`}>
                                 {isPositive ? '+' : ''}{formatPercent(Math.abs(currentMarket.change24h))}
                             </span>
@@ -142,7 +142,7 @@ export default function MarketSelector() {
                                                             {formatCurrency(market.price)}
                                                         </span>
                                                         <span className={`text-xs font-medium ${
-                                                            marketIsPositive ? 'text-bullish' : 'text-bearish'
+                                                            marketIsPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
                                                         }`}>
                                                             {marketIsPositive ? '+' : ''}{formatPercent(Math.abs(market.change24h))}
                                                         </span>

@@ -44,19 +44,21 @@ export default function PositionsPanel() {
                             >
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
-                                        <div className="font-semibold text-sm text-white">{position.symbol}</div>
+                                        <div className="font-semibold text-sm text-white">
+                                            {position.symbol.replace(/-(USD|PERP)$/i, '')}
+                                        </div>
                                         <div className="text-xs text-coffee-medium">
                                             {position.side === 'long' ? 'Long' : 'Short'} • {position.leverage}x
                                         </div>
                                     </div>
                                     <div className="text-right">
                                         <div className={`font-mono font-semibold text-sm ${
-                                            isPositive ? 'text-bullish' : 'text-bearish'
+                                            isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
                                         }`}>
                                             {formatCurrency(position.unrealizedPnl)}
                                         </div>
                                         <div className={`text-xs font-semibold ${
-                                            isPositive ? 'text-bullish' : 'text-bearish'
+                                            isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
                                         }`}>
                                             {formatPercent(Math.abs(position.unrealizedPnlPercent))}
                                         </div>

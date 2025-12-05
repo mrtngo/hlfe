@@ -37,6 +37,7 @@ export default function OrderPanel() {
     const [orderNotification, setOrderNotification] = useState<OrderNotificationData | null>(null);
 
     const market = getMarket(selectedMarket);
+    const displaySymbol = selectedMarket?.replace(/-(USD|PERP)$/i, '') || selectedMarket;
     const currentPrice = market?.price || 0;
     const maxLeverage = market?.maxLeverage || 20;
     
@@ -172,7 +173,7 @@ export default function OrderPanel() {
                     <>
                         {/* Market Info - Clean Display */}
                         <div className="text-center py-2">
-                            <div className="text-2xl font-bold text-white">{selectedMarket}</div>
+                            <div className="text-2xl font-bold text-white">{displaySymbol}</div>
                             <div className="text-3xl font-bold text-primary mt-1">
                                 {formatCurrency(currentPrice)}
                             </div>
@@ -184,9 +185,10 @@ export default function OrderPanel() {
                                 onClick={() => setOrderSide('long')}
                                 className={`py-5 rounded-full font-bold text-lg transition-all ${
                                     orderSide === 'long'
-                                        ? 'bg-[#FFFF00] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)] scale-[1.02]'
+                                        ? 'bg-[#FFFF00] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)] scale-[1.02] active:text-black focus:text-black'
                                         : 'bg-[#1A1A1A] text-[#FFFF00] border-2 border-[#FFFF00]/30 hover:border-[#FFFF00]/60'
                                 }`}
+                                style={orderSide === 'long' ? { color: '#000' } : undefined}
                             >
                                 <TrendingUp className="w-6 h-6 mx-auto mb-1" />
                                 {t.order.buy}
@@ -195,9 +197,10 @@ export default function OrderPanel() {
                                 onClick={() => setOrderSide('short')}
                                 className={`py-5 rounded-full font-bold text-lg transition-all ${
                                     orderSide === 'short'
-                                        ? 'bg-[#FF4444] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)] scale-[1.02]'
+                                        ? 'bg-[#FF4444] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)] scale-[1.02] active:text-white focus:text-white'
                                         : 'bg-[#1A1A1A] text-[#FF4444] border-2 border-[#FF4444]/30 hover:border-[#FF4444]/60'
                                 }`}
+                                style={orderSide === 'short' ? { color: '#FFFFFF' } : undefined}
                             >
                                 <TrendingDown className="w-6 h-6 mx-auto mb-1" />
                                 {t.order.sell}
@@ -228,9 +231,10 @@ export default function OrderPanel() {
                                             onClick={() => setUsdAmount(amount.toString())}
                                             className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${
                                                 isActive
-                                                    ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80'
+                                                    ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80 active:text-black focus:text-black'
                                                     : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
                                             }`}
+                                            style={isActive ? { color: '#000' } : undefined}
                                         >
                                             ${amount}
                                         </button>
@@ -255,9 +259,10 @@ export default function OrderPanel() {
                                                 isDisabled
                                                     ? 'bg-bg-tertiary/40 text-coffee-medium/50 border border-white/5 cursor-not-allowed'
                                                     : isActive
-                                                    ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80'
+                                                    ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80 active:text-black focus:text-black'
                                                     : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
                                             }`}
+                                            style={isActive ? { color: '#000' } : undefined}
                                         >
                                             {lev}x
                                         </button>
@@ -271,7 +276,7 @@ export default function OrderPanel() {
                             <div className="p-4 rounded-2xl space-y-2 border border-white/5 bg-transparent">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-coffee-medium">{orderSide === 'long' ? t.order.youWillBuy : t.order.youWillSell}</span>
-                                    <span className="text-white font-semibold">{tokenSize.toFixed(6)} {selectedMarket}</span>
+                                    <span className="text-white font-semibold">{tokenSize.toFixed(6)} {displaySymbol}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-coffee-medium">{t.order.positionSize}</span>
@@ -513,9 +518,10 @@ export default function OrderPanel() {
                     disabled={!connected || loading || tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE}
                     className={`w-full rounded-full py-4 text-lg font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${
                         orderSide === 'long'
-                            ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
-                            : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'
+                            ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)] active:text-black focus:text-black'
+                            : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)] active:text-white focus:text-white'
                     }`}
+                    style={orderSide === 'long' ? { color: '#000' } : undefined}
                 >
                     {loading ? (
                         <div className="flex items-center justify-center gap-2">
@@ -526,7 +532,7 @@ export default function OrderPanel() {
                         `Min $${MIN_NOTIONAL_VALUE}`
                     ) : (
                         mode === 'basic' 
-                            ? `${orderSide === 'long' ? t.order.buy : t.order.sell} ${selectedMarket}`
+                            ? `${orderSide === 'long' ? t.order.buy : t.order.sell} ${displaySymbol}`
                             : `${t.order.placeOrder} ${orderSide === 'long' ? t.order.long : t.order.short}`
                     )}
                 </button>
