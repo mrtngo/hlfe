@@ -21,7 +21,7 @@ export default function MarketSelector() {
         if (!searchQuery) return true;
         const query = searchQuery.toLowerCase();
         return market.symbol.toLowerCase().includes(query) ||
-               market.name.toLowerCase().includes(query);
+            market.name.toLowerCase().includes(query);
     });
 
     // Close dropdown when clicking outside
@@ -51,55 +51,84 @@ export default function MarketSelector() {
 
     return (
         <div className="relative" ref={dropdownRef}>
-            {/* Market Selector Button */}
+            {/* Market Selector Button - Rayo Brand Styled */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 bg-bg-secondary hover:bg-bg-hover border border-white/10 rounded-lg transition-all group"
+                className="flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all group"
+                style={{
+                    backgroundColor: '#000000',
+                    border: isOpen ? '1px solid #FFFF00' : '1px solid rgba(255, 255, 0, 0.2)',
+                    boxShadow: isOpen ? '0 0 20px rgba(255, 255, 0, 0.15)' : 'none'
+                }}
             >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <TokenLogo symbol={currentMarket.symbol} size={32} />
+                    <TokenLogo symbol={currentMarket.symbol} size={36} />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                            <span className="text-base font-semibold text-white">
+                            <span className="text-lg font-bold text-white tracking-tight">
                                 {currentMarket.name}
                             </span>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-sm font-mono text-white">
+                            <span className="text-sm font-mono text-white/90">
                                 {formatCurrency(currentMarket.price)}
                             </span>
-                            <span className={`text-xs font-medium ${
-                                isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
-                            }`}>
+                            <span
+                                className="text-xs font-bold"
+                                style={{ color: isPositive ? '#FFFF00' : '#FF4444' }}
+                            >
                                 {isPositive ? '+' : ''}{formatPercent(Math.abs(currentMarket.change24h))}
                             </span>
                         </div>
                     </div>
                 </div>
-                <ChevronDown className={`w-4 h-4 text-coffee-medium transition-transform flex-shrink-0 ${
-                    isOpen ? 'rotate-180' : ''
-                }`} />
+                <ChevronDown
+                    className={`w-5 h-5 transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
+                    style={{ color: '#FFFF00' }}
+                />
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu - Rayo Brand Styled */}
             {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-bg-secondary border border-white/10 rounded-lg shadow-xl z-50 max-h-[400px] flex flex-col overflow-hidden">
+                <div
+                    className="absolute top-full left-0 right-0 mt-2 rounded-xl shadow-2xl z-50 max-h-[400px] flex flex-col overflow-hidden"
+                    style={{
+                        backgroundColor: '#000000',
+                        border: '1px solid rgba(255, 255, 0, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 0, 0.1)'
+                    }}
+                >
                     {/* Search Input */}
-                    <div className="p-3 border-b border-white/10">
+                    <div className="p-3" style={{ borderBottom: '1px solid rgba(255, 255, 0, 0.15)' }}>
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-coffee-medium" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#888888' }} />
                             <input
                                 type="text"
                                 placeholder="Search markets..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-10 py-2 bg-bg-tertiary border border-white/10 rounded-lg text-sm text-white placeholder-coffee-medium focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50"
+                                className="w-full pl-10 pr-10 py-2.5 rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none transition-all"
+                                style={{
+                                    backgroundColor: '#1A1A1A',
+                                    border: '1px solid rgba(255, 255, 0, 0.15)',
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = '#FFFF00';
+                                    e.target.style.boxShadow = '0 0 10px rgba(255, 255, 0, 0.2)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = 'rgba(255, 255, 0, 0.15)';
+                                    e.target.style.boxShadow = 'none';
+                                }}
                                 autoFocus
                             />
                             {searchQuery && (
                                 <button
                                     onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-coffee-medium hover:text-white transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                                    style={{ color: '#888888' }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#FFFF00'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = '#888888'}
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
@@ -110,7 +139,7 @@ export default function MarketSelector() {
                     {/* Market List */}
                     <div className="overflow-y-auto flex-1">
                         {filteredMarkets.length === 0 ? (
-                            <div className="p-4 text-center text-coffee-medium text-sm">
+                            <div className="p-4 text-center text-sm" style={{ color: '#888888' }}>
                                 No markets found
                             </div>
                         ) : (
@@ -123,34 +152,54 @@ export default function MarketSelector() {
                                         <button
                                             key={market.symbol}
                                             onClick={() => handleSelectMarket(market.symbol)}
-                                            className={`w-full flex items-center justify-between p-3 rounded-lg transition-all text-left ${
-                                                isSelected
-                                                    ? 'bg-primary/20 border border-primary'
-                                                    : 'hover:bg-bg-hover border border-transparent'
-                                            }`}
+                                            className="w-full flex items-center justify-between p-3 rounded-lg transition-all text-left"
+                                            style={{
+                                                backgroundColor: isSelected ? 'rgba(255, 255, 0, 0.1)' : 'transparent',
+                                                border: isSelected ? '1px solid #FFFF00' : '1px solid transparent',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (!isSelected) {
+                                                    e.currentTarget.style.backgroundColor = '#1A1A1A';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!isSelected) {
+                                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                                }
+                                            }}
                                         >
                                             <div className="flex items-center gap-3 flex-1 min-w-0">
                                                 <TokenLogo symbol={market.symbol} size={32} />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-sm font-semibold text-white">
+                                                        <span
+                                                            className="text-sm font-bold"
+                                                            style={{ color: isSelected ? '#FFFF00' : '#FFFFFF' }}
+                                                        >
                                                             {market.name}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-2 mt-0.5">
-                                                        <span className="text-xs font-mono text-coffee-medium">
+                                                        <span className="text-xs font-mono" style={{ color: '#888888' }}>
                                                             {formatCurrency(market.price)}
                                                         </span>
-                                                        <span className={`text-xs font-medium ${
-                                                            marketIsPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
-                                                        }`}>
+                                                        <span
+                                                            className="text-xs font-bold"
+                                                            style={{ color: marketIsPositive ? '#FFFF00' : '#FF4444' }}
+                                                        >
                                                             {marketIsPositive ? '+' : ''}{formatPercent(Math.abs(market.change24h))}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
                                             {isSelected && (
-                                                <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                                                <div
+                                                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                                    style={{
+                                                        backgroundColor: '#FFFF00',
+                                                        boxShadow: '0 0 8px #FFFF00'
+                                                    }}
+                                                />
                                             )}
                                         </button>
                                     );

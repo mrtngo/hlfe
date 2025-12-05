@@ -3,12 +3,12 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode, startTransition, useRef } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useMarketData, Market } from '@/lib/hyperliquid/market-data';
-import { createHyperliquidClient, API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
-import { 
-    getAgentWallet, 
-    saveAgentWallet, 
-    generateAgentWallet, 
-    isAgentApproved, 
+import { createHyperliquidClient, API_URL, IS_TESTNET, BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import {
+    getAgentWallet,
+    saveAgentWallet,
+    generateAgentWallet,
+    isAgentApproved,
     setAgentApproved,
     getAgentSigner,
     approveAgentWallet,
@@ -124,6 +124,12 @@ interface HyperliquidContextType {
     // Agent Wallet
     agentWalletEnabled: boolean;
     setupAgentWallet: () => Promise<{ success: boolean; message: string }>;
+
+    // Builder Fee (Rayo trading fees on mainnet)
+    builderFeeApproved: boolean;
+    builderFeeLoading: boolean;
+    approveBuilderFee: () => Promise<{ success: boolean; message: string }>;
+    checkBuilderFeeApproval: () => Promise<boolean>;
 }
 
 const HyperliquidContext = createContext<HyperliquidContextType | undefined>(undefined);
@@ -160,7 +166,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (realMarkets.length > 0) {
             startTransition(() => {
-            setMarkets(realMarkets);
+                setMarkets(realMarkets);
             });
         }
     }, [realMarkets]);
@@ -172,34 +178,34 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Strip -PERP suffix and xyz: prefix from coin name for matching
                 const cleanCoin = coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
                 const symbol = `${cleanCoin}-USD`;
-            setMarkets(prev => prev.map(m =>
+                setMarkets(prev => prev.map(m =>
                     m.symbol === symbol || m.name === cleanCoin || m.name === coin ? { ...m, price } : m
-            ));
+                ));
 
-            // Update positions with new mark prices
-            setPositions(prev => prev.map(position => {
+                // Update positions with new mark prices
+                setPositions(prev => prev.map(position => {
                     if (position.symbol !== symbol && position.name !== coin) return position;
 
-                const pnl = position.side === 'long'
-                    ? (price - position.entryPrice) * position.size
-                    : (position.entryPrice - price) * position.size;
+                    const pnl = position.side === 'long'
+                        ? (price - position.entryPrice) * position.size
+                        : (position.entryPrice - price) * position.size;
 
-                const pnlPercent = (pnl / (position.entryPrice * position.size)) * 100;
+                    const pnlPercent = (pnl / (position.entryPrice * position.size)) * 100;
 
-                return {
-                    ...position,
-                    markPrice: price,
-                    unrealizedPnl: pnl,
-                    unrealizedPnlPercent: pnlPercent,
-                };
-            }));
+                    return {
+                        ...position,
+                        markPrice: price,
+                        unrealizedPnl: pnl,
+                        unrealizedPnlPercent: pnlPercent,
+                    };
+                }));
             },
             onAccountUpdate: (data) => {
                 // Update account data from WebSocket
                 if (data.marginSummary) {
                     const accountValue = parseFloat(data.marginSummary.accountValue || '0');
                     const totalMarginUsed = parseFloat(data.marginSummary.totalMarginUsed || '0');
-                    
+
                     setAccount(prev => ({
                         ...prev,
                         balance: accountValue,
@@ -223,7 +229,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const leverage = parseFloat(position.leverage?.value || '1');
                             const side = szi > 0 ? 'long' : 'short';
                             const size = Math.abs(szi);
-                            
+
                             const pnl = side === 'long'
                                 ? (markPx - entryPx) * size
                                 : (entryPx - markPx) * size;
@@ -246,7 +252,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 unrealizedPnlPercent: pnlPercent,
                             };
                         });
-                    
+
                     setPositions(activePositions);
                 }
             },
@@ -266,7 +272,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         };
     }, []);
 
-        // Subscribe to user data when address is available
+    // Subscribe to user data when address is available
     useEffect(() => {
         if (address && wsManager.isConnected()) {
             const normalizedAddress = address.toLowerCase();
@@ -281,7 +287,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // Try embedded wallet first, then any connected wallet
             const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
             const connectedWallet = embeddedWallet || wallets[0];
-            
+
             if (connectedWallet && connectedWallet.address) {
                 // Docs say to lowercase addresses before signing and sending
                 const lowercasedAddress = connectedWallet.address.toLowerCase();
@@ -301,6 +307,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [fetchingAccount, setFetchingAccount] = useState(false);
     const initialFetchDone = useRef(false);
     const [agentWalletEnabled, setAgentWalletEnabled] = useState(false);
+
+    // Builder fee state (for mainnet trading fees)
+    const [builderFeeApproved, setBuilderFeeApproved] = useState(false);
+    const [builderFeeLoading, setBuilderFeeLoading] = useState(false);
 
     // Cached user data (fills, funding)
     const [fills, setFills] = useState<Fill[]>([]);
@@ -418,7 +428,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 console.log('⏸️ Already fetching account data, skipping...');
                 return;
             }
-            
+
             // Skip if rate limited
             if (rateLimited && retryAfter && Date.now() < retryAfter) {
                 const waitTime = Math.ceil((retryAfter - Date.now()) / 1000);
@@ -426,7 +436,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 setFetchingAccount(false);
                 return;
             }
-            
+
             setFetchingAccount(true);
             try {
                 // Ensure address is lowercase (Hyperliquid API requirement)
@@ -435,12 +445,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 console.log('🌐 Using testnet:', IS_TESTNET);
                 console.log('🌐 API URL:', API_URL);
                 console.log('🔗 Chain: Arbitrum Sepolia (421614)');
-                
+
                 if (!normalizedAddress) {
                     console.warn('⚠️ No address available');
                     return;
                 }
-                
+
                 const client = createHyperliquidClient();
                 await client.connect();
 
@@ -457,13 +467,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         console.warn('⚠️ Rate limited, will retry later');
                         return;
                     }
-                    
+
                     // Check if it's a network error
                     if (apiError?.code === 'NETWORK_ERROR' || apiError?.message?.includes('network')) {
                         console.error('🌐 Network error fetching account data:', apiError.message);
                         throw new Error('Network error. Please check your connection.');
                     }
-                    
+
                     // Check if address might not exist on testnet
                     if (apiError?.message?.includes('unknown error') || apiError?.code === 'UNKNOWN_ERROR') {
                         console.warn('⚠️ API returned unknown error. This might mean:');
@@ -473,15 +483,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         // Don't throw - just log and return, keeping last known state
                         return;
                     }
-                    
+
                     // Re-throw other errors
                     throw apiError;
                 }
-                
+
                 // Success - reset rate limiting
                 setRateLimited(false);
                 setRetryAfter(null);
-                
+
                 console.log('📊 Raw userState response:', JSON.stringify(userState, null, 2));
                 console.log('📊 userState type:', typeof userState);
                 console.log('📊 userState is null?', userState === null);
@@ -491,7 +501,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     // Extract account values - ClearinghouseState has marginSummary directly
                     const marginSummary = userState.marginSummary;
                     console.log('💰 Margin Summary:', marginSummary);
-                    
+
                     if (marginSummary) {
                         const accountValue = parseFloat(marginSummary.accountValue || '0');
                         const totalMarginUsed = parseFloat(marginSummary.totalMarginUsed || '0');
@@ -504,14 +514,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             availableMargin: accountValue - totalMarginUsed
                         });
 
-                    setAccount({
-                        balance: accountValue,
-                        equity: accountValue,
-                        availableMargin: accountValue - totalMarginUsed,
-                        usedMargin: totalMarginUsed,
-                        unrealizedPnl: 0, // Will be calculated from positions
-                        unrealizedPnlPercent: 0,
-                    });
+                        setAccount({
+                            balance: accountValue,
+                            equity: accountValue,
+                            availableMargin: accountValue - totalMarginUsed,
+                            usedMargin: totalMarginUsed,
+                            unrealizedPnl: 0, // Will be calculated from positions
+                            unrealizedPnlPercent: 0,
+                        });
                     } else {
                         console.warn('⚠️ marginSummary is missing from userState');
                         setAccount({
@@ -572,7 +582,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     console.warn('⚠️ userState is null, undefined, or not an object');
                     console.warn('💡 This might mean the account has not been initialized on Hyperliquid testnet.');
                     console.warn('💡 Visit https://app.hyperliquid-testnet.xyz/ and make a deposit to register your wallet.');
-                    
+
                     // Set zero balance but don't show error to user
                     setAccount({
                         balance: 0,
@@ -586,15 +596,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
             } catch (err: any) {
                 console.error('❌ Error fetching account data:', err);
-                
+
                 // Check if it's a rate limit error (429)
                 const errAny = err as any;
-                const isRateLimited = err instanceof Error && 
-                    (err.message?.includes('429') || 
-                     err.message?.includes('Too Many Requests') ||
-                     err.message?.includes('rate limit') ||
-                     errAny.code === 'RATE_LIMITED');
-                
+                const isRateLimited = err instanceof Error &&
+                    (err.message?.includes('429') ||
+                        err.message?.includes('Too Many Requests') ||
+                        err.message?.includes('rate limit') ||
+                        errAny.code === 'RATE_LIMITED');
+
                 if (isRateLimited) {
                     console.warn('⚠️ Rate limited by API. Backing off...');
                     setRateLimited(true);
@@ -605,12 +615,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     setFetchingAccount(false);
                     return;
                 }
-                
+
                 // Check for "unknown error" - this usually means the account doesn't exist on testnet
-                const isUnknownError = err?.message?.includes('unknown error') || 
-                                     err?.code === 'UNKNOWN_ERROR' ||
-                                     (err?.name === 'HyperliquidAPIError' && err?.message?.includes('unknown'));
-                
+                const isUnknownError = err?.message?.includes('unknown error') ||
+                    err?.code === 'UNKNOWN_ERROR' ||
+                    (err?.name === 'HyperliquidAPIError' && err?.message?.includes('unknown'));
+
                 if (isUnknownError) {
                     console.warn('⚠️ API returned "unknown error". This usually means:');
                     console.warn('  1. The address has no account on testnet (needs activation)');
@@ -631,26 +641,26 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     setFetchingAccount(false);
                     return;
                 }
-                
+
                 // Check for network errors
-                const isNetworkError = err?.code === 'NETWORK_ERROR' || 
-                                     err?.message?.includes('network') ||
-                                     err?.message?.includes('fetch failed');
-                
+                const isNetworkError = err?.code === 'NETWORK_ERROR' ||
+                    err?.message?.includes('network') ||
+                    err?.message?.includes('fetch failed');
+
                 if (isNetworkError) {
                     console.error('🌐 Network error:', err.message);
                     // Don't update state on network errors - keep last known state
                     setFetchingAccount(false);
                     return;
                 }
-                
+
                 // Log other errors for debugging
                 if (err instanceof Error) {
                     console.error('Error message:', err.message);
                     console.error('Error code:', (err as any).code);
                     console.error('Error name:', err.name);
                 }
-                
+
                 // For other errors, don't update account state (keep last known state)
                 // Only set zero if it's the first fetch
                 if (true) {
@@ -699,7 +709,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
         try {
             const normalizedAddress = address.toLowerCase();
-            
+
             // Fetch fills with caching
             const fillsData = await cachedFetch<any[]>(
                 `user_fills:${normalizedAddress}`,
@@ -866,7 +876,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // Get user's wallet for signing the approval
             const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
             let userSigner = null;
-            
+
             if (embeddedWallet) {
                 userSigner = await embeddedWallet.getEthereumProvider();
             } else if (typeof window !== 'undefined' && (window as any).ethereum) {
@@ -878,7 +888,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // Approve the agent (requires ONE signature from user)
             try {
                 const approved = await approveAgentWallet(address, userSigner, agent.address, agent.name);
-                
+
                 if (approved) {
                     setAgentWalletEnabled(true);
                     return { success: true, message: 'Agent wallet approved! You can now trade without signing each transaction.' };
@@ -887,13 +897,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
             } catch (approvalError: any) {
                 // Check if the error is "Extra agent already used"
-                if (approvalError.message?.includes('Extra agent already used') || 
+                if (approvalError.message?.includes('Extra agent already used') ||
                     approvalError.message?.includes('already used')) {
                     console.log('⚠️ Agent already registered on-chain, checking existing agents...');
-                    
+
                     // Check if there's an existing agent on-chain
                     const existingAgent = await checkExistingAgent(address);
-                    
+
                     if (existingAgent.hasAgent) {
                         // User has an agent registered but we don't have the private key
                         // Clear local storage and inform user
@@ -927,6 +937,169 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             setAgentWalletEnabled(approved && !!agent);
         }
     }, [address]);
+
+    // Check builder fee approval status
+    const checkBuilderFeeApproval = useCallback(async (): Promise<boolean> => {
+        if (!address || !BUILDER_CONFIG.enabled) {
+            return false;
+        }
+
+        try {
+            setBuilderFeeLoading(true);
+            const normalizedAddress = address.toLowerCase();
+            const builderAddress = BUILDER_CONFIG.address.toLowerCase();
+
+            // Query the API for max builder fee approval
+            const response = await fetch(`${API_URL}/info`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'maxBuilderFee',
+                    user: normalizedAddress,
+                    builder: builderAddress
+                })
+            });
+
+            if (!response.ok) {
+                console.warn('Failed to check builder fee approval:', response.status);
+                return false;
+            }
+
+            const maxFee = await response.json();
+            console.log('📊 Builder fee approval status:', { maxFee, requiredFee: BUILDER_CONFIG.fee });
+
+            // maxFee is returned as a number in tenths of basis points
+            // User is approved if their max fee >= our required fee
+            const isApproved = typeof maxFee === 'number' && maxFee >= BUILDER_CONFIG.fee;
+            setBuilderFeeApproved(isApproved);
+            return isApproved;
+        } catch (error) {
+            console.error('Error checking builder fee approval:', error);
+            return false;
+        } finally {
+            setBuilderFeeLoading(false);
+        }
+    }, [address]);
+
+    // Check builder fee on address change (mainnet only)
+    useEffect(() => {
+        if (address && BUILDER_CONFIG.enabled) {
+            checkBuilderFeeApproval();
+        }
+    }, [address, checkBuilderFeeApproval]);
+
+    // Approve builder fee (user signs once to allow Rayo to collect trading fees)
+    const approveBuilderFee = useCallback(async (): Promise<{ success: boolean; message: string }> => {
+        if (!address) {
+            return { success: false, message: 'Please connect your wallet first' };
+        }
+
+        if (!BUILDER_CONFIG.enabled) {
+            return { success: true, message: 'Builder fees are not enabled on testnet' };
+        }
+
+        // Check if already approved
+        const alreadyApproved = await checkBuilderFeeApproval();
+        if (alreadyApproved) {
+            return { success: true, message: 'Builder fee already approved' };
+        }
+
+        try {
+            setBuilderFeeLoading(true);
+
+            // Import SDK signing utilities
+            const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
+            const { signUserSignedAction } = hyperliquidSDK;
+
+            // Get user's wallet for signing
+            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+            let signingProvider = null;
+
+            if (embeddedWallet) {
+                signingProvider = await embeddedWallet.getEthereumProvider();
+            } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                signingProvider = (window as any).ethereum;
+            } else {
+                throw new Error('No wallet available for signing');
+            }
+
+            // Create browser wallet wrapper
+            const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+            const browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
+
+            // Construct ApproveBuilderFee action
+            // maxFeeRate is a percentage string (e.g., "0.03%" for 3 basis points)
+            // Our fee is 30 tenths of basis points = 3 basis points = 0.03%
+            const feePercent = (BUILDER_CONFIG.fee / 1000).toFixed(3); // 30 / 1000 = 0.03
+            const nonce = Date.now();
+
+            // Use correct chain based on testnet/mainnet
+            const hyperliquidChain = IS_TESTNET ? 'Testnet' : 'Mainnet';
+            const signatureChainId = IS_TESTNET ? '0x66eee' : '0xa4b1'; // Arbitrum Sepolia vs Arbitrum Mainnet
+
+            const action = {
+                type: 'approveBuilderFee',
+                hyperliquidChain,
+                signatureChainId,
+                maxFeeRate: `${feePercent}%`,
+                builder: BUILDER_CONFIG.address.toLowerCase(),
+                nonce
+            };
+
+            console.log('📝 ApproveBuilderFee action:', action);
+
+            // Sign the action
+            const signature = await signUserSignedAction(
+                browserWallet as any,
+                action,
+                [
+                    { name: 'hyperliquidChain', type: 'string' },
+                    { name: 'maxFeeRate', type: 'string' },
+                    { name: 'builder', type: 'address' },
+                    { name: 'nonce', type: 'uint64' }
+                ],
+                'HyperliquidTransaction:ApproveBuilderFee',
+                !IS_TESTNET // isMainnet
+            );
+
+            // Send to exchange API
+            const response = await fetch(`${API_URL}/exchange`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action,
+                    nonce,
+                    signature
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`Failed to approve builder fee: ${error}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Builder fee approval result:', result);
+
+            if (result.status === 'err') {
+                throw new Error(result.response || 'Failed to approve builder fee');
+            }
+
+            setBuilderFeeApproved(true);
+            return {
+                success: true,
+                message: `Builder fee approved! Rayo will collect ${feePercent}% on your trades.`
+            };
+        } catch (error: any) {
+            console.error('Error approving builder fee:', error);
+            return {
+                success: false,
+                message: error.message || 'Failed to approve builder fee'
+            };
+        } finally {
+            setBuilderFeeLoading(false);
+        }
+    }, [address, wallets, checkBuilderFeeApproval]);
 
     // Place order
     const placeOrder = useCallback(async (
@@ -968,7 +1141,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             // Check if this is a Trade.xyz (DEX) asset
             const isTradeXyzAsset = market.isStock === true;
-            
+
             let meta: any;
             let assetIndex: number;
             let assetName: string;
@@ -995,19 +1168,19 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Response is [Meta, AssetCtx[]]
                 meta = dexData[0];
                 const assetCtxs = dexData[1];
-                
+
                 // Trade.xyz assets have "xyz:" prefix in the meta
                 assetName = `xyz:${baseCoin}`;
-                
+
                 console.log('Looking for Trade.xyz asset:', assetName);
                 console.log('Available Trade.xyz assets:', meta.universe?.map((u: any) => u.name) || []);
-                
+
                 assetIndex = meta.universe?.findIndex((u: any) => u.name === assetName) ?? -1;
-                
+
                 if (assetIndex === -1) {
                     throw new Error(`Trade.xyz asset index not found for ${assetName}. Available assets: ${meta.universe?.map((u: any) => u.name).slice(0, 10).join(', ') || 'none'}...`);
                 }
-                
+
                 // Get current reference price from asset context for accurate market orders
                 const assetCtx = assetCtxs?.[assetIndex];
                 if (assetCtx?.markPx) {
@@ -1023,11 +1196,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
             } else {
                 // For core assets, use standard meta
-            const client = createHyperliquidClient();
+                const client = createHyperliquidClient();
                 meta = await client.info.perpetuals.getMeta();
 
-            // On testnet, assets have a -PERP suffix (e.g., SOL-PERP, BTC-PERP)
-            // Our market symbols are like SOL-USD, BTC-USD
+                // On testnet, assets have a -PERP suffix (e.g., SOL-PERP, BTC-PERP)
+                // Our market symbols are like SOL-USD, BTC-USD
                 assetName = IS_TESTNET ? `${baseCoin}-PERP` : baseCoin;
 
                 console.log('Looking for core asset:', assetName);
@@ -1035,16 +1208,16 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                 assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
 
-            if (assetIndex === -1) {
-                throw new Error(`Asset index not found for ${assetName}. Available assets: ${meta.universe.map((u: any) => u.name).slice(0, 10).join(', ')}...`);
+                if (assetIndex === -1) {
+                    throw new Error(`Asset index not found for ${assetName}. Available assets: ${meta.universe.map((u: any) => u.name).slice(0, 10).join(', ')}...`);
                 }
             }
-            
+
             console.log(`✅ Found asset at index ${assetIndex}: ${assetName}`);
 
             // 2. Construct order wire
             const isBuy = side === 'buy';
-            
+
             // For market orders with IOC, we need an aggressive price to ensure immediate execution
             // For Trade.xyz assets, use reference price directly or with minimal slippage to stay within 80% limit
             // For limit orders, use the provided price
@@ -1052,11 +1225,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             if (type === 'market') {
                 // For Trade.xyz assets, prefer reference price if available
                 const currentPrice = (isTradeXyzAsset && referencePrice) ? referencePrice : (market.price || price || 0);
-                
+
                 if (currentPrice <= 0) {
                     throw new Error('Invalid price: Market price must be greater than 0');
                 }
-                
+
                 console.log('💰 Price calculation:', {
                     isTradeXyzAsset,
                     referencePrice,
@@ -1064,7 +1237,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     currentPrice,
                     isBuy
                 });
-                
+
                 if (isTradeXyzAsset && referencePrice) {
                     // For Trade.xyz assets, use reference price with minimal slippage (0.01%) or directly
                     // The exchange requires price to be within 80% of reference, so we use reference price directly
@@ -1085,7 +1258,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     // IOC orders fill at the BEST available price up to your limit
                     // So we set a small buffer just to ensure execution, not the actual fill price
                     // The actual fill will be at market price, this is just a safety ceiling
-                    
+
                     // Dynamic slippage based on asset volatility/price level
                     // Higher priced assets can use tighter slippage in dollar terms
                     let slippagePercent: number;
@@ -1102,13 +1275,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         // Small coins: 0.2% (more volatile)
                         slippagePercent = 0.002;
                     }
-                    
+
                     if (isBuy) {
                         finalPx = currentPrice * (1 + slippagePercent);
                     } else {
                         finalPx = currentPrice * (1 - slippagePercent);
                     }
-                    
+
                     const slippageDollars = Math.abs(finalPx - currentPrice);
                     console.log('💰 Market order with minimal slippage:', {
                         currentPrice,
@@ -1130,7 +1303,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // Different assets have different tick sizes (BTC = 1.0, ETH = 0.1, smaller coins = 0.01, etc.)
             const assetMeta = meta.universe[assetIndex];
             let tickSize = 1.0; // Default to 1.0 for safety
-            
+
             // szDecimals tells us the size precision, but for price we need to check the asset
             // For most assets, tick size is related to the price level:
             // - BTC (~$90k+): tick size = 1.0 (whole dollars)
@@ -1147,14 +1320,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             } else {
                 tickSize = 0.0001; // Small coins: fractions of cents
             }
-            
+
             console.log('📊 Tick size calculation:', { currentPriceLevel, tickSize, assetName });
-            
+
             // Round price to valid tick size
             finalPx = Math.round(finalPx / tickSize) * tickSize;
             // Clean up floating point precision issues
             finalPx = parseFloat(finalPx.toFixed(Math.max(0, -Math.floor(Math.log10(tickSize)))));
-            
+
             console.log('📊 Price after tick size rounding:', finalPx);
 
             // Round size based on asset's szDecimals (HIP-3 markets have specific precision requirements)
@@ -1169,14 +1342,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // Use the vendor SDK we already have installed
             const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
             const { orderToWire, signL1Action, floatToWire } = hyperliquidSDK;
-            
+
             // Format price and size using SDK's floatToWire to handle scientific notation and significant figures
             // floatToWire removes trailing zeros and formats according to Hyperliquid requirements
             // We rely on the SDK's floatToWire instead of manual rounding for price precision
             // This is critical for stocks like XYZ100 (~$20,000+) and penny stocks with very low prices
             const formattedPrice = floatToWire(finalPx);
             const formattedSize = floatToWire(roundedSize);
-            
+
             // orderToWire expects numbers, but we need to ensure they're properly formatted
             // The SDK will format them correctly internally using floatToWire
             // For Trade.xyz assets, use the full asset name (xyz:TSLA) to match the DEX meta universe
@@ -1192,22 +1365,40 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     : { limit: { tif: 'Gtc' } } as const,
                 reduce_only: reduceOnly || false
             };
-            
+
             // orderToWire formats the price and size correctly according to Hyperliquid requirements
             console.log('📝 Order Request before orderToWire:', JSON.stringify(orderRequest, null, 2));
             console.log('📝 Asset Index:', assetIndex, 'Asset Name:', assetName);
             const wireOrder = orderToWire(orderRequest, assetIndex);
-            
+
             console.log('📝 Market szDecimals:', market.szDecimals);
             console.log('📝 Original size:', size, 'Rounded size:', roundedSize);
             console.log('📝 Formatted price:', formattedPrice, 'Formatted size:', formattedSize);
             console.log('📝 Wire order:', JSON.stringify(wireOrder, null, 2));
 
-            const actionPayload = {
+            // Build action payload with optional builder fee (mainnet only)
+            // Builder codes allow Rayo to receive a small fee on each trade
+            // Fee format: {b: address, f: tenths_of_basis_points}
+            // 30 = 3 basis points = 0.03% fee per trade
+            const actionPayload: {
+                type: string;
+                orders: typeof wireOrder[];
+                grouping: string;
+                builder?: { b: string; f: number };
+            } = {
                 type: 'order',
                 orders: [wireOrder],
                 grouping: 'na'
             };
+
+            // Add builder fee on mainnet only
+            if (BUILDER_CONFIG.enabled) {
+                actionPayload.builder = {
+                    b: BUILDER_CONFIG.address.toLowerCase(),
+                    f: BUILDER_CONFIG.fee
+                };
+                console.log('💰 Builder fee enabled:', actionPayload.builder);
+            }
 
             // 4. Sign action
             // Try agent wallet first (no signature prompts), fall back to user wallet
@@ -1215,18 +1406,18 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             let lowercasedAddress = address.toLowerCase();
             const nonce = Date.now();
             let usingAgentWallet = false;
-            
+
             // Check if agent wallet is available and approved
             const agent = getAgentWallet();
             const agentSigner = getAgentSigner();
             const isApproved = isAgentApproved(address);
-            
+
             if (agentWalletEnabled && agent && agentSigner && isApproved) {
                 // Use agent wallet - no user signature needed!
                 console.log('✅ Using approved agent wallet - NO signature prompt needed!');
                 console.log('Agent address:', agent.address);
                 usingAgentWallet = true;
-                
+
                 // Create a BrowserWallet-like interface for the agent
                 browserWallet = {
                     address: agent.address,
@@ -1246,12 +1437,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     isApproved,
                 });
             }
-            
+
             // Fall back to user wallet if agent not available
             if (!browserWallet) {
                 let signingProvider = null;
                 const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
-                
+
                 if (embeddedWallet) {
                     signingProvider = await embeddedWallet.getEthereumProvider();
                     console.log('⚠️ Using user wallet - signature prompt required');
@@ -1263,11 +1454,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         throw new Error('No wallet found. Please connect a wallet (MetaMask or Privy embedded wallet).');
                     }
                 }
-                
+
                 if (!signingProvider) {
                     throw new Error('Could not get Ethereum provider from wallet');
                 }
-                
+
                 const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
                 browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
             }
@@ -1288,7 +1479,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 nonce,
                 !IS_TESTNET // Pass isMainnet (opposite of IS_TESTNET): false for testnet
             );
-            
+
             if (usingAgentWallet) {
                 console.log('✅ Order signed with agent wallet - no user prompt!');
             } else {
@@ -1312,11 +1503,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const waitTime = Math.ceil((retryAfter - Date.now()) / 1000);
                 throw new Error(`Rate limited. Please wait ${waitTime} seconds before trying again.`);
             }
-            
+
             console.log('📤 Sending order to API:', JSON.stringify(payload, null, 2));
 
             // For Trade.xyz assets, include dex parameter as query string
-            const exchangeUrl = isTradeXyzAsset 
+            const exchangeUrl = isTradeXyzAsset
                 ? `${API_URL}/exchange?dex=xyz`
                 : `${API_URL}/exchange`;
 
@@ -1352,7 +1543,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             if (result.status === 'err') {
                 console.error('❌ Order failed:', result.response);
-                
+
                 // Check if it's an agent wallet issue - if so, disable agent and notify user
                 const errorMsg = result.response || '';
                 if (errorMsg.includes('does not exist') || errorMsg.includes('API Wallet')) {
@@ -1365,22 +1556,22 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     }
                     throw new Error('Agent wallet issue detected. It has been disabled. Please try again - your order will now use normal signing.');
                 }
-                
+
                 throw new Error(result.response);
             }
 
             if (result.status === 'ok') {
                 console.log('✅ Order successful:', JSON.stringify(result.response, null, 2));
-                
+
                 // Check if there are any errors in the order statuses
                 let orderFilled = false;
                 let filledSize = 0;
                 let filledPrice = finalPx;
-                
+
                 // Initialize PnL tracking variables (will be calculated if closing position)
                 let realizedPnl: number | undefined = undefined;
                 let isClosingPosition = false;
-                
+
                 if (result.response?.type === 'order' && result.response?.data?.statuses) {
                     const statuses = result.response.data.statuses;
                     for (const status of statuses) {
@@ -1400,9 +1591,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             if (status.filled.avgPx) {
                                 filledPrice = parseFloat(status.filled.avgPx);
                             }
-                            
+
                             // Log fill quality - show user they got market price, not limit price
-                            const improvement = isBuy 
+                            const improvement = isBuy
                                 ? finalPx - filledPrice  // For buys, lower is better
                                 : filledPrice - finalPx; // For sells, higher is better
                             console.log('✅ Order FILLED at market price:', {
@@ -1427,13 +1618,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                     const orderValue = filledSize * filledPrice;
                     const marginUsed = orderValue / (leverage || market.maxLeverage || 1);
-                    
+
                     // Update account balance optimistically
                     setAccount(prev => {
                         const newAvailableMargin = Math.max(0, prev.availableMargin - marginUsed);
                         const newUsedMargin = prev.usedMargin + marginUsed;
                         const newEquity = prev.equity; // Equity stays same, just margin allocation changes
-                        
+
                         return {
                             ...prev,
                             availableMargin: newAvailableMargin,
@@ -1445,7 +1636,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     // Calculate PnL if closing position (before updating positions)
                     const existingPositionBeforeUpdate = positions.find(p => p.symbol === symbol);
                     isClosingPosition = existingPositionBeforeUpdate ? (
-                        reduceOnly || 
+                        reduceOnly ||
                         (existingPositionBeforeUpdate.side === 'long' && side === 'sell') ||
                         (existingPositionBeforeUpdate.side === 'short' && side === 'buy')
                     ) : false;
@@ -1455,7 +1646,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         const entryPrice = existingPositionBeforeUpdate.entryPrice;
                         const closePrice = filledPrice;
                         const closedSize = Math.min(filledSize, existingPositionBeforeUpdate.size);
-                        
+
                         if (existingPositionBeforeUpdate.side === 'long') {
                             // Long position: profit = (closePrice - entryPrice) * size
                             realizedPnl = (closePrice - entryPrice) * closedSize;
@@ -1469,7 +1660,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     setPositions(prev => {
                         const existingPosition = prev.find(p => p.symbol === symbol);
                         const cleanCoin = baseCoin; // Already extracted from symbol
-                        
+
                         if (existingPosition) {
                             // Update existing position
                             if (reduceOnly) {
@@ -1479,8 +1670,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     // Position closed
                                     return prev.filter(p => p.symbol !== symbol);
                                 }
-                                return prev.map(p => 
-                                    p.symbol === symbol 
+                                return prev.map(p =>
+                                    p.symbol === symbol
                                         ? {
                                             ...p,
                                             size: newSize,
@@ -1498,7 +1689,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     const totalValue = (existingPosition.size * existingPosition.entryPrice) + (filledSize * filledPrice);
                                     const totalSize = existingPosition.size + filledSize;
                                     const avgEntryPrice = totalValue / totalSize;
-                                    
+
                                     return prev.map(p =>
                                         p.symbol === symbol
                                             ? {
@@ -1602,10 +1793,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 name: error?.name,
                 stack: error?.stack?.split('\n').slice(0, 5),
             });
-            
+
             // Provide more specific error messages
             const errorMessage = error?.message || 'Unknown error';
-            
+
             // Check for common error patterns and provide helpful messages
             if (errorMessage.includes('User rejected') || errorMessage.includes('user rejected')) {
                 throw new Error('Transaction was rejected. Please approve the transaction in your wallet.');
@@ -1619,7 +1810,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             if (errorMessage.includes('Invalid signature') || errorMessage.includes('signature')) {
                 throw new Error('Signature failed. Please try again or reconnect your wallet.');
             }
-            
+
             throw error;
         } finally {
             setLoading(false);
@@ -1700,6 +1891,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         thirtyDayPnl,
         userDataLoading,
         refreshUserData,
+        // Builder fee (mainnet trading fees)
+        builderFeeApproved,
+        builderFeeLoading,
+        approveBuilderFee,
+        checkBuilderFeeApproval,
     };
 
     return (

@@ -211,13 +211,12 @@ export default function OrderPanel() {
                         <div>
                             <label className="text-sm text-coffee-medium mb-2 block">{t.order.amountUSD}</label>
                             <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-coffee-medium">$</span>
                                 <input
                                     type="number"
                                     value={usdAmount}
                                     onChange={(e) => setUsdAmount(e.target.value)}
                                     placeholder="0"
-                                    className="w-full pl-10 pr-4 py-4 text-2xl font-bold text-white bg-bg-tertiary border border-white/10 rounded-2xl focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                    className="w-full px-4 py-4 text-2xl font-bold text-white bg-bg-tertiary border border-white/10 rounded-2xl focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                 />
                             </div>
                             

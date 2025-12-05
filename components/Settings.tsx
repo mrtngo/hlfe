@@ -4,17 +4,22 @@ import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, RotateCcw } from 'lucide-react';
+import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, RotateCcw, DollarSign } from 'lucide-react';
 
 export default function Settings() {
     const { t, language, setLanguage } = useLanguage();
-    const { address, agentWalletEnabled, setupAgentWallet } = useHyperliquid();
+    const { address, agentWalletEnabled, setupAgentWallet, builderFeeApproved, builderFeeLoading, approveBuilderFee } = useHyperliquid();
     const [connectWallet, setConnectWallet] = useState(false);
     const [notifications, setNotifications] = useState(true);
     const [settingUpAgent, setSettingUpAgent] = useState(false);
     const [agentSetupError, setAgentSetupError] = useState<string | null>(null);
     const [agentSetupSuccess, setAgentSetupSuccess] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    // Builder fee approval state
+    const [builderFeeError, setBuilderFeeError] = useState<string | null>(null);
+    const [builderFeeSuccess, setBuilderFeeSuccess] = useState(false);
 
     const handleSetupAgentWallet = async () => {
         if (!address) {
@@ -34,6 +39,28 @@ export default function Settings() {
             setAgentSetupError(error instanceof Error ? error.message : 'Failed to setup agent wallet');
         } finally {
             setSettingUpAgent(false);
+        }
+    };
+
+    const handleApproveBuilderFee = async () => {
+        if (!address) {
+            setBuilderFeeError('Please connect your wallet first');
+            return;
+        }
+
+        setBuilderFeeError(null);
+        setBuilderFeeSuccess(false);
+
+        try {
+            const result = await approveBuilderFee();
+            if (result.success) {
+                setBuilderFeeSuccess(true);
+                setTimeout(() => setBuilderFeeSuccess(false), 5000);
+            } else {
+                setBuilderFeeError(result.message);
+            }
+        } catch (error) {
+            setBuilderFeeError(error instanceof Error ? error.message : 'Failed to approve builder fee');
         }
     };
 
@@ -96,13 +123,11 @@ export default function Settings() {
                         </div>
                         <button
                             onClick={() => setConnectWallet(!connectWallet)}
-                            className={`relative w-12 h-6 rounded-full transition-colors ${
-                                connectWallet ? 'bg-primary' : 'bg-bg-tertiary border border-white/10'
-                            }`}
+                            className={`relative w-12 h-6 rounded-full transition-colors ${connectWallet ? 'bg-primary' : 'bg-bg-tertiary border border-white/10'
+                                }`}
                         >
-                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                                connectWallet ? 'translate-x-6' : 'translate-x-0'
-                            }`} />
+                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${connectWallet ? 'translate-x-6' : 'translate-x-0'
+                                }`} />
                         </button>
                     </div>
                 </div>
@@ -117,21 +142,19 @@ export default function Settings() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setLanguage('en')}
-                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                                    language === 'en' 
-                                        ? 'bg-primary text-primary-foreground' 
-                                        : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
-                                }`}
+                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${language === 'en'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
+                                    }`}
                             >
                                 English
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
-                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-                                    language === 'es' 
-                                        ? 'bg-primary text-primary-foreground' 
-                                        : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
-                                }`}
+                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${language === 'es'
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
+                                    }`}
                             >
                                 Español
                             </button>
@@ -145,13 +168,11 @@ export default function Settings() {
                         <span className="font-semibold text-white">{t.settings.notifications}</span>
                         <button
                             onClick={() => setNotifications(!notifications)}
-                            className={`relative w-12 h-6 rounded-full transition-colors ${
-                                notifications ? 'bg-primary' : 'bg-bg-tertiary border border-white/10'
-                            }`}
+                            className={`relative w-12 h-6 rounded-full transition-colors ${notifications ? 'bg-primary' : 'bg-bg-tertiary border border-white/10'
+                                }`}
                         >
-                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                                notifications ? 'translate-x-6' : 'translate-x-0'
-                            }`} />
+                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${notifications ? 'translate-x-6' : 'translate-x-0'
+                                }`} />
                         </button>
                     </div>
                 </div>
@@ -185,7 +206,7 @@ export default function Settings() {
                                     </button>
                                 )}
                             </div>
-                            
+
                             {agentSetupError && (
                                 <div className="space-y-2">
                                     <div className="flex items-start gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
@@ -207,20 +228,20 @@ export default function Settings() {
                                     )}
                                 </div>
                             )}
-                            
+
                             {agentSetupSuccess && (
                                 <div className="flex items-center gap-2 p-3 bg-bullish/10 border border-bullish/20 rounded-lg text-sm text-bullish">
                                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                                     <span>Agent wallet enabled! You can now trade without signing each transaction.</span>
                                 </div>
                             )}
-                            
+
                             {!agentWalletEnabled && !settingUpAgent && !agentSetupError && (
                                 <p className="text-xs text-coffee-medium mt-2">
                                     Approve once to enable automatic signing. You'll sign ONE transaction to approve the agent, then all future trades will be signed automatically.
                                 </p>
                             )}
-                            
+
                             {agentWalletEnabled && (
                                 <button
                                     onClick={() => {
@@ -234,6 +255,59 @@ export default function Settings() {
                                     <RotateCcw className="w-3 h-3" />
                                     Disable agent wallet
                                 </button>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Builder Fee - Rayo Trading Fees */}
+                {address && BUILDER_CONFIG.enabled && (
+                    <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <DollarSign className="w-5 h-5 text-primary" />
+                                    <div>
+                                        <span className="font-semibold text-white block">Builder Fee</span>
+                                        <span className="text-xs text-coffee-medium">
+                                            Support Rayo with a {(BUILDER_CONFIG.fee / 10).toFixed(1)} bps fee on trades
+                                        </span>
+                                    </div>
+                                </div>
+                                {builderFeeApproved ? (
+                                    <div className="flex items-center gap-2 text-bullish">
+                                        <CheckCircle2 className="w-5 h-5" />
+                                        <span className="text-sm font-semibold">Approved</span>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={handleApproveBuilderFee}
+                                        disabled={builderFeeLoading}
+                                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {builderFeeLoading ? 'Approving...' : 'Approve'}
+                                    </button>
+                                )}
+                            </div>
+
+                            {builderFeeError && (
+                                <div className="flex items-start gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
+                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                    <span>{builderFeeError}</span>
+                                </div>
+                            )}
+
+                            {builderFeeSuccess && (
+                                <div className="flex items-center gap-2 p-3 bg-bullish/10 border border-bullish/20 rounded-lg text-sm text-bullish">
+                                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                    <span>Builder fee approved! Thank you for supporting Rayo.</span>
+                                </div>
+                            )}
+
+                            {!builderFeeApproved && !builderFeeLoading && !builderFeeError && (
+                                <p className="text-xs text-coffee-medium mt-2">
+                                    Approve once to enable trading fees. A small {(BUILDER_CONFIG.fee / 10).toFixed(1)} basis points ({(BUILDER_CONFIG.fee / 1000 * 100).toFixed(3)}%) fee will be collected on each trade to support Rayo development.
+                                </p>
                             )}
                         </div>
                     </div>
