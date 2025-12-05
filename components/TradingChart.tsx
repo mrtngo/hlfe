@@ -5,7 +5,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useCandleData, type Timeframe } from '@/hooks/useCandleData';
 import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area } from 'recharts';
-import { BarChart3, ChevronDown } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 
 // Rayo Lightning Yellow
 const RAYO_YELLOW = '#FFD60A';
@@ -18,7 +18,6 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
     const { t } = useLanguage();
     const { selectedMarket, getMarket } = useHyperliquid();
     const [timeframe, setTimeframe] = useState<Timeframe>('1h');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     // Get the market to check if it's a stock
     const marketSymbol = symbol || selectedMarket;
@@ -105,59 +104,17 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
 
     return (
         <div className="glass-card h-full flex flex-col bg-bg-secondary rounded-lg shadow-soft-lg min-w-0 border border-white/10">
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <div className="p-4 border-b border-white/10 flex items-center">
                 <div className="flex items-center gap-4">
                     <h3 className="text-sm font-semibold text-white">
                         {marketSymbol?.replace('-USD', '').replace('-PERP', '') || 'BTC'} · {currentTimeframeLabel} · Hyperliquid
                     </h3>
                     <div className="w-2 h-2 bg-bullish rounded-full"></div>
                 </div>
-
-                <div className="relative">
-                    <button
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="px-4 py-1.5 text-xs rounded-lg transition-all font-semibold flex items-center gap-2 bg-primary/20 hover:bg-primary/30 text-white border border-primary/30"
-                    >
-                        <span>{currentTimeframeLabel}</span>
-                        <ChevronDown className={`w-3 h-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {isDropdownOpen && (
-                        <>
-                            <div 
-                                className="fixed inset-0 z-10" 
-                                onClick={() => setIsDropdownOpen(false)}
-                            />
-                            <div className="absolute right-0 top-full mt-2 bg-bg-secondary border border-white/10 rounded-lg shadow-lg z-20 min-w-[120px] overflow-hidden">
-                                {timeframeOptions.map((option, index) => {
-                                    const isSelected = selectedLabel === option.label;
-                                    
-                                    return (
-                                        <button
-                                            key={`${option.value}-${index}-${option.label}`}
-                                            onClick={() => {
-                                                setTimeframe(option.value);
-                                                setSelectedLabel(option.label);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                            className={`w-full px-4 py-2 text-xs text-left transition-all font-semibold ${
-                                                isSelected 
-                                                    ? 'bg-primary text-primary-foreground' 
-                                                    : 'text-white hover:bg-bg-hover'
-                                            }`}
-                                        >
-                                            {option.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </>
-                    )}
-                </div>
             </div>
 
             {/* Chart Container - Fixed height to avoid ResponsiveContainer dimension issues */}
-            <div className="relative w-full p-4" style={{ height: '400px' }}>
+            <div className="relative w-full p-4" style={{ height: '340px' }}>
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80 z-10 rounded-b-lg">
                         <div className="text-center">
@@ -227,6 +184,32 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                         </ComposedChart>
                     </ResponsiveContainer>
                 )}
+            </div>
+
+            {/* Timeframe buttons - Footer style */}
+            <div className="flex items-center justify-evenly px-4 pb-4">
+                {timeframeOptions.map((option, index) => {
+                    const isSelected = selectedLabel === option.label;
+                    return (
+                        <button
+                            key={`${option.value}-${index}-${option.label}`}
+                            onClick={() => {
+                                setTimeframe(option.value);
+                                setSelectedLabel(option.label);
+                            }}
+                            className="flex flex-col items-center px-2 py-2 transition-all border-none outline-none"
+                            style={{ 
+                                color: '#FFFF00', 
+                                background: 'transparent',
+                                opacity: isSelected ? 1 : 0.5
+                            }}
+                        >
+                            <span className={`text-xs font-semibold ${isSelected ? 'text-[#FFFF00]' : 'text-[#FFFF00]/50'}`}>
+                                {option.label}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );

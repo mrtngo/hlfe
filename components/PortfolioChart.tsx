@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef, memo, useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { ComposedChart, Line, Area, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
-import { ChevronDown } from 'lucide-react';
 
 // Rayo Lightning Yellow
 const RAYO_YELLOW = '#FFD60A';
@@ -22,7 +21,6 @@ function PortfolioChart() {
     const { address, account, fills, userDataLoading } = useHyperliquid();
     const { t } = useLanguage();
     const [timeframe, setTimeframe] = useState<TimeframeOption>('30D');
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     // Helper function to calculate timeframe cutoff
     const getTimeframeCutoff = useCallback((now: number, tf: TimeframeOption): number => {
@@ -175,7 +173,6 @@ function PortfolioChart() {
     // Memoized timeframe change handler
     const handleTimeframeChange = useCallback((newTimeframe: TimeframeOption) => {
         setTimeframe(newTimeframe);
-        setIsDropdownOpen(false);
     }, []);
 
     // Custom tooltip
@@ -201,50 +198,11 @@ function PortfolioChart() {
 
     return (
         <div className="w-full">
-            {/* Timeframe selector */}
-            <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-semibold text-coffee-medium">{t.home.portfolioHistory}</h4>
-                <div className="relative">
-                    <button
-                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="px-3 py-1.5 text-xs rounded-lg transition-all font-semibold flex items-center gap-2 bg-primary/20 hover:bg-primary/30 text-white border border-primary/30"
-                    >
-                        <span>{timeframe}</span>
-                        <ChevronDown className={`w-3 h-3 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                    </button>
-
-                    {isDropdownOpen && (
-                        <>
-                            <div 
-                                className="fixed inset-0 z-10" 
-                                onClick={() => setIsDropdownOpen(false)}
-                            />
-                            <div className="absolute right-0 top-full mt-2 bg-bg-secondary border border-white/10 rounded-lg shadow-lg z-20 min-w-[100px] overflow-hidden">
-                                {timeframeOptions.map((option) => {
-                                    const isSelected = timeframe === option;
-                                    
-                                    return (
-                                        <button
-                                            key={option}
-                                            onClick={() => handleTimeframeChange(option)}
-                                            className={`w-full px-4 py-2 text-xs text-left transition-all font-semibold ${
-                                                isSelected 
-                                                    ? 'bg-primary text-primary-foreground' 
-                                                    : 'text-white hover:bg-bg-hover'
-                                            }`}
-                                        >
-                                            {option}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
+            {/* Title */}
+            <h4 className="text-sm font-semibold text-coffee-medium mb-4">{t.home.portfolioHistory}</h4>
 
             {/* Chart */}
-            <div className="w-full relative" style={{ height: '200px' }}>
+            <div className="w-full relative" style={{ height: '180px' }}>
                 {userDataLoading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-bg-secondary/80 z-10 rounded-lg">
                         <div className="text-center">
@@ -292,6 +250,29 @@ function PortfolioChart() {
                         </ComposedChart>
                     </ResponsiveContainer>
                 )}
+            </div>
+
+            {/* Timeframe buttons - Footer style */}
+            <div className="flex items-center justify-evenly mt-4 px-2">
+                {timeframeOptions.map((option) => {
+                    const isSelected = timeframe === option;
+                    return (
+                        <button
+                            key={option}
+                            onClick={() => handleTimeframeChange(option)}
+                            className="flex flex-col items-center px-4 py-2 transition-all border-none outline-none"
+                            style={{ 
+                                color: '#FFFF00', 
+                                background: 'transparent',
+                                opacity: isSelected ? 1 : 0.5
+                            }}
+                        >
+                            <span className={`text-xs font-semibold ${isSelected ? 'text-[#FFFF00]' : 'text-[#FFFF00]/50'}`}>
+                                {option}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
         </div>
     );
