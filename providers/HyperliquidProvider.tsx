@@ -1766,42 +1766,68 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
 
                 // Record trade to database (async, don't block UI)
+                console.log('🔍 Trade recording check:', {
+                    orderFilled,
+                    type,
+                    address,
+                    willRecordTrade: (orderFilled || type === 'market') && address
+                });
+
                 if ((orderFilled || type === 'market') && address) {
+                    console.log('🚀 Starting trade recording...');
                     (async () => {
                         try {
                             // Get user from database
+                            console.log('🔍 Looking up user:', address);
                             const userData = await db.users.getByWallet(address);
+                            console.log('👤 User data:', userData);
+
                             if (!userData) {
-                                console.warn('⚠️ Could not find user in database for trade recording');
+                                console.warn('⚠️ Could not find user in database for trade recording. Creating user...');
+                                const newUser = await db.users.create(address);
+                                if (!newUser) {
+                                    console.error('❌ Failed to create user for trade recording');
+                                    return;
+                                }
+                                console.log('✅ Created new user:', newUser);
+                            }
+
+                            const user = userData || await db.users.getByWallet(address);
+                            if (!user) {
+                                console.error('❌ Still no user after creation attempt');
                                 return;
                             }
 
                             const actualFilledSize = filledSize || roundedSize;
                             const actualFilledPrice = filledPrice || finalPx;
 
+                            console.log('📝 Creating trade record:', {
+                                user_id: user.id,
+                                symbol,
+                                side: isBuy ? 'long' : 'short',
+                                size: actualFilledSize,
+                                entry_price: actualFilledPrice,
+                                isClosing: isClosingPosition,
+                                pnl: realizedPnl
+                            });
+
                             if (isClosingPosition && realizedPnl !== undefined) {
                                 // For closing trades, record as a closed trade with PnL
-                                await db.trades.create({
-                                    user_id: userData.id,
+                                const result = await db.trades.create({
+                                    user_id: user.id,
                                     symbol: symbol,
                                     side: isBuy ? 'long' : 'short',
                                     size: actualFilledSize,
-                                    entry_price: actualFilledPrice, // This is actually exit price for closes
+                                    entry_price: actualFilledPrice,
                                     exit_price: actualFilledPrice,
                                     pnl: realizedPnl,
                                     status: 'closed',
                                 });
-                                console.log('📊 Recorded closed trade to database:', {
-                                    symbol,
-                                    side: isBuy ? 'long' : 'short',
-                                    size: actualFilledSize,
-                                    price: actualFilledPrice,
-                                    pnl: realizedPnl,
-                                });
+                                console.log('📊 Closed trade result:', result);
                             } else {
                                 // For opening trades, record as an open trade
-                                await db.trades.create({
-                                    user_id: userData.id,
+                                const result = await db.trades.create({
+                                    user_id: user.id,
                                     symbol: symbol,
                                     side: isBuy ? 'long' : 'short',
                                     size: actualFilledSize,
@@ -1810,18 +1836,16 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     pnl: null,
                                     status: 'open',
                                 });
-                                console.log('📊 Recorded open trade to database:', {
-                                    symbol,
-                                    side: isBuy ? 'long' : 'short',
-                                    size: actualFilledSize,
-                                    entryPrice: actualFilledPrice,
-                                });
+                                console.log('📊 Open trade result:', result);
                             }
                         } catch (err) {
                             console.error('❌ Failed to record trade to database:', err);
-                            // Don't throw - trade recording failure shouldn't block the order
                         }
                     })();
+                } else {
+                    console.log('⏭️ Skipping trade recording:', {
+                        reason: !address ? 'no address' : (!orderFilled && type !== 'market') ? 'not filled' : 'unknown'
+                    });
                 }
 
                 // Return order details for notification

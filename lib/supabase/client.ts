@@ -24,6 +24,9 @@ export interface User {
     username: string | null;
     display_name: string | null;
     avatar_url: string | null;
+    referral_code: string | null;
+    referred_by: string | null;
+    referral_earnings: number;
     created_at: string;
     updated_at: string;
 }
@@ -42,6 +45,27 @@ export interface Trade {
     closed_at: string | null;
 }
 
+export interface Referral {
+    id: string;
+    referrer_id: string;
+    referred_id: string;
+    referral_code: string;
+    fee_share_percent: number;
+    total_fees_earned: number;
+    created_at: string;
+}
+
+export interface LeaderboardEntry {
+    rank: number;
+    user_id: string;
+    wallet_address: string;
+    username: string | null;
+    total_pnl: number;
+    trade_count: number;
+    win_count: number;
+    loss_count: number;
+}
+
 // Helper functions for common operations
 export const db = {
     // User operations
@@ -53,18 +77,23 @@ export const db = {
                 .eq('wallet_address', walletAddress.toLowerCase())
                 .single();
 
-            if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+            if (error && error.code !== 'PGRST116') {
                 console.error('Error fetching user:', error);
             }
             return data;
         },
 
-        async create(walletAddress: string, username?: string): Promise<User | null> {
+        async create(walletAddress: string, username?: string, referredBy?: string): Promise<User | null> {
+            // Generate a simple referral code
+            const referralCode = Math.random().toString(36).substring(2, 10);
+
             const { data, error } = await supabase
                 .from('users')
                 .insert({
                     wallet_address: walletAddress.toLowerCase(),
                     username: username || null,
+                    referral_code: referralCode,
+                    referred_by: referredBy || null,
                 })
                 .select()
                 .single();
@@ -91,16 +120,29 @@ export const db = {
             return data;
         },
 
-        async getOrCreate(walletAddress: string): Promise<User | null> {
+        async getOrCreate(walletAddress: string, referredBy?: string): Promise<User | null> {
             let user = await this.getByWallet(walletAddress);
             if (!user) {
-                user = await this.create(walletAddress);
+                user = await this.create(walletAddress, undefined, referredBy);
             }
             return user;
         },
+
+        async getByReferralCode(code: string): Promise<User | null> {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('referral_code', code.toLowerCase())
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching user by referral code:', error);
+            }
+            return data;
+        },
     },
 
-    // Trade operations (for future use)
+    // Trade operations
     trades: {
         async getByUser(userId: string): Promise<Trade[]> {
             const { data, error } = await supabase
@@ -117,17 +159,116 @@ export const db = {
         },
 
         async create(trade: Omit<Trade, 'id' | 'opened_at' | 'closed_at'>): Promise<Trade | null> {
+            console.log('📝 Attempting to create trade:', trade);
             const { data, error } = await supabase
                 .from('trades')
-                .insert(trade)
+                .insert({
+                    ...trade,
+                    closed_at: trade.status === 'closed' ? new Date().toISOString() : null,
+                })
                 .select()
                 .single();
 
             if (error) {
-                console.error('Error creating trade:', error);
+                console.error('❌ Error creating trade:', error.message, error.code, error.details, error.hint);
+                return null;
+            }
+            console.log('✅ Trade created successfully:', data);
+            return data;
+        },
+    },
+
+    // Leaderboard operations
+    leaderboard: {
+        async get(period: 'daily' | 'weekly' | 'all' = 'all', limit: number = 100): Promise<LeaderboardEntry[]> {
+            const { data, error } = await supabase.rpc('get_leaderboard', {
+                time_period: period,
+                limit_count: limit,
+            });
+
+            if (error) {
+                console.error('Error fetching leaderboard:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getUserRank(userId: string, period: 'daily' | 'weekly' | 'all' = 'all'): Promise<LeaderboardEntry | null> {
+            const leaderboard = await this.get(period, 1000);
+            return leaderboard.find(e => e.user_id === userId) || null;
+        },
+    },
+
+    // Referral operations
+    referrals: {
+        async create(referrerId: string, referredId: string, code: string): Promise<Referral | null> {
+            const { data, error } = await supabase
+                .from('referrals')
+                .insert({
+                    referrer_id: referrerId,
+                    referred_id: referredId,
+                    referral_code: code,
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error creating referral:', error);
                 return null;
             }
             return data;
+        },
+
+        async getByReferrer(referrerId: string): Promise<Referral[]> {
+            const { data, error } = await supabase
+                .from('referrals')
+                .select('*')
+                .eq('referrer_id', referrerId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching referrals:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getReferredUsers(referrerId: string): Promise<User[]> {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('referred_by', referrerId)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching referred users:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getTotalEarnings(referrerId: string): Promise<number> {
+            const { data, error } = await supabase
+                .from('referrals')
+                .select('total_fees_earned')
+                .eq('referrer_id', referrerId);
+
+            if (error) {
+                console.error('Error fetching referral earnings:', error);
+                return 0;
+            }
+            return data?.reduce((sum, r) => sum + (r.total_fees_earned || 0), 0) || 0;
+        },
+
+        async addEarnings(referralId: string, amount: number): Promise<void> {
+            const { error } = await supabase.rpc('increment_referral_earnings', {
+                ref_id: referralId,
+                amount: amount,
+            });
+
+            if (error) {
+                console.error('Error adding referral earnings:', error);
+            }
         },
     },
 };

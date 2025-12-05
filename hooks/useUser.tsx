@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, createContext, useContext, ReactNode 
 import { db, User } from '@/lib/supabase/client';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 
+const REFERRAL_STORAGE_KEY = 'rayo_referral_code';
+
 interface UserContextType {
     user: User | null;
     loading: boolean;
@@ -15,11 +17,35 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+// Check for referral code in URL on page load
+function getAndStoreReferralCode(): string | null {
+    if (typeof window === 'undefined') return null;
+
+    // Check URL params for ref code
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+
+    if (refCode) {
+        // Store in localStorage for later use (after wallet connect)
+        localStorage.setItem(REFERRAL_STORAGE_KEY, refCode);
+        console.log('📎 Stored referral code:', refCode);
+        return refCode;
+    }
+
+    // Return stored referral code if exists
+    return localStorage.getItem(REFERRAL_STORAGE_KEY);
+}
+
 export function UserProvider({ children }: { children: ReactNode }) {
     const { address, connected } = useHyperliquid();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // Check for referral code on mount
+    useEffect(() => {
+        getAndStoreReferralCode();
+    }, []);
 
     // Fetch or create user when wallet connects
     const fetchOrCreateUser = useCallback(async () => {
@@ -32,7 +58,41 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setError(null);
 
         try {
-            const userData = await db.users.getOrCreate(address);
+            // Check if user exists
+            let userData = await db.users.getByWallet(address);
+
+            if (!userData) {
+                // New user - check for referral code
+                const referralCode = typeof window !== 'undefined'
+                    ? localStorage.getItem(REFERRAL_STORAGE_KEY)
+                    : null;
+
+                let referrerId: string | undefined;
+
+                if (referralCode) {
+                    // Look up referrer by code
+                    const referrer = await db.users.getByReferralCode(referralCode);
+                    if (referrer) {
+                        referrerId = referrer.id;
+                        console.log('🔗 Found referrer:', referrer.username || referrer.wallet_address);
+
+                        // Create referral record after user is created
+                        setTimeout(async () => {
+                            const newUser = await db.users.getByWallet(address);
+                            if (newUser && referrer) {
+                                await db.referrals.create(referrer.id, newUser.id, referralCode);
+                                console.log('✅ Created referral link');
+                                // Clear stored referral code
+                                localStorage.removeItem(REFERRAL_STORAGE_KEY);
+                            }
+                        }, 1000);
+                    }
+                }
+
+                // Create user with referral info
+                userData = await db.users.create(address, undefined, referrerId);
+            }
+
             setUser(userData);
         } catch (err) {
             console.error('Error fetching user:', err);
@@ -53,7 +113,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
             return { success: false, message: 'Wallet not connected' };
         }
 
-        // Validate username
         const trimmedUsername = username.trim().toLowerCase();
         if (trimmedUsername.length < 3) {
             return { success: false, message: 'Username must be at least 3 characters' };
@@ -73,7 +132,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
             return { success: false, message: 'Username already taken' };
         } catch (err: any) {
-            // Handle unique constraint violation
             if (err?.code === '23505') {
                 return { success: false, message: 'Username already taken' };
             }
@@ -81,7 +139,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     }, [address]);
 
-    // Update profile (display name, avatar)
+    // Update profile
     const updateProfile = useCallback(async (updates: { display_name?: string; avatar_url?: string }): Promise<{ success: boolean; message: string }> => {
         if (!address) {
             return { success: false, message: 'Wallet not connected' };
@@ -99,7 +157,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     }, [address]);
 
-    // Manual refresh
     const refreshUser = useCallback(async () => {
         await fetchOrCreateUser();
     }, [fetchOrCreateUser]);
@@ -125,3 +182,4 @@ export function useUser() {
     }
     return context;
 }
+

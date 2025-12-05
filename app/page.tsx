@@ -13,13 +13,15 @@ import MarketSelector from '@/components/MarketSelector';
 import OrderHistory from '@/components/OrderHistory';
 import Settings from '@/components/Settings';
 import Profile from '@/components/Profile';
-import { BarChart3, History, Settings as SettingsIcon, User } from 'lucide-react';
+import Leaderboard from '@/components/Leaderboard';
+import ReferralPage from '@/components/ReferralPage';
+import { BarChart3, History, Settings as SettingsIcon, User, Trophy, Gift } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
     const { selectedMarket, setSelectedMarket, address } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'settings' | 'profile'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'settings' | 'profile' | 'leaderboard' | 'referrals'>('home');
 
     const formatAddress = (addr: string | null) => {
         if (!addr) return null;
@@ -60,6 +62,14 @@ export default function Home() {
                     <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                         <Profile />
                     </div>
+                ) : view === 'leaderboard' ? (
+                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
+                        <Leaderboard />
+                    </div>
+                ) : view === 'referrals' ? (
+                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
+                        <ReferralPage />
+                    </div>
                 ) : (
                     <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
                         {/* Market Selector */}
@@ -99,12 +109,12 @@ export default function Home() {
 
 
             {/* Footer Navigation - Rayo Style */}
-            <nav 
-                style={{ 
-                    position: 'fixed', 
-                    bottom: 0, 
-                    left: 0, 
-                    right: 0, 
+            <nav
+                style={{
+                    position: 'fixed',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
                     top: 'auto',
                     zIndex: 9999,
                     backgroundColor: '#000000',
@@ -119,9 +129,9 @@ export default function Home() {
                         className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
                         style={{ color: '#FFFF00', background: 'transparent' }}
                     >
-                        <img 
-                            src="/logo.svg" 
-                            alt="Home" 
+                        <img
+                            src="/logo.svg"
+                            alt="Home"
                             className="w-7 h-7"
                         />
                         <span className="text-[11px] font-semibold">{t.nav.home}</span>
@@ -150,11 +160,31 @@ export default function Home() {
                     {/* Settings */}
                     <button
                         onClick={() => setView('settings')}
-                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
-                        style={{ color: '#FFFF00', background: 'transparent' }}
+                        className="flex flex-col items-center gap-1 px-3 py-3 transition-all border-none outline-none"
+                        style={{ color: view === 'settings' ? '#FFFF00' : '#888888', background: 'transparent' }}
                     >
-                        <SettingsIcon className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">{t.nav.settings}</span>
+                        <SettingsIcon className="w-6 h-6" strokeWidth={2} />
+                        <span className="text-[10px] font-semibold">{t.nav.settings}</span>
+                    </button>
+
+                    {/* Leaderboard */}
+                    <button
+                        onClick={() => setView('leaderboard')}
+                        className="flex flex-col items-center gap-1 px-3 py-3 transition-all border-none outline-none"
+                        style={{ color: view === 'leaderboard' ? '#FFFF00' : '#888888', background: 'transparent' }}
+                    >
+                        <Trophy className="w-6 h-6" strokeWidth={2} />
+                        <span className="text-[10px] font-semibold">Ranks</span>
+                    </button>
+
+                    {/* Referrals */}
+                    <button
+                        onClick={() => setView('referrals')}
+                        className="flex flex-col items-center gap-1 px-3 py-3 transition-all border-none outline-none"
+                        style={{ color: view === 'referrals' ? '#FFFF00' : '#888888', background: 'transparent' }}
+                    >
+                        <Gift className="w-6 h-6" strokeWidth={2} />
+                        <span className="text-[10px] font-semibold">Invite</span>
                     </button>
 
                     {/* Profile/Account */}
