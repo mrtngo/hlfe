@@ -13,7 +13,7 @@ import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 export default function Profile() {
     const { t, language, setLanguage } = useLanguage();
     const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet, syncTrades } = useHyperliquid();
-    const { logout } = usePrivy();
+    const { logout, exportWallet, user: privyUser } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
 
     const [copied, setCopied] = useState(false);
@@ -475,6 +475,27 @@ export default function Profile() {
                             <div className="mt-2 text-sm text-red-400">{feeError}</div>
                         )}
                     </div>
+
+                    {/* Export Wallet - Only for embedded wallets */}
+                    {privyUser?.wallet?.connectorType === 'embedded' && (
+                        <div className="bg-white/5 rounded-2xl p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="font-semibold text-white">Export Wallet</div>
+                                    <div className="text-sm text-coffee-medium">
+                                        View your private key to access funds externally
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={exportWallet}
+                                    className="px-4 py-2 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 flex items-center gap-2"
+                                >
+                                    <Share2 className="w-4 h-4" />
+                                    Export
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Sync Trades */}
                     <div className="bg-white/5 rounded-2xl p-4">
