@@ -248,10 +248,14 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     <h2 className="text-2xl font-bold text-white">{t.home.watchlist}</h2>
                     <div className="relative" ref={dropdownRef}>
                         <button
-                            className="p-3 hover:bg-[#FFD60A]/10 rounded-2xl transition-colors border border-[#FFD60A]/30"
+                            className="p-2 transition-all"
+                            style={{
+                                background: 'transparent',
+                                border: 'none'
+                            }}
                             onClick={() => setShowAddDropdown(!showAddDropdown)}
                         >
-                            <Plus className="w-6 h-6 text-[#FFD60A]" />
+                            <Plus className="w-7 h-7 text-[#FFFF00]" style={{ filter: 'drop-shadow(0 0 4px rgba(255, 255, 0, 0.4))' }} />
                         </button>
 
                         {/* Add Token Modal */}
@@ -259,28 +263,30 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             <>
                                 {/* Backdrop */}
                                 <div
-                                    className="fixed inset-0 bg-black/60 z-[99]"
+                                    className="fixed inset-0 bg-black/80 z-[99]"
                                     onClick={() => setShowAddDropdown(false)}
                                 />
-                                {/* Modal */}
+                                {/* Modal - Brand styled */}
                                 <div
-                                    className="fixed z-[100] bg-bg-secondary border border-white/10 rounded-2xl shadow-xl overflow-hidden"
+                                    className="fixed z-[100] rounded-2xl shadow-[0_0_40px_rgba(255,255,0,0.15)] overflow-hidden"
                                     style={{
                                         left: '16px',
                                         right: '16px',
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        maxHeight: '60vh'
+                                        maxHeight: '60vh',
+                                        backgroundColor: '#000000',
+                                        border: '1px solid rgba(255, 255, 0, 0.3)'
                                     }}
                                 >
                                     <div className="p-4">
                                         <div className="flex items-center justify-between mb-4">
-                                            <div className="text-lg text-white font-bold">{t.home.addToWatchlist}</div>
+                                            <div className="text-lg text-[#FFFF00] font-bold">{t.home.addToWatchlist}</div>
                                             <button
                                                 onClick={() => setShowAddDropdown(false)}
-                                                className="p-2 hover:bg-white/10 rounded-xl"
+                                                className="p-2 hover:bg-[#FFFF00]/10 rounded-xl transition-colors"
                                             >
-                                                <X className="w-5 h-5 text-coffee-medium" />
+                                                <X className="w-5 h-5 text-[#FFFF00]" />
                                             </button>
                                         </div>
                                         <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(60vh - 80px)' }}>
@@ -290,11 +296,11 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                 .map(market => (
                                                     <button
                                                         key={market.name}
-                                                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 rounded-xl transition-colors text-left"
+                                                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#FFFF00]/10 rounded-xl transition-colors text-left"
                                                         onClick={() => addToWatchlist(market.name)}
                                                     >
                                                         <span className="text-white font-medium">{market.name}</span>
-                                                        <span className="text-[#FFD60A] text-sm font-mono">${market.price?.toFixed(2) || '0.00'}</span>
+                                                        <span className="text-[#FFFF00] text-sm font-mono">${market.price?.toFixed(2) || '0.00'}</span>
                                                     </button>
                                                 ))}
                                         </div>

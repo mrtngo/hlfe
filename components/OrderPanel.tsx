@@ -221,10 +221,10 @@ export default function OrderPanel() {
                                 />
                             </div>
 
-                            {/* Amount Increment/Decrement Buttons - Bigger for Mobile */}
-                            <div className="flex gap-2 mt-4">
-                                {/* Subtract buttons - ordered from lowest (−$25) to highest (−$10) */}
-                                {[25, 10].map((amt) => (
+                            {/* Amount Increment/Decrement Buttons - 3 each */}
+                            <div className="flex gap-3 mt-4">
+                                {/* Subtract buttons: -100, -50, -10 */}
+                                {[100, 50, 10].map((amt) => (
                                     <button
                                         key={`sub-${amt}`}
                                         onClick={() => {
@@ -232,21 +232,33 @@ export default function OrderPanel() {
                                             const newVal = Math.max(0, current - amt);
                                             setUsdAmount(newVal > 0 ? newVal.toString() : '');
                                         }}
-                                        className="flex-1 py-4 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] bg-[#0A0A0A] text-[#FF4444]/80 border border-[#FF4444]/20 hover:border-[#FF4444]/50 hover:text-[#FF4444]"
+                                        className="flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center hover:brightness-110"
+                                        style={{ backgroundColor: '#4A4A4C', color: 'white', minHeight: '56px' }}
+                                        onMouseDown={(e) => { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; }}
+                                        onMouseUp={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
+                                        onTouchStart={(e) => { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; }}
+                                        onTouchEnd={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
                                     >
                                         −${amt}
                                     </button>
                                 ))}
 
-                                {/* Add buttons - ordered from lowest (+$25) to highest (+$100) */}
-                                {[25, 50, 100].map((amt) => (
+                                {/* Add buttons: +10, +50, +100 */}
+                                {[10, 50, 100].map((amt) => (
                                     <button
                                         key={`add-${amt}`}
                                         onClick={() => {
                                             const current = parseFloat(usdAmount) || 0;
                                             setUsdAmount((current + amt).toString());
                                         }}
-                                        className="flex-1 py-4 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]"
+                                        className="flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center hover:brightness-110"
+                                        style={{ backgroundColor: '#4A4A4C', color: 'white', minHeight: '56px' }}
+                                        onMouseDown={(e) => { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; }}
+                                        onMouseUp={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
+                                        onTouchStart={(e) => { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; }}
+                                        onTouchEnd={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
                                     >
                                         +${amt}
                                     </button>
@@ -254,14 +266,14 @@ export default function OrderPanel() {
                             </div>
                         </div>
 
-                        {/* Leverage Selector with +/- Buttons */}
+                        {/* Leverage Selector */}
                         <div>
                             <div className="flex justify-between items-center mb-2">
                                 <label className="text-sm text-coffee-medium">{t.order.leverage}</label>
                                 <span className="text-lg font-bold text-[#FFFF00]">{leverage}x</span>
                             </div>
-                            <div className="flex gap-2">
-                                {/* Decrease leverage buttons - 3 buttons: −5x, −2x, −1x (lowest to highest) */}
+                            <div className="flex gap-3">
+                                {/* Decrease leverage buttons */}
                                 {[5, 2, 1].map((dec) => {
                                     const newLev = leverage - dec;
                                     const isDisabled = newLev < 1;
@@ -270,17 +282,24 @@ export default function OrderPanel() {
                                             key={`lev-sub-${dec}`}
                                             onClick={() => setLeverage(Math.max(1, newLev))}
                                             disabled={isDisabled}
-                                            className={`flex-1 py-4 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${isDisabled
-                                                ? 'bg-bg-tertiary/40 text-coffee-medium/30 border border-white/5 cursor-not-allowed'
-                                                : 'bg-[#0A0A0A] text-[#FF4444]/80 border border-[#FF4444]/20 hover:border-[#FF4444]/50 hover:text-[#FF4444]'
-                                                }`}
+                                            className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center ${isDisabled ? 'cursor-not-allowed' : 'hover:brightness-110'}`}
+                                            style={{
+                                                backgroundColor: isDisabled ? '#2C2C2E' : '#4A4A4C',
+                                                color: isDisabled ? 'rgba(255,255,255,0.3)' : 'white',
+                                                minHeight: '56px'
+                                            }}
+                                            onMouseDown={(e) => { if (!isDisabled) { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; } }}
+                                            onMouseUp={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
+                                            onTouchStart={(e) => { if (!isDisabled) { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; } }}
+                                            onTouchEnd={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
                                         >
                                             −{dec}x
                                         </button>
                                     );
                                 })}
 
-                                {/* Increase leverage buttons - 3 buttons: +1x, +2x, +5x (lowest to highest) */}
+                                {/* Increase leverage buttons */}
                                 {[1, 2, 5].map((inc) => {
                                     const newLev = leverage + inc;
                                     const isDisabled = newLev > maxLeverage;
@@ -289,10 +308,17 @@ export default function OrderPanel() {
                                             key={`lev-add-${inc}`}
                                             onClick={() => setLeverage(Math.min(maxLeverage, newLev))}
                                             disabled={isDisabled}
-                                            className={`flex-1 py-4 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${isDisabled
-                                                ? 'bg-bg-tertiary/40 text-coffee-medium/30 border border-white/5 cursor-not-allowed'
-                                                : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
-                                                }`}
+                                            className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center ${isDisabled ? 'cursor-not-allowed' : 'hover:brightness-110'}`}
+                                            style={{
+                                                backgroundColor: isDisabled ? '#2C2C2E' : '#4A4A4C',
+                                                color: isDisabled ? 'rgba(255,255,255,0.3)' : 'white',
+                                                minHeight: '56px'
+                                            }}
+                                            onMouseDown={(e) => { if (!isDisabled) { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; } }}
+                                            onMouseUp={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
+                                            onTouchStart={(e) => { if (!isDisabled) { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; } }}
+                                            onTouchEnd={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
                                         >
                                             +{inc}x
                                         </button>
@@ -573,15 +599,15 @@ export default function OrderPanel() {
                         </div>
                     )}
 
-                {/* Place Order Button - Rayo Style - BIGGER for mobile */}
+                {/* Place Order Button - Rayo Style - Taller & Squared */}
                 <button
                     onClick={handlePlaceOrder}
                     disabled={!connected || loading || tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE}
-                    className={`w-full rounded-full py-6 text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed ${orderSide === 'long'
-                        ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)] active:text-black focus:text-black'
-                        : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)] active:text-white focus:text-white'
+                    className={`w-full rounded-xl text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
+                        ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
+                        : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'
                         }`}
-                    style={orderSide === 'long' ? { color: '#000' } : undefined}
+                    style={orderSide === 'long' ? { color: '#000', minHeight: '80px' } : { minHeight: '80px' }}
                 >
                     {loading ? (
                         <div className="flex items-center justify-center gap-2">
