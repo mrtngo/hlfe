@@ -142,9 +142,6 @@ export default function OrderPanel() {
         }
     };
 
-    // Quick amount buttons for basic mode
-    const quickAmounts = [10, 25, 50, 100];
-
     return (
         <div className="h-full flex flex-col min-w-0">
             {/* Mode Toggle Header */}
@@ -224,48 +221,80 @@ export default function OrderPanel() {
                                 />
                             </div>
 
-                            {/* Quick Amount Buttons - Rayo brand */}
-                            <div className="flex gap-2.5 mt-4">
-                                {quickAmounts.map((amount) => {
-                                    const isActive = usdAmount === amount.toString();
-                                    return (
-                                        <button
-                                            key={amount}
-                                            onClick={() => setUsdAmount(amount.toString())}
-                                            className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${isActive
-                                                ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80 active:text-black focus:text-black'
-                                                : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
-                                                }`}
-                                            style={isActive ? { color: '#000' } : undefined}
-                                        >
-                                            ${amount}
-                                        </button>
-                                    );
-                                })}
+                            {/* Amount Increment/Decrement Buttons - Bigger for Mobile */}
+                            <div className="flex gap-2 mt-4">
+                                {/* Subtract buttons - ordered from lowest (−$25) to highest (−$10) */}
+                                {[25, 10].map((amt) => (
+                                    <button
+                                        key={`sub-${amt}`}
+                                        onClick={() => {
+                                            const current = parseFloat(usdAmount) || 0;
+                                            const newVal = Math.max(0, current - amt);
+                                            setUsdAmount(newVal > 0 ? newVal.toString() : '');
+                                        }}
+                                        className="flex-1 py-4 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] bg-[#0A0A0A] text-[#FF4444]/80 border border-[#FF4444]/20 hover:border-[#FF4444]/50 hover:text-[#FF4444]"
+                                    >
+                                        −${amt}
+                                    </button>
+                                ))}
+
+                                {/* Add buttons - ordered from lowest (+$25) to highest (+$100) */}
+                                {[25, 50, 100].map((amt) => (
+                                    <button
+                                        key={`add-${amt}`}
+                                        onClick={() => {
+                                            const current = parseFloat(usdAmount) || 0;
+                                            setUsdAmount((current + amt).toString());
+                                        }}
+                                        className="flex-1 py-4 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]"
+                                    >
+                                        +${amt}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
-                        {/* Simple Leverage Selector */}
+                        {/* Leverage Selector with +/- Buttons */}
                         <div>
-                            <label className="text-sm text-coffee-medium mb-2 block">{t.order.leverage}</label>
-                            <div className="flex gap-2.5">
-                                {[1, 2, 5, 10].map((lev) => {
-                                    const isActive = leverage === lev;
-                                    const isDisabled = lev > maxLeverage;
+                            <div className="flex justify-between items-center mb-2">
+                                <label className="text-sm text-coffee-medium">{t.order.leverage}</label>
+                                <span className="text-lg font-bold text-[#FFFF00]">{leverage}x</span>
+                            </div>
+                            <div className="flex gap-2">
+                                {/* Decrease leverage buttons - 3 buttons: −5x, −2x, −1x (lowest to highest) */}
+                                {[5, 2, 1].map((dec) => {
+                                    const newLev = leverage - dec;
+                                    const isDisabled = newLev < 1;
                                     return (
                                         <button
-                                            key={lev}
-                                            onClick={() => setLeverage(Math.min(lev, maxLeverage))}
+                                            key={`lev-sub-${dec}`}
+                                            onClick={() => setLeverage(Math.max(1, newLev))}
                                             disabled={isDisabled}
-                                            className={`flex-1 py-3.5 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${isDisabled
-                                                ? 'bg-bg-tertiary/40 text-coffee-medium/50 border border-white/5 cursor-not-allowed'
-                                                : isActive
-                                                    ? 'bg-[#FFFF00] text-black shadow-[0_0_18px_rgba(255,255,0,0.35)] border-2 border-[#FFFF00]/80 active:text-black focus:text-black'
-                                                    : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
+                                            className={`flex-1 py-4 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${isDisabled
+                                                ? 'bg-bg-tertiary/40 text-coffee-medium/30 border border-white/5 cursor-not-allowed'
+                                                : 'bg-[#0A0A0A] text-[#FF4444]/80 border border-[#FF4444]/20 hover:border-[#FF4444]/50 hover:text-[#FF4444]'
                                                 }`}
-                                            style={isActive ? { color: '#000' } : undefined}
                                         >
-                                            {lev}x
+                                            −{dec}x
+                                        </button>
+                                    );
+                                })}
+
+                                {/* Increase leverage buttons - 3 buttons: +1x, +2x, +5x (lowest to highest) */}
+                                {[1, 2, 5].map((inc) => {
+                                    const newLev = leverage + inc;
+                                    const isDisabled = newLev > maxLeverage;
+                                    return (
+                                        <button
+                                            key={`lev-add-${inc}`}
+                                            onClick={() => setLeverage(Math.min(maxLeverage, newLev))}
+                                            disabled={isDisabled}
+                                            className={`flex-1 py-4 px-2 rounded-full text-base font-bold transition-all active:scale-[0.98] ${isDisabled
+                                                ? 'bg-bg-tertiary/40 text-coffee-medium/30 border border-white/5 cursor-not-allowed'
+                                                : 'bg-[#0A0A0A] text-[#FFFF00]/80 border border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:text-[#FFFF00]'
+                                                }`}
+                                        >
+                                            +{inc}x
                                         </button>
                                     );
                                 })}

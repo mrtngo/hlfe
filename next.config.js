@@ -25,7 +25,7 @@ const nextConfig = {
         net: false,
         tls: false,
       };
-      
+
       // Fix MetaMask SDK trying to import React Native modules
       // This is a known issue with @metamask/sdk in web environments
       config.resolve.alias = {
@@ -42,6 +42,21 @@ const nextConfig = {
 
   // Ensure we don't try to transpile missing packages
   transpilePackages: [],
+
+  // Add headers for cross-origin isolation (needed for some wallet features)
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

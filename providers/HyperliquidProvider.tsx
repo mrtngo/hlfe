@@ -1216,7 +1216,101 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             console.log(`✅ Found asset at index ${assetIndex}: ${assetName}`);
 
-            // 2. Construct order wire
+            // 2. Update leverage if specified (MUST be done BEFORE placing order)
+            // Hyperliquid has default leverage per asset (e.g., 20x for BTC/ETH)
+            // If we don't explicitly set leverage, the order uses the default
+            const targetLeverage = leverage || 1;
+            console.log(`📊 Setting leverage to ${targetLeverage}x for ${assetName}`);
+
+            try {
+                // Import SDK signing utilities for leverage update
+                const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
+                const { signL1Action } = hyperliquidSDK;
+
+                // Get signing wallet (agent or user)
+                let signingWallet: any = null;
+                const agent = getAgentWallet();
+                const agentSigner = getAgentSigner();
+                const isApproved = isAgentApproved(address);
+
+                if (agentWalletEnabled && agent && agentSigner && isApproved) {
+                    // Use agent wallet for leverage update
+                    signingWallet = {
+                        address: agent.address,
+                        getAddress: async () => agent.address.toLowerCase(),
+                        signTypedData: async (domain: any, types: any, value: any) => {
+                            const { EIP712Domain, ...restTypes } = types;
+                            return await agentSigner.signTypedData(domain, restTypes, value);
+                        },
+                    };
+                } else {
+                    // Use user wallet
+                    const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+                    let signingProvider = null;
+
+                    if (embeddedWallet) {
+                        signingProvider = await embeddedWallet.getEthereumProvider();
+                    } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                        signingProvider = (window as any).ethereum;
+                    }
+
+                    if (signingProvider) {
+                        const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+                        signingWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
+                    }
+                }
+
+                if (signingWallet) {
+                    // Construct updateLeverage action
+                    const leverageAction = {
+                        type: 'updateLeverage',
+                        asset: assetIndex,
+                        isCross: false, // Use isolated margin for safety
+                        leverage: targetLeverage
+                    };
+
+                    const leverageNonce = Date.now();
+                    const leverageSignature = await signL1Action(
+                        signingWallet,
+                        leverageAction,
+                        null, // vaultAddress
+                        leverageNonce,
+                        !IS_TESTNET // isMainnet
+                    );
+
+                    // Send leverage update to API
+                    const leveragePayload = {
+                        action: leverageAction,
+                        nonce: leverageNonce,
+                        signature: leverageSignature,
+                        vaultAddress: null
+                    };
+
+                    const leverageUrl = isTradeXyzAsset
+                        ? `${API_URL}/exchange?dex=xyz`
+                        : `${API_URL}/exchange`;
+
+                    const leverageResponse = await fetch(leverageUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(leveragePayload)
+                    });
+
+                    const leverageResult = await leverageResponse.json();
+                    console.log(`📊 Leverage update result:`, leverageResult);
+
+                    if (leverageResult.status === 'err') {
+                        console.warn(`⚠️ Leverage update failed: ${leverageResult.response}. Proceeding with order anyway.`);
+                    } else {
+                        console.log(`✅ Leverage set to ${targetLeverage}x`);
+                    }
+                }
+            } catch (leverageError) {
+                // Don't block the order if leverage update fails
+                console.warn(`⚠️ Could not update leverage: ${leverageError}. Using exchange default.`);
+            }
+
+            // 3. Construct order wire
             const isBuy = side === 'buy';
 
             // For market orders with IOC, we need an aggressive price to ensure immediate execution
@@ -1255,27 +1349,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         slippage: minimalSlippage * 100 + '%'
                     });
                 } else {
-                    // For regular assets, use minimal slippage for market orders
+                    // For regular assets, use 0.3% slippage for market orders
                     // IOC orders fill at the BEST available price up to your limit
-                    // So we set a small buffer just to ensure execution, not the actual fill price
-                    // The actual fill will be at market price, this is just a safety ceiling
-
-                    // Dynamic slippage based on asset volatility/price level
-                    // Higher priced assets can use tighter slippage in dollar terms
-                    let slippagePercent: number;
-                    if (currentPrice >= 10000) {
-                        // BTC-level: 0.05% = ~$46 buffer on $92k (very tight)
-                        slippagePercent = 0.0005;
-                    } else if (currentPrice >= 1000) {
-                        // ETH-level: 0.1% = ~$3 buffer on $3k
-                        slippagePercent = 0.001;
-                    } else if (currentPrice >= 10) {
-                        // Mid-tier: 0.15%
-                        slippagePercent = 0.0015;
-                    } else {
-                        // Small coins: 0.2% (more volatile)
-                        slippagePercent = 0.002;
-                    }
+                    // This is a safety ceiling to ensure execution against resting orders
+                    // The actual fill will be at the best available market price
+                    const slippagePercent = 0.003; // 0.3% max slippage
 
                     if (isBuy) {
                         finalPx = currentPrice * (1 + slippagePercent);
@@ -1284,10 +1362,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     }
 
                     const slippageDollars = Math.abs(finalPx - currentPrice);
-                    console.log('💰 Market order with minimal slippage:', {
+                    console.log('💰 Market order with 0.3% slippage:', {
                         currentPrice,
                         limitPrice: finalPx,
-                        slippagePercent: (slippagePercent * 100).toFixed(3) + '%',
+                        slippagePercent: (slippagePercent * 100).toFixed(1) + '%',
                         slippageDollars: '$' + slippageDollars.toFixed(2),
                         note: 'IOC fills at best available price, this is just max slippage'
                     });

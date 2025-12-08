@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { useLanguage } from '@/hooks/useLanguage'; // Changed import
 import { X, Copy, Check, ExternalLink } from 'lucide-react';
 
 interface DepositModalProps {
@@ -12,8 +13,10 @@ interface DepositModalProps {
 
 export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
     const { address } = useHyperliquid();
+    const { t } = useLanguage(); // Use custom hook
     const [copied, setCopied] = useState(false);
     const [mounted, setMounted] = useState(false);
+    // Removed next-intl useTranslations
 
     useEffect(() => {
         setMounted(true);
@@ -78,7 +81,7 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                     padding: '16px',
                     borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
                 }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', margin: 0 }}>Deposit</h2>
+                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', margin: 0 }}>{t.depositModal.title}</h2>
                     <button
                         onClick={onClose}
                         style={{
@@ -97,7 +100,7 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                 <div style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '14px', textAlign: 'center', margin: 0 }}>
-                            Send USDC (Arbitrum) to your wallet address
+                            {t.depositModal.instruction}
                         </p>
 
                         {/* Wallet Address */}
@@ -108,11 +111,11 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                             padding: '16px'
                         }}>
                             <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                Your Wallet Address
+                                {t.depositModal.walletAddressLabel}
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <code style={{ flex: 1, fontSize: '13px', color: '#FFFF00', fontFamily: 'monospace', wordBreak: 'break-all' }}>
-                                    {address || 'Connect wallet first'}
+                                    {address || t.depositModal.connectWallet}
                                 </code>
                                 <button
                                     onClick={copyAddress}
@@ -146,9 +149,9 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                                 <span style={{ fontSize: '18px' }}>⚠️</span>
                                 <div style={{ fontSize: '14px' }}>
-                                    <div style={{ fontWeight: 600, color: '#FFFF00' }}>Only send USDC on Arbitrum</div>
+                                    <div style={{ fontWeight: 600, color: '#FFFF00' }}>{t.depositModal.warningTitle}</div>
                                     <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginTop: '4px' }}>
-                                        Sending other tokens or using wrong network may result in loss of funds.
+                                        {t.depositModal.warningText}
                                     </div>
                                 </div>
                             </div>
@@ -170,7 +173,7 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                                 textDecoration: 'none',
                             }}
                         >
-                            <span>Deposit to Hyperliquid L1</span>
+                            <span>{t.depositModal.hyperliquidLink}</span>
                             <ExternalLink style={{ width: '16px', height: '16px' }} />
                         </a>
                     </div>

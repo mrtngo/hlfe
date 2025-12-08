@@ -298,6 +298,15 @@
     "comingSoon": "Próximamente",
     "spotComingSoonDesc": "El trading spot y las tenencias estarán disponibles pronto"
   },
+  "depositModal": {
+    "title": "Depositar Activos",
+    "instruction": "Envía USDC (Arbitrum / Mainnet) a tu dirección de depósito abajo.",
+    "walletAddressLabel": "Tu Dirección de Depósito",
+    "connectWallet": "Conecta Billetera para Ver",
+    "warningTitle": "Envía solo USDC en Arbitrum",
+    "warningText": "Enviar cualquier otro activo o usar otra red puede resultar en la pérdida permanente de fondos.",
+    "hyperliquidLink": "Depositar vía Hyperliquid Bridge"
+  },
   "tooltips": {
     "leverage": "El apalancamiento multiplica tu exposición. Mayor apalancamiento = Mayor riesgo.",
     "liquidationPrice": "Si el precio llega a este nivel, tu posición será liquidada automáticamente.",

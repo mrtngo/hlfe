@@ -116,8 +116,13 @@ export default function Home() {
                     {/* Home */}
                     <button
                         onClick={() => setView('home')}
-                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
-                        style={{ color: '#FFFF00', background: 'transparent' }}
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'home' ? 'scale-110' : ''}`}
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            filter: view === 'home' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: view === 'home' ? 1 : 0.6
+                        }}
                     >
                         <img
                             src="/logo.svg"
@@ -130,8 +135,13 @@ export default function Home() {
                     {/* Trading */}
                     <button
                         onClick={() => setView('trading')}
-                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
-                        style={{ color: '#FFFF00', background: 'transparent' }}
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'trading' ? 'scale-110' : ''}`}
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            filter: view === 'trading' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: view === 'trading' ? 1 : 0.6
+                        }}
                     >
                         <BarChart3 className="w-7 h-7" strokeWidth={2} />
                         <span className="text-[11px] font-semibold">{t.nav.trade}</span>
@@ -140,8 +150,13 @@ export default function Home() {
                     {/* History */}
                     <button
                         onClick={() => setView('history')}
-                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
-                        style={{ color: '#FFFF00', background: 'transparent' }}
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'history' ? 'scale-110' : ''}`}
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            filter: view === 'history' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: view === 'history' ? 1 : 0.6
+                        }}
                     >
                         <History className="w-7 h-7" strokeWidth={2} />
                         <span className="text-[11px] font-semibold">{t.nav.history}</span>
@@ -150,8 +165,13 @@ export default function Home() {
                     {/* Leaderboard */}
                     <button
                         onClick={() => setView('leaderboard')}
-                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
-                        style={{ color: view === 'leaderboard' ? '#FFFF00' : '#888888', background: 'transparent' }}
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'leaderboard' ? 'scale-110' : ''}`}
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            filter: view === 'leaderboard' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: view === 'leaderboard' ? 1 : 0.6
+                        }}
                     >
                         <Trophy className="w-7 h-7" strokeWidth={2} />
                         <span className="text-[11px] font-semibold">Ranks</span>
@@ -161,8 +181,13 @@ export default function Home() {
                     <button
                         onClick={handleProfileClick}
                         disabled={!ready}
-                        className="flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none"
-                        style={{ color: '#FFFF00', background: 'transparent' }}
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'profile' ? 'scale-110' : ''}`}
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            filter: view === 'profile' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: view === 'profile' ? 1 : 0.6
+                        }}
                     >
                         {!ready ? (
                             <>

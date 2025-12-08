@@ -298,6 +298,15 @@
     "comingSoon": "Coming Soon",
     "spotComingSoonDesc": "Spot trading and holdings will be available soon"
   },
+  "depositModal": {
+    "title": "Deposit Assets",
+    "instruction": "Send USDC (Arbitrum / Mainnet) to your deposit address below.",
+    "walletAddressLabel": "Your Deposit Address",
+    "connectWallet": "Connect Wallet to View",
+    "warningTitle": "Send only USDC on Arbitrum",
+    "warningText": "Sending any other asset or using another network may result in permanent loss of funds.",
+    "hyperliquidLink": "Deposit via Hyperliquid Bridge"
+  },
   "tooltips": {
     "leverage": "Leverage multiplies your exposure. Higher leverage = Higher risk.",
     "liquidationPrice": "If price reaches this level, your position will be automatically liquidated.",
