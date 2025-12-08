@@ -8,7 +8,7 @@ import OrderNotification, { OrderNotificationData } from './OrderNotification';
 
 export default function PositionsPanel() {
     const { t, formatCurrency, formatPercent } = useLanguage();
-    const { positions, closePosition, loading, markets } = useHyperliquid();
+    const { positions, closePosition, loading, markets, refreshAccountData } = useHyperliquid();
     const [closeNotification, setCloseNotification] = useState<OrderNotificationData | null>(null);
 
     const handleClosePosition = async (symbol: string) => {
@@ -33,6 +33,9 @@ export default function PositionsPanel() {
                     pnl: position.unrealizedPnl,
                     isClosing: true
                 });
+
+                // Force refresh account data to show updated positions/balance immediately
+                setTimeout(() => refreshAccountData(), 500);
             } catch (error) {
                 // Error handling is done in the provider
                 console.error('Failed to close position:', error);

@@ -17,7 +17,7 @@ const MIN_NOTIONAL_VALUE = 10;
 
 export default function OrderPanel() {
     const { t, formatCurrency } = useLanguage();
-    const { connected, getMarket, selectedMarket, placeOrder, account } = useHyperliquid();
+    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData } = useHyperliquid();
 
     const [mode, setMode] = useState<OrderMode>('basic');
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
@@ -130,6 +130,9 @@ export default function OrderPanel() {
                     pnl: orderResult.pnl,
                     isClosing: orderResult.isClosing,
                 });
+
+                // Force refresh account data to show updated positions/balance immediately
+                setTimeout(() => refreshAccountData(), 500);
             }
 
             setSuccess(t.order.orderPlaced);

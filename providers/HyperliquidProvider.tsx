@@ -121,6 +121,7 @@ interface HyperliquidContextType {
     thirtyDayPnl: number;
     userDataLoading: boolean;
     refreshUserData: () => Promise<void>;
+    refreshAccountData: () => Promise<void>; // Force refresh account, positions, orders
 
     // Agent Wallet
     agentWalletEnabled: boolean;
@@ -202,10 +203,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }));
             },
             onAccountUpdate: (data) => {
+                // Debug: Log when account update is received from WebSocket
+                console.log('🔄 [WS] Account update received:', data);
+
                 // Update account data from WebSocket
                 if (data.marginSummary) {
                     const accountValue = parseFloat(data.marginSummary.accountValue || '0');
                     const totalMarginUsed = parseFloat(data.marginSummary.totalMarginUsed || '0');
+
+                    console.log('🔄 [WS] Updating account state:', { accountValue, totalMarginUsed });
 
                     setAccount(prev => ({
                         ...prev,
@@ -217,6 +223,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
             },
             onPositionUpdate: (assetPositions) => {
+                // Debug: Log when position update is received from WebSocket
+                console.log('🔄 [WS] Position update received:', assetPositions?.length, 'positions');
+
                 // Update positions from WebSocket
                 if (Array.isArray(assetPositions)) {
                     const activePositions: Position[] = assetPositions
@@ -254,6 +263,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             };
                         });
 
+                    console.log('🔄 [WS] Setting', activePositions.length, 'active positions');
                     setPositions(activePositions);
                 }
             },
@@ -779,6 +789,84 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             await fetchUserData(true);
         }
     }, [address, fetchUserData]);
+
+    // Refresh account data (positions, balance, orders) - force fetch after trades
+    const refreshAccountData = useCallback(async () => {
+        if (!address) return;
+
+        console.log('🔄 [REFRESH] Forcing account data refresh...');
+
+        try {
+            const normalizedAddress = address.toLowerCase();
+            const client = createHyperliquidClient();
+            await client.connect();
+
+            // Fetch clearinghouse state (account + positions)
+            const userState = await client.info.perpetuals.getClearinghouseState(normalizedAddress, false);
+
+            if (userState) {
+                // Update account state
+                const marginSummary = userState.marginSummary || {};
+                const accountValue = parseFloat(marginSummary.accountValue || '0');
+                const totalMarginUsed = parseFloat(marginSummary.totalMarginUsed || '0');
+
+                console.log('🔄 [REFRESH] Account updated:', { accountValue, totalMarginUsed });
+
+                setAccount(prev => ({
+                    ...prev,
+                    balance: accountValue,
+                    equity: accountValue,
+                    availableMargin: accountValue - totalMarginUsed,
+                    usedMargin: totalMarginUsed,
+                }));
+
+                // Update positions
+                const assetPositions = userState.assetPositions || [];
+                const activePositions: Position[] = assetPositions
+                    .filter((pos: any) => parseFloat(pos.position?.szi || '0') !== 0)
+                    .map((pos: any) => {
+                        const position = pos.position;
+                        const szi = parseFloat(position.szi || '0');
+                        const entryPx = parseFloat(position.entryPx || '0');
+                        const markPx = parseFloat(position.markPx || '0');
+                        const liqPx = parseFloat(position.liqPx || '0');
+                        const leverage = parseFloat(position.leverage?.value || '1');
+                        const side = szi > 0 ? 'long' : 'short';
+                        const size = Math.abs(szi);
+
+                        const pnl = side === 'long'
+                            ? (markPx - entryPx) * size
+                            : (entryPx - markPx) * size;
+                        const pnlPercent = entryPx > 0 ? (pnl / (entryPx * size)) * 100 : 0;
+
+                        const cleanCoin = pos.coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                        const symbol = `${cleanCoin}-USD`;
+
+                        return {
+                            symbol,
+                            name: cleanCoin,
+                            side,
+                            size,
+                            entryPrice: entryPx,
+                            markPrice: markPx,
+                            liquidationPrice: liqPx,
+                            leverage,
+                            unrealizedPnl: pnl,
+                            unrealizedPnlPercent: pnlPercent,
+                        };
+                    });
+
+                console.log('🔄 [REFRESH] Positions updated:', activePositions.length, 'active');
+                setPositions(activePositions);
+            }
+
+            // Also refresh fills
+            await refreshUserData();
+
+        } catch (error) {
+            console.error('❌ [REFRESH] Failed to refresh account data:', error);
+        }
+    }, [address, refreshUserData]);
 
     // Helper to get the best provider
     const getProvider = () => {
@@ -2075,6 +2163,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         thirtyDayPnl,
         userDataLoading,
         refreshUserData,
+        refreshAccountData,
         // Builder fee (mainnet trading fees)
         builderFeeApproved,
         builderFeeLoading,
