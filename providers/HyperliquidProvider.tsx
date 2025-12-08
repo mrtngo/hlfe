@@ -122,6 +122,7 @@ interface HyperliquidContextType {
     userDataLoading: boolean;
     refreshUserData: () => Promise<void>;
     refreshAccountData: () => Promise<void>; // Force refresh account, positions, orders
+    syncTrades: () => Promise<{ synced: number; totalPnl: number } | null>; // Sync trades from Hyperliquid fills
 
     // Agent Wallet
     agentWalletEnabled: boolean;
@@ -867,6 +868,46 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             console.error('❌ [REFRESH] Failed to refresh account data:', error);
         }
     }, [address, refreshUserData]);
+
+    // Sync trades from Hyperliquid fills to database
+    const syncTrades = useCallback(async (): Promise<{ synced: number; totalPnl: number } | null> => {
+        if (!address) return null;
+
+        console.log('🔄 [SYNC] Starting trade sync from Hyperliquid fills...');
+
+        try {
+            // Get user from database
+            const user = await db.users.getOrCreate(address);
+            if (!user) {
+                console.error('❌ [SYNC] Could not get/create user');
+                return null;
+            }
+
+            // Force refresh fills from Hyperliquid
+            apiCache.invalidate(`user_fills:${address.toLowerCase()}`);
+
+            const normalizedAddress = address.toLowerCase();
+            const client = createHyperliquidClient();
+            const freshFills = await client.info.getUserFills(normalizedAddress);
+
+            if (!freshFills || freshFills.length === 0) {
+                console.log('⚠️ [SYNC] No fills found from Hyperliquid');
+                return { synced: 0, totalPnl: 0 };
+            }
+
+            console.log(`🔄 [SYNC] Found ${freshFills.length} fills from Hyperliquid`);
+
+            // Sync to database
+            const result = await db.trades.syncFromFills(user.id, freshFills as any[]);
+
+            console.log(`✅ [SYNC] Synced ${result.synced} trades, total PnL: $${result.totalPnl.toFixed(2)}`);
+
+            return result;
+        } catch (error) {
+            console.error('❌ [SYNC] Failed to sync trades:', error);
+            return null;
+        }
+    }, [address]);
 
     // Helper to get the best provider
     const getProvider = () => {
@@ -1738,6 +1779,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Initialize PnL tracking variables (will be calculated if closing position)
                 let realizedPnl: number | undefined = undefined;
                 let isClosingPosition = false;
+                // Capture original position before any updates (for PnL calculation and DB recording)
+                const originalPosition = positions.find(p => p.symbol === symbol);
 
                 if (result.response?.type === 'order' && result.response?.data?.statuses) {
                     const statuses = result.response.data.statuses;
@@ -1800,21 +1843,20 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         };
                     });
 
-                    // Calculate PnL if closing position (before updating positions)
-                    const existingPositionBeforeUpdate = positions.find(p => p.symbol === symbol);
-                    isClosingPosition = existingPositionBeforeUpdate ? (
+                    // Calculate PnL if closing position (using position captured before any updates)
+                    isClosingPosition = originalPosition ? (
                         reduceOnly ||
-                        (existingPositionBeforeUpdate.side === 'long' && side === 'sell') ||
-                        (existingPositionBeforeUpdate.side === 'short' && side === 'buy')
+                        (originalPosition.side === 'long' && side === 'sell') ||
+                        (originalPosition.side === 'short' && side === 'buy')
                     ) : false;
 
-                    if (isClosingPosition && existingPositionBeforeUpdate) {
+                    if (isClosingPosition && originalPosition) {
                         // Calculate realized PnL
-                        const entryPrice = existingPositionBeforeUpdate.entryPrice;
+                        const entryPrice = originalPosition.entryPrice;
                         const closePrice = filledPrice;
-                        const closedSize = Math.min(filledSize, existingPositionBeforeUpdate.size);
+                        const closedSize = Math.min(filledSize, originalPosition.size);
 
-                        if (existingPositionBeforeUpdate.side === 'long') {
+                        if (originalPosition.side === 'long') {
                             // Long position: profit = (closePrice - entryPrice) * size
                             realizedPnl = (closePrice - entryPrice) * closedSize;
                         } else {
@@ -1967,6 +2009,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const actualFilledSize = filledSize || roundedSize;
                             const actualFilledPrice = filledPrice || finalPx;
 
+                            // For closing trades, we need the ORIGINAL entry price, not the closing price
+                            // originalPosition is captured in the closure from line 1740
+                            const originalEntryPrice = originalPosition?.entryPrice || actualFilledPrice;
+
                             // Determine if this is a closing trade
                             // Use reduceOnly flag as primary indicator, fallback to position check
                             const isClosing = reduceOnly || isClosingPosition;
@@ -1975,9 +2021,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             console.log('📝 Creating trade record:', {
                                 user_id: user.id,
                                 symbol,
-                                side: isBuy ? 'long' : 'short',
+                                side: originalPosition?.side || (isBuy ? 'long' : 'short'),
                                 size: actualFilledSize,
-                                entry_price: actualFilledPrice,
+                                original_entry_price: originalEntryPrice,
+                                exit_price: actualFilledPrice,
                                 reduceOnly,
                                 isClosingPosition,
                                 isClosing,
@@ -1986,14 +2033,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             });
 
                             if (isClosing && hasPnl) {
-                                // For closing trades, record as a closed trade with PnL
+                                // For closing trades, record with original entry price and actual exit price
                                 const result = await db.trades.create({
                                     user_id: user.id,
                                     symbol: symbol,
-                                    side: isBuy ? 'long' : 'short',
+                                    side: originalPosition?.side || (isBuy ? 'long' : 'short'),
                                     size: actualFilledSize,
-                                    entry_price: actualFilledPrice,
-                                    exit_price: actualFilledPrice,
+                                    entry_price: originalEntryPrice, // Original position entry
+                                    exit_price: actualFilledPrice,    // Closing fill price
                                     pnl: realizedPnl ?? null,
                                     status: 'closed',
                                 });
@@ -2004,10 +2051,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 const result = await db.trades.create({
                                     user_id: user.id,
                                     symbol: symbol,
-                                    side: isBuy ? 'long' : 'short',
+                                    side: originalPosition?.side || (isBuy ? 'long' : 'short'),
                                     size: actualFilledSize,
-                                    entry_price: actualFilledPrice,
-                                    exit_price: actualFilledPrice,
+                                    entry_price: originalEntryPrice, // Original position entry
+                                    exit_price: actualFilledPrice,    // Closing fill price
                                     pnl: realizedPnl || 0,
                                     status: 'closed',
                                 });
@@ -2164,6 +2211,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         userDataLoading,
         refreshUserData,
         refreshAccountData,
+        syncTrades,
         // Builder fee (mainnet trading fees)
         builderFeeApproved,
         builderFeeLoading,

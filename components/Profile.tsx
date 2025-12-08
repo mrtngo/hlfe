@@ -7,12 +7,12 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { LogOut, Copy, Check, User as UserIcon, Wallet, TrendingUp, Package, Loader2, AlertCircle, Gift, Users, DollarSign, Settings, ChevronRight, Share2 } from 'lucide-react';
+import { LogOut, Copy, Check, User as UserIcon, Wallet, TrendingUp, Package, Loader2, AlertCircle, Gift, Users, DollarSign, Settings, ChevronRight, Share2, RefreshCw } from 'lucide-react';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 
 export default function Profile() {
     const { t, language, setLanguage } = useLanguage();
-    const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet } = useHyperliquid();
+    const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet, syncTrades } = useHyperliquid();
     const { logout } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
 
@@ -37,6 +37,10 @@ export default function Profile() {
     const [settingUpAgent, setSettingUpAgent] = useState(false);
     const [agentSetupError, setAgentSetupError] = useState<string | null>(null);
     const [agentSetupSuccess, setAgentSetupSuccess] = useState(false);
+
+    // Sync state
+    const [syncing, setSyncing] = useState(false);
+    const [syncResult, setSyncResult] = useState<string | null>(null);
 
     const referralLink = user?.referral_code
         ? `${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${user.referral_code}`
@@ -134,6 +138,29 @@ export default function Profile() {
             setFeeError(err?.message || 'Failed to approve builder fee');
         } finally {
             setApprovingFee(false);
+        }
+    };
+
+    const handleSyncTrades = async () => {
+        if (!syncTrades) return;
+
+        setSyncing(true);
+        setSyncResult(null);
+
+        try {
+            const result = await syncTrades();
+            if (result) {
+                setSyncResult(`Synced ${result.synced} trades (PnL: $${result.totalPnl.toFixed(2)})`);
+                // Clear success message after 5 seconds
+                setTimeout(() => setSyncResult(null), 5000);
+            } else {
+                setSyncResult('Sync failed or no trades found');
+            }
+        } catch (err) {
+            console.error('Error syncing trades:', err);
+            setSyncResult('Failed to sync trades');
+        } finally {
+            setSyncing(false);
         }
     };
 
@@ -446,6 +473,35 @@ export default function Profile() {
                         </div>
                         {feeError && (
                             <div className="mt-2 text-sm text-red-400">{feeError}</div>
+                        )}
+                    </div>
+
+                    {/* Sync Trades */}
+                    <div className="bg-white/5 rounded-2xl p-4">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="font-semibold text-white">Sync Trades</div>
+                                <div className="text-sm text-coffee-medium">
+                                    Fix PnL history if it looks wrong
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleSyncTrades}
+                                disabled={syncing}
+                                className="px-4 py-2 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {syncing ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <RefreshCw className="w-4 h-4" />
+                                )}
+                                Sync
+                            </button>
+                        </div>
+                        {syncResult && (
+                            <div className="mt-2 text-sm text-[#FFFF00]">
+                                {syncResult}
+                            </div>
                         )}
                     </div>
                 </div>

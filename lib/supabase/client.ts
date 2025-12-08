@@ -176,6 +176,83 @@ export const db = {
             console.log('✅ Trade created successfully:', data);
             return data;
         },
+
+        async deleteAllByUser(userId: string): Promise<boolean> {
+            console.log('🗑️ Deleting all trades for user:', userId);
+            const { error } = await supabase
+                .from('trades')
+                .delete()
+                .eq('user_id', userId);
+
+            if (error) {
+                console.error('❌ Error deleting trades:', error);
+                return false;
+            }
+            console.log('✅ All trades deleted for user');
+            return true;
+        },
+
+        async syncFromFills(userId: string, fills: Array<{
+            time: number;
+            coin: string;
+            px: string;
+            sz: string;
+            side: string;
+            closedPnl: string;
+            dir?: string;
+        }>): Promise<{ synced: number; totalPnl: number }> {
+            console.log('🔄 Syncing trades from fills for user:', userId, 'fills count:', fills.length);
+
+            // First delete all existing trades for this user
+            await this.deleteAllByUser(userId);
+
+            let synced = 0;
+            let totalPnl = 0;
+
+            // Only import fills with closedPnl (completed trades)
+            for (const fill of fills) {
+                const pnl = parseFloat(fill.closedPnl || '0');
+
+                // Skip fills with 0 PnL (opening trades or dust)
+                if (pnl === 0) continue;
+
+                totalPnl += pnl;
+
+                // Normalize coin name
+                const cleanCoin = fill.coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                const symbol = `${cleanCoin}-USD`;
+
+                // Determine side from the fill
+                const side = fill.side.toLowerCase() === 'b' || fill.side.toLowerCase() === 'buy' ? 'long' : 'short';
+
+                const trade: Omit<Trade, 'id' | 'opened_at' | 'closed_at'> = {
+                    user_id: userId,
+                    symbol,
+                    side: side as 'long' | 'short',
+                    size: parseFloat(fill.sz),
+                    entry_price: parseFloat(fill.px),
+                    exit_price: parseFloat(fill.px),
+                    pnl: pnl,
+                    status: 'closed',
+                };
+
+                // Insert with original timestamp
+                const { error } = await supabase
+                    .from('trades')
+                    .insert({
+                        ...trade,
+                        opened_at: new Date(fill.time).toISOString(),
+                        closed_at: new Date(fill.time).toISOString(),
+                    });
+
+                if (!error) {
+                    synced++;
+                }
+            }
+
+            console.log(`✅ Synced ${synced} trades, total PnL: $${totalPnl.toFixed(2)}`);
+            return { synced, totalPnl };
+        },
     },
 
     // Leaderboard operations
