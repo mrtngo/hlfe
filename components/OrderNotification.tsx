@@ -38,32 +38,28 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
             setFillPercent(0);
             setShowContent(false);
             setIsVisible(true);
-            
+
             // Small delay then start animations
             const t1 = setTimeout(() => {
                 setIsAnimating(true);
             }, 50);
-            
+
             // Start fill animation
             const t2 = setTimeout(() => {
                 setFillPercent(100);
             }, 100);
-            
+
             // Show content after logo animation
             const t3 = setTimeout(() => {
                 setShowContent(true);
             }, 500);
 
-            // Auto-close after 4 seconds
-            const closeTimer = setTimeout(() => {
-                handleClose();
-            }, 4000);
+            // No auto-close - user must tap outside to dismiss
 
             return () => {
                 clearTimeout(t1);
                 clearTimeout(t2);
                 clearTimeout(t3);
-                clearTimeout(closeTimer);
             };
         }
     }, [order]);
@@ -81,14 +77,14 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
     if (!order || !isVisible || !mounted) return null;
 
     const isLong = order.side === 'buy';
-    const actionText = order.isClosing 
+    const actionText = order.isClosing
         ? (t.positions?.positionClosed || 'Position Closed')
         : (t.order?.orderPlaced || 'Order Placed');
 
     const notificationContent = (
         <>
             {/* Backdrop - covers entire screen */}
-            <div 
+            <div
                 style={{
                     position: 'fixed',
                     top: 0,
@@ -106,7 +102,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
             />
 
             {/* Modal - centered on screen */}
-            <div 
+            <div
                 style={{
                     position: 'fixed',
                     top: 0,
@@ -124,7 +120,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                     transition: 'opacity 0.3s ease-out, transform 0.3s ease-out',
                 }}
             >
-                <div 
+                <div
                     style={{
                         backgroundColor: '#000000',
                         border: '2px solid rgba(255, 255, 0, 0.3)',
@@ -139,7 +135,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                 >
                     {/* Lightning Logo with Fill Animation */}
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-                        <div 
+                        <div
                             style={{
                                 position: 'relative',
                                 width: '120px',
@@ -148,8 +144,8 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                             }}
                         >
                             {/* Background lightning (outline only - dimmed) */}
-                            <svg 
-                                viewBox="0 0 100 100" 
+                            <svg
+                                viewBox="0 0 100 100"
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -158,8 +154,8 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                                     left: 0,
                                 }}
                             >
-                                <path 
-                                    d="M55 10L25 52H45L38 90L75 42H52L55 10Z" 
+                                <path
+                                    d="M55 10L25 52H45L38 90L75 42H52L55 10Z"
                                     stroke="#FFFF00"
                                     strokeWidth="3"
                                     strokeLinecap="round"
@@ -168,10 +164,10 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                                     opacity="0.2"
                                 />
                             </svg>
-                            
+
                             {/* Filled lightning with clip animation */}
-                            <svg 
-                                viewBox="0 0 100 100" 
+                            <svg
+                                viewBox="0 0 100 100"
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -179,7 +175,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                                     top: 0,
                                     left: 0,
                                     clipPath: `inset(${100 - fillPercent}% 0 0 0)`,
-                                    filter: fillPercent === 100 
+                                    filter: fillPercent === 100
                                         ? 'drop-shadow(0 0 20px rgba(255, 255, 0, 0.9)) drop-shadow(0 0 40px rgba(255, 255, 0, 0.5))'
                                         : 'drop-shadow(0 0 10px rgba(255, 255, 0, 0.6))',
                                     transition: 'clip-path 0.7s ease-out, filter 0.3s ease-out',
@@ -192,8 +188,8 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                                         <stop offset="100%" stopColor="#FFD700" />
                                     </linearGradient>
                                 </defs>
-                                <path 
-                                    d="M55 10L25 52H45L38 90L75 42H52L55 10Z" 
+                                <path
+                                    d="M55 10L25 52H45L38 90L75 42H52L55 10Z"
                                     fill="url(#boltGradientNotif)"
                                     stroke="#FFFF00"
                                     strokeWidth="3"
@@ -205,7 +201,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                     </div>
 
                     {/* Success Text */}
-                    <div 
+                    <div
                         style={{
                             opacity: showContent ? 1 : 0,
                             transform: showContent ? 'translateY(0)' : 'translateY(16px)',
@@ -240,15 +236,15 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                 <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.side || 'Side'}</span>
-                                <span style={{ 
-                                    fontSize: '14px', 
-                                    fontWeight: 'bold', 
-                                    color: isLong ? '#00FF00' : '#FF4444' 
+                                <span style={{
+                                    fontSize: '14px',
+                                    fontWeight: 'bold',
+                                    color: isLong ? '#00FF00' : '#FF4444'
                                 }}>
                                     {isLong ? 'LONG' : 'SHORT'}
                                 </span>
                             </div>
-                            
+
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                 <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.size || 'Size'}</span>
                                 <span style={{ fontSize: '14px', fontFamily: 'monospace', fontWeight: '600', color: '#FFFFFF' }}>
@@ -265,18 +261,18 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
 
                             {/* PnL if closing position */}
                             {order.isClosing && order.pnl !== undefined && (
-                                <div style={{ 
-                                    paddingTop: '12px', 
-                                    marginTop: '12px', 
-                                    borderTop: '1px solid rgba(255, 255, 255, 0.1)' 
+                                <div style={{
+                                    paddingTop: '12px',
+                                    marginTop: '12px',
+                                    borderTop: '1px solid rgba(255, 255, 255, 0.1)'
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.pnl || 'Realized P&L'}</span>
-                                        <span style={{ 
-                                            fontSize: '14px', 
-                                            fontFamily: 'monospace', 
-                                            fontWeight: 'bold', 
-                                            color: order.pnl >= 0 ? '#00FF00' : '#FF4444' 
+                                        <span style={{
+                                            fontSize: '14px',
+                                            fontFamily: 'monospace',
+                                            fontWeight: 'bold',
+                                            color: order.pnl >= 0 ? '#00FF00' : '#FF4444'
                                         }}>
                                             {order.pnl >= 0 ? '+' : ''}${order.pnl.toFixed(2)}
                                         </span>
