@@ -63,12 +63,12 @@ export default function Home() {
                 ) : (
                     <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
                         {/* Market Selector */}
-                        <div className="px-4 pt-4">
+                        <div className="px-4 pt-4 mb-24">
                             <MarketSelector />
                         </div>
 
                         {/* Chart Section - Full Width */}
-                        <div className="flex-1 min-h-0">
+                        <div className="flex-1 min-h-0 mt-14">
                             <TradingChart />
                         </div>
 

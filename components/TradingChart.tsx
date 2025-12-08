@@ -129,21 +129,20 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
 
     return (
         <div className="h-full flex flex-col min-w-0">
-            <div className="p-4 flex items-center justify-between">
+            <div className="p-4 mt-20 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <h3 className="text-sm font-semibold text-white">
-                        {marketSymbol?.replace('-USD', '').replace('-PERP', '') || 'BTC'} · {currentTimeframeLabel} · Hyperliquid
+                        {marketSymbol?.replace('-USD', '').replace('-PERP', '') || 'BTC'} · {currentTimeframeLabel}
                     </h3>
                     <div className="w-2 h-2 bg-bullish rounded-full"></div>
                 </div>
-                {/* Trade markers legend */}
-                {(symbolFills.length > 0 || currentPosition) && (
+                {/* Position markers legend */}
+                {currentPosition && (
                     <div className="flex items-center gap-3 text-xs">
-                        {currentPosition && (
-                            <span className="text-[#00BFFF]">◆ Entry</span>
+                        <span className="text-[#00FF00]">◆ Entry</span>
+                        {currentPosition.liquidationPrice > 0 && (
+                            <span className="text-[#FF4444]">◆ Liq</span>
                         )}
-                        <span className="text-[#00FF00]">▲ Buy</span>
-                        <span className="text-[#FF4444]">▼ Sell</span>
                     </div>
                 )}
             </div>
@@ -221,13 +220,13 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             {currentPosition && (
                                 <ReferenceLine
                                     y={currentPosition.entryPrice}
-                                    stroke="#00BFFF"
+                                    stroke={TRADE_GREEN}
                                     strokeWidth={2}
                                     strokeDasharray="8 4"
                                     label={{
                                         value: `◆ Entry $${currentPosition.entryPrice.toFixed(2)}`,
                                         position: 'insideBottomRight',
-                                        fill: '#00BFFF',
+                                        fill: TRADE_GREEN,
                                         fontSize: 12,
                                         fontWeight: 'bold',
                                         style: {
@@ -242,13 +241,13 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             {currentPosition && currentPosition.liquidationPrice > 0 && (
                                 <ReferenceLine
                                     y={currentPosition.liquidationPrice}
-                                    stroke="#FF4444"
+                                    stroke={TRADE_RED}
                                     strokeWidth={2}
                                     strokeDasharray="4 2"
                                     label={{
-                                        value: `⚠️ Liq $${currentPosition.liquidationPrice.toFixed(2)}`,
+                                        value: `◆ Liq $${currentPosition.liquidationPrice.toFixed(2)}`,
                                         position: 'insideBottomLeft',
-                                        fill: '#FF4444',
+                                        fill: TRADE_RED,
                                         fontSize: 12,
                                         fontWeight: 'bold',
                                         style: {

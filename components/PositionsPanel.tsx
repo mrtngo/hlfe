@@ -66,6 +66,8 @@ export default function PositionsPanel() {
                     <div className="divide-y divide-white/10">
                         {positions.map((position) => {
                             const isPositive = position.unrealizedPnl >= 0;
+                            const market = markets.find((m) => m.symbol === position.symbol);
+                            const markPrice = market?.price ?? position.markPrice;
 
                             return (
                                 <div
@@ -104,7 +106,7 @@ export default function PositionsPanel() {
                                         </div>
                                         <div>
                                             <div className="text-coffee-medium mb-1">Mark</div>
-                                            <div className="font-mono font-semibold text-white">{formatCurrency(position.markPrice)}</div>
+                                            <div className="font-mono font-semibold text-white">{formatCurrency(markPrice)}</div>
                                         </div>
                                         <div>
                                             <div className="text-coffee-medium mb-1">Liq. Price</div>
