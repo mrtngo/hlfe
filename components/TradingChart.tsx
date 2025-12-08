@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useCandleData, type Timeframe } from '@/hooks/useCandleData';
-import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area } from 'recharts';
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, Scatter } from 'recharts';
 import { BarChart3 } from 'lucide-react';
 
 // Rayo Lightning Yellow
 const RAYO_YELLOW = '#FFD60A';
+const TRADE_GREEN = '#00FF00';
+const TRADE_RED = '#FF4444';
 
 interface TradingChartProps {
     symbol?: string;
@@ -16,7 +18,7 @@ interface TradingChartProps {
 
 export default function TradingChart({ symbol }: TradingChartProps = {}) {
     const { t } = useLanguage();
-    const { selectedMarket, getMarket } = useHyperliquid();
+    const { selectedMarket, getMarket, fills, positions } = useHyperliquid();
     const [timeframe, setTimeframe] = useState<Timeframe>('1h');
 
     // Get the market to check if it's a stock
@@ -51,6 +53,29 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
     const { candles, loading, error } = useCandleData(marketSymbol, timeframe, isStock, dateRangeDays);
 
     const currentTimeframeLabel = selectedLabel;
+
+    // Filter fills for the current symbol
+    const symbolFills = useMemo(() => {
+        if (!fills || fills.length === 0 || !marketSymbol) return [];
+        const symbolBase = marketSymbol.replace('-USD', '').replace('-PERP', '').toUpperCase();
+        const filtered = fills.filter(fill => {
+            const fillCoin = (fill.coin || '').toUpperCase();
+            return fillCoin === symbolBase ||
+                fillCoin === marketSymbol.toUpperCase() ||
+                fillCoin.includes(symbolBase);
+        });
+        // Debug: log fills info
+        if (fills.length > 0) {
+            console.log('[TradingChart] Fills:', fills.length, 'Symbol:', symbolBase, 'Matched:', filtered.length);
+        }
+        return filtered.slice(0, 20); // Limit to last 20 trades for performance
+    }, [fills, marketSymbol]);
+
+    // Get current position for this symbol (for entry line)
+    const currentPosition = useMemo(() => {
+        if (!positions || !marketSymbol) return null;
+        return positions.find(p => p.symbol === marketSymbol);
+    }, [positions, marketSymbol]);
 
     // Format data for recharts - simple line chart with OHLC
     const chartData = candles.map(candle => ({
@@ -104,13 +129,23 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
 
     return (
         <div className="h-full flex flex-col min-w-0">
-            <div className="p-4 flex items-center">
+            <div className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <h3 className="text-sm font-semibold text-white">
                         {marketSymbol?.replace('-USD', '').replace('-PERP', '') || 'BTC'} · {currentTimeframeLabel} · Hyperliquid
                     </h3>
                     <div className="w-2 h-2 bg-bullish rounded-full"></div>
                 </div>
+                {/* Trade markers legend */}
+                {(symbolFills.length > 0 || currentPosition) && (
+                    <div className="flex items-center gap-3 text-xs">
+                        {currentPosition && (
+                            <span className="text-[#00BFFF]">◆ Entry</span>
+                        )}
+                        <span className="text-[#00FF00]">▲ Buy</span>
+                        <span className="text-[#FF4444]">▼ Sell</span>
+                    </div>
+                )}
             </div>
 
             {/* Chart Container - Fixed height to avoid ResponsiveContainer dimension issues */}
@@ -181,6 +216,50 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                 dot={false}
                                 activeDot={{ r: 5, fill: RAYO_YELLOW, stroke: RAYO_YELLOW, strokeWidth: 2 }}
                             />
+
+                            {/* Current position entry price line */}
+                            {currentPosition && (
+                                <ReferenceLine
+                                    y={currentPosition.entryPrice}
+                                    stroke="#00BFFF"
+                                    strokeWidth={2}
+                                    strokeDasharray="8 4"
+                                    label={{
+                                        value: `◆ Entry $${currentPosition.entryPrice.toFixed(2)}`,
+                                        position: 'insideBottomRight',
+                                        fill: '#00BFFF',
+                                        fontSize: 12,
+                                        fontWeight: 'bold',
+                                        style: {
+                                            textShadow: '0 0 4px #000, 0 0 8px #000, 2px 2px 4px #000',
+                                            paintOrder: 'stroke fill'
+                                        }
+                                    }}
+                                />
+                            )}
+
+                            {/* Liquidation price line - RED warning */}
+                            {currentPosition && currentPosition.liquidationPrice > 0 && (
+                                <ReferenceLine
+                                    y={currentPosition.liquidationPrice}
+                                    stroke="#FF4444"
+                                    strokeWidth={2}
+                                    strokeDasharray="4 2"
+                                    label={{
+                                        value: `⚠️ Liq $${currentPosition.liquidationPrice.toFixed(2)}`,
+                                        position: 'insideBottomLeft',
+                                        fill: '#FF4444',
+                                        fontSize: 12,
+                                        fontWeight: 'bold',
+                                        style: {
+                                            textShadow: '0 0 4px #000, 0 0 8px #000, 2px 2px 4px #000',
+                                            paintOrder: 'stroke fill'
+                                        }
+                                    }}
+                                />
+                            )}
+
+                            {/* Trade fill markers removed - were breaking chart layout */}
                         </ComposedChart>
                     </ResponsiveContainer>
                 )}

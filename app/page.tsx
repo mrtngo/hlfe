@@ -199,9 +199,7 @@ export default function Home() {
                         ) : (
                             <>
                                 <User className="w-7 h-7" strokeWidth={2} />
-                                <span className="text-[11px] font-semibold">
-                                    {authenticated ? formatAddress(address) : t.nav.profile}
-                                </span>
+                                <span className="text-[11px] font-semibold">{t.nav.profile}</span>
                             </>
                         )}
                     </button>
