@@ -840,7 +840,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             : (entryPx - markPx) * size;
                         const pnlPercent = entryPx > 0 ? (pnl / (entryPx * size)) * 100 : 0;
 
-                        const cleanCoin = pos.coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                        const rawCoin = pos.coin || pos.position?.coin || '';
+                        const cleanCoin = rawCoin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
                         const symbol = `${cleanCoin}-USD`;
 
                         return {
