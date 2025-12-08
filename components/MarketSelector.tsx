@@ -74,16 +74,35 @@ export default function MarketSelector() {
                 <div className="flex items-center gap-3 min-w-0">
                     <TokenLogo symbol={currentMarket.symbol} size={36} />
                     <div className="min-w-0">
-                        <div className="text-sm font-semibold text-white truncate">{currentMarket.name}</div>
-                        <div className="text-[11px] text-white/60">Tap to change market</div>
+                        <div
+                            className="text-sm font-semibold truncate"
+                            style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(0,0,0,0.6)' }}
+                        >
+                            {currentMarket.name}
+                        </div>
+                        <div
+                            className="text-[11px]"
+                            style={{ color: 'rgba(255,255,255,0.8)', textShadow: '0 0 4px rgba(0,0,0,0.6)' }}
+                        >
+                            Tap to change market
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right">
-                        <div className="font-mono font-bold text-sm text-white">
+                        <div
+                            className="font-mono font-bold text-sm"
+                            style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(0,0,0,0.6)' }}
+                        >
                             {formatCurrency(currentMarket.price)}
                         </div>
-                        <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'}`}>
+                        <div
+                            className="flex items-center justify-end gap-1 text-xs"
+                            style={{
+                                color: isPositive ? '#FFFF00' : '#FF4444',
+                                textShadow: '0 0 6px rgba(0,0,0,0.6)'
+                            }}
+                        >
                             {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                             <span className="font-mono font-semibold">
                                 {formatPercent(Math.abs(currentMarket.change24h))}
@@ -206,19 +225,31 @@ export default function MarketSelector() {
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1 flex items-center gap-2">
                                                 <TokenLogo symbol={market.symbol} size={24} />
-                                                <div className="flex items-center gap-2">
-                                                    <div className="font-semibold text-sm text-white">{market.name}</div>
-                                                    {market.onlyIsolated && (
-                                                        <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">
-                                                            Isolated
-                                                        </span>
-                                                    )}
-                                                    {market.isStock && (
-                                                        <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-semibold">
-                                                            Stock
-                                                        </span>
-                                                    )}
+                                            <div className="flex items-center gap-2">
+                                                <div
+                                                    className="font-semibold text-sm px-2 py-0.5 rounded"
+                                                    style={{
+                                                        color: '#FFFFFF',
+                                                        background: 'rgba(0,0,0,0.6)',
+                                                        textShadow: '0 0 6px rgba(0,0,0,0.6)'
+                                                    }}
+                                                >
+                                                    {market.name}
                                                 </div>
+                                                <span className="text-[11px] px-2 py-0.5 rounded border border-white/15 bg-black/70 text-white font-semibold">
+                                                    {market.symbol}
+                                                </span>
+                                                {market.onlyIsolated && (
+                                                    <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">
+                                                        Isolated
+                                                    </span>
+                                                )}
+                                                {market.isStock && (
+                                                    <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-semibold">
+                                                        Stock
+                                                    </span>
+                                                )}
+                                            </div>
                                             </div>
                                             <div className="text-right">
                                                 <div className="font-mono font-semibold text-sm text-white">
