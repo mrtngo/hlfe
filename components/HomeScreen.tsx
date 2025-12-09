@@ -5,7 +5,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import PortfolioChart from '@/components/PortfolioChart';
@@ -13,6 +13,94 @@ import DepositModal from '@/components/DepositModal';
 import type { Market } from '@/hooks/useHyperliquid';
 
 const WATCHLIST_STORAGE_KEY = 'hyperliquid_watchlist';
+
+// Full token names for better display
+const TOKEN_FULL_NAMES: Record<string, string> = {
+    'BTC': 'Bitcoin',
+    'ETH': 'Ethereum',
+    'SOL': 'Solana',
+    'BNB': 'BNB',
+    'XRP': 'XRP',
+    'ADA': 'Cardano',
+    'DOGE': 'Dogecoin',
+    'DOT': 'Polkadot',
+    'MATIC': 'Polygon',
+    'AVAX': 'Avalanche',
+    'LINK': 'Chainlink',
+    'UNI': 'Uniswap',
+    'ATOM': 'Cosmos',
+    'LTC': 'Litecoin',
+    'SHIB': 'Shiba Inu',
+    'APT': 'Aptos',
+    'ARB': 'Arbitrum',
+    'OP': 'Optimism',
+    'SUI': 'Sui',
+    'SEI': 'Sei',
+    'INJ': 'Injective',
+    'TIA': 'Celestia',
+    'NEAR': 'Near Protocol',
+    'FTM': 'Fantom',
+    'HYPE': 'Hyperliquid',
+    'PEPE': 'Pepe',
+    'WIF': 'dogwifhat',
+    'BONK': 'Bonk',
+    'JUP': 'Jupiter',
+    'PYTH': 'Pyth Network',
+    'JTO': 'Jito',
+    'RENDER': 'Render',
+    'FET': 'Fetch.ai',
+    'TAO': 'Bittensor',
+    'AAVE': 'Aave',
+    'MKR': 'Maker',
+    'CRV': 'Curve',
+    'LDO': 'Lido DAO',
+    'GMX': 'GMX',
+    'SNX': 'Synthetix',
+    'PENDLE': 'Pendle',
+    'ENA': 'Ethena',
+    'W': 'Wormhole',
+    'STRK': 'Starknet',
+    'TON': 'Toncoin',
+    'TRX': 'Tron',
+    'KAS': 'Kaspa',
+    'ONDO': 'Ondo Finance',
+    'WLD': 'Worldcoin',
+    'BLUR': 'Blur',
+    'ENS': 'ENS',
+    'RUNE': 'THORChain',
+    'IMX': 'Immutable X',
+    'APE': 'ApeCoin',
+    'GALA': 'Gala',
+    'AXS': 'Axie Infinity',
+    'SAND': 'The Sandbox',
+    'MANA': 'Decentraland',
+    'FIL': 'Filecoin',
+    'ICP': 'Internet Computer',
+    'HBAR': 'Hedera',
+    'EGLD': 'MultiversX',
+    'STX': 'Stacks',
+    'ORDI': 'ORDI',
+    'XLM': 'Stellar',
+    'ALGO': 'Algorand',
+    'VET': 'VeChain',
+    'CFX': 'Conflux',
+    // Stocks
+    'NVDA': 'NVIDIA',
+    'MSFT': 'Microsoft',
+    'TSLA': 'Tesla',
+    'GOOGL': 'Alphabet',
+    'AMZN': 'Amazon',
+    'AAPL': 'Apple',
+    'META': 'Meta',
+    'NFLX': 'Netflix',
+    'COIN': 'Coinbase',
+    'HOOD': 'Robinhood',
+    'PYPL': 'PayPal',
+};
+
+function getTokenFullName(ticker: string): string {
+    return TOKEN_FULL_NAMES[ticker] || ticker;
+}
 
 interface HomeScreenProps {
     onTokenClick?: (symbol: string) => void;
@@ -28,6 +116,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const [mounted, setMounted] = useState(false);
     const [showAddDropdown, setShowAddDropdown] = useState(false);
     const [showDepositModal, setShowDepositModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -263,47 +352,135 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             <>
                                 {/* Backdrop */}
                                 <div
-                                    className="fixed inset-0 bg-black/80 z-[99]"
-                                    onClick={() => setShowAddDropdown(false)}
+                                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99]"
+                                    onClick={() => {
+                                        setShowAddDropdown(false);
+                                        setSearchQuery('');
+                                    }}
                                 />
-                                {/* Modal - Brand styled */}
+                                {/* Modal - Styled like MarketSelector */}
                                 <div
-                                    className="fixed z-[100] rounded-2xl shadow-[0_0_40px_rgba(255,255,0,0.15)] overflow-hidden"
+                                    className="fixed z-[100] rounded-xl shadow-2xl overflow-hidden backdrop-blur-md"
                                     style={{
                                         left: '16px',
                                         right: '16px',
                                         top: '50%',
                                         transform: 'translateY(-50%)',
-                                        maxHeight: '60vh',
-                                        backgroundColor: '#000000',
-                                        border: '1px solid rgba(255, 255, 0, 0.3)'
+                                        maxHeight: '70vh',
+                                        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                                        border: '1px solid rgba(255, 255, 0, 0.35)',
+                                        boxShadow: '0 10px 32px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 255, 0, 0.12)',
                                     }}
                                 >
-                                    <div className="p-4">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div className="text-lg text-[#FFFF00] font-bold">{t.home.addToWatchlist}</div>
+                                    {/* Header */}
+                                    <div className="p-4 border-b border-white/10">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-sm font-semibold text-white">{t.home.addToWatchlist}</h3>
                                             <button
-                                                onClick={() => setShowAddDropdown(false)}
-                                                className="p-2 hover:bg-[#FFFF00]/10 rounded-xl transition-colors"
+                                                onClick={() => {
+                                                    setShowAddDropdown(false);
+                                                    setSearchQuery('');
+                                                }}
+                                                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
                                             >
-                                                <X className="w-5 h-5 text-[#FFFF00]" />
+                                                <X className="w-4 h-4 text-white/70" />
                                             </button>
                                         </div>
-                                        <div className="space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(60vh - 80px)' }}>
-                                            {markets
+                                    </div>
+
+                                    {/* Search */}
+                                    <div className="p-4 border-b border-white/10">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-coffee-medium" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search markets..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="w-full pl-10 pr-10 py-2.5 rounded-lg text-sm text-white placeholder-coffee-medium focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                                style={{
+                                                    backgroundColor: '#0a0a0a',
+                                                    border: '1px solid rgba(255, 255, 0, 0.2)',
+                                                }}
+                                                autoFocus
+                                            />
+                                            {searchQuery && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSearchQuery('')}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-coffee-medium hover:text-white transition-colors"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Markets List */}
+                                    <div className="max-h-[360px] overflow-y-auto p-4 space-y-2">
+                                        {(() => {
+                                            const filteredMarkets = markets
                                                 .filter(m => !watchlist.includes(m.name))
-                                                .slice(0, 30)
-                                                .map(market => (
+                                                .filter(m => {
+                                                    const query = searchQuery.toLowerCase();
+                                                    return m.symbol.toLowerCase().includes(query) || m.name.toLowerCase().includes(query);
+                                                });
+
+                                            if (filteredMarkets.length === 0) {
+                                                return (
+                                                    <div className="text-center text-sm text-white/60 py-8">No markets found</div>
+                                                );
+                                            }
+
+                                            return filteredMarkets.map(market => {
+                                                const marketIsPositive = (market.change24h || 0) >= 0;
+                                                return (
                                                     <button
                                                         key={market.name}
-                                                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#FFFF00]/10 rounded-xl transition-colors text-left"
-                                                        onClick={() => addToWatchlist(market.name)}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            addToWatchlist(market.name);
+                                                            setSearchQuery('');
+                                                        }}
+                                                        className="w-full text-left p-3 transition-all rounded-lg border border-white/10 hover:border-primary/50 hover:bg-primary/10"
+                                                        style={{
+                                                            backgroundColor: '#0a0a0a',
+                                                        }}
                                                     >
-                                                        <span className="text-white font-medium">{market.name}</span>
-                                                        <span className="text-[#FFFF00] text-sm font-mono">${market.price?.toFixed(2) || '0.00'}</span>
+                                                        <div className="flex items-center justify-between w-full">
+                                                            {/* Left: Logo + Name */}
+                                                            <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
+                                                                <TokenLogo symbol={market.symbol} size={36} />
+                                                                <div className="flex flex-col min-w-0 truncate pr-2">
+                                                                    <div className="font-bold text-base truncate" style={{ color: '#FFFFFF' }}>
+                                                                        {getTokenFullName(market.name)}
+                                                                    </div>
+                                                                    <div className="text-xs truncate" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                                                                        {market.name}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {/* Right: Price + Change */}
+                                                            <div className="text-right shrink-0">
+                                                                <div className="font-mono font-bold text-base" style={{ color: '#FFFFFF' }}>
+                                                                    ${market.price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                                                                </div>
+                                                                <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
+                                                                    {marketIsPositive ? (
+                                                                        <TrendingUp className="w-3 h-3" />
+                                                                    ) : (
+                                                                        <TrendingDown className="w-3 h-3" />
+                                                                    )}
+                                                                    <span className="font-mono font-semibold">
+                                                                        {marketIsPositive ? '+' : ''}{(market.change24h || 0).toFixed(2)}%
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </button>
-                                                ))}
-                                        </div>
+                                                );
+                                            });
+                                        })()}
                                     </div>
                                 </div>
                             </>
@@ -352,15 +529,29 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove }: WatchlistItemPro
     const isPositive = priceChangePercent >= 0;
     const cleanTicker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
 
+    const handleRemove = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent triggering the card click
+        onRemove(market.name);
+    };
+
     return (
         <div
-            className="bg-gradient-to-br from-[#2C2C2E] to-[#1C1C1E] rounded-3xl p-4 md:p-5 hover:from-[#3C3C3E] hover:to-[#2C2C2E] transition-all cursor-pointer group active:scale-[0.98] shadow-lg"
+            className="relative bg-gradient-to-br from-[#2C2C2E] to-[#1C1C1E] rounded-3xl p-4 md:p-5 hover:from-[#3C3C3E] hover:to-[#2C2C2E] transition-all cursor-pointer group active:scale-[0.98] shadow-lg"
             onClick={() => onTokenClick(market.symbol)}
         >
+            {/* Remove button - appears on hover */}
+            <button
+                onClick={handleRemove}
+                className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF3B30] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-[#FF5545] z-10"
+                aria-label="Remove from watchlist"
+            >
+                <X className="w-3.5 h-3.5 text-white" />
+            </button>
+
             <div className="flex items-center gap-2 md:gap-4">
                 {/* Token Logo */}
                 <div className="shrink-0">
-                    <TokenLogo symbol={market.symbol} size={48} className="rounded-full md:w-14 md:h-14" />
+                    <TokenLogo symbol={market.symbol} size={36} className="rounded-full md:w-11 md:h-11" />
                 </div>
 
                 {/* Token Name */}
