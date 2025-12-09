@@ -7,13 +7,11 @@ import { useWallets } from '@privy-io/react-auth';
 import { TrendingUp, TrendingDown, AlertCircle, Info, Settings2, Zap } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from '@/components/OrderNotification';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
 
 type OrderSide = 'long' | 'short';
 type OrderMode = 'basic' | 'advanced';
 type MarginMode = 'isolated' | 'cross';
-
-// Hyperliquid minimum notional value requirement
-const MIN_NOTIONAL_VALUE = 10;
 
 export default function OrderPanel() {
     const { t, formatCurrency } = useLanguage();

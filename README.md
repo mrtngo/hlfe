@@ -1,178 +1,201 @@
-# Hyperliquid LATAM - Trading de Futuros Cripto 🚀
+# Rayo - Hyperliquid Trading App ⚡
 
-Una interfaz de trading premium optimizada para traders hispanohablantes en América Latina. Opera futuros de Bitcoin, Ethereum y más con apalancamiento en una plataforma diseñada específicamente para la comunidad LATAM.
+A premium mobile-first trading interface for Hyperliquid, designed for the LATAM community. Trade perpetual futures with leverage on a fast, intuitive platform.
 
-## ✨ Características Principales
+## ✨ Features
 
-- **🎨 Diseño Premium LATAM**: Colores vibrantes (naranjas cálidos, azules profundos, acentos dorados) con efectos glassmorphism
-- **🌎 100% en Español**: Traducciones completas con terminología optimizada para América Latina
-- **📱 Mobile-First**: Diseño responsivo que funciona perfectamente en todos los dispositivos
-- **⚡ Tiempo Real**: Actualización de precios en vivo cada 2 segundos
-- **📊 Trading Completo**: Órdenes Market/Limit, apalancamiento hasta 50x, gestión de posiciones
-- **🎓 Educativo**: Tooltips explicativos para cada término de trading
+- **⚡ Lightning Fast**: Real-time WebSocket updates, optimistic UI updates
+- **🌎 Bilingual**: Full Spanish and English support (default: Spanish)
+- **📱 Mobile-First**: PWA-ready, designed for iOS home screen
+- **🎨 Premium Design**: Neon yellow/black theme with glassmorphism effects
+- **🔐 Privy Auth**: Email login with embedded wallets
+- **📈 Full Trading**: Market/limit orders, leverage up to 50x, position management
+- **💰 Agent Wallet**: One-time approval for gasless trading
+- **📊 Portfolio**: 30-day PnL tracking, trade history sync
 
-## 🚀 Inicio Rápido
+## 🚀 Quick Start
 
 ```bash
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Ejecutar en modo desarrollo
+# Run development server
 npm run dev
 
-# Abrir en navegador
-# http://localhost:3000
+# Open http://localhost:3000
 ```
 
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
 ```
-/hlfe
-├── app/
-│   ├── globals.css       → Sistema de diseño premium
-│   ├── layout.tsx         → Layout principal con SEO
-│   └── page.tsx           → Dashboard de trading
-├── components/
-│   ├── WalletConnect.tsx  → Conexión de billetera
-│   ├── MarketOverview.tsx → Lista de mercados
-│   ├── TradingChart.tsx   → Gráfico de precios
-│   ├── OrderPanel.tsx     → Panel de órdenes
-│   └── PositionsPanel.tsx → Posiciones activas
-├── hooks/
-│   ├── useLanguage.tsx    → Internacionalización
-│   └── useHyperliquid.tsx → Lógica de trading
-└── lib/i18n/
-    ├── es.json            → Traducciones español
-    └── en.json            → Traducciones inglés
+hlfe/
+├── app/                      # Next.js App Router
+│   ├── globals.css           # Design system (Tailwind + CSS vars)
+│   ├── layout.tsx            # Root layout with providers
+│   └── page.tsx              # Main trading dashboard
+│
+├── components/               # React components
+│   ├── HomeScreen.tsx        # Portfolio & watchlist
+│   ├── MarketSelector.tsx    # Market search dropdown
+│   ├── TradingChart.tsx      # Price charts (Recharts)
+│   ├── OrderPanel.tsx        # Order placement UI
+│   ├── PositionsPanel.tsx    # Active positions
+│   ├── OrderHistory.tsx      # Trade history
+│   ├── Profile.tsx           # User settings
+│   └── ...
+│
+├── hooks/                    # Custom React hooks
+│   ├── useHyperliquid.tsx    # Main trading context
+│   ├── useLanguage.tsx       # i18n translations
+│   ├── useUser.tsx           # Supabase user data
+│   ├── useCandleData.ts      # Chart candle data
+│   ├── useUserData.ts        # Fills, funding, PnL (extracted)
+│   ├── useAgentWallet.ts     # Agent wallet logic (extracted)
+│   └── useHyperliquidAccount.ts  # Account state (extracted)
+│
+├── providers/                # React context providers
+│   └── HyperliquidProvider.tsx   # Main Hyperliquid state
+│
+├── types/                    # TypeScript type definitions
+│   ├── index.ts              # Central export
+│   ├── hyperliquid.ts        # Position, Order, Account types
+│   └── market.ts             # Market, Candle types
+│
+├── lib/                      # Utilities and services
+│   ├── constants/            # Shared constants
+│   │   ├── tokens.ts         # Token display names
+│   │   └── trading.ts        # Trading constants
+│   ├── hyperliquid/          # Hyperliquid integration
+│   │   ├── client.ts         # API/WS configuration
+│   │   ├── websocket-manager.ts  # WebSocket singleton
+│   │   ├── market-data.ts    # Market metadata
+│   │   └── browser-wallet.ts # Wallet signing
+│   ├── supabase/             # Database integration
+│   │   └── client.ts         # Supabase client + helpers
+│   ├── i18n/                 # Translations
+│   │   ├── es.json           # Spanish (default)
+│   │   └── en.json           # English
+│   └── agent-wallet.ts       # Agent wallet utilities
+│
+└── public/                   # Static assets
+    └── icons/                # Token logos
 ```
 
-## 🎯 Funcionalidades
+## 🏗️ Architecture
 
-### Mercados
-- ✅ Lista de mercados con búsqueda
-- ✅ Precios en tiempo real
-- ✅ Cambio 24h con indicadores visuales
-- ✅ Sistema de favoritos
-- ✅ Volumen y tasas de financiamiento
+### State Management
 
-### Órdenes
-- ✅ Órdenes Market (instantáneas)
-- ✅ Órdenes Limit (precio específico)
-- ✅ Apalancamiento 1x-50x con slider
-- ✅ Cálculo automático de comisiones
-- ✅ Precio de liquidación estimado
-- ✅ Validación de balance y tamaño mínimo
+The app uses React Context for global state:
 
-### Posiciones
-- ✅ Visualización de posiciones activas
-- ✅ P&L en tiempo real (USD y %)
-- ✅ Precios de entrada, mark y liquidación
-- ✅ Indicadores Long/Short
-- ✅ Cierre rápido de posiciones
+1. **HyperliquidProvider** - Trading state, positions, orders, market data
+2. **LanguageProvider** - i18n translations and formatting
+3. **UserProvider** - Supabase user data, referrals
+4. **PrivyProvider** - Authentication and wallet
 
-### Cuenta
-- ✅ Balance total
-- ✅ Margen disponible/usado
-- ✅ P&L no realizado
-- ✅ Simulación de conexión de billetera
+### Data Flow
 
-## 🌐 Idiomas
+```
+User Action → HyperliquidProvider → Hyperliquid API
+                    ↓
+              WebSocket Manager ← Real-time updates
+                    ↓
+              Component Re-render
+```
 
-- **Español (ES)** - Predeterminado, optimizado para LATAM
-- **Inglés (EN)** - Idioma secundario
+### Key Integrations
 
-Cambia el idioma haciendo clic en el botón 🌐 en el header.
+| Service | Purpose |
+|---------|---------|
+| [Hyperliquid](https://hyperliquid.xyz) | Perpetual futures exchange |
+| [Privy](https://privy.io) | Email auth + embedded wallets |
+| [Supabase](https://supabase.com) | User profiles, trade history |
 
-## 🎨 Sistema de Diseño
+## 🔧 Configuration
 
-### Colores
-- **Primario**: `#FF6B35` (Naranja Cálido - Energía)
-- **Secundario**: `#1E3A8A` (Azul Profundo - Confianza)
-- **Acento**: `#F59E0B` (Oro - Éxito)
-- **Compra**: `#10B981` (Verde - Ganancias)
-- **Venta**: `#EF4444` (Rojo - Precaución)
+### Environment Variables
 
-### Tipografía
-- **UI**: Inter (legible, moderna)
-- **Números**: Roboto Mono (ancho fijo para precios)
+Create `.env.local`:
 
-## 🔧 Tecnologías
+```env
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-- **Framework**: Next.js 16 (App Router)
-- **Lenguaje**: TypeScript
-- **Estilos**: TailwindCSS + CSS Custom Properties
-- **Iconos**: Lucide React
-- **Estado**: React Hooks
+### Testnet vs Mainnet
 
-## 📝 Próximos Pasos
+Toggle in `lib/hyperliquid/client.ts`:
 
-### Para Producción
+```typescript
+export const IS_TESTNET = true;  // false for mainnet
+```
 
-1. **Integración Hyperliquid Real**:
-   ```bash
-   npm install @hyperliquid-dex/sdk
-   ```
-   Reemplaza las funciones mock en `hooks/useHyperliquid.tsx`
+## 📱 PWA Installation
 
-2. **WebSocket Real**:
-   - Conecta a `wss://api.hyperliquid.xyz/ws`
-   - Suscríbete a feeds de precios
-   - Implementa reconexión automática
+The app is PWA-ready. On mobile Safari:
+1. Visit the deployed URL
+2. Tap Share → "Add to Home Screen"
+3. The app will run fullscreen with native-like experience
 
-3. **Wallet Real**:
-   - Integra MetaMask
-   - Manejo de claves privadas
-   - Firma de transacciones
+## 🎨 Design System
 
-### Mejoras Opcionales
+### Colors (Rayo Brand)
 
-- 📈 **TradingView Charts**: Gráficos profesionales interactivos
-- 🎯 **Stop-Loss/Take-Profit**: Órdenes avanzadas
-- 📊 **Analytics**: Historial y métricas de rendimiento
-- 🔔 **Notificaciones**: Alertas de órdenes completadas
-- 💱 **Monedas Locales**: Conversión a MXN, ARS, BRL, COP, CLP
-- 🎓 **Tutorial Interactivo**: Onboarding para nuevos usuarios
+- **Primary**: `#FFFF00` (Neon Yellow)
+- **Background**: `#000000` (Pure Black)
+- **Buy/Long**: `#FFFF00` (Yellow)
+- **Sell/Short**: `#FF4444` (Red)
+
+### Typography
+
+- **UI**: Inter
+- **Headings**: Plus Jakarta Sans
+- **Numbers**: JetBrains Mono
 
 ## 🚀 Deployment
 
-### Vercel (Recomendado)
+### Vercel (Recommended)
+
 ```bash
 vercel --prod
 ```
 
-### Build Manual
+### Manual Build
+
 ```bash
 npm run build
 npm start
 ```
 
-## 📱 Compatibilidad
+## 📝 Development
 
-- ✅ Chrome/Edge (Chromium)
-- ✅ Firefox
-- ✅ Safari
-- ✅ Mobile browsers (iOS Safari, Chrome Android)
+### Adding a New Hook
 
-## 🎉 Demo
+1. Create file in `hooks/`
+2. Export from hook file
+3. Import where needed
 
-El servidor de desarrollo está corriendo en http://localhost:3000
+### Adding a New Constant
 
-**Características demostradas**:
-- Interfaz en español con diseño LATAM
-- Conexión de billetera simulada
-- Selección de mercados (BTC, ETH, SOL, ARB)
-- Colocación de órdenes
-- Actualización de precios en tiempo real
-- Responsive en todos los tamaños de pantalla
+1. Add to appropriate file in `lib/constants/`
+2. Export from `lib/constants/index.ts`
+3. Import using `@/lib/constants`
 
-## 📄 Licencia
+### Type Definitions
+
+All types should be defined in `types/` directory:
+- `types/hyperliquid.ts` - Trading types
+- `types/market.ts` - Market types
+- Export from `types/index.ts`
+
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
+
+## 📄 License
 
 MIT
 
-## 🤝 Contribuciones
-
-¡Las contribuciones son bienvenidas! Este proyecto está diseñado para servir a la comunidad hispanohablante de trading.
-
 ---
 
-**Hecho con ❤️ para la comunidad LATAM de traders**
+**Built with ⚡ for the LATAM trading community**

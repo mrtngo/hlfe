@@ -18,8 +18,9 @@ import {
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useWalletClient } from 'wagmi';
-import { cachedFetch, apiCache } from '@/lib/api-cache';
+import { apiCache } from '@/lib/api-cache';
 import { db } from '@/lib/supabase/client';
+import { useUserData } from '@/hooks/useUserData';
 
 export type { Market };
 
@@ -324,12 +325,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [builderFeeApproved, setBuilderFeeApproved] = useState(false);
     const [builderFeeLoading, setBuilderFeeLoading] = useState(false);
 
-    // Cached user data (fills, funding)
-    const [fills, setFills] = useState<Fill[]>([]);
-    const [funding, setFunding] = useState<FundingEntry[]>([]);
-    const [thirtyDayPnl, setThirtyDayPnl] = useState(0);
-    const [userDataLoading, setUserDataLoading] = useState(false);
-    const userDataFetchedRef = useRef<string | null>(null);
+    // User data (fills, funding, PnL) - now handled by useUserData hook
+    const {
+        fills,
+        funding,
+        thirtyDayPnl,
+        loading: userDataLoading,
+        refreshUserData,
+        syncTrades,
+    } = useUserData(address);
 
     // WebSocket-based account data updates
     useEffect(() => {
@@ -703,93 +707,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         };
     }, [isConnected, address]); // Only re-run when connection or address changes
 
-    // Fetch cached user data (fills, funding) - shared across all components
-    const fetchUserData = useCallback(async (forceRefresh = false) => {
-        if (!address) {
-            setFills([]);
-            setFunding([]);
-            setThirtyDayPnl(0);
-            return;
-        }
-
-        // Only fetch once per address unless forced
-        if (!forceRefresh && userDataFetchedRef.current === address.toLowerCase()) {
-            return;
-        }
-
-        setUserDataLoading(true);
-
-        try {
-            const normalizedAddress = address.toLowerCase();
-
-            // Fetch fills with caching
-            const fillsData = await cachedFetch<any[]>(
-                `user_fills:${normalizedAddress}`,
-                async () => {
-                    const client = createHyperliquidClient();
-                    const result = await client.info.getUserFills(normalizedAddress);
-                    return result || [];
-                },
-                60000 // 1 minute cache
-            );
-            setFills(fillsData as Fill[]);
-
-            // Calculate 30-day PnL
-            if (fillsData.length > 0) {
-                const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-                const totalPnl = fillsData
-                    .filter((fill: Fill) => fill.time >= thirtyDaysAgo)
-                    .reduce((sum: number, fill: Fill) => sum + parseFloat(fill.closedPnl || '0'), 0);
-                setThirtyDayPnl(totalPnl);
-            } else {
-                setThirtyDayPnl(0);
-            }
-
-            // Fetch funding with caching (last 90 days)
-            const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-            const fundingData = await cachedFetch<any[]>(
-                `user_funding:${normalizedAddress}`,
-                async () => {
-                    const client = createHyperliquidClient();
-                    const result = await client.info.perpetuals.getUserFunding(normalizedAddress, ninetyDaysAgo);
-                    return result || [];
-                },
-                60000 // 1 minute cache
-            );
-            setFunding(fundingData as FundingEntry[]);
-
-            userDataFetchedRef.current = normalizedAddress;
-        } catch (err) {
-            // Silent fail - user data is nice-to-have
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('Failed to fetch user data:', err);
-            }
-        } finally {
-            setUserDataLoading(false);
-        }
-    }, [address]);
-
-    // Load user data when address changes
-    useEffect(() => {
-        if (address) {
-            fetchUserData();
-        } else {
-            setFills([]);
-            setFunding([]);
-            setThirtyDayPnl(0);
-            userDataFetchedRef.current = null;
-        }
-    }, [address, fetchUserData]);
-
-    // Refresh user data (can be called by components after trades)
-    const refreshUserData = useCallback(async () => {
-        if (address) {
-            // Invalidate cache
-            apiCache.invalidate(`user_fills:${address.toLowerCase()}`);
-            apiCache.invalidate(`user_funding:${address.toLowerCase()}`);
-            await fetchUserData(true);
-        }
-    }, [address, fetchUserData]);
+    // NOTE: User data (fills, funding, PnL) is now managed by useUserData hook (imported above)
+    // The hook provides: fills, funding, thirtyDayPnl, userDataLoading, refreshUserData, syncTrades
 
     // Refresh account data (positions, balance, orders) - force fetch after trades
     const refreshAccountData = useCallback(async () => {
@@ -870,45 +789,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [address, refreshUserData]);
 
-    // Sync trades from Hyperliquid fills to database
-    const syncTrades = useCallback(async (): Promise<{ synced: number; totalPnl: number } | null> => {
-        if (!address) return null;
-
-        console.log('🔄 [SYNC] Starting trade sync from Hyperliquid fills...');
-
-        try {
-            // Get user from database
-            const user = await db.users.getOrCreate(address);
-            if (!user) {
-                console.error('❌ [SYNC] Could not get/create user');
-                return null;
-            }
-
-            // Force refresh fills from Hyperliquid
-            apiCache.invalidate(`user_fills:${address.toLowerCase()}`);
-
-            const normalizedAddress = address.toLowerCase();
-            const client = createHyperliquidClient();
-            const freshFills = await client.info.getUserFills(normalizedAddress);
-
-            if (!freshFills || freshFills.length === 0) {
-                console.log('⚠️ [SYNC] No fills found from Hyperliquid');
-                return { synced: 0, totalPnl: 0 };
-            }
-
-            console.log(`🔄 [SYNC] Found ${freshFills.length} fills from Hyperliquid`);
-
-            // Sync to database
-            const result = await db.trades.syncFromFills(user.id, freshFills as any[]);
-
-            console.log(`✅ [SYNC] Synced ${result.synced} trades, total PnL: $${result.totalPnl.toFixed(2)}`);
-
-            return result;
-        } catch (error) {
-            console.error('❌ [SYNC] Failed to sync trades:', error);
-            return null;
-        }
-    }, [address]);
+    // NOTE: syncTrades is now provided by useUserData hook
 
     // Helper to get the best provider
     const getProvider = () => {

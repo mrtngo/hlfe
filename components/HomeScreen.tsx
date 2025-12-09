@@ -11,96 +11,9 @@ import TokenLogo from '@/components/TokenLogo';
 import PortfolioChart from '@/components/PortfolioChart';
 import DepositModal from '@/components/DepositModal';
 import type { Market } from '@/hooks/useHyperliquid';
+import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
 
-const WATCHLIST_STORAGE_KEY = 'hyperliquid_watchlist';
-
-// Full token names for better display
-const TOKEN_FULL_NAMES: Record<string, string> = {
-    'BTC': 'Bitcoin',
-    'ETH': 'Ethereum',
-    'SOL': 'Solana',
-    'BNB': 'BNB',
-    'XRP': 'XRP',
-    'ADA': 'Cardano',
-    'DOGE': 'Dogecoin',
-    'DOT': 'Polkadot',
-    'MATIC': 'Polygon',
-    'AVAX': 'Avalanche',
-    'LINK': 'Chainlink',
-    'UNI': 'Uniswap',
-    'ATOM': 'Cosmos',
-    'LTC': 'Litecoin',
-    'SHIB': 'Shiba Inu',
-    'APT': 'Aptos',
-    'ARB': 'Arbitrum',
-    'OP': 'Optimism',
-    'SUI': 'Sui',
-    'SEI': 'Sei',
-    'INJ': 'Injective',
-    'TIA': 'Celestia',
-    'NEAR': 'Near Protocol',
-    'FTM': 'Fantom',
-    'HYPE': 'Hyperliquid',
-    'PEPE': 'Pepe',
-    'WIF': 'dogwifhat',
-    'BONK': 'Bonk',
-    'JUP': 'Jupiter',
-    'PYTH': 'Pyth Network',
-    'JTO': 'Jito',
-    'RENDER': 'Render',
-    'FET': 'Fetch.ai',
-    'TAO': 'Bittensor',
-    'AAVE': 'Aave',
-    'MKR': 'Maker',
-    'CRV': 'Curve',
-    'LDO': 'Lido DAO',
-    'GMX': 'GMX',
-    'SNX': 'Synthetix',
-    'PENDLE': 'Pendle',
-    'ENA': 'Ethena',
-    'W': 'Wormhole',
-    'STRK': 'Starknet',
-    'TON': 'Toncoin',
-    'TRX': 'Tron',
-    'KAS': 'Kaspa',
-    'ONDO': 'Ondo Finance',
-    'WLD': 'Worldcoin',
-    'BLUR': 'Blur',
-    'ENS': 'ENS',
-    'RUNE': 'THORChain',
-    'IMX': 'Immutable X',
-    'APE': 'ApeCoin',
-    'GALA': 'Gala',
-    'AXS': 'Axie Infinity',
-    'SAND': 'The Sandbox',
-    'MANA': 'Decentraland',
-    'FIL': 'Filecoin',
-    'ICP': 'Internet Computer',
-    'HBAR': 'Hedera',
-    'EGLD': 'MultiversX',
-    'STX': 'Stacks',
-    'ORDI': 'ORDI',
-    'XLM': 'Stellar',
-    'ALGO': 'Algorand',
-    'VET': 'VeChain',
-    'CFX': 'Conflux',
-    // Stocks
-    'NVDA': 'NVIDIA',
-    'MSFT': 'Microsoft',
-    'TSLA': 'Tesla',
-    'GOOGL': 'Alphabet',
-    'AMZN': 'Amazon',
-    'AAPL': 'Apple',
-    'META': 'Meta',
-    'NFLX': 'Netflix',
-    'COIN': 'Coinbase',
-    'HOOD': 'Robinhood',
-    'PYPL': 'PayPal',
-};
-
-function getTokenFullName(ticker: string): string {
-    return TOKEN_FULL_NAMES[ticker] || ticker;
-}
+const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
 
 interface HomeScreenProps {
     onTokenClick?: (symbol: string) => void;
@@ -166,9 +79,8 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
         onTokenClick?.(symbol);
     }, [setSelectedMarket, onTokenClick]);
 
-    // Default watchlist tokens if empty
-    const defaultWatchlist = ['BTC', 'ETH', 'SOL'];
-    const watchlistToShow = watchlist.length > 0 ? watchlist : defaultWatchlist;
+    // Default watchlist tokens if empty - using centralized constant
+    const watchlistToShow = watchlist.length > 0 ? watchlist : DEFAULT_WATCHLIST;
     const watchlistMarkets = markets.filter(m => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol));
     const portfolioValue = account.equity || account.balance;
 
