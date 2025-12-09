@@ -228,45 +228,59 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Debug: Log when position update is received from WebSocket
                 console.log('🔄 [WS] Position update received:', assetPositions?.length, 'positions');
 
-                // Update positions from WebSocket
+                // Update positions from WebSocket, preserving markPrice if new value is 0
                 if (Array.isArray(assetPositions)) {
-                    const activePositions: Position[] = assetPositions
-                        .filter((pos: any) => parseFloat(pos.position?.szi || '0') !== 0)
-                        .map((pos: any) => {
-                            const position = pos.position;
-                            const szi = parseFloat(position.szi || '0');
-                            const entryPx = parseFloat(position.entryPx || '0');
-                            const markPx = parseFloat(position.markPx || '0');
-                            const liqPx = parseFloat(position.liqPx || '0');
-                            const leverage = parseFloat(position.leverage?.value || '1');
-                            const side = szi > 0 ? 'long' : 'short';
-                            const size = Math.abs(szi);
+                    setPositions(prevPositions => {
+                        const activePositions: Position[] = assetPositions
+                            .filter((pos: any) => parseFloat(pos.position?.szi || '0') !== 0)
+                            .map((pos: any) => {
+                                const position = pos.position;
+                                const szi = parseFloat(position.szi || '0');
+                                const entryPx = parseFloat(position.entryPx || '0');
+                                let markPx = parseFloat(position.markPx || '0');
+                                const liqPx = parseFloat(position.liqPx || '0');
+                                const leverage = parseFloat(position.leverage?.value || '1');
+                                const side = szi > 0 ? 'long' : 'short';
+                                const size = Math.abs(szi);
 
-                            const pnl = side === 'long'
-                                ? (markPx - entryPx) * size
-                                : (entryPx - markPx) * size;
-                            const pnlPercent = (pnl / (entryPx * size)) * 100;
+                                // Normalize coin name to match market symbols
+                                const cleanCoin = pos.coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                                const symbol = `${cleanCoin}-USD`;
 
-                            // Normalize coin name to match market symbols (strip -PERP and xyz: prefix)
-                            const cleanCoin = pos.coin.replace(/-PERP$/i, '').replace(/^xyz:/i, '');
-                            const symbol = `${cleanCoin}-USD`;
+                                // If markPx is 0, try to preserve previous value
+                                if (markPx === 0) {
+                                    const prevPosition = prevPositions.find(pp => pp.symbol === symbol);
+                                    if (prevPosition && prevPosition.markPrice > 0) {
+                                        markPx = prevPosition.markPrice;
+                                    } else if (entryPx > 0) {
+                                        markPx = entryPx; // Fallback to entry price
+                                    }
+                                }
 
-                            return {
-                                symbol,
-                                name: cleanCoin,
-                                side,
-                                size,
-                                entryPrice: entryPx,
-                                markPrice: markPx,
-                                liquidationPrice: liqPx,
-                                leverage,
-                                unrealizedPnl: pnl,
-                                unrealizedPnlPercent: pnlPercent,
-                            };
-                        });
+                                const pnl = side === 'long'
+                                    ? (markPx - entryPx) * size
+                                    : (entryPx - markPx) * size;
+                                const pnlPercent = entryPx > 0 && size > 0
+                                    ? (pnl / (entryPx * size)) * 100
+                                    : 0;
 
-                    console.log('🔄 [WS] Setting', activePositions.length, 'active positions');
-                    setPositions(activePositions);
+                                return {
+                                    symbol,
+                                    name: cleanCoin,
+                                    side: side as 'long' | 'short',
+                                    size,
+                                    entryPrice: entryPx,
+                                    markPrice: markPx,
+                                    liquidationPrice: liqPx,
+                                    leverage,
+                                    unrealizedPnl: pnl,
+                                    unrealizedPnlPercent: pnlPercent,
+                                };
+                            });
+
+                        console.log('🔄 [WS] Setting', activePositions.length, 'active positions');
+                        return activePositions;
+                    });
                 }
             },
             onUserEvent: (event) => {
@@ -378,38 +392,60 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             },
             onPositionUpdate: (assetPositions: any[]) => {
                 if (Array.isArray(assetPositions)) {
-                    const activePositions: Position[] = assetPositions
-                        .filter((p: any) => {
-                            const position = p.position || p;
-                            return parseFloat(position.szi || '0') !== 0;
-                        })
-                        .map((p: any) => {
-                            const position = p.position || p;
-                            // Normalize coin name to match market symbols (strip -PERP and xyz: prefix)
-                            // Use regex to ensure we only strip at the end/start, not in the middle
-                            const cleanCoin = (position.coin || '').replace(/-PERP$/i, '').replace(/^xyz:/i, '');
-                            const market = markets.find(m => m.name === cleanCoin || m.symbol === `${cleanCoin}-USD`);
-                            const entryPrice = parseFloat(position.entryPx || '0');
-                            const markPrice = parseFloat(position.markPx || '0');
-                            const size = parseFloat(position.szi || '0');
-                            const pnl = (markPrice - entryPrice) * size;
-                            const pnlPercent = entryPrice > 0 ? (pnl / (entryPrice * Math.abs(size))) * 100 : 0;
+                    // Get current positions to preserve markPrice if new value is 0
+                    setPositions(prevPositions => {
+                        const activePositions: Position[] = assetPositions
+                            .filter((p: any) => {
+                                const position = p.position || p;
+                                return parseFloat(position.szi || '0') !== 0;
+                            })
+                            .map((p: any) => {
+                                const position = p.position || p;
+                                const cleanCoin = (position.coin || '').replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                                const symbol = `${cleanCoin}-USD`;
+                                const market = markets.find(m => m.name === cleanCoin || m.symbol === symbol);
+                                const entryPrice = parseFloat(position.entryPx || '0');
+                                let markPrice = parseFloat(position.markPx || '0');
+                                const size = parseFloat(position.szi || '0');
+                                const side = size > 0 ? 'long' : 'short';
+                                const absSize = Math.abs(size);
 
-                            return {
-                                symbol: `${cleanCoin}-USD`,
-                                name: cleanCoin,
-                                side: size > 0 ? 'long' : 'short',
-                                size: Math.abs(size),
-                                entryPrice,
-                                markPrice,
-                                liquidationPrice: parseFloat(position.liquidationPx || '0'),
-                                leverage: market?.maxLeverage || 1,
-                                unrealizedPnl: pnl,
-                                unrealizedPnlPercent: pnlPercent,
-                                isStock: market?.isStock || false,
-                            };
-                        });
-                    setPositions(activePositions);
+                                // If markPrice is 0, try to get it from previous position or market data
+                                if (markPrice === 0) {
+                                    const prevPosition = prevPositions.find(pp => pp.symbol === symbol);
+                                    if (prevPosition && prevPosition.markPrice > 0) {
+                                        markPrice = prevPosition.markPrice;
+                                    } else if (market?.price && market.price > 0) {
+                                        markPrice = market.price;
+                                    } else if (entryPrice > 0) {
+                                        markPrice = entryPrice; // Fallback to entry price
+                                    }
+                                }
+
+                                // Calculate PnL correctly based on side
+                                const pnl = side === 'long'
+                                    ? (markPrice - entryPrice) * absSize
+                                    : (entryPrice - markPrice) * absSize;
+                                const pnlPercent = entryPrice > 0 && absSize > 0
+                                    ? (pnl / (entryPrice * absSize)) * 100
+                                    : 0;
+
+                                return {
+                                    symbol,
+                                    name: cleanCoin,
+                                    side: side as 'long' | 'short',
+                                    size: absSize,
+                                    entryPrice,
+                                    markPrice,
+                                    liquidationPrice: parseFloat(position.liquidationPx || '0'),
+                                    leverage: market?.maxLeverage || 1,
+                                    unrealizedPnl: pnl,
+                                    unrealizedPnlPercent: pnlPercent,
+                                    isStock: market?.isStock || false,
+                                };
+                            });
+                        return activePositions;
+                    });
                 }
             },
             onOrderUpdate: (ordersData: any) => {
