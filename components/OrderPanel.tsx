@@ -20,8 +20,8 @@ export default function OrderPanel() {
     const [mode, setMode] = useState<OrderMode>('basic');
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
 
-    // Basic mode state (USD amount)
-    const [usdAmount, setUsdAmount] = useState<string>('');
+    // Basic mode state (margin amount - position size = margin * leverage)
+    const [marginAmount, setMarginAmount] = useState<string>('');
 
     // Advanced mode state (token amount)
     const [size, setSize] = useState<string>('');
@@ -44,13 +44,13 @@ export default function OrderPanel() {
     const isUsingEmbeddedWallet = wallets.some((w: any) => w.walletClientType === 'privy');
 
     // Calculate values based on mode
-    const usdValue = parseFloat(usdAmount) || 0;
-    const tokenSize = mode === 'basic'
-        ? (currentPrice > 0 ? usdValue / currentPrice : 0)
-        : (parseFloat(size) || 0);
-
-    const notionalValue = mode === 'basic' ? usdValue : tokenSize * currentPrice;
-    const requiredMargin = notionalValue / leverage;
+    // Basic mode: user enters margin, position size = margin * leverage
+    const marginValue = parseFloat(marginAmount) || 0;
+    const notionalValue = mode === 'basic'
+        ? marginValue * leverage  // Position size = margin × leverage
+        : (parseFloat(size) || 0) * currentPrice;
+    const tokenSize = currentPrice > 0 ? notionalValue / currentPrice : 0;
+    const requiredMargin = mode === 'basic' ? marginValue : notionalValue / leverage;
 
     // Fee breakdown for transparency
     // Exchange fee: ~0.035% for taker orders (market orders)
@@ -134,7 +134,7 @@ export default function OrderPanel() {
             }
 
             setSuccess(t.order.orderPlaced);
-            setUsdAmount('');
+            setMarginAmount('');
             setSize('');
         } catch (err) {
             setError(err instanceof Error ? err.message : t.errors.unknown);
@@ -209,29 +209,29 @@ export default function OrderPanel() {
                             </button>
                         </div>
 
-                        {/* USD Amount Input - Simple and Clear */}
+                        {/* Margin Input - User enters collateral, position = margin × leverage */}
                         <div>
-                            <label className="text-sm text-coffee-medium mb-2 block">{t.order.amountUSD}</label>
+                            <label className="text-sm text-coffee-medium mb-2 block">Margin</label>
                             <div className="relative">
                                 <input
                                     type="number"
-                                    value={usdAmount}
-                                    onChange={(e) => setUsdAmount(e.target.value)}
+                                    value={marginAmount}
+                                    onChange={(e) => setMarginAmount(e.target.value)}
                                     placeholder="0"
                                     className="w-full px-4 py-4 text-2xl font-bold text-white bg-bg-tertiary border border-white/10 rounded-2xl focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                                 />
                             </div>
 
-                            {/* Amount Increment/Decrement Buttons - 3 each */}
+                            {/* Margin Increment/Decrement Buttons */}
                             <div className="flex gap-3 mt-4">
-                                {/* Subtract buttons: -100, -50, -10 */}
-                                {[100, 50, 10].map((amt) => (
+                                {/* Subtract buttons */}
+                                {[50, 25, 10].map((amt) => (
                                     <button
                                         key={`sub-${amt}`}
                                         onClick={() => {
-                                            const current = parseFloat(usdAmount) || 0;
+                                            const current = parseFloat(marginAmount) || 0;
                                             const newVal = Math.max(0, current - amt);
-                                            setUsdAmount(newVal > 0 ? newVal.toString() : '');
+                                            setMarginAmount(newVal > 0 ? newVal.toString() : '');
                                         }}
                                         className="flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center hover:brightness-110"
                                         style={{ backgroundColor: '#4A4A4C', color: 'white', minHeight: '56px' }}
@@ -245,13 +245,13 @@ export default function OrderPanel() {
                                     </button>
                                 ))}
 
-                                {/* Add buttons: +10, +50, +100 */}
-                                {[10, 50, 100].map((amt) => (
+                                {/* Add buttons */}
+                                {[10, 25, 50].map((amt) => (
                                     <button
                                         key={`add-${amt}`}
                                         onClick={() => {
-                                            const current = parseFloat(usdAmount) || 0;
-                                            setUsdAmount((current + amt).toString());
+                                            const current = parseFloat(marginAmount) || 0;
+                                            setMarginAmount((current + amt).toString());
                                         }}
                                         className="flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center hover:brightness-110"
                                         style={{ backgroundColor: '#4A4A4C', color: 'white', minHeight: '56px' }}
@@ -329,23 +329,23 @@ export default function OrderPanel() {
                         </div>
 
                         {/* Simple Summary */}
-                        {usdValue > 0 && (
+                        {marginValue > 0 && (
                             <div className="p-4 rounded-2xl space-y-2 border border-white/5 bg-transparent">
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-coffee-medium">{orderSide === 'long' ? t.order.youWillBuy : t.order.youWillSell}</span>
-                                    <span className="text-white font-semibold">{tokenSize.toFixed(6)} {displaySymbol}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-coffee-medium">{t.order.positionSize}</span>
-                                    <span className="text-white font-semibold">{formatCurrency(usdValue)}</span>
+                                    <span className="text-coffee-medium">Margin</span>
+                                    <span className="text-white font-semibold">{formatCurrency(marginValue)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-coffee-medium">{t.order.leverage}</span>
-                                    <span className="text-white font-semibold">{leverage}x</span>
+                                    <span className="text-white font-semibold">×{leverage}</span>
+                                </div>
+                                <div className="flex justify-between text-sm pt-2 border-t border-white/10">
+                                    <span className="text-coffee-medium">{t.order.positionSize}</span>
+                                    <span className="text-primary font-bold">{formatCurrency(notionalValue)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-coffee-medium">{t.order.marginNeeded}</span>
-                                    <span className="text-white font-semibold">{formatCurrency(usdValue / leverage)}</span>
+                                    <span className="text-coffee-medium">{orderSide === 'long' ? t.order.youWillBuy : t.order.youWillSell}</span>
+                                    <span className="text-white font-semibold">{tokenSize.toFixed(6)} {displaySymbol}</span>
                                 </div>
 
                                 {/* Fee Breakdown */}
@@ -592,7 +592,7 @@ export default function OrderPanel() {
                 )}
 
                 {/* Minimum Notional Warning */}
-                {((mode === 'basic' && usdValue > 0 && usdValue < MIN_NOTIONAL_VALUE) ||
+                {((mode === 'basic' && marginValue > 0 && notionalValue < MIN_NOTIONAL_VALUE) ||
                     (mode === 'advanced' && tokenSize > 0 && notionalValue < MIN_NOTIONAL_VALUE)) && (
                         <div className="flex items-center gap-2 p-3 bg-secondary/10 border border-secondary/20 rounded-lg text-sm text-secondary">
                             <AlertCircle className="w-4 h-4 shrink-0" />

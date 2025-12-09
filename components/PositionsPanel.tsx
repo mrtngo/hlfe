@@ -45,13 +45,20 @@ export default function PositionsPanel() {
 
     if (positions.length === 0) {
         return (
-            <div className="p-6 h-full flex flex-col min-w-0">
-                <h3 className="text-sm font-semibold mb-4 text-white">{t.positions.title}</h3>
-                <div className="text-center py-8 text-coffee-medium flex-1 flex flex-col items-center justify-center">
-                    <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p>{t.positions.noPositions}</p>
+            <>
+                <div className="p-6 h-full flex flex-col min-w-0">
+                    <h3 className="text-sm font-semibold mb-4 text-white">{t.positions.title}</h3>
+                    <div className="text-center py-8 text-coffee-medium flex-1 flex flex-col items-center justify-center">
+                        <TrendingUp className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                        <p>{t.positions.noPositions}</p>
+                    </div>
                 </div>
-            </div>
+                {/* Notification still needs to render for closing animation */}
+                <OrderNotification
+                    order={closeNotification}
+                    onClose={() => setCloseNotification(null)}
+                />
+            </>
         );
     }
 
