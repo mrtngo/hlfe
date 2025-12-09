@@ -45,7 +45,9 @@ export default function OrderPanel() {
 
     // Calculate values based on mode
     // Basic mode: user enters margin, position size = margin * leverage
-    const marginValue = parseFloat(marginAmount) || 0;
+    // Cap margin to available balance
+    const rawMarginValue = parseFloat(marginAmount) || 0;
+    const marginValue = Math.min(rawMarginValue, account.availableMargin > 0 ? account.availableMargin : rawMarginValue);
     const notionalValue = mode === 'basic'
         ? marginValue * leverage  // Position size = margin × leverage
         : (parseFloat(size) || 0) * currentPrice;
@@ -209,62 +211,51 @@ export default function OrderPanel() {
                             </button>
                         </div>
 
-                        {/* Margin Input - User enters collateral, position = margin × leverage */}
+                        {/* Margin Slider */}
                         <div>
-                            <label className="text-sm text-coffee-medium mb-2 block">Margin</label>
-                            <div className="relative">
-                                <input
-                                    type="number"
-                                    value={marginAmount}
-                                    onChange={(e) => setMarginAmount(e.target.value)}
-                                    placeholder="0"
-                                    className="w-full px-4 py-4 text-2xl font-bold text-white bg-bg-tertiary border border-white/10 rounded-2xl focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                                />
+                            <div className="flex justify-between items-center mb-3">
+                                <label className="text-base text-coffee-medium">Margin</label>
+                                <span className="text-xl font-bold text-[#FFFF00]">{formatCurrency(marginValue)}</span>
                             </div>
 
-                            {/* Margin Increment/Decrement Buttons */}
-                            <div className="flex gap-3 mt-4">
-                                {/* Subtract buttons */}
-                                {[50, 25, 10].map((amt) => (
-                                    <button
-                                        key={`sub-${amt}`}
-                                        onClick={() => {
-                                            const current = parseFloat(marginAmount) || 0;
-                                            const newVal = Math.max(0, current - amt);
-                                            setMarginAmount(newVal > 0 ? newVal.toString() : '');
-                                        }}
-                                        className="flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center hover:brightness-110"
-                                        style={{ backgroundColor: '#4A4A4C', color: 'white', minHeight: '56px' }}
-                                        onMouseDown={(e) => { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; }}
-                                        onMouseUp={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
-                                        onTouchStart={(e) => { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; }}
-                                        onTouchEnd={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
-                                    >
-                                        −${amt}
-                                    </button>
-                                ))}
-
-                                {/* Add buttons */}
-                                {[10, 25, 50].map((amt) => (
-                                    <button
-                                        key={`add-${amt}`}
-                                        onClick={() => {
-                                            const current = parseFloat(marginAmount) || 0;
-                                            setMarginAmount((current + amt).toString());
-                                        }}
-                                        className="flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center hover:brightness-110"
-                                        style={{ backgroundColor: '#4A4A4C', color: 'white', minHeight: '56px' }}
-                                        onMouseDown={(e) => { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; }}
-                                        onMouseUp={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
-                                        onTouchStart={(e) => { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; }}
-                                        onTouchEnd={(e) => { e.currentTarget.style.backgroundColor = '#4A4A4C'; e.currentTarget.style.color = 'white'; }}
-                                    >
-                                        +${amt}
-                                    </button>
-                                ))}
-                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max={account.availableMargin > 0 ? account.availableMargin : 100}
+                                step="1"
+                                value={marginValue}
+                                onChange={(e) => {
+                                    const val = Math.min(parseFloat(e.target.value), account.availableMargin);
+                                    setMarginAmount(val.toString());
+                                }}
+                                className="w-full h-[4px] rounded-full appearance-none cursor-pointer"
+                                style={{
+                                    background: account.availableMargin > 0
+                                        ? `linear-gradient(to right, #FFFF00 0%, #FFFF00 ${(marginValue / account.availableMargin) * 100}%, #3A3A3C ${(marginValue / account.availableMargin) * 100}%, #3A3A3C 100%)`
+                                        : '#3A3A3C',
+                                }}
+                            />
+                            <style jsx>{`
+                                input[type="range"]::-webkit-slider-thumb {
+                                    -webkit-appearance: none;
+                                    appearance: none;
+                                    width: 28px;
+                                    height: 28px;
+                                    border-radius: 50%;
+                                    background: linear-gradient(to bottom, #FFFF00, #CCCC00);
+                                    cursor: pointer;
+                                    box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 2px 6px rgba(0,0,0,0.3);
+                                }
+                                input[type="range"]::-moz-range-thumb {
+                                    width: 28px;
+                                    height: 28px;
+                                    border-radius: 50%;
+                                    background: linear-gradient(to bottom, #FFFF00, #CCCC00);
+                                    cursor: pointer;
+                                    border: none;
+                                    box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 2px 6px rgba(0,0,0,0.3);
+                                }
+                            `}</style>
                         </div>
 
                         {/* Leverage Selector */}

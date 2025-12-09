@@ -91,11 +91,11 @@ export default function PositionsPanel() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className={`font-mono font-semibold text-sm ${isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
+                                            <div className={`font-mono font-semibold text-sm ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'
                                                 }`}>
                                                 {formatCurrency(position.unrealizedPnl)}
                                             </div>
-                                            <div className={`text-xs font-semibold ${isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
+                                            <div className={`text-xs font-semibold ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'
                                                 }`}>
                                                 {formatPercent(Math.abs(position.unrealizedPnlPercent))}
                                             </div>
@@ -105,7 +105,12 @@ export default function PositionsPanel() {
                                     <div className="grid grid-cols-2 gap-3 text-xs mb-3">
                                         <div>
                                             <div className="text-coffee-medium mb-1">Size</div>
-                                            <div className="font-mono font-semibold text-white">{position.size}</div>
+                                            <div className="font-mono font-semibold text-white">
+                                                {position.size.toFixed(4)}
+                                                <span className="text-coffee-medium ml-1">
+                                                    ({formatCurrency(position.size * markPrice)})
+                                                </span>
+                                            </div>
                                         </div>
                                         <div>
                                             <div className="text-coffee-medium mb-1">Entry</div>

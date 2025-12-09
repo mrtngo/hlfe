@@ -77,7 +77,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                 <div className="font-mono font-bold text-base text-white">
                                     {formatCurrency(currentMarket.price)}
                                 </div>
-                                <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
+                                <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'
                                     }`}>
                                     {isPositive ? (
                                         <TrendingUp className="w-3 h-3" />
@@ -106,8 +106,8 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                     setActiveTab('crypto');
                                 }}
                                 className={`flex-1 py-2 px-4 rounded font-semibold text-sm transition-all ${activeTab === 'crypto'
-                                        ? 'bg-primary text-primary-foreground shadow-soft'
-                                        : 'bg-primary/50 text-primary-foreground hover:bg-primary'
+                                    ? 'bg-primary text-primary-foreground shadow-soft'
+                                    : 'bg-primary/50 text-primary-foreground hover:bg-primary'
                                     }`}
                             >
                                 Crypto
@@ -118,8 +118,8 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                     setActiveTab('stocks');
                                 }}
                                 className={`flex-1 py-2 px-4 rounded font-semibold text-sm transition-all ${activeTab === 'stocks'
-                                        ? 'bg-primary text-primary-foreground shadow-soft'
-                                        : 'bg-primary/50 text-primary-foreground hover:bg-primary'
+                                    ? 'bg-primary text-primary-foreground shadow-soft'
+                                    : 'bg-primary/50 text-primary-foreground hover:bg-primary'
                                     }`}
                             >
                                 Stocks
@@ -184,7 +184,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                             <div className="font-mono font-semibold text-sm text-white">
                                                 {formatCurrency(market.price)}
                                             </div>
-                                            <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'
+                                            <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'
                                                 }`}>
                                                 {isPositive ? (
                                                     <TrendingUp className="w-3 h-3" />
