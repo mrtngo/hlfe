@@ -397,12 +397,12 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                 placeholder="Search markets..."
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="w-full pl-10 pr-10 py-2.5 rounded-lg text-base md:text-sm text-white placeholder-coffee-medium focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                                className="w-full pl-10 pr-10 py-2.5 rounded-lg text-white placeholder-coffee-medium focus:outline-none focus:ring-1 focus:ring-primary/50 md:text-sm"
                                                 style={{
                                                     backgroundColor: '#0a0a0a',
                                                     border: '1px solid rgba(255, 255, 0, 0.2)',
+                                                    fontSize: '16px', // Force 16px to prevent iOS zoom
                                                 }}
-                                                autoFocus
                                             />
                                             {searchQuery && (
                                                 <button
