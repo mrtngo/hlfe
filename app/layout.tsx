@@ -20,6 +20,11 @@ export const metadata: Metadata = {
         description: 'Fast, simple, and secure on-chain trading',
         type: 'website',
     },
+    appleWebApp: {
+        capable: true,
+        title: 'Rayo',
+        statusBarStyle: 'black-translucent',
+    },
 };
 
 export default function RootLayout({
