@@ -15,6 +15,7 @@
     "@fontsource/inter": "^5.2.8",
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/plus-jakarta-sans": "^5.2.8",
+    "@lifi/sdk": "^3.13.7",
     "@moonpay/moonpay-js": "^0.7.6",
     "@privy-io/react-auth": "^3.8.0",
     "@privy-io/wagmi": "^2.0.3",
@@ -31,7 +32,7 @@
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "recharts": "^3.5.1",
-    "viem": "^2.40.3",
+    "viem": "^2.41.2",
     "wagmi": "^2.19.5"
   },
   "devDependencies": {
