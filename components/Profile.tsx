@@ -310,20 +310,20 @@ export default function Profile() {
                     </div>
 
                     {/* Agent Wallet - Toggle */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Zap className="w-5 h-5 text-coffee-medium" />
-                            <span className="text-white text-sm">{profile.agentWallet || 'Billetera Agente'}</span>
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <Zap className="w-5 h-5 text-coffee-medium flex-shrink-0" />
+                            <span className="text-white text-sm truncate">{profile.agentWallet || 'Billetera Agente'}</span>
                         </div>
                         <button
                             onClick={agentWalletEnabled ? handleDisableAgentWallet : handleSetupAgentWallet}
                             disabled={settingUpAgent}
-                            className={`w-12 h-7 rounded-full transition-all relative flex-shrink-0 ${agentWalletEnabled ? 'bg-[#FFFF00]' : 'bg-white/20 border border-white/30'}`}
+                            className={`w-12 h-7 rounded-full transition-all relative flex-shrink-0 cursor-pointer ${agentWalletEnabled ? 'bg-[#FFFF00]' : 'bg-white/20 border border-white/30'}`}
                         >
                             {settingUpAgent ? (
-                                <Loader2 className="w-4 h-4 animate-spin absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-black" />
+                                <Loader2 className="w-4 h-4 animate-spin absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-black pointer-events-none" />
                             ) : (
-                                <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all ${agentWalletEnabled ? 'right-1' : 'left-1'}`} />
+                                <div className={`w-5 h-5 rounded-full bg-white shadow-md absolute top-1 transition-all pointer-events-none ${agentWalletEnabled ? 'right-1' : 'left-1'}`} />
                             )}
                         </button>
                     </div>

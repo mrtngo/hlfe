@@ -71,6 +71,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
+    const [initialStepSet, setInitialStepSet] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -78,8 +79,10 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
     }, []);
 
     // Determine initial step based on what's already approved
+    // Only set initial step ONCE when modal opens, not on every state change
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !initialStepSet) {
+            setInitialStepSet(true);
             if (agentWalletEnabled && builderFeeApproved) {
                 setStep('complete');
             } else if (!agentWalletEnabled) {
@@ -88,7 +91,11 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                 setStep('builder'); // Skip to builder if agent is done
             }
         }
-    }, [isOpen, agentWalletEnabled, builderFeeApproved]);
+        // Reset when modal closes
+        if (!isOpen) {
+            setInitialStepSet(false);
+        }
+    }, [isOpen, agentWalletEnabled, builderFeeApproved, initialStepSet]);
 
     const needsAgentWallet = !agentWalletEnabled;
     const needsBuilderFee = BUILDER_CONFIG.enabled && !builderFeeApproved;
@@ -143,17 +150,21 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
     if (!isOpen || !mounted) return null;
 
     const content = (
-        <div className="fixed inset-0 z-[99999]">
-            {/* Backdrop */}
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" style={{ minHeight: '100dvh' }}>
+            {/* Backdrop - Stronger blur for better focus */}
             <div
-                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/85 backdrop-blur-md"
                 onClick={handleClose}
             />
 
-            {/* Modal Container - Centered */}
-            <div className="absolute inset-0 flex items-center justify-center p-4">
+            {/* Modal Container - Centered on all devices including mobile */}
+            <div
+                className="relative w-full max-w-md z-10"
+                style={{ maxHeight: 'calc(100dvh - 2rem)' }}
+            >
                 <div
-                    className="relative bg-[#0D0D0D] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl"
+                    className="relative bg-[#0D0D0D] border border-white/10 rounded-3xl p-6 w-full shadow-2xl overflow-y-auto"
+                    style={{ maxHeight: 'calc(100dvh - 2rem)' }}
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Header */}
@@ -227,7 +238,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             </div>
 
                             <button
-                                onClick={() => setStep('agent')}
+                                onClick={() => setStep(needsAgentWallet ? 'agent' : 'builder')}
                                 className="w-full py-4 bg-[#FFFF00] text-black rounded-2xl font-bold text-base hover:bg-[#FFFF33] transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                             >
                                 {wizard.letsGo}
