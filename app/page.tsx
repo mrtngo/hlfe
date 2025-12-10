@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
-import MarketOverview from '@/components/MarketOverview';
 import OrderPanel from '@/components/OrderPanel';
 import PositionsPanel from '@/components/PositionsPanel';
 import HomeScreen from '@/components/HomeScreen';
@@ -67,29 +66,20 @@ export default function Home() {
                             <MarketSelector />
                         </div>
 
-                        {/* Chart Section - Full Width */}
-                        <div className="flex-1 min-h-0 mt-14">
+                        {/* Chart Section - Full Width with padding */}
+                        <div className="flex-1 min-h-0 mt-14 px-4">
                             <TradingChart />
                         </div>
 
-                        {/* Bottom Grid - Markets, Positions, Orders */}
-                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
-                            {/* Left Sidebar - Markets (Desktop: 3 columns, Large: 3 columns) */}
-                            <div className="xl:col-span-3 2xl:col-span-3 h-full overflow-hidden">
-                                <MarketOverview
-                                    onTokenClick={(symbol) => {
-                                        setSelectedMarket(symbol);
-                                    }}
-                                />
-                            </div>
-
-                            {/* Center - Positions (Desktop: 5 columns, Large: 4 columns) */}
-                            <div className="xl:col-span-5 2xl:col-span-4 h-full overflow-hidden">
+                        {/* Bottom Grid - Positions, Orders */}
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 flex-1 min-h-0 px-4">
+                            {/* Left - Positions */}
+                            <div className="h-full overflow-hidden">
                                 <PositionsPanel />
                             </div>
 
-                            {/* Right Sidebar - Order Panel (Desktop: 4 columns, Large: 5 columns) */}
-                            <div className="xl:col-span-4 2xl:col-span-5 h-full overflow-hidden">
+                            {/* Right - Order Panel */}
+                            <div className="h-full overflow-hidden">
                                 <OrderPanel />
                             </div>
                         </div>

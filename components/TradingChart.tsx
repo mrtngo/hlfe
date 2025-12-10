@@ -129,7 +129,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
 
     return (
         <div className="h-full flex flex-col min-w-0">
-            <div className="p-4 mt-20 flex items-center justify-between">
+            <div className="mt-20 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <h3 className="text-sm font-semibold text-white">
                         {marketSymbol?.replace('-USD', '').replace('-PERP', '') || 'BTC'} · {currentTimeframeLabel}
@@ -148,7 +148,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
             </div>
 
             {/* Chart Container - Fixed height to avoid ResponsiveContainer dimension issues */}
-            <div className="relative w-full p-4" style={{ height: '340px' }}>
+            <div className="relative w-full" style={{ height: '340px' }}>
                 {loading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/90 z-10">
                         <div className="text-center">
@@ -183,7 +183,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart
                             data={chartData}
-                            margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
+                            margin={{ top: 10, right: 0, left: 0, bottom: 10 }}
                         >
                             <defs>
                                 {/* Rayo Yellow gradient for area fill */}
@@ -265,7 +265,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
             </div>
 
             {/* Timeframe buttons - Footer style */}
-            <div className="flex items-center justify-evenly px-4 pb-4">
+            <div className="flex items-center justify-evenly pb-4">
                 {timeframeOptions.map((option, index) => {
                     const isSelected = selectedLabel === option.label;
                     return (

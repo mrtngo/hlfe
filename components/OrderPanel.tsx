@@ -6,6 +6,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
 import { TrendingUp, TrendingDown, AlertCircle, Info, Settings2, Zap } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from '@/components/OrderNotification';
+import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
 
@@ -15,7 +16,7 @@ type MarginMode = 'isolated' | 'cross';
 
 export default function OrderPanel() {
     const { t, formatCurrency } = useLanguage();
-    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData } = useHyperliquid();
+    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData, agentWalletEnabled, builderFeeApproved } = useHyperliquid();
 
     const [mode, setMode] = useState<OrderMode>('basic');
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
@@ -34,6 +35,7 @@ export default function OrderPanel() {
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
     const [orderNotification, setOrderNotification] = useState<OrderNotificationData | null>(null);
+    const [showSetupWizard, setShowSetupWizard] = useState(false);
 
     const market = getMarket(selectedMarket);
     const displaySymbol = selectedMarket?.replace(/-(USD|PERP)$/i, '') || selectedMarket;
@@ -89,6 +91,12 @@ export default function OrderPanel() {
 
         if (!connected) {
             setError(t.errors.walletNotConnected);
+            return;
+        }
+
+        // Check if setup is needed
+        if (!agentWalletEnabled) {
+            setShowSetupWizard(true);
             return;
         }
 
@@ -620,6 +628,12 @@ export default function OrderPanel() {
             <OrderNotification
                 order={orderNotification}
                 onClose={() => setOrderNotification(null)}
+            />
+
+            {/* Trading Setup Wizard */}
+            <TradingSetupWizard
+                isOpen={showSetupWizard}
+                onClose={() => setShowSetupWizard(false)}
             />
         </div>
     );
