@@ -2,7 +2,7 @@
 
 /**
  * useBridge Hook
- * Manages state and logic for cross-chain USDC bridging
+ * Manages state and logic for cross-chain USDC bridging via Rhino.fi
  */
 
 import { useState, useCallback } from 'react';
@@ -11,9 +11,8 @@ import {
     getBridgeQuote,
     executeBridge,
     MIN_BRIDGE_AMOUNT_USD,
-    CHAIN_IDS,
     type BridgeQuote,
-} from '@/lib/bridge/lifi';
+} from '@/lib/bridge/rhino';
 
 export type BridgeStatus =
     | 'idle'
@@ -101,7 +100,7 @@ export function useBridge(userAddress: string | null): UseBridgeResult {
         try {
             const provider = await embeddedWallet.getEthereumProvider();
 
-            const result = await executeBridge(quote.route, provider, {
+            const result = await executeBridge(quote, provider, userAddress, {
                 onApprovalRequired: () => setStatus('approving'),
                 onBridgeSent: (hash) => setTxHash(hash),
                 onComplete: (hash) => {
