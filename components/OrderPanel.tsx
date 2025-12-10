@@ -604,7 +604,7 @@ export default function OrderPanel() {
                 {/* Place Order Button - Rayo Style - Taller & Squared */}
                 <button
                     onClick={handlePlaceOrder}
-                    disabled={!connected || loading || tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE}
+                    disabled={loading || (connected && agentWalletEnabled && (tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE))}
                     className={`w-full rounded-xl text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
                         ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
                         : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'

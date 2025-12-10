@@ -4,12 +4,13 @@
  * TradingSetupWizard
  * A unified setup flow for agent wallet and builder fee approval.
  * Presents both requirements as a single "Setup Trading" wizard.
+ * Supports Spanish and English via i18n translations.
  */
 
 import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { Zap, Shield, DollarSign, Check, ChevronRight, X, Loader2 } from 'lucide-react';
+import { Zap, Shield, DollarSign, Check, ChevronRight, X, Loader2, Info } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { useLanguage } from '@/hooks/useLanguage';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 
 interface TradingSetupWizardProps {
@@ -28,6 +29,43 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
         builderFeeApproved,
         approveBuilderFee
     } = useHyperliquid();
+    const { t } = useLanguage();
+
+    // Translations shorthand with fallback for safety
+    const wizard = (t as any).setupWizard || {
+        title: 'Setup Trading',
+        subtitle: 'One-time setup',
+        approvals: 'approval',
+        approvalsPlural: 'approvals',
+        letsGo: "Let's Go! ⚡",
+        signatureNote: "You'll need to sign {{count}} transaction (one-time only)",
+        signatureNotePlural: "You'll need to sign {{count}} transactions (one-time only)",
+        agentWallet: {
+            title: 'Agent Wallet',
+            description: 'Trade without signing each transaction',
+            longDescription: 'Sign once to enable automatic trading. No more popups for every order!',
+            approve: 'Approve Agent Wallet',
+            waiting: 'Waiting for signature...',
+            preSignNote: "You're about to approve a wallet that can execute trades on your behalf."
+        },
+        builderFee: {
+            title: 'Builder Fee',
+            description: 'Support Rayo with {{fee}} bps fee',
+            longDescription: 'A tiny {{fee}} bps fee on trades helps support Rayo development.',
+            approve: 'Approve Fee',
+            skip: 'Skip for now',
+            waiting: 'Waiting for signature...',
+            preSignNote: "You're approving a small fee that helps keep the app running."
+        },
+        complete: {
+            title: "You're All Set! 🎉",
+            description: 'Trading is now enabled. No more signature popups!',
+            agentActive: 'Agent wallet active',
+            builderApproved: 'Builder fee approved',
+            startTrading: 'Start Trading ⚡'
+        }
+    };
+    const builderFeeBps = (BUILDER_CONFIG.fee / 10).toFixed(1);
 
     const [step, setStep] = useState<SetupStep>('intro');
     const [loading, setLoading] = useState(false);
@@ -55,6 +93,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
     const needsAgentWallet = !agentWalletEnabled;
     const needsBuilderFee = BUILDER_CONFIG.enabled && !builderFeeApproved;
     const totalSteps = (needsAgentWallet ? 1 : 0) + (needsBuilderFee ? 1 : 0);
+
 
     const handleSetupAgent = async () => {
         setLoading(true);
@@ -104,17 +143,17 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
     if (!isOpen || !mounted) return null;
 
     const content = (
-        <>
+        <div className="fixed inset-0 z-[99999]">
             {/* Backdrop */}
             <div
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999]"
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                 onClick={handleClose}
             />
 
-            {/* Modal */}
-            <div className="fixed inset-0 flex items-center justify-center p-4 z-[100000] pointer-events-none">
+            {/* Modal Container - Centered */}
+            <div className="absolute inset-0 flex items-center justify-center p-4">
                 <div
-                    className="bg-[#0D0D0D] border border-white/10 rounded-3xl p-6 max-w-md w-full pointer-events-auto shadow-2xl"
+                    className="relative bg-[#0D0D0D] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Header */}
@@ -124,8 +163,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 <Zap className="w-5 h-5 text-[#FFFF00]" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-white">Setup Trading</h2>
-                                <p className="text-xs text-coffee-medium">One-time setup • {totalSteps} approval{totalSteps !== 1 ? 's' : ''}</p>
+                                <h2 className="text-lg font-bold text-white">{wizard.title}</h2>
+                                <p className="text-xs text-coffee-medium">{wizard.subtitle} • {totalSteps} {totalSteps !== 1 ? wizard.approvalsPlural : wizard.approvals}</p>
                             </div>
                         </div>
                         <button
@@ -142,8 +181,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             {needsAgentWallet && (
                                 <>
                                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'intro' || step === 'agent'
-                                            ? 'bg-[#FFFF00]/20 text-[#FFFF00]'
-                                            : agentWalletEnabled ? 'bg-[#00FF00]/20 text-[#00FF00]' : 'bg-white/10 text-coffee-medium'
+                                        ? 'bg-[#FFFF00]/20 text-[#FFFF00]'
+                                        : agentWalletEnabled ? 'bg-[#00FF00]/20 text-[#00FF00]' : 'bg-white/10 text-coffee-medium'
                                         }`}>
                                         {agentWalletEnabled ? <Check className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
                                         Agent
@@ -153,8 +192,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             )}
                             {needsBuilderFee && (
                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'builder'
-                                        ? 'bg-[#FFFF00]/20 text-[#FFFF00]'
-                                        : builderFeeApproved ? 'bg-[#00FF00]/20 text-[#00FF00]' : 'bg-white/10 text-coffee-medium'
+                                    ? 'bg-[#FFFF00]/20 text-[#FFFF00]'
+                                    : builderFeeApproved ? 'bg-[#00FF00]/20 text-[#00FF00]' : 'bg-white/10 text-coffee-medium'
                                     }`}>
                                     {builderFeeApproved ? <Check className="w-3 h-3" /> : <DollarSign className="w-3 h-3" />}
                                     Builder Fee
@@ -171,8 +210,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                     <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
                                         <Shield className="w-5 h-5 text-[#FFFF00] shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-semibold text-white">Agent Wallet</p>
-                                            <p className="text-xs text-coffee-medium">Trade without signing each transaction</p>
+                                            <p className="text-sm font-semibold text-white">{wizard.agentWallet.title}</p>
+                                            <p className="text-xs text-coffee-medium">{wizard.agentWallet.description}</p>
                                         </div>
                                     </div>
                                 )}
@@ -180,8 +219,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                     <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
                                         <DollarSign className="w-5 h-5 text-[#FFFF00] shrink-0 mt-0.5" />
                                         <div>
-                                            <p className="text-sm font-semibold text-white">Builder Fee</p>
-                                            <p className="text-xs text-coffee-medium">Support Rayo with {(BUILDER_CONFIG.fee / 10).toFixed(1)} bps fee</p>
+                                            <p className="text-sm font-semibold text-white">{wizard.builderFee.title}</p>
+                                            <p className="text-xs text-coffee-medium">{wizard.builderFee.description.replace('{{fee}}', builderFeeBps)}</p>
                                         </div>
                                     </div>
                                 )}
@@ -191,11 +230,13 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 onClick={() => setStep('agent')}
                                 className="w-full py-4 bg-[#FFFF00] text-black rounded-2xl font-bold text-base hover:bg-[#FFFF33] transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                             >
-                                Let's Go ⚡
+                                {wizard.letsGo}
                             </button>
 
                             <p className="text-center text-xs text-coffee-medium">
-                                You'll need to sign {totalSteps} transaction{totalSteps !== 1 ? 's' : ''} (one-time only)
+                                {totalSteps !== 1
+                                    ? wizard.signatureNotePlural.replace('{{count}}', String(totalSteps))
+                                    : wizard.signatureNote.replace('{{count}}', String(totalSteps))}
                             </p>
                         </div>
                     )}
@@ -206,9 +247,9 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FFFF00]/20 flex items-center justify-center">
                                     <Shield className="w-8 h-8 text-[#FFFF00]" />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">Enable Agent Wallet</h3>
+                                <h3 className="text-xl font-bold text-white mb-2">{wizard.agentWallet.title}</h3>
                                 <p className="text-sm text-coffee-medium">
-                                    Sign once to enable automatic trading. No more popups for every order!
+                                    {wizard.agentWallet.longDescription}
                                 </p>
                             </div>
 
@@ -226,10 +267,10 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 {loading ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        Waiting for signature...
+                                        {wizard.agentWallet.waiting}
                                     </>
                                 ) : (
-                                    'Approve Agent Wallet'
+                                    wizard.agentWallet.approve
                                 )}
                             </button>
                         </div>
@@ -241,9 +282,9 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FFFF00]/20 flex items-center justify-center">
                                     <DollarSign className="w-8 h-8 text-[#FFFF00]" />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">Approve Builder Fee</h3>
+                                <h3 className="text-xl font-bold text-white mb-2">{wizard.builderFee.title}</h3>
                                 <p className="text-sm text-coffee-medium">
-                                    A tiny {(BUILDER_CONFIG.fee / 10).toFixed(1)} bps fee on trades helps support Rayo development.
+                                    {wizard.builderFee.longDescription.replace('{{fee}}', builderFeeBps)}
                                 </p>
                             </div>
 
@@ -261,10 +302,10 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 {loading ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        Waiting for signature...
+                                        {wizard.builderFee.waiting}
                                     </>
                                 ) : (
-                                    'Approve Builder Fee'
+                                    wizard.builderFee.approve
                                 )}
                             </button>
 
@@ -272,7 +313,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 onClick={() => setStep('complete')}
                                 className="w-full py-2 text-coffee-medium text-sm hover:text-white transition-colors"
                             >
-                                Skip for now
+                                {wizard.builderFee.skip}
                             </button>
                         </div>
                     )}
@@ -283,21 +324,21 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#00FF00]/20 flex items-center justify-center">
                                     <Check className="w-10 h-10 text-[#00FF00]" />
                                 </div>
-                                <h3 className="text-xl font-bold text-white mb-2">You're All Set! 🎉</h3>
+                                <h3 className="text-xl font-bold text-white mb-2">{wizard.complete.title}</h3>
                                 <p className="text-sm text-coffee-medium">
-                                    Trading is now enabled. No more signature popups!
+                                    {wizard.complete.description}
                                 </p>
                             </div>
 
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3 p-3 bg-[#00FF00]/10 rounded-xl">
                                     <Check className="w-5 h-5 text-[#00FF00]" />
-                                    <span className="text-sm text-white">Agent wallet active</span>
+                                    <span className="text-sm text-white">{wizard.complete.agentActive}</span>
                                 </div>
                                 {builderFeeApproved && (
                                     <div className="flex items-center gap-3 p-3 bg-[#00FF00]/10 rounded-xl">
                                         <Check className="w-5 h-5 text-[#00FF00]" />
-                                        <span className="text-sm text-white">Builder fee approved</span>
+                                        <span className="text-sm text-white">{wizard.complete.builderApproved}</span>
                                     </div>
                                 )}
                             </div>
@@ -306,14 +347,15 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 onClick={handleClose}
                                 className="w-full py-4 bg-[#FFFF00] text-black rounded-2xl font-bold text-base hover:bg-[#FFFF33] transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                             >
-                                Start Trading ⚡
+                                {wizard.complete.startTrading}
                             </button>
                         </div>
                     )}
                 </div>
             </div>
-        </>
+        </div>
     );
 
-    return createPortal(content, document.body);
+    // Return content directly instead of using portal - the fixed positioning will work fine
+    return content;
 }

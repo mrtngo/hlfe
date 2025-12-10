@@ -16,6 +16,9 @@ export default function Profile() {
     const { logout, exportWallet, user: privyUser } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
 
+    // Profile translations with fallback
+    const profile = (t as any).profile || {};
+
     const [copied, setCopied] = useState(false);
     const [referralCopied, setReferralCopied] = useState(false);
     const [isEditingUsername, setIsEditingUsername] = useState(false);
@@ -150,11 +153,11 @@ export default function Profile() {
         try {
             const result = await syncTrades();
             if (result) {
-                setSyncResult(`Synced ${result.synced} trades (PnL: $${result.totalPnl.toFixed(2)})`);
+                setSyncResult(profile.syncSuccess?.replace('{{count}}', result.synced.toString()).replace('{{pnl}}', result.totalPnl.toFixed(2)) || `Synced ${result.synced} trades (PnL: $${result.totalPnl.toFixed(2)})`);
                 // Clear success message after 5 seconds
                 setTimeout(() => setSyncResult(null), 5000);
             } else {
-                setSyncResult('Sync failed or no trades found');
+                setSyncResult(profile.syncFailed || 'Sync failed or no trades found');
             }
         } catch (err) {
             console.error('Error syncing trades:', err);
@@ -201,7 +204,7 @@ export default function Profile() {
                                 autoFocus
                             />
                             <p className="text-xs text-coffee-medium">
-                                3-20 characters, lowercase letters, numbers, underscores only
+                                {profile.usernameRules || '3-20 characters, lowercase letters, numbers, underscores only'}
                             </p>
                             <div className="flex items-center justify-center gap-2">
                                 <button
@@ -274,7 +277,7 @@ export default function Profile() {
                     {user && (
                         <div className="mt-3 text-xs text-coffee-light flex items-center justify-center gap-1">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                            Synced to cloud
+                            {profile.syncedToCloud || 'Synced to cloud'}
                         </div>
                     )}
                 </div>
@@ -306,13 +309,13 @@ export default function Profile() {
             <div className="glass-card p-6">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <Gift className="w-5 h-5 text-[#FFFF00]" />
-                    Invite Friends
+                    {profile.inviteFriends || 'Invite Friends'}
                 </h2>
 
                 {/* Referral Link */}
                 <div className="bg-black/40 rounded-2xl p-4 flex items-center gap-3 mb-4">
                     <code className="flex-1 text-sm text-[#FFFF00] font-mono truncate">
-                        {referralLink || 'Loading...'}
+                        {referralLink || (profile.loading || 'Loading...')}
                     </code>
                     <button
                         onClick={copyReferralLink}
@@ -323,7 +326,7 @@ export default function Profile() {
                 </div>
 
                 <div className="text-sm text-coffee-medium text-center mb-4">
-                    Share your link & earn <span className="text-[#FFFF00] font-bold">10%</span> of their trading fees
+                    {profile.shareAndEarn || 'Share your link & earn'} <span className="text-[#FFFF00] font-bold">10%</span> {profile.ofFees || 'of their trading fees'}
                 </div>
 
                 {/* Referral Stats */}
@@ -331,7 +334,7 @@ export default function Profile() {
                     <div className="bg-white/5 rounded-2xl p-4">
                         <div className="flex items-center gap-2 mb-1">
                             <Users className="w-4 h-4 text-[#FFFF00]" />
-                            <span className="text-coffee-medium text-sm">Referrals</span>
+                            <span className="text-coffee-medium text-sm">{profile.referrals || 'Referrals'}</span>
                         </div>
                         <div className="text-2xl font-bold text-white">
                             {loadingReferrals ? '...' : referredUsers.length}
@@ -340,7 +343,7 @@ export default function Profile() {
                     <div className="bg-white/5 rounded-2xl p-4">
                         <div className="flex items-center gap-2 mb-1">
                             <DollarSign className="w-4 h-4 text-[#FFFF00]" />
-                            <span className="text-coffee-medium text-sm">Earned</span>
+                            <span className="text-coffee-medium text-sm">{profile.earned || 'Earned'}</span>
                         </div>
                         <div className="text-2xl font-bold text-bullish font-mono">
                             ${loadingReferrals ? '...' : totalEarnings.toFixed(2)}
@@ -349,11 +352,10 @@ export default function Profile() {
                 </div>
             </div>
 
-            {/* Settings Section */}
             <div className="glass-card p-6">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-[#FFFF00]" />
-                    Settings
+                    {t.settings?.title || 'Settings'}
                 </h2>
 
                 <div className="space-y-4">
@@ -388,15 +390,15 @@ export default function Profile() {
                     <div className="bg-white/5 rounded-2xl p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="font-semibold text-white">Agent Wallet</div>
+                                <div className="font-semibold text-white">{profile.agentWallet || 'Agent Wallet'}</div>
                                 <div className="text-sm text-coffee-medium">
-                                    Trade without signing every transaction
+                                    {profile.agentWalletDesc || 'Trade without signing every transaction'}
                                 </div>
                             </div>
                             {agentWalletEnabled ? (
                                 <div className="flex items-center gap-2 text-green-400 text-sm font-semibold">
                                     <Check className="w-4 h-4" />
-                                    Active
+                                    {profile.active || 'Active'}
                                 </div>
                             ) : (
                                 <button
@@ -405,7 +407,7 @@ export default function Profile() {
                                     className="px-4 py-2 bg-[#FFFF00] text-black rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
                                 >
                                     {settingUpAgent && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    Enable
+                                    {profile.enable || 'Enable'}
                                 </button>
                             )}
                         </div>
@@ -421,27 +423,27 @@ export default function Profile() {
                                         }}
                                         className="text-xs text-coffee-medium hover:text-white"
                                     >
-                                        Reset local agent data
+                                        {profile.resetAgentData || 'Reset local agent data'}
                                     </button>
                                 )}
                             </div>
                         )}
                         {agentSetupSuccess && (
                             <div className="mt-2 text-sm text-green-400">
-                                Agent wallet enabled! You can now trade without signing each transaction.
+                                {profile.agentWalletEnabled || 'Agent wallet enabled! You can now trade without signing each transaction.'}
                             </div>
                         )}
                         {agentWalletEnabled && (
                             <button
                                 onClick={() => {
-                                    if (confirm('Disable automatic signing? You will need to sign each transaction manually.')) {
+                                    if (confirm(language === 'es' ? '¿Desactivar firma automática? Tendrás que firmar cada transacción manualmente.' : 'Disable automatic signing? You will need to sign each transaction manually.')) {
                                         clearAgentWallet();
                                         window.location.reload();
                                     }
                                 }}
                                 className="mt-2 text-xs text-coffee-medium hover:text-white"
                             >
-                                Disable agent wallet
+                                {profile.disableAgentWallet || 'Disable agent wallet'}
                             </button>
                         )}
                     </div>
@@ -450,7 +452,7 @@ export default function Profile() {
                     <div className="bg-white/5 rounded-2xl p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="font-semibold text-white">Builder Fee</div>
+                                <div className="font-semibold text-white">{profile.builderFee || 'Builder Fee'}</div>
                                 <div className="text-sm text-coffee-medium">
                                     {BUILDER_CONFIG.fee / 100} bps ({(BUILDER_CONFIG.fee / 1000).toFixed(2)}%)
                                 </div>
@@ -458,7 +460,7 @@ export default function Profile() {
                             {builderFeeApproved ? (
                                 <div className="flex items-center gap-2 text-[#FFFF00] text-sm">
                                     <Check className="w-4 h-4" />
-                                    Approved
+                                    {profile.approved || 'Approved'}
                                 </div>
                             ) : (
                                 <button
@@ -467,7 +469,7 @@ export default function Profile() {
                                     className="px-4 py-2 bg-[#FFFF00] text-black rounded-xl font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2"
                                 >
                                     {approvingFee && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    Approve
+                                    {profile.approve || 'Approve'}
                                 </button>
                             )}
                         </div>
@@ -481,9 +483,9 @@ export default function Profile() {
                         <div className="bg-white/5 rounded-2xl p-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <div className="font-semibold text-white">Export Wallet</div>
+                                    <div className="font-semibold text-white">{profile.exportWallet || 'Export Wallet'}</div>
                                     <div className="text-sm text-coffee-medium">
-                                        View your private key to access funds externally
+                                        {profile.exportWalletDesc || 'View your private key to access funds externally'}
                                     </div>
                                 </div>
                                 <button
@@ -491,7 +493,7 @@ export default function Profile() {
                                     className="px-4 py-2 bg-white/10 text-white rounded-xl font-semibold hover:bg-white/20 flex items-center gap-2"
                                 >
                                     <Share2 className="w-4 h-4" />
-                                    Export
+                                    {profile.export || 'Export'}
                                 </button>
                             </div>
                         </div>
@@ -501,9 +503,9 @@ export default function Profile() {
                     <div className="bg-white/5 rounded-2xl p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <div className="font-semibold text-white">Sync Trades</div>
+                                <div className="font-semibold text-white">{profile.syncTrades || 'Sync Trades'}</div>
                                 <div className="text-sm text-coffee-medium">
-                                    Fix PnL history if it looks wrong
+                                    {language === 'es' ? 'Corregir historial de G/P si hay errores' : 'Fix PnL history if it looks wrong'}
                                 </div>
                             </div>
                             <button
@@ -516,7 +518,7 @@ export default function Profile() {
                                 ) : (
                                     <RefreshCw className="w-4 h-4" />
                                 )}
-                                Sync
+                                {syncing ? (profile.syncing || 'Syncing...') : (language === 'es' ? 'Sincronizar' : 'Sync')}
                             </button>
                         </div>
                         {syncResult && (

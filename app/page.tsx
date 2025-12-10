@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
@@ -12,13 +12,38 @@ import MarketSelector from '@/components/MarketSelector';
 import OrderHistory from '@/components/OrderHistory';
 import Leaderboard from '@/components/Leaderboard';
 import Profile from '@/components/Profile';
+import TradingSetupWizard from '@/components/TradingSetupWizard';
+import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { BarChart3, History, User, Trophy } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
-    const { selectedMarket, setSelectedMarket, address } = useHyperliquid();
+    const { selectedMarket, setSelectedMarket, address, agentWalletEnabled, builderFeeApproved } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard'>('home');
+    const [showSetupWizard, setShowSetupWizard] = useState(false);
+
+    // Auto-prompt setup wizard when entering trading view if setup not complete
+    useEffect(() => {
+        if (view === 'trading' && authenticated) {
+            const needsAgentWallet = !agentWalletEnabled;
+            const needsBuilderFee = BUILDER_CONFIG.enabled && !builderFeeApproved;
+            const setupNeeded = needsAgentWallet || needsBuilderFee;
+
+            // Check if already dismissed this session
+            const dismissed = sessionStorage.getItem('setup_wizard_dismissed');
+
+            if (setupNeeded && !dismissed) {
+                setShowSetupWizard(true);
+            }
+        }
+    }, [view, authenticated, agentWalletEnabled, builderFeeApproved]);
+
+    const handleWizardClose = () => {
+        setShowSetupWizard(false);
+        // Mark as dismissed for this session
+        sessionStorage.setItem('setup_wizard_dismissed', 'true');
+    };
 
     const formatAddress = (addr: string | null) => {
         if (!addr) return null;
@@ -195,6 +220,12 @@ export default function Home() {
                     </button>
                 </div>
             </nav>
+
+            {/* Trading Setup Wizard - Auto-prompt */}
+            <TradingSetupWizard
+                isOpen={showSetupWizard}
+                onClose={handleWizardClose}
+            />
         </div>
     );
 }

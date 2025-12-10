@@ -296,7 +296,51 @@
     "accountOverview": "Resumen de Cuenta",
     "spotHoldings": "Tenencias Spot",
     "comingSoon": "Próximamente",
-    "spotComingSoonDesc": "El trading spot y las tenencias estarán disponibles pronto"
+    "spotComingSoonDesc": "El trading spot y las tenencias estarán disponibles pronto",
+    "syncTrades": "Sincronizar Operaciones",
+    "syncing": "Sincronizando...",
+    "syncSuccess": "Sincronizado {{count}} operaciones (G/P: ${{pnl}})",
+    "syncFailed": "Error al sincronizar o sin operaciones",
+    "syncDesc": "Corregir historial de G/P si hay errores",
+    "exportWallet": "Exportar Billetera",
+    "exportWalletDesc": "Ver tu clave privada para acceder a fondos externamente",
+    "export": "Exportar",
+    "signOut": "Cerrar Sesión",
+    "syncedToCloud": "Sincronizado con la nube",
+    "inviteFriends": "Invitar Amigos",
+    "shareAndEarn": "Comparte tu enlace y gana",
+    "ofFees": "de sus comisiones de trading",
+    "referrals": "Referidos",
+    "earned": "Ganado",
+    "loading": "Cargando...",
+    "agentWallet": "Billetera Agente",
+    "agentWalletDesc": "Opera sin firmar cada transacción",
+    "active": "Activo",
+    "enable": "Activar",
+    "agentWalletEnabled": "¡Billetera agente activada! Ahora puedes operar sin firmar cada transacción.",
+    "disableAgentWallet": "Desactivar billetera agente",
+    "resetAgentData": "Restablecer datos de agente local",
+    "builderFee": "Comisión Builder",
+    "approved": "Aprobado",
+    "approve": "Aprobar",
+    "usernameRules": "3-20 caracteres, letras minúsculas, números y guiones bajos"
+  },
+  "history": {
+    "title": "Historial de Órdenes",
+    "connectWalletToView": "Conecta tu billetera para ver el historial",
+    "loading": "Cargando historial...",
+    "noHistory": "Sin historial de órdenes",
+    "long": "Long",
+    "short": "Short",
+    "price": "Precio",
+    "size": "Tamaño",
+    "realizedPnl": "G/P Realizada",
+    "trades": "Operaciones",
+    "orders": "Órdenes",
+    "funding": "Financiamiento",
+    "noTrades": "Sin operaciones",
+    "noOrders": "Sin órdenes",
+    "noFunding": "Sin financiamiento"
   },
   "depositModal": {
     "title": "Depositar Activos",
@@ -329,6 +373,39 @@
       "hoursAgo": "Hace {{count}} h",
       "daysAgo": "Hace {{count}} d",
       "weeksAgo": "Hace {{count}} sem"
+    }
+  },
+  "setupWizard": {
+    "title": "Configurar Trading",
+    "subtitle": "Configuración única",
+    "approvals": "aprobación",
+    "approvalsPlural": "aprobaciones",
+    "letsGo": "¡Vamos! ⚡",
+    "signatureNote": "Necesitarás firmar {{count}} transacción (solo una vez)",
+    "signatureNotePlural": "Necesitarás firmar {{count}} transacciones (solo una vez)",
+    "agentWallet": {
+      "title": "Billetera Agente",
+      "description": "Tradea sin firmar cada transacción",
+      "longDescription": "Firma una vez para habilitar el trading automático. ¡No más ventanas emergentes por cada orden!",
+      "approve": "Aprobar Billetera Agente",
+      "waiting": "Esperando firma...",
+      "preSignNote": "Estás a punto de aprobar una billetera que puede ejecutar trades en tu nombre. Esto es seguro y solo funciona con Hyperliquid."
+    },
+    "builderFee": {
+      "title": "Comisión de Builder",
+      "description": "Apoya el desarrollo de Rayo con {{fee}} bps",
+      "longDescription": "Una pequeña comisión de {{fee}} bps en tus trades ayuda a mantener Rayo.",
+      "approve": "Aprobar Comisión",
+      "skip": "Omitir por ahora",
+      "waiting": "Esperando firma...",
+      "preSignNote": "Estás aprobando una pequeña comisión que ayuda a mantener la app funcionando."
+    },
+    "complete": {
+      "title": "¡Todo Listo! 🎉",
+      "description": "El trading está habilitado. ¡No más ventanas de firma!",
+      "agentActive": "Billetera agente activa",
+      "builderApproved": "Comisión de builder aprobada",
+      "startTrading": "Empezar a Tradear ⚡"
     }
   }
 }

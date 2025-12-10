@@ -296,7 +296,51 @@
     "accountOverview": "Account Overview",
     "spotHoldings": "Spot Holdings",
     "comingSoon": "Coming Soon",
-    "spotComingSoonDesc": "Spot trading and holdings will be available soon"
+    "spotComingSoonDesc": "Spot trading and holdings will be available soon",
+    "syncTrades": "Sync Trades",
+    "syncing": "Syncing...",
+    "syncSuccess": "Synced {{count}} trades (PnL: ${{pnl}})",
+    "syncFailed": "Sync failed or no trades found",
+    "syncDesc": "Fix PnL history if it looks wrong",
+    "exportWallet": "Export Wallet",
+    "exportWalletDesc": "View your private key to access funds externally",
+    "export": "Export",
+    "signOut": "Sign Out",
+    "syncedToCloud": "Synced to cloud",
+    "inviteFriends": "Invite Friends",
+    "shareAndEarn": "Share your link & earn",
+    "ofFees": "of their trading fees",
+    "referrals": "Referrals",
+    "earned": "Earned",
+    "loading": "Loading...",
+    "agentWallet": "Agent Wallet",
+    "agentWalletDesc": "Trade without signing every transaction",
+    "active": "Active",
+    "enable": "Enable",
+    "agentWalletEnabled": "Agent wallet enabled! You can now trade without signing each transaction.",
+    "disableAgentWallet": "Disable agent wallet",
+    "resetAgentData": "Reset local agent data",
+    "builderFee": "Builder Fee",
+    "approved": "Approved",
+    "approve": "Approve",
+    "usernameRules": "3-20 characters, lowercase letters, numbers, underscores only"
+  },
+  "history": {
+    "title": "Order History",
+    "connectWalletToView": "Connect wallet to view order history",
+    "loading": "Loading order history...",
+    "noHistory": "No order history",
+    "long": "Long",
+    "short": "Short",
+    "price": "Price",
+    "size": "Size",
+    "realizedPnl": "Realized P&L",
+    "trades": "Trades",
+    "orders": "Orders",
+    "funding": "Funding",
+    "noTrades": "No trades",
+    "noOrders": "No orders",
+    "noFunding": "No funding"
   },
   "depositModal": {
     "title": "Deposit Assets",
@@ -329,6 +373,39 @@
       "hoursAgo": "{{count}}h ago",
       "daysAgo": "{{count}}d ago",
       "weeksAgo": "{{count}}w ago"
+    }
+  },
+  "setupWizard": {
+    "title": "Setup Trading",
+    "subtitle": "One-time setup",
+    "approvals": "approval",
+    "approvalsPlural": "approvals",
+    "letsGo": "Let's Go! ⚡",
+    "signatureNote": "You'll need to sign {{count}} transaction (one-time only)",
+    "signatureNotePlural": "You'll need to sign {{count}} transactions (one-time only)",
+    "agentWallet": {
+      "title": "Agent Wallet",
+      "description": "Trade without signing each transaction",
+      "longDescription": "Sign once to enable automatic trading. No more popups for every order!",
+      "approve": "Approve Agent Wallet",
+      "waiting": "Waiting for signature...",
+      "preSignNote": "You're about to approve a wallet that can execute trades on your behalf. This is secure and only works with Hyperliquid."
+    },
+    "builderFee": {
+      "title": "Builder Fee",
+      "description": "Support Rayo with {{fee}} bps fee",
+      "longDescription": "A tiny {{fee}} bps fee on trades helps support Rayo development.",
+      "approve": "Approve Fee",
+      "skip": "Skip for now",
+      "waiting": "Waiting for signature...",
+      "preSignNote": "You're approving a small fee that helps keep the app running."
+    },
+    "complete": {
+      "title": "You're All Set! 🎉",
+      "description": "Trading is now enabled. No more signature popups!",
+      "agentActive": "Agent wallet active",
+      "builderApproved": "Builder fee approved",
+      "startTrading": "Start Trading ⚡"
     }
   }
 }
