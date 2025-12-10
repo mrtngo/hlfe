@@ -194,7 +194,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         ? (price - position.entryPrice) * position.size
                         : (position.entryPrice - price) * position.size;
 
-                    const pnlPercent = (pnl / (position.entryPrice * position.size)) * 100;
+                    // Calculate P&L % based on margin (not notional value)
+                    const notionalValue = position.entryPrice * position.size;
+                    const margin = notionalValue / position.leverage;
+                    const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
 
                     return {
                         ...position,
@@ -260,9 +263,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 const pnl = side === 'long'
                                     ? (markPx - entryPx) * size
                                     : (entryPx - markPx) * size;
-                                const pnlPercent = entryPx > 0 && size > 0
-                                    ? (pnl / (entryPx * size)) * 100
-                                    : 0;
+                                // Calculate P&L % based on margin (not notional value)
+                                const notionalValue = entryPx * size;
+                                const margin = notionalValue / leverage;
+                                const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
 
                                 return {
                                     symbol,
@@ -426,9 +430,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 const pnl = side === 'long'
                                     ? (markPrice - entryPrice) * absSize
                                     : (entryPrice - markPrice) * absSize;
-                                const pnlPercent = entryPrice > 0 && absSize > 0
-                                    ? (pnl / (entryPrice * absSize)) * 100
-                                    : 0;
+                                // Calculate P&L % based on margin (not notional value)
+                                const leverage = market?.maxLeverage || 1;
+                                const notionalValue = entryPrice * absSize;
+                                const margin = notionalValue / leverage;
+                                const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
 
                                 return {
                                     symbol,
@@ -610,17 +616,23 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const market = markets.find(m => m.name === cleanCoin || m.symbol === `${cleanCoin}-USD`);
                             const markPrice = market?.price || entryPx;
 
+                            // Calculate P&L % based on margin (not notional value)
+                            const absSize = Math.abs(szi);
+                            const notionalValue = entryPx * absSize;
+                            const margin = notionalValue / leverage;
+                            const pnlPercent = margin > 0 ? (unrealizedPnl / margin) * 100 : 0;
+
                             activePositions.push({
                                 symbol: `${cleanCoin}-USD`,
                                 name: cleanCoin,
                                 side: szi > 0 ? 'long' : 'short',
-                                size: Math.abs(szi),
+                                size: absSize,
                                 entryPrice: entryPx,
                                 markPrice,
                                 liquidationPrice: liquidationPx,
                                 leverage,
                                 unrealizedPnl,
-                                unrealizedPnlPercent: entryPx > 0 ? (unrealizedPnl / (entryPx * Math.abs(szi))) * 100 : 0,
+                                unrealizedPnlPercent: pnlPercent,
                             });
                         }
 
@@ -813,9 +825,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const pnl = side === 'long'
                                 ? (markPx - entryPx) * size
                                 : (entryPx - markPx) * size;
-                            const pnlPercent = entryPx > 0 && size > 0
-                                ? (pnl / (entryPx * size)) * 100
-                                : 0;
+                            // Calculate P&L % based on margin (not notional value)
+                            const notionalValue = entryPx * size;
+                            const margin = notionalValue / leverage;
+                            const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
 
                             return {
                                 symbol,
@@ -1266,9 +1279,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const client = createHyperliquidClient();
                 meta = await client.info.perpetuals.getMeta();
 
-                // On testnet, assets have a -PERP suffix (e.g., SOL-PERP, BTC-PERP)
+                // On both mainnet and testnet, assets have -PERP suffix in the meta universe
                 // Our market symbols are like SOL-USD, BTC-USD
-                assetName = IS_TESTNET ? `${baseCoin}-PERP` : baseCoin;
+                assetName = `${baseCoin}-PERP`;
 
                 console.log('Looking for core asset:', assetName);
                 console.log('Available core assets:', meta.universe.map((u: any) => u.name));

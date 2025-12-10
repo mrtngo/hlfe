@@ -56,7 +56,11 @@ function parsePosition(pos: any, markets: Market[]): Position | null {
     const pnl = side === 'long'
         ? (markPx - entryPx) * size
         : (entryPx - markPx) * size;
-    const pnlPercent = entryPx > 0 ? (pnl / (entryPx * size)) * 100 : 0;
+    // Calculate P&L % based on margin (not notional value)
+    // Margin = (entryPx * size) / leverage
+    const notionalValue = entryPx * size;
+    const margin = notionalValue / leverage;
+    const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
 
     // Get market info for additional data
     const market = markets.find(m => m.name === cleanCoin || m.symbol === symbol);

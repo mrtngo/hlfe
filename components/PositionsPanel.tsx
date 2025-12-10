@@ -8,7 +8,7 @@ import OrderNotification, { OrderNotificationData } from './OrderNotification';
 
 export default function PositionsPanel() {
     const { t, formatCurrency, formatPercent } = useLanguage();
-    const { positions, closePosition, loading, markets, refreshAccountData } = useHyperliquid();
+    const { positions, closePosition, loading, markets, refreshAccountData, setSelectedMarket } = useHyperliquid();
     const [closeNotification, setCloseNotification] = useState<OrderNotificationData | null>(null);
 
     const handleClosePosition = async (symbol: string) => {
@@ -81,53 +81,61 @@ export default function PositionsPanel() {
                                     key={position.symbol}
                                     className="p-4 hover:bg-bg-hover transition-colors"
                                 >
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div>
-                                            <div className="font-semibold text-sm text-white">
-                                                {position.symbol.replace(/-(USD|PERP)$/i, '')}
+                                    {/* Clickable area for position info - navigates to that market */}
+                                    <div
+                                        className="cursor-pointer"
+                                        onClick={() => setSelectedMarket(position.symbol)}
+                                    >
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div>
+                                                <div className="font-semibold text-sm text-white">
+                                                    {position.symbol.replace(/-(USD|PERP)$/i, '')}
+                                                </div>
+                                                <div className="text-xs text-coffee-medium">
+                                                    {position.side === 'long' ? 'Long' : 'Short'} • {position.leverage}x
+                                                </div>
                                             </div>
-                                            <div className="text-xs text-coffee-medium">
-                                                {position.side === 'long' ? 'Long' : 'Short'} • {position.leverage}x
+                                            <div className="text-right">
+                                                <div className={`font-mono font-semibold text-sm ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'}`}>
+                                                    {formatCurrency(position.unrealizedPnl)}
+                                                </div>
+                                                <div className={`text-xs font-semibold ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'}`}>
+                                                    {isPositive ? '+' : ''}{formatPercent(position.unrealizedPnlPercent)}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className={`font-mono font-semibold text-sm ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'
-                                                }`}>
-                                                {formatCurrency(position.unrealizedPnl)}
+
+                                        <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+                                            <div>
+                                                <div className="text-coffee-medium mb-1">Size</div>
+                                                <div className="font-mono font-semibold text-white">
+                                                    {position.size.toFixed(4)}
+                                                    <span className="text-coffee-medium ml-1">
+                                                        ({formatCurrency(position.size * markPrice)})
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className={`text-xs font-semibold ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'
-                                                }`}>
-                                                {formatPercent(Math.abs(position.unrealizedPnlPercent))}
+                                            <div>
+                                                <div className="text-coffee-medium mb-1">Entry</div>
+                                                <div className="font-mono font-semibold text-white">{formatCurrency(position.entryPrice)}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-coffee-medium mb-1">Mark</div>
+                                                <div className="font-mono font-semibold text-white">{formatCurrency(markPrice)}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-coffee-medium mb-1">Liq. Price</div>
+                                                <div className="font-mono font-semibold text-bearish">{formatCurrency(position.liquidationPrice)}</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3 text-xs mb-3">
-                                        <div>
-                                            <div className="text-coffee-medium mb-1">Size</div>
-                                            <div className="font-mono font-semibold text-white">
-                                                {position.size.toFixed(4)}
-                                                <span className="text-coffee-medium ml-1">
-                                                    ({formatCurrency(position.size * markPrice)})
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-coffee-medium mb-1">Entry</div>
-                                            <div className="font-mono font-semibold text-white">{formatCurrency(position.entryPrice)}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-coffee-medium mb-1">Mark</div>
-                                            <div className="font-mono font-semibold text-white">{formatCurrency(markPrice)}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-coffee-medium mb-1">Liq. Price</div>
-                                            <div className="font-mono font-semibold text-bearish">{formatCurrency(position.liquidationPrice)}</div>
-                                        </div>
-                                    </div>
-
+                                    {/* Close button - outside the clickable area */}
                                     <button
-                                        onClick={() => handleClosePosition(position.symbol)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleClosePosition(position.symbol);
+                                        }}
                                         disabled={loading}
                                         className="w-full py-4 px-4 bg-[#FFFF00] hover:bg-[#FFFF33] text-black rounded-full text-base font-bold transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                                     >

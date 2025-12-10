@@ -205,14 +205,19 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                 <span className="text-xs text-coffee-medium bg-white/5 px-1.5 py-0.5 rounded border border-white/5">{position.leverage}x</span>
                                             </div>
                                         </div>
-                                        <div className={`flex items-center gap-1 ${pnlColor}`}>
-                                            {position.unrealizedPnl >= 0 ? (
-                                                <ArrowUpRight className="w-4 h-4" />
-                                            ) : (
-                                                <ArrowDownRight className="w-4 h-4" />
-                                            )}
-                                            <span className="font-bold font-mono text-lg">
-                                                ${position.unrealizedPnl.toFixed(2)}
+                                        <div className={`flex flex-col items-end ${pnlColor}`}>
+                                            <div className="flex items-center gap-1">
+                                                {position.unrealizedPnl >= 0 ? (
+                                                    <ArrowUpRight className="w-4 h-4" />
+                                                ) : (
+                                                    <ArrowDownRight className="w-4 h-4" />
+                                                )}
+                                                <span className="font-bold font-mono text-lg">
+                                                    ${Math.abs(position.unrealizedPnl).toFixed(2)}
+                                                </span>
+                                            </div>
+                                            <span className="text-xs font-semibold font-mono">
+                                                {position.unrealizedPnl >= 0 ? '+' : ''}{position.unrealizedPnlPercent.toFixed(2)}%
                                             </span>
                                         </div>
                                     </div>

@@ -82,6 +82,116 @@ const SYMBOL_TO_COINGECKO_ID: Record<string, string> = {
     'TAO': 'bittensor',
 };
 
+// Stock symbol to Twitter handle mapping for unavatar.io
+const STOCK_TO_TWITTER: Record<string, string> = {
+    // Tech Giants
+    'AAPL': 'apple',
+    'MSFT': 'microsoft',
+    'GOOGL': 'google',
+    'GOOG': 'google',
+    'AMZN': 'amazon',
+    'META': 'meta',
+    'NVDA': 'nvidia',
+    'TSLA': 'tesla',
+    'AMD': 'amd',
+    'INTC': 'intel',
+    'CRM': 'salesforce',
+    'ORCL': 'oracle',
+    'ADBE': 'adobe',
+    'CSCO': 'cisco',
+    'IBM': 'ibm',
+    'QCOM': 'qualcomm',
+    'TXN': 'txinstruments',
+    'AVGO': 'broadcom',
+    'NOW': 'servicenow',
+    'INTU': 'intuit',
+    // Finance
+    'JPM': 'jpmorgan',
+    'BAC': 'bankofamerica',
+    'WFC': 'wellsfargo',
+    'GS': 'goldmansachs',
+    'V': 'visa',
+    'MA': 'mastercard',
+    'AXP': 'americanexpress',
+    'BLK': 'blackrock',
+    'C': 'citi',
+    'SCHW': 'charlesschwab',
+    'COIN': 'coinbase',
+    'HOOD': 'robinhoodapp',
+    // Consumer
+    'KO': 'cocacola',
+    'PEP': 'pepsi',
+    'MCD': 'mcdonalds',
+    'SBUX': 'starbucks',
+    'NKE': 'nike',
+    'DIS': 'disney',
+    'NFLX': 'netflix',
+    'COST': 'costco',
+    'WMT': 'walmart',
+    'TGT': 'target',
+    'HD': 'homedepot',
+    'LOW': 'lowes',
+    // Healthcare
+    'JNJ': 'jnj',
+    'PFE': 'pfizer',
+    'UNH': 'uhc',
+    'MRK': 'merck',
+    'ABBV': 'abbvie',
+    'LLY': 'lillypad',
+    'TMO': 'thermofisher',
+    'BMY': 'bmsnews',
+    // Energy/Industrial
+    'XOM': 'exxonmobil',
+    'CVX': 'chevron',
+    'BA': 'boeing',
+    'CAT': 'caterpillarinc',
+    'GE': 'generalelectric',
+    'HON': 'honeywell',
+    'UPS': 'ups',
+    'FDX': 'fedex',
+    // Auto
+    'F': 'ford',
+    'GM': 'gm',
+    'RIVN': 'rivian',
+    'LCID': 'lucidmotors',
+    // Communications
+    'T': 'att',
+    'VZ': 'verizon',
+    'TMUS': 'tmobile',
+    // Other Tech
+    'UBER': 'uber',
+    'LYFT': 'lyft',
+    'ABNB': 'airbnb',
+    'SQ': 'square',
+    'SHOP': 'shopify',
+    'SNOW': 'snowflake',
+    'PLTR': 'palantirtech',
+    'ZM': 'zoom',
+    'SNAP': 'snap',
+    'PINS': 'pinterest',
+    'TWLO': 'twilio',
+    'DDOG': 'datadoghq',
+    'NET': 'cloudflare',
+    'CRWD': 'crowdstrike',
+    'ZS': 'zscaler',
+    'OKTA': 'okta',
+    'MDB': 'mongodb',
+    'SPOT': 'spotify',
+    'ROKU': 'roku',
+    'U': 'unitygames',
+    'RBLX': 'roblox',
+    'EA': 'ea',
+    'TTWO': 'rockstargames',
+    'ATVI': 'activision',
+    // SPY/Indexes
+    'SPY': 'spglobal',
+    'QQQ': 'invesco',
+    'IWM': 'ishares',
+    'DIA': 'spglobal',
+    // PayPal
+    'PYPL': 'paypal',
+};
+
 // Primary logo sources (CoinGecko CDN) - known working URLs
 const TOKEN_LOGOS: Record<string, string> = {
     'BTC': 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
@@ -108,6 +218,18 @@ function getJsDelivrUrl(symbol: string): string | null {
     return `https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${coingeckoId}/standard.png`;
 }
 
+// Get unavatar.io URL for stocks using Twitter handle
+function getUnavatarUrl(symbol: string): string | null {
+    const twitterHandle = STOCK_TO_TWITTER[symbol];
+    if (!twitterHandle) return null;
+    return `https://unavatar.io/x/${twitterHandle}`;
+}
+
+// Check if symbol is a stock
+function isStockSymbol(symbol: string): boolean {
+    return symbol in STOCK_TO_TWITTER;
+}
+
 export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLogoProps) {
     const [imgError, setImgError] = useState(false);
     const [fallbackError, setFallbackError] = useState(false);
@@ -115,10 +237,22 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
     // Get the base symbol (remove -USD, -PERP, etc.)
     const baseSymbol = symbol.replace(/-USD$/, '').replace(/-PERP$/, '').toUpperCase();
 
-    // Primary: CoinGecko direct URL
-    const primaryUrl = TOKEN_LOGOS[baseSymbol];
-    // Fallback: jsDelivr CDN
-    const fallbackUrl = getJsDelivrUrl(baseSymbol);
+    // Check if this is a stock
+    const isStock = isStockSymbol(baseSymbol);
+
+    // Get logo URLs based on asset type
+    let primaryUrl: string | null = null;
+    let fallbackUrl: string | null = null;
+
+    if (isStock) {
+        // For stocks, use unavatar.io (Twitter profile images)
+        primaryUrl = getUnavatarUrl(baseSymbol);
+        fallbackUrl = null; // No fallback for stocks
+    } else {
+        // For crypto, use CoinGecko -> jsDelivr
+        primaryUrl = TOKEN_LOGOS[baseSymbol] || null;
+        fallbackUrl = getJsDelivrUrl(baseSymbol);
+    }
 
     // Determine which URL to use
     const logoUrl = imgError ? fallbackUrl : primaryUrl;
@@ -127,8 +261,14 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
     if ((imgError && fallbackError) || (!logoUrl && !fallbackUrl)) {
         return (
             <div
-                className={`rounded-full bg-gradient-to-br from-[#FFD60A] to-[#FF9500] flex items-center justify-center flex-shrink-0 ${className}`}
-                style={{ width: size, height: size }}
+                className={`rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
+                style={{
+                    width: size,
+                    height: size,
+                    background: isStock
+                        ? 'linear-gradient(135deg, #1E3A5F 0%, #2D5A87 100%)' // Blue for stocks
+                        : 'linear-gradient(135deg, #FFD60A 0%, #FF9500 100%)' // Yellow/orange for crypto
+                }}
             >
                 <span className="text-white font-bold" style={{ fontSize: size / 2.5 }}>
                     {baseSymbol.charAt(0)}
@@ -143,7 +283,7 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
     if (urlToUse) {
         return (
             <div
-                className={`rounded-full overflow-hidden flex-shrink-0 bg-white/10 ${className}`}
+                className={`rounded-full overflow-hidden flex-shrink-0 ${isStock ? 'bg-white' : 'bg-white/10'} ${className}`}
                 style={{ width: size, height: size }}
             >
                 <Image
@@ -168,8 +308,14 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
     // Final fallback - letter
     return (
         <div
-            className={`rounded-full bg-gradient-to-br from-[#FFD60A] to-[#FF9500] flex items-center justify-center flex-shrink-0 ${className}`}
-            style={{ width: size, height: size }}
+            className={`rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
+            style={{
+                width: size,
+                height: size,
+                background: isStock
+                    ? 'linear-gradient(135deg, #1E3A5F 0%, #2D5A87 100%)'
+                    : 'linear-gradient(135deg, #FFD60A 0%, #FF9500 100%)'
+            }}
         >
             <span className="text-white font-bold" style={{ fontSize: size / 2.5 }}>
                 {baseSymbol.charAt(0)}
@@ -177,8 +323,3 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
         </div>
     );
 }
-
-
-
-
-

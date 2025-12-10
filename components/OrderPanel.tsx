@@ -155,29 +155,31 @@ export default function OrderPanel() {
 
     return (
         <div className="h-full flex flex-col min-w-0">
-            {/* Mode Toggle Header */}
-            <div className="p-3">
-                <div className="flex items-center justify-center gap-1 p-1 bg-bg-tertiary rounded-xl">
-                    <button
-                        onClick={() => setMode('basic')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${mode === 'basic'
-                            ? 'bg-primary text-primary-foreground shadow-md'
-                            : 'text-coffee-medium hover:text-white'
-                            }`}
-                    >
-                        <Zap className="w-4 h-4" />
-                        {t.order.basic}
-                    </button>
-                    <button
-                        onClick={() => setMode('advanced')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${mode === 'advanced'
-                            ? 'bg-primary text-primary-foreground shadow-md'
-                            : 'text-coffee-medium hover:text-white'
-                            }`}
-                    >
-                        <Settings2 className="w-4 h-4" />
-                        {t.order.advanced}
-                    </button>
+            {/* Mode Toggle Header - HIDDEN FOR NOW, keeping code for later */}
+            <div className="hidden">
+                <div className="p-3">
+                    <div className="flex items-center justify-center gap-1 p-1 bg-bg-tertiary rounded-xl">
+                        <button
+                            onClick={() => setMode('basic')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${mode === 'basic'
+                                ? 'bg-primary text-primary-foreground shadow-md'
+                                : 'text-coffee-medium hover:text-white'
+                                }`}
+                        >
+                            <Zap className="w-4 h-4" />
+                            {t.order.basic}
+                        </button>
+                        <button
+                            onClick={() => setMode('advanced')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-semibold transition-all ${mode === 'advanced'
+                                ? 'bg-primary text-primary-foreground shadow-md'
+                                : 'text-coffee-medium hover:text-white'
+                                }`}
+                        >
+                            <Settings2 className="w-4 h-4" />
+                            {t.order.advanced}
+                        </button>
+                    </div>
                 </div>
             </div>
 

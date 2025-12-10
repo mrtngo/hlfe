@@ -9,7 +9,7 @@ export const HYPERLIQUID_MAINNET_WS = 'wss://api.hyperliquid.xyz/ws';
 export const HYPERLIQUID_TESTNET_WS = 'wss://api.hyperliquid-testnet.xyz/ws';
 
 // Network configuration - set to false for mainnet
-export const IS_TESTNET = true;
+export const IS_TESTNET = false;
 export const API_URL = IS_TESTNET ? HYPERLIQUID_TESTNET_URL : HYPERLIQUID_MAINNET_URL;
 export const WS_URL = IS_TESTNET ? HYPERLIQUID_TESTNET_WS : HYPERLIQUID_MAINNET_WS;
 
