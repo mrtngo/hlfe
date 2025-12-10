@@ -88,7 +88,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const getUsername = () => {
         if (user?.username) return `@${user.username}`;
         if (user?.display_name) return user.display_name;
-        if (!address) return 'Guest';
+        if (!address) return '';
         return `${address.slice(0, 4)}...${address.slice(-4)}`;
     };
 
@@ -184,7 +184,8 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     <div className="space-y-3">
                         {positions.map((position) => {
                             const isLong = position.side === 'long';
-                            const pnlColor = position.unrealizedPnl >= 0 ? 'text-bullish' : 'text-bearish';
+                            // Use green for profit, red for loss (iOS style colors)
+                            const pnlColor = position.unrealizedPnl >= 0 ? 'text-[#34C759]' : 'text-[#FF3B30]';
 
                             return (
                                 <div

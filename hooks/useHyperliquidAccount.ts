@@ -44,11 +44,19 @@ function parsePosition(pos: any, markets: Market[]): Position | null {
     const symbol = `${cleanCoin}-USD`;
 
     const entryPx = parseFloat(position.entryPx || '0');
-    const markPx = parseFloat(position.markPx || '0');
+    let markPx = parseFloat(position.markPx || '0');
     const liqPx = parseFloat(position.liqPx || position.liquidationPx || '0');
     const leverage = typeof position.leverage?.value === 'string'
         ? parseFloat(position.leverage.value)
         : (position.leverage?.value || parseFloat(position.leverage) || 1);
+
+    // Get market info for additional data and price fallback
+    const market = markets.find(m => m.name === cleanCoin || m.symbol === symbol);
+
+    // If markPx is 0 or same as entry (API sometimes doesn't update), use current market price
+    if (markPx === 0 || markPx === entryPx) {
+        markPx = market?.price || entryPx;
+    }
 
     const side = szi > 0 ? 'long' : 'short';
     const size = Math.abs(szi);
@@ -61,9 +69,6 @@ function parsePosition(pos: any, markets: Market[]): Position | null {
     const notionalValue = entryPx * size;
     const margin = notionalValue / leverage;
     const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
-
-    // Get market info for additional data
-    const market = markets.find(m => m.name === cleanCoin || m.symbol === symbol);
 
     return {
         symbol,
