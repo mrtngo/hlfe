@@ -137,8 +137,8 @@ export interface BridgeExecutionCallbacks {
 }
 
 /**
- * Execute a bridge transaction using Rhino.fi SDK
- * Note: This requires the full SDK with a provider/signer
+ * Execute a bridge transaction using Rhino.fi REST API
+ * This approach works in browser without Node.js polyfills
  */
 export async function executeBridge(
     quote: BridgeQuote,
@@ -147,60 +147,60 @@ export async function executeBridge(
     callbacks?: BridgeExecutionCallbacks
 ): Promise<{ success: boolean; txHash?: string; error?: string }> {
     try {
-        // Dynamic import to avoid SSR issues
-        const { RhinoSdk, SupportedChains, SupportedTokens } = await import('@rhino.fi/sdk');
-        const { getEvmChainAdapterFromProvider } = await import('@rhino.fi/sdk/adapters/evm');
-
-        // Note: Rhino.fi requires an API key for the SDK
-        // For now, we'll use the API directly for quotes and 
-        // the SDK for execution when we have the API key configured
-
-        const apiKey = process.env.NEXT_PUBLIC_RHINO_API_KEY;
-
-        if (!apiKey) {
-            // Fallback: Return quote info and let user bridge manually
-            console.warn('No Rhino.fi API key configured. Manual bridge required.');
-            return {
-                success: false,
-                error: 'Rhino.fi API key not configured. Please set NEXT_PUBLIC_RHINO_API_KEY.',
-            };
-        }
-
-        const sdk = RhinoSdk({ apiKey });
-
         callbacks?.onApprovalRequired?.();
 
-        const result = await sdk.bridge({
-            type: 'bridge',
-            amount: quote.inputAmount,
-            chainIn: SupportedChains.BASE,
-            chainOut: SupportedChains.ARBITRUM_ONE,
-            token: SupportedTokens.USDC,
-            depositor: userAddress,
-            recipient: userAddress,
-            mode: 'receive',
-        }, {
-            getChainAdapter: (chainConfig: any) =>
-                getEvmChainAdapterFromProvider(walletProvider, chainConfig),
+        // Step 1: Commit the quote to get transaction data
+        const commitResponse = await fetch(`${RHINO_API_URL}/bridge/commit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                quoteId: quote.quoteId,
+                depositor: userAddress,
+                recipient: userAddress,
+            }),
         });
 
-        if (result.data) {
-            const txHash = result.data.withdrawTxHash || result.data.depositTxHash;
-            callbacks?.onComplete?.(txHash || '');
+        if (!commitResponse.ok) {
+            const errorText = await commitResponse.text();
+            console.error('Rhino.fi commit error:', errorText);
+            throw new Error('Failed to commit bridge quote');
+        }
+
+        const commitData = await commitResponse.json();
+        console.log('🦏 Rhino.fi commit response:', commitData);
+
+        // Step 2: Execute the transaction using the wallet provider
+        // The commit response should contain transaction data to sign and send
+        if (commitData.depositTx) {
+            const tx = commitData.depositTx;
+
+            // Request the wallet to send the transaction
+            const txHash = await walletProvider.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: userAddress,
+                    to: tx.to,
+                    data: tx.data,
+                    value: tx.value || '0x0',
+                    gas: tx.gas,
+                }],
+            });
+
+            callbacks?.onBridgeSent?.(txHash);
+
+            // Step 3: Wait for confirmation (optional polling)
+            console.log('🦏 Bridge transaction sent:', txHash);
+
+            callbacks?.onComplete?.(txHash);
             return {
                 success: true,
                 txHash,
             };
         } else {
-            // BridgeError is a discriminated union - extract error info safely
-            const errorMsg = result.error?.type
-                ? `Bridge error: ${result.error.type}`
-                : 'Bridge execution failed';
-            callbacks?.onError?.(new Error(errorMsg));
-            return {
-                success: false,
-                error: errorMsg,
-            };
+            // If no direct transaction, provide instructions
+            throw new Error('Bridge requires manual execution. Please use rhino.fi directly.');
         }
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Bridge execution failed';
