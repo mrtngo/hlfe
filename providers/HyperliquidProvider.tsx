@@ -134,6 +134,11 @@ interface HyperliquidContextType {
     builderFeeLoading: boolean;
     approveBuilderFee: () => Promise<{ success: boolean; message: string }>;
     checkBuilderFeeApproval: () => Promise<boolean>;
+
+    // DEX Abstraction (required for Trade.xyz stocks)
+    dexAbstractionEnabled: boolean;
+    dexAbstractionLoading: boolean;
+    enableDexAbstraction: () => Promise<{ success: boolean; message: string }>;
 }
 
 const HyperliquidContext = createContext<HyperliquidContextType | undefined>(undefined);
@@ -342,6 +347,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     // Builder fee state (for mainnet trading fees)
     const [builderFeeApproved, setBuilderFeeApproved] = useState(false);
     const [builderFeeLoading, setBuilderFeeLoading] = useState(false);
+
+    // DEX abstraction state (required for Trade.xyz stocks)
+    const [dexAbstractionEnabled, setDexAbstractionEnabled] = useState(false);
+    const [dexAbstractionLoading, setDexAbstractionLoading] = useState(false);
 
     // User data (fills, funding, PnL) - now handled by useUserData hook
     const {
@@ -1181,6 +1190,92 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [address, wallets, checkBuilderFeeApproval]);
 
+    // Enable DEX abstraction for Trade.xyz stocks (one-time setup)
+    const enableDexAbstraction = useCallback(async (): Promise<{ success: boolean; message: string }> => {
+        if (!address) {
+            return { success: false, message: 'Wallet not connected' };
+        }
+
+        if (dexAbstractionEnabled) {
+            return { success: true, message: 'DEX abstraction already enabled' };
+        }
+
+        setDexAbstractionLoading(true);
+        try {
+            const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
+            const { signL1Action } = hyperliquidSDK;
+
+            // Get signing provider
+            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+            let signingProvider = null;
+
+            if (embeddedWallet) {
+                signingProvider = await embeddedWallet.getEthereumProvider();
+            } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                signingProvider = (window as any).ethereum;
+            } else {
+                throw new Error('No wallet available for signing');
+            }
+
+            const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+            const browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
+
+            const nonce = Date.now();
+
+            // Use the simpler agent version which uses L1 action signing (same as orders)
+            const action = {
+                type: 'agentEnableDexAbstraction'
+            };
+
+            console.log('📝 AgentEnableDexAbstraction action:', action);
+
+            // Sign as L1 action (same as order placement)
+            const signature = await signL1Action(
+                browserWallet as any,
+                action,
+                null, // vaultAddress
+                nonce,
+                !IS_TESTNET // isMainnet
+            );
+
+            const response = await fetch(`${API_URL}/exchange`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action,
+                    nonce,
+                    signature
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`Failed to enable DEX abstraction: ${error}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ DEX abstraction result:', result);
+
+            if (result.status === 'err') {
+                throw new Error(result.response || 'Failed to enable DEX abstraction');
+            }
+
+            setDexAbstractionEnabled(true);
+            return {
+                success: true,
+                message: 'Stock trading enabled! You can now trade Trade.xyz stocks.'
+            };
+        } catch (error: any) {
+            console.error('Error enabling DEX abstraction:', error);
+            return {
+                success: false,
+                message: error.message || 'Failed to enable stock trading'
+            };
+        } finally {
+            setDexAbstractionLoading(false);
+        }
+    }, [address, wallets, dexAbstractionEnabled]);
+
     // Place order
     const placeOrder = useCallback(async (
         symbol: string,
@@ -1225,6 +1320,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             let meta: any;
             let assetIndex: number;
             let assetName: string;
+            let actualSzDecimals: number | undefined; // szDecimals from fresh API data
             let referencePrice: number | null = null; // Store reference price for Trade.xyz assets
             const baseCoin = symbol.split('-')[0]; // e.g., "TSLA" from "TSLA-USD"
 
@@ -1260,6 +1356,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 if (assetIndex === -1) {
                     throw new Error(`Trade.xyz asset index not found for ${assetName}. Available assets: ${meta.universe?.map((u: any) => u.name).slice(0, 10).join(', ') || 'none'}...`);
                 }
+
+                // Get szDecimals from fresh DEX meta (not cached market data)
+                const dexAssetMeta = meta.universe[assetIndex];
+                actualSzDecimals = dexAssetMeta?.szDecimals;
+                console.log('📊 Trade.xyz DEX meta szDecimals:', actualSzDecimals, 'vs cached market:', market.szDecimals);
 
                 // Get current reference price from asset context for accurate market orders
                 const assetCtx = assetCtxs?.[assetIndex];
@@ -1413,19 +1514,22 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 });
 
                 if (isTradeXyzAsset && referencePrice) {
-                    // For Trade.xyz assets, use reference price with minimal slippage (0.01%) or directly
-                    // The exchange requires price to be within 80% of reference, so we use reference price directly
-                    // with a tiny adjustment to ensure execution
-                    const minimalSlippage = 0.0001; // 0.01% - very minimal
+                    // For Trade.xyz assets (stocks), use higher slippage (1%) due to lower liquidity
+                    // and wider spreads compared to crypto. IOC orders fill at best available price
+                    // up to this limit, so this just sets the max acceptable slippage.
+                    const stockSlippage = 0.01; // 1% max slippage for stocks
                     if (isBuy) {
-                        finalPx = referencePrice * (1 + minimalSlippage);
+                        finalPx = referencePrice * (1 + stockSlippage);
                     } else {
-                        finalPx = referencePrice * (1 - minimalSlippage);
+                        finalPx = referencePrice * (1 - stockSlippage);
                     }
-                    console.log('💰 Using Trade.xyz reference price with minimal slippage:', {
+                    const slippageDollars = Math.abs(finalPx - referencePrice);
+                    console.log('💰 Trade.xyz stock order with 1% max slippage:', {
                         referencePrice,
-                        finalPx,
-                        slippage: minimalSlippage * 100 + '%'
+                        limitPrice: finalPx,
+                        maxSlippage: stockSlippage * 100 + '%',
+                        maxSlippageDollars: '$' + slippageDollars.toFixed(2),
+                        note: 'IOC fills at best price, this is just the max you\'ll pay'
                     });
                 } else {
                     // For regular assets, use 0.3% slippage for market orders
@@ -1489,11 +1593,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             console.log('📊 Price after tick size rounding:', finalPx);
 
             // Round size based on asset's szDecimals (HIP-3 markets have specific precision requirements)
-            // Note: We don't manually round the price - let the SDK's orderToWire handle it
-            // The SDK knows the correct tick size for each asset and will format the price correctly
+            // For Trade.xyz assets, use szDecimals from fresh DEX meta (actualSzDecimals)
+            // For core assets, use cached market.szDecimals
+            const szDecimalsToUse = actualSzDecimals ?? market.szDecimals;
+            console.log('📊 Using szDecimals for size rounding:', szDecimalsToUse);
+
             let roundedSize = size;
-            if (market.szDecimals !== undefined) {
-                const roundingMultiplier = Math.pow(10, market.szDecimals);
+            if (szDecimalsToUse !== undefined) {
+                const roundingMultiplier = Math.pow(10, szDecimalsToUse);
                 roundedSize = Math.floor(size * roundingMultiplier) / roundingMultiplier;
             }
 
@@ -1526,8 +1633,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             // orderToWire formats the price and size correctly according to Hyperliquid requirements
             console.log('📝 Order Request before orderToWire:', JSON.stringify(orderRequest, null, 2));
-            console.log('📝 Asset Index:', assetIndex, 'Asset Name:', assetName);
-            const wireOrder = orderToWire(orderRequest, assetIndex);
+
+            // For HIP-3 DEX assets (Trade.xyz), use 110000 + index offset
+            // Similar to spot assets using 10000 + index
+            const wireAssetIndex = isTradeXyzAsset ? 110000 + assetIndex : assetIndex;
+            console.log('📝 Asset Index:', assetIndex, 'Wire Asset Index:', wireAssetIndex, 'Asset Name:', assetName);
+            const wireOrder = orderToWire(orderRequest, wireAssetIndex);
 
             console.log('📝 Market szDecimals:', market.szDecimals);
             console.log('📝 Original size:', size, 'Rounded size:', roundedSize);
@@ -1668,6 +1779,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const exchangeUrl = isTradeXyzAsset
                 ? `${API_URL}/exchange?dex=xyz`
                 : `${API_URL}/exchange`;
+
+            console.log('📤 Endpoint:', exchangeUrl, 'isTradeXyzAsset:', isTradeXyzAsset);
 
             const response = await fetch(exchangeUrl, {
                 method: 'POST',
@@ -2167,6 +2280,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         builderFeeLoading,
         approveBuilderFee,
         checkBuilderFeeApproval,
+        // DEX abstraction (required for Trade.xyz stocks)
+        dexAbstractionEnabled,
+        dexAbstractionLoading,
+        enableDexAbstraction,
     };
 
     return (

@@ -12,7 +12,7 @@ import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 
 export default function Profile() {
     const { t, language, setLanguage } = useLanguage();
-    const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet, syncTrades } = useHyperliquid();
+    const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet, syncTrades, dexAbstractionEnabled, dexAbstractionLoading, enableDexAbstraction } = useHyperliquid();
     const { logout, exportWallet, user: privyUser } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
 
@@ -356,6 +356,33 @@ export default function Profile() {
                     {feeError && (
                         <div className="text-xs text-red-400 ml-8">{feeError}</div>
                     )}
+
+                    {/* Stock Trading (DEX Abstraction) - Required for Trade.xyz stocks */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Zap className="w-5 h-5 text-coffee-medium" />
+                            <span className="text-white text-sm">{profile.stockTrading || 'Stock Trading'}</span>
+                        </div>
+                        {dexAbstractionEnabled ? (
+                            <Check className="w-5 h-5 text-[#FFFF00]" />
+                        ) : (
+                            <button
+                                onClick={async () => {
+                                    const result = await enableDexAbstraction();
+                                    if (!result.success) {
+                                        setError(result.message);
+                                    } else {
+                                        setSuccess(result.message);
+                                        setTimeout(() => setSuccess(null), 3000);
+                                    }
+                                }}
+                                disabled={dexAbstractionLoading}
+                                className="px-3 py-1.5 border border-[#FFFF00] text-[#FFFF00] rounded-lg text-xs font-semibold hover:bg-[#FFFF00] hover:text-black transition-all"
+                            >
+                                {dexAbstractionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (profile.enable || 'Enable')}
+                            </button>
+                        )}
+                    </div>
 
                     {/* Export Wallet */}
                     {privyUser?.wallet?.connectorType === 'embedded' && (
