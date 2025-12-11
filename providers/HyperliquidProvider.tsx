@@ -36,6 +36,7 @@ export interface Position {
     leverage: number;
     unrealizedPnl: number;
     unrealizedPnlPercent: number;
+    isStock?: boolean; // True for Trade.xyz stocks
 }
 
 export interface Order {
@@ -621,9 +622,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 : (position.leverage?.value || 1);
                             const liquidationPx = parseFloat(position.liquidationPx || '0');
 
-                            // Get current mark price - use normalized coin name
+                            // Get current mark price - calculate from positionValue/size (more accurate)
+                            // or fall back to market price, then entry price
+                            const positionValue = parseFloat(position.positionValue || '0');
+                            const sizeForCalc = Math.abs(szi);
+                            const calculatedMarkPrice = sizeForCalc > 0 ? positionValue / sizeForCalc : 0;
                             const market = markets.find(m => m.name === cleanCoin || m.symbol === `${cleanCoin}-USD`);
-                            const markPrice = market?.price || entryPx;
+                            const markPrice = calculatedMarkPrice > 0 ? calculatedMarkPrice : (market?.price || entryPx);
 
                             // Calculate P&L % based on margin (not notional value)
                             const absSize = Math.abs(szi);
@@ -642,7 +647,69 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 leverage,
                                 unrealizedPnl,
                                 unrealizedPnlPercent: pnlPercent,
+                                isStock: (position.coin || '').startsWith('xyz:'),
                             });
+                        }
+
+                        // Also fetch Trade.xyz DEX positions
+                        try {
+                            const dexResponse = await fetch('https://api.hyperliquid.xyz/info', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    type: 'clearinghouseState',
+                                    user: normalizedAddress,
+                                    dex: 'xyz'
+                                })
+                            });
+
+                            if (dexResponse.ok) {
+                                const dexState = await dexResponse.json();
+                                console.log('📊 DEX State response:', dexState);
+
+                                if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
+                                    for (const pos of dexState.assetPositions) {
+                                        const position = pos.position;
+                                        const cleanCoin = (position.coin || '').replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                                        const szi = parseFloat(position.szi);
+
+                                        if (szi === 0) continue;
+
+                                        const entryPx = parseFloat(position.entryPx || '0');
+                                        const unrealizedPnl = parseFloat(position.unrealizedPnl || '0');
+                                        const leverage = typeof position.leverage?.value === 'string'
+                                            ? parseFloat(position.leverage.value)
+                                            : (position.leverage?.value || 1);
+                                        const liquidationPx = parseFloat(position.liquidationPx || '0');
+
+                                        const absSize = Math.abs(szi);
+                                        const positionValue = parseFloat(position.positionValue || '0');
+                                        const calculatedMarkPrice = absSize > 0 ? positionValue / absSize : 0;
+                                        const market = markets.find(m => m.name === cleanCoin || m.symbol === `${cleanCoin}-USD`);
+                                        const markPrice = calculatedMarkPrice > 0 ? calculatedMarkPrice : (market?.price || entryPx);
+                                        const notionalValue = entryPx * absSize;
+                                        const margin = notionalValue / leverage;
+                                        const pnlPercent = margin > 0 ? (unrealizedPnl / margin) * 100 : 0;
+
+                                        activePositions.push({
+                                            symbol: `${cleanCoin}-USD`,
+                                            name: cleanCoin,
+                                            side: szi > 0 ? 'long' : 'short',
+                                            size: absSize,
+                                            entryPrice: entryPx,
+                                            markPrice,
+                                            liquidationPrice: liquidationPx,
+                                            leverage,
+                                            unrealizedPnl,
+                                            unrealizedPnlPercent: pnlPercent,
+                                            isStock: true,
+                                        });
+                                    }
+                                    console.log('✅ Added DEX positions:', dexState.assetPositions.length);
+                                }
+                            }
+                        } catch (dexErr) {
+                            console.warn('⚠️ Failed to fetch DEX positions:', dexErr);
                         }
 
                         setPositions(activePositions);

@@ -177,13 +177,44 @@ export function useHyperliquidAccount(
                     });
                 }
 
-                // Extract positions
+                // Extract core perps positions
                 if (userState.assetPositions && Array.isArray(userState.assetPositions)) {
                     const activePositions: Position[] = [];
                     for (const pos of userState.assetPositions) {
                         const parsed = parsePosition(pos, markets);
                         if (parsed) activePositions.push(parsed);
                     }
+
+                    // Also fetch Trade.xyz DEX positions
+                    try {
+                        const dexResponse = await fetch('https://api.hyperliquid.xyz/info', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                type: 'clearinghouseState',
+                                user: normalizedAddress,
+                                dex: 'xyz'
+                            })
+                        });
+
+                        if (dexResponse.ok) {
+                            const dexState = await dexResponse.json();
+                            if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
+                                for (const pos of dexState.assetPositions) {
+                                    const parsed = parsePosition(pos, markets);
+                                    if (parsed) {
+                                        // Mark as stock position
+                                        parsed.isStock = true;
+                                        activePositions.push(parsed);
+                                    }
+                                }
+                                console.log('✅ Fetched DEX positions:', dexState.assetPositions.length);
+                            }
+                        }
+                    } catch (dexErr) {
+                        console.warn('⚠️ Failed to fetch DEX positions:', dexErr);
+                    }
+
                     setPositions(activePositions);
                 }
             }
@@ -240,6 +271,35 @@ export function useHyperliquidAccount(
                     const parsed = parsePosition(pos, markets);
                     if (parsed) activePositions.push(parsed);
                 }
+
+                // Also fetch Trade.xyz DEX positions
+                try {
+                    const dexResponse = await fetch('https://api.hyperliquid.xyz/info', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'clearinghouseState',
+                            user: normalizedAddress,
+                            dex: 'xyz'
+                        })
+                    });
+
+                    if (dexResponse.ok) {
+                        const dexState = await dexResponse.json();
+                        if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
+                            for (const pos of dexState.assetPositions) {
+                                const parsed = parsePosition(pos, markets);
+                                if (parsed) {
+                                    parsed.isStock = true;
+                                    activePositions.push(parsed);
+                                }
+                            }
+                        }
+                    }
+                } catch (dexErr) {
+                    console.warn('⚠️ Failed to fetch DEX positions on refresh:', dexErr);
+                }
+
                 setPositions(activePositions);
             }
         } catch (error) {
