@@ -607,6 +607,36 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         console.log('📈 Asset Positions:', userState.assetPositions);
                         const activePositions: Position[] = [];
 
+                        // Fetch fills to calculate fees for open positions
+                        let feesByCoin: Record<string, number> = {};
+                        try {
+                            const fillsResponse = await fetch('https://api.hyperliquid.xyz/info', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    type: 'userFills',
+                                    user: normalizedAddress
+                                })
+                            });
+
+                            if (fillsResponse.ok) {
+                                const fills = await fillsResponse.json();
+                                // Sum fees for each coin's "Open" fills (position opening trades)
+                                for (const fill of fills) {
+                                    if (fill.dir?.includes('Open')) {
+                                        const coin = (fill.coin || '').replace(/-PERP$/i, '').replace(/^xyz:/i, '');
+                                        const fee = parseFloat(fill.fee || '0');
+                                        const builderFee = parseFloat(fill.builderFee || '0');
+                                        feesByCoin[coin] = (feesByCoin[coin] || 0) + fee + builderFee;
+                                    }
+                                }
+                                console.log('💰 Fees by coin:', feesByCoin);
+                            }
+                        } catch (fillsErr) {
+                            console.warn('⚠️ Failed to fetch fills for fee calculation:', fillsErr);
+                        }
+
+
                         for (const pos of userState.assetPositions) {
                             const position = pos.position;
                             // Normalize coin name to match market symbols (strip -PERP and xyz: prefix)
@@ -634,7 +664,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const absSize = Math.abs(szi);
                             const notionalValue = entryPx * absSize;
                             const margin = notionalValue / leverage;
-                            const pnlPercent = margin > 0 ? (unrealizedPnl / margin) * 100 : 0;
+
+                            // Subtract fees to show net PnL (unrealized - trading fees)
+                            const fees = feesByCoin[cleanCoin] || 0;
+                            const netPnl = unrealizedPnl - fees;
+                            const pnlPercent = margin > 0 ? (netPnl / margin) * 100 : 0;
 
                             activePositions.push({
                                 symbol: `${cleanCoin}-USD`,
@@ -645,7 +679,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 markPrice,
                                 liquidationPrice: liquidationPx,
                                 leverage,
-                                unrealizedPnl,
+                                unrealizedPnl: netPnl, // Now includes fees
                                 unrealizedPnlPercent: pnlPercent,
                                 isStock: (position.coin || '').startsWith('xyz:'),
                             });
@@ -689,7 +723,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                         const markPrice = calculatedMarkPrice > 0 ? calculatedMarkPrice : (market?.price || entryPx);
                                         const notionalValue = entryPx * absSize;
                                         const margin = notionalValue / leverage;
-                                        const pnlPercent = margin > 0 ? (unrealizedPnl / margin) * 100 : 0;
+
+                                        // Subtract fees to show net PnL
+                                        const fees = feesByCoin[cleanCoin] || 0;
+                                        const netPnl = unrealizedPnl - fees;
+                                        const pnlPercent = margin > 0 ? (netPnl / margin) * 100 : 0;
 
                                         activePositions.push({
                                             symbol: `${cleanCoin}-USD`,
@@ -700,7 +738,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                             markPrice,
                                             liquidationPrice: liquidationPx,
                                             leverage,
-                                            unrealizedPnl,
+                                            unrealizedPnl: netPnl, // Now includes fees
                                             unrealizedPnlPercent: pnlPercent,
                                             isStock: true,
                                         });

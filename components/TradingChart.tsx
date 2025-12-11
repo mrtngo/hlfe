@@ -1,11 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useCandleData, type Timeframe } from '@/hooks/useCandleData';
 import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, Scatter } from 'recharts';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, Maximize2 } from 'lucide-react';
 
 // Rayo Lightning Yellow
 const RAYO_YELLOW = '#FFD60A';
@@ -17,6 +18,7 @@ interface TradingChartProps {
 }
 
 export default function TradingChart({ symbol }: TradingChartProps = {}) {
+    const router = useRouter();
     const { t } = useLanguage();
     const { selectedMarket, getMarket, fills, positions } = useHyperliquid();
     const [timeframe, setTimeframe] = useState<Timeframe>('1h');
@@ -136,15 +138,25 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                     </h3>
                     <div className="w-2 h-2 bg-bullish rounded-full"></div>
                 </div>
-                {/* Position markers legend */}
-                {currentPosition && (
-                    <div className="flex items-center gap-3 text-xs">
-                        <span className="text-[#00FF00]">◆ Entry</span>
-                        {currentPosition.liquidationPrice > 0 && (
-                            <span className="text-[#FF4444]">◆ Liq</span>
-                        )}
-                    </div>
-                )}
+                <div className="flex items-center gap-3">
+                    {/* Position markers legend */}
+                    {currentPosition && (
+                        <div className="flex items-center gap-3 text-xs">
+                            <span className="text-[#00FF00]">◆ Entry</span>
+                            {currentPosition.liquidationPrice > 0 && (
+                                <span className="text-[#FF4444]">◆ Liq</span>
+                            )}
+                        </div>
+                    )}
+                    {/* Expand to Advanced Trading */}
+                    <button
+                        onClick={() => router.push(`/trade?symbol=${marketSymbol}`)}
+                        className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                        title="Advanced Trading"
+                    >
+                        <Maximize2 className="w-4 h-4 text-primary" />
+                    </button>
+                </div>
             </div>
 
             {/* Chart Container - Fixed height to avoid ResponsiveContainer dimension issues */}
