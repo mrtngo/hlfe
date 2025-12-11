@@ -65,6 +65,13 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
         }
     }, [orderType, market?.price, price]);
 
+    // Clamp leverage when market changes (different maxLeverage)
+    useEffect(() => {
+        if (leverage > maxLeverage) {
+            setLeverage(maxLeverage);
+        }
+    }, [maxLeverage, leverage]);
+
     // Calculate size from percentage
     const setQuickSize = (pct: number) => {
         setSizePercent(pct);
@@ -132,8 +139,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     <button
                         onClick={() => setOrderType('limit')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-l-md border transition-colors ${orderType === 'limit'
-                                ? 'bg-[#FFFF00]/20 border-[#FFFF00]/50 text-[#FFFF00]'
-                                : 'bg-transparent border-white/20 text-white/60 hover:text-white'
+                            ? 'bg-[#FFFF00]/20 border-[#FFFF00]/50 text-[#FFFF00]'
+                            : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
                         Limit
@@ -141,8 +148,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     <button
                         onClick={() => setOrderType('market')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-r-md border-t border-r border-b transition-colors ${orderType === 'market'
-                                ? 'bg-[#FFFF00]/20 border-[#FFFF00]/50 text-[#FFFF00]'
-                                : 'bg-transparent border-white/20 text-white/60 hover:text-white'
+                            ? 'bg-[#FFFF00]/20 border-[#FFFF00]/50 text-[#FFFF00]'
+                            : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
                         Market
@@ -153,28 +160,35 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                 <div className="relative">
                     <button
                         onClick={() => setShowLeverageDropdown(!showLeverageDropdown)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-[#FFFF00]/10 border border-[#FFFF00]/30 rounded text-[#FFFF00]"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-[#FFFF00]/20 border border-[#FFFF00]/50 rounded text-[#FFFF00]"
                     >
                         {Math.min(leverage, maxLeverage)}x
                         <ChevronDown className="w-3 h-3" />
                     </button>
                     {showLeverageDropdown && (
-                        <div className="absolute right-0 top-full mt-1 bg-black border border-[#FFFF00]/20 rounded-lg shadow-xl z-50 p-2 min-w-[120px]">
+                        <div
+                            className="absolute right-0 top-full mt-1 bg-[#111111] border border-[#FFFF00]/30 rounded-lg shadow-2xl z-50 p-3"
+                            style={{ minWidth: '150px' }}
+                        >
+                            <div className="text-center text-[#FFFF00] font-bold text-lg mb-2">
+                                {Math.min(leverage, maxLeverage)}x
+                            </div>
                             <input
                                 type="range"
                                 min="1"
                                 max={maxLeverage}
                                 value={Math.min(leverage, maxLeverage)}
                                 onChange={(e) => setLeverage(parseInt(e.target.value))}
-                                className="w-full accent-[#FFFF00]"
+                                className="w-full h-2 accent-[#FFFF00] bg-white/10 rounded-full"
+                                style={{ accentColor: '#FFFF00' }}
                             />
-                            <div className="flex justify-between text-[9px] text-[#FFFF00]/50 mt-1">
+                            <div className="flex justify-between text-[10px] text-[#FFFF00]/60 mt-1">
                                 <span>1x</span>
                                 <span>{maxLeverage}x</span>
                             </div>
                             <button
                                 onClick={() => setShowLeverageDropdown(false)}
-                                className="w-full mt-2 py-1 text-xs bg-[#FFFF00] text-black font-medium rounded"
+                                className="w-full mt-3 py-1.5 text-xs bg-[#FFFF00] text-black font-bold rounded"
                             >
                                 Confirm
                             </button>
@@ -187,18 +201,18 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             <div className="flex gap-2 mb-4">
                 <button
                     onClick={() => setSide('buy')}
-                    className={`flex-1 py-2.5 text-sm font-bold rounded transition-all ${side === 'buy'
-                            ? 'bg-[#00D4AA] text-white'
-                            : 'bg-[#00D4AA]/20 text-[#00D4AA] hover:bg-[#00D4AA]/30'
+                    className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${side === 'buy'
+                        ? 'bg-[#34C759] text-white shadow-lg'
+                        : 'bg-[#34C759]/20 text-[#34C759] border border-[#34C759]/30 hover:bg-[#34C759]/30'
                         }`}
                 >
                     Buy / Long
                 </button>
                 <button
                     onClick={() => setSide('sell')}
-                    className={`flex-1 py-2.5 text-sm font-bold rounded transition-all ${side === 'sell'
-                            ? 'bg-[#FF5555] text-white'
-                            : 'bg-[#FF5555]/20 text-[#FF5555] hover:bg-[#FF5555]/30'
+                    className={`flex-1 py-3 text-sm font-bold rounded-lg transition-all ${side === 'sell'
+                        ? 'bg-[#FF3B30] text-white shadow-lg'
+                        : 'bg-[#FF3B30]/20 text-[#FF3B30] border border-[#FF3B30]/30 hover:bg-[#FF3B30]/30'
                         }`}
                 >
                     Sell / Short
@@ -207,27 +221,27 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
 
             {/* Available to Trade */}
             <div className="flex justify-between text-xs mb-3">
-                <span className="text-white/60">Avail. to Trade</span>
-                <span className="text-white font-mono">{availableMargin.toFixed(2)} USDC</span>
+                <span className="text-[#FFFF00]/60">Avail. to Trade</span>
+                <span className="text-[#FFFF00] font-mono">{availableMargin.toFixed(2)} USDC</span>
             </div>
 
             {/* Price Input (for limit orders) */}
             {orderType === 'limit' && (
                 <div className="mb-3">
-                    <div className="flex items-center justify-between bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2.5">
-                        <span className="text-xs text-white/60">Price (USDC)</span>
+                    <div className="flex items-center justify-between bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2.5">
+                        <span className="text-xs text-[#FFFF00]/60">Price (USDC)</span>
                         <div className="flex items-center gap-2">
                             <input
                                 type="number"
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}
                                 placeholder="0.00"
-                                className="w-24 text-right bg-transparent text-white text-sm font-mono outline-none"
-                                style={{ color: '#FFFFFF' }}
+                                className="w-24 text-right bg-transparent text-sm font-mono outline-none"
+                                style={{ color: '#FFFF00' }}
                             />
                             <button
                                 onClick={() => market?.price && setPrice(formatPrice(market.price))}
-                                className="text-[10px] text-[#00D4AA] font-medium"
+                                className="text-[10px] text-[#FFFF00] font-medium border border-[#FFFF00]/50 px-1.5 py-0.5 rounded"
                             >
                                 Mid
                             </button>
@@ -238,8 +252,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
 
             {/* Size Input */}
             <div className="mb-3">
-                <div className="flex items-center justify-between bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2.5">
-                    <span className="text-xs text-white/60">Size</span>
+                <div className="flex items-center justify-between bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2.5">
+                    <span className="text-xs text-[#FFFF00]/60">Size</span>
                     <div className="flex items-center gap-2">
                         <input
                             type="number"
@@ -249,10 +263,10 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                                 setSizePercent(0);
                             }}
                             placeholder="0.0000"
-                            className="w-24 text-right bg-transparent text-white text-sm font-mono outline-none"
-                            style={{ color: '#FFFFFF' }}
+                            className="w-24 text-right bg-transparent text-sm font-mono outline-none"
+                            style={{ color: '#FFFF00' }}
                         />
-                        <span className="text-xs text-white/40">{coin}</span>
+                        <span className="text-xs text-[#FFFF00]/50">{coin}</span>
                     </div>
                 </div>
             </div>
@@ -267,7 +281,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         step="25"
                         value={sizePercent}
                         onChange={(e) => setQuickSize(parseInt(e.target.value))}
-                        className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#FFFF00]"
+                        className="w-full h-1 bg-[#FFFF00]/20 rounded-lg appearance-none cursor-pointer accent-[#FFFF00]"
                     />
                     {/* Tick marks */}
                     <div className="flex justify-between mt-1">
@@ -275,12 +289,12 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             <button
                                 key={tick}
                                 onClick={() => setQuickSize(tick)}
-                                className={`w-2 h-2 rounded-full transition-colors ${sizePercent >= tick ? 'bg-[#FFFF00]' : 'bg-white/20'
+                                className={`w-2 h-2 rounded-full transition-colors ${sizePercent >= tick ? 'bg-[#FFFF00]' : 'bg-[#FFFF00]/30'
                                     }`}
                             />
                         ))}
                     </div>
-                    <div className="flex justify-between text-[9px] text-white/40 mt-1">
+                    <div className="flex justify-between text-[9px] text-[#FFFF00]/50 mt-1">
                         <span>0%</span>
                         <span>25%</span>
                         <span>50%</span>
@@ -295,75 +309,75 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                 <label className="flex items-center gap-2 cursor-pointer">
                     <div
                         onClick={() => setReduceOnly(!reduceOnly)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${reduceOnly ? 'bg-[#FFFF00] border-[#FFFF00]' : 'border-white/30 bg-transparent'
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${reduceOnly ? 'bg-[#FFFF00] border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
                             }`}
                     >
                         {reduceOnly && <Check className="w-3 h-3 text-black" />}
                     </div>
-                    <span className="text-xs text-white/70">Reduce Only</span>
+                    <span className="text-xs text-[#FFFF00]/70">Reduce Only</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
                     <div
                         onClick={() => setEnableTpSl(!enableTpSl)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${enableTpSl ? 'bg-[#00D4AA] border-[#00D4AA]' : 'border-white/30 bg-transparent'
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${enableTpSl ? 'bg-[#FFFF00] border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
                             }`}
                     >
-                        {enableTpSl && <Check className="w-3 h-3 text-white" />}
+                        {enableTpSl && <Check className="w-3 h-3 text-black" />}
                     </div>
-                    <span className="text-xs text-white/70">Take Profit / Stop Loss</span>
+                    <span className="text-xs text-[#FFFF00]/70">Take Profit / Stop Loss</span>
                 </label>
             </div>
 
             {/* TP/SL Inputs */}
             {enableTpSl && (
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2">
-                        <span className="text-[10px] text-white/40 block mb-1">TP Price</span>
+                    <div className="bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2">
+                        <span className="text-[10px] text-[#FFFF00]/50 block mb-1">TP Price</span>
                         <input
                             type="number"
                             value={tpPrice}
                             onChange={(e) => setTpPrice(e.target.value)}
                             placeholder="---"
-                            className="w-full bg-transparent text-white text-sm font-mono outline-none"
-                            style={{ color: '#FFFFFF' }}
+                            className="w-full bg-transparent text-sm font-mono outline-none"
+                            style={{ color: '#FFFF00' }}
                         />
                     </div>
-                    <div className="bg-[#1a1a1a] border border-white/10 rounded-lg px-3 py-2">
-                        <span className="text-[10px] text-white/40 block mb-1">SL Price</span>
+                    <div className="bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2">
+                        <span className="text-[10px] text-[#FFFF00]/50 block mb-1">SL Price</span>
                         <input
                             type="number"
                             value={slPrice}
                             onChange={(e) => setSlPrice(e.target.value)}
                             placeholder="---"
-                            className="w-full bg-transparent text-white text-sm font-mono outline-none"
-                            style={{ color: '#FFFFFF' }}
+                            className="w-full bg-transparent text-sm font-mono outline-none"
+                            style={{ color: '#FFFF00' }}
                         />
                     </div>
                 </div>
             )}
 
             {/* Order Summary */}
-            <div className="border-t border-white/10 pt-3 mb-4 space-y-1">
+            <div className="border-t border-[#FFFF00]/20 pt-3 mb-4 space-y-1">
                 <div className="flex justify-between text-xs">
-                    <span className="text-white/50">Order Value</span>
-                    <span className="text-white font-mono">${orderValue.toFixed(2)}</span>
+                    <span className="text-[#FFFF00]/50">Order Value</span>
+                    <span className="text-[#FFFF00] font-mono">${orderValue.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                    <span className="text-white/50">Margin Required</span>
-                    <span className="text-white font-mono">${margin.toFixed(2)}</span>
+                    <span className="text-[#FFFF00]/50">Margin Required</span>
+                    <span className="text-[#FFFF00] font-mono">${margin.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                    <span className="text-white/50">Est. Liq. Price</span>
-                    <span className="text-white/50 font-mono">---</span>
+                    <span className="text-[#FFFF00]/50">Est. Liq. Price</span>
+                    <span className="text-[#FFFF00]/50 font-mono">---</span>
                 </div>
             </div>
 
             {/* Error Message */}
             {error && (
-                <div className="mb-3 p-2 bg-[#FF5555]/10 border border-[#FF5555]/20 rounded-lg flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-[#FF5555] flex-shrink-0" />
-                    <span className="text-xs text-[#FF5555]">{error}</span>
+                <div className="mb-3 p-2 bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-lg flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-[#FF3B30] flex-shrink-0" />
+                    <span className="text-xs text-[#FF3B30]">{error}</span>
                 </div>
             )}
 
@@ -371,10 +385,10 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             <button
                 onClick={handleSubmit}
                 disabled={loading || !size || parseFloat(size) <= 0}
-                className={`w-full py-3 rounded-lg font-bold text-sm transition-all ${side === 'buy'
-                        ? 'bg-[#00D4AA] hover:bg-[#00D4AA]/90 text-white'
-                        : 'bg-[#FF5555] hover:bg-[#FF5555]/90 text-white'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`w-full py-3.5 rounded-lg font-bold text-sm transition-all shadow-lg ${side === 'buy'
+                    ? 'bg-[#34C759] hover:bg-[#34C759]/90 text-white'
+                    : 'bg-[#FF3B30] hover:bg-[#FF3B30]/90 text-white'
+                    } disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none`}
             >
                 {loading ? (
                     <div className="flex items-center justify-center gap-2">

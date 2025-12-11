@@ -84,14 +84,14 @@ function TradePageContent() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col">
+        <div className="min-h-screen bg-black text-[#FFFF00] flex flex-col">
             {/* Header - Compact Exchange Style */}
-            <header className="flex items-center justify-between px-3 py-2 bg-black border-b border-white/10">
+            <header className="flex items-center justify-between px-3 py-2 bg-black border-b border-[#FFFF00]/20">
                 {/* Back + Market Selector */}
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => router.back()}
-                        className="p-1.5 text-white/60 hover:text-white"
+                        className="p-1.5 text-[#FFFF00]/60 hover:text-[#FFFF00]"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
@@ -100,50 +100,50 @@ function TradePageContent() {
                         className="flex items-center gap-1.5"
                     >
                         <TokenLogo symbol={symbol} size={24} />
-                        <span className="font-bold text-white">{coin}</span>
+                        <span className="font-bold text-[#FFFF00]">{coin}</span>
                         <span className="text-xs px-1.5 py-0.5 bg-[#FFFF00]/20 text-[#FFFF00] rounded font-medium">
                             {maxLeverage}x
                         </span>
-                        <ChevronDown className="w-4 h-4 text-white/60" />
+                        <ChevronDown className="w-4 h-4 text-[#FFFF00]/60" />
                     </button>
                 </div>
 
                 {/* Price + Change */}
                 <div className="text-right">
-                    <div className="text-sm font-bold font-mono text-white">
+                    <div className="text-sm font-bold font-mono text-[#FFFF00]">
                         ${market?.price ? formatPrice(market.price) : '---'}
                     </div>
-                    <div className={`text-xs font-mono ${isPositive ? 'text-[#00D4AA]' : 'text-[#FF5555]'}`}>
+                    <div className={`text-xs font-mono ${isPositive ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
                         {isPositive ? '+' : ''}{priceChange.toFixed(2)}%
                     </div>
                 </div>
             </header>
 
             {/* Content Tabs: Chart | Order Book | Trades */}
-            <div className="flex border-b border-white/10">
+            <div className="flex border-b border-[#FFFF00]/20 bg-black">
                 <button
                     onClick={() => setContentTab('chart')}
-                    className={`flex-1 py-2.5 text-xs font-medium transition-colors ${contentTab === 'chart'
-                            ? 'text-[#00D4AA] border-b-2 border-[#00D4AA]'
-                            : 'text-white/60 hover:text-white'
+                    className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${contentTab === 'chart'
+                        ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                        : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
                         }`}
                 >
                     Chart
                 </button>
                 <button
                     onClick={() => setContentTab('orderbook')}
-                    className={`flex-1 py-2.5 text-xs font-medium transition-colors ${contentTab === 'orderbook'
-                            ? 'text-[#00D4AA] border-b-2 border-[#00D4AA]'
-                            : 'text-white/60 hover:text-white'
+                    className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${contentTab === 'orderbook'
+                        ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                        : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
                         }`}
                 >
                     Order Book
                 </button>
                 <button
                     onClick={() => setContentTab('trades')}
-                    className={`flex-1 py-2.5 text-xs font-medium transition-colors ${contentTab === 'trades'
-                            ? 'text-[#00D4AA] border-b-2 border-[#00D4AA]'
-                            : 'text-white/60 hover:text-white'
+                    className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${contentTab === 'trades'
+                        ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                        : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
                         }`}
                 >
                     Trades
@@ -170,35 +170,35 @@ function TradePageContent() {
                 )}
 
                 {/* Order Form */}
-                <div className="border-t border-white/10">
+                <div className="border-t border-[#FFFF00]/20">
                     <AdvancedOrderPanel symbol={symbol} initialPrice={orderPrice} />
                 </div>
 
                 {/* Bottom Tabs: Positions | Orders | History */}
-                <div className="flex border-t border-white/10 bg-[#0a0a0a]">
+                <div className="flex border-t border-[#FFFF00]/20 bg-black">
                     <button
                         onClick={() => setBottomTab('positions')}
-                        className={`flex-1 py-2.5 text-xs font-medium transition-colors ${bottomTab === 'positions'
-                                ? 'text-white border-b-2 border-[#FFFF00] bg-[#FFFF00]/5'
-                                : 'text-white/50 hover:text-white'
+                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${bottomTab === 'positions'
+                            ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                            : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
                             }`}
                     >
-                        Positions {currentPosition ? '(1)' : ''}
+                        Positions {positions?.length ? `(${positions.length})` : ''}
                     </button>
                     <button
                         onClick={() => setBottomTab('orders')}
-                        className={`flex-1 py-2.5 text-xs font-medium transition-colors ${bottomTab === 'orders'
-                                ? 'text-white border-b-2 border-[#FFFF00] bg-[#FFFF00]/5'
-                                : 'text-white/50 hover:text-white'
+                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${bottomTab === 'orders'
+                            ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                            : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
                             }`}
                     >
                         Open Orders
                     </button>
                     <button
                         onClick={() => setBottomTab('history')}
-                        className={`flex-1 py-2.5 text-xs font-medium transition-colors ${bottomTab === 'history'
-                                ? 'text-white border-b-2 border-[#FFFF00] bg-[#FFFF00]/5'
-                                : 'text-white/50 hover:text-white'
+                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${bottomTab === 'history'
+                            ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                            : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
                             }`}
                     >
                         History
@@ -206,23 +206,55 @@ function TradePageContent() {
                 </div>
 
                 {/* Bottom Tab Content */}
-                <div className="p-3 bg-[#0a0a0a] min-h-[100px]">
+                <div className="p-3 bg-black min-h-[100px]">
                     {bottomTab === 'positions' && (
-                        currentPosition ? (
-                            <PositionDisplay symbol={symbol} />
+                        positions && positions.length > 0 ? (
+                            <div className="space-y-2">
+                                {positions.map((pos) => (
+                                    <div
+                                        key={pos.symbol}
+                                        className={`p-3 rounded-lg border cursor-pointer ${pos.symbol === symbol ? 'border-[#FFFF00]/50 bg-[#FFFF00]/5' : 'border-[#FFFF00]/20 bg-black'}`}
+                                        onClick={() => {
+                                            setSymbol(pos.symbol);
+                                            setSelectedMarket(pos.symbol);
+                                            router.replace(`/trade?symbol=${pos.symbol}`);
+                                        }}
+                                    >
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center gap-2">
+                                                <TokenLogo symbol={pos.symbol} size={20} />
+                                                <span className="text-sm font-medium text-[#FFFF00]">
+                                                    {pos.symbol.replace('-USD', '').replace('-PERP', '')}
+                                                </span>
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${pos.side === 'long' ? 'bg-[#34C759]/20 text-[#34C759]' : 'bg-[#FF3B30]/20 text-[#FF3B30]'}`}>
+                                                    {pos.side === 'long' ? 'LONG' : 'SHORT'} {pos.leverage}x
+                                                </span>
+                                            </div>
+                                            <span className={`text-sm font-mono ${pos.unrealizedPnl >= 0 ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
+                                                {pos.unrealizedPnl >= 0 ? '+' : ''}${pos.unrealizedPnl.toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between text-[10px] text-[#FFFF00]/50">
+                                            <span>Size: {Math.abs(pos.size).toFixed(4)}</span>
+                                            <span>Entry: ${pos.entryPrice.toFixed(2)}</span>
+                                            <span>Mark: ${pos.markPrice.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
-                            <div className="text-center text-white/40 text-sm py-6">
+                            <div className="text-center text-[#FFFF00]/40 text-sm py-6">
                                 No Open Positions
                             </div>
                         )
                     )}
                     {bottomTab === 'orders' && (
-                        <div className="text-center text-white/40 text-sm py-6">
+                        <div className="text-center text-[#FFFF00]/40 text-sm py-6">
                             No Open Orders
                         </div>
                     )}
                     {bottomTab === 'history' && (
-                        <div className="text-center text-white/40 text-sm py-6">
+                        <div className="text-center text-[#FFFF00]/40 text-sm py-6">
                             No Trade History
                         </div>
                     )}
@@ -245,23 +277,39 @@ function TradePageContent() {
                 <div className="flex items-center justify-around h-full">
                     <button
                         onClick={() => router.push('/')}
-                        className="flex flex-col items-center gap-1 px-6 py-1 text-white/50"
+                        className="flex flex-col items-center gap-1 px-4 py-2 transition-all border-none outline-none"
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            opacity: 0.6
+                        }}
                     >
-                        <BarChart2 className="w-5 h-5" />
-                        <span className="text-[10px] font-medium">Markets</span>
+                        <BarChart2 className="w-6 h-6" strokeWidth={2} />
+                        <span className="text-[10px] font-semibold">Markets</span>
                     </button>
                     <button
-                        className="flex flex-col items-center gap-1 px-6 py-1 text-[#00D4AA]"
+                        className="flex flex-col items-center gap-1 px-4 py-2 transition-all border-none outline-none scale-110"
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            filter: 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))',
+                            opacity: 1
+                        }}
                     >
-                        <List className="w-5 h-5" />
-                        <span className="text-[10px] font-medium">Trade</span>
+                        <List className="w-6 h-6" strokeWidth={2} />
+                        <span className="text-[10px] font-semibold">Trade</span>
                     </button>
                     <button
                         onClick={() => router.push('/profile')}
-                        className="flex flex-col items-center gap-1 px-6 py-1 text-white/50"
+                        className="flex flex-col items-center gap-1 px-4 py-2 transition-all border-none outline-none"
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            opacity: 0.6
+                        }}
                     >
-                        <Clock className="w-5 h-5" />
-                        <span className="text-[10px] font-medium">Account</span>
+                        <Clock className="w-6 h-6" strokeWidth={2} />
+                        <span className="text-[10px] font-semibold">Account</span>
                     </button>
                 </div>
             </nav>

@@ -665,10 +665,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const notionalValue = entryPx * absSize;
                             const margin = notionalValue / leverage;
 
-                            // Subtract fees to show net PnL (unrealized - trading fees)
-                            const fees = feesByCoin[cleanCoin] || 0;
-                            const netPnl = unrealizedPnl - fees;
-                            const pnlPercent = margin > 0 ? (netPnl / margin) * 100 : 0;
+                            // Use the API's unrealizedPnl directly - it's already calculated correctly
+                            // Note: fees are tracked separately as they're a realized cost, not unrealized
+                            const pnlPercent = margin > 0 ? (unrealizedPnl / margin) * 100 : 0;
 
                             activePositions.push({
                                 symbol: `${cleanCoin}-USD`,
@@ -679,7 +678,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 markPrice,
                                 liquidationPrice: liquidationPx,
                                 leverage,
-                                unrealizedPnl: netPnl, // Now includes fees
+                                unrealizedPnl, // Use API value directly
                                 unrealizedPnlPercent: pnlPercent,
                                 isStock: (position.coin || '').startsWith('xyz:'),
                             });
@@ -724,10 +723,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                         const notionalValue = entryPx * absSize;
                                         const margin = notionalValue / leverage;
 
-                                        // Subtract fees to show net PnL
-                                        const fees = feesByCoin[cleanCoin] || 0;
-                                        const netPnl = unrealizedPnl - fees;
-                                        const pnlPercent = margin > 0 ? (netPnl / margin) * 100 : 0;
+                                        // Use the API's unrealizedPnl directly
+                                        const pnlPercent = margin > 0 ? (unrealizedPnl / margin) * 100 : 0;
 
                                         activePositions.push({
                                             symbol: `${cleanCoin}-USD`,
@@ -738,7 +735,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                             markPrice,
                                             liquidationPrice: liquidationPx,
                                             leverage,
-                                            unrealizedPnl: netPnl, // Now includes fees
+                                            unrealizedPnl, // Use API value directly
                                             unrealizedPnlPercent: pnlPercent,
                                             isStock: true,
                                         });
