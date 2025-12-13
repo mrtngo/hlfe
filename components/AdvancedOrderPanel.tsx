@@ -139,7 +139,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     <button
                         onClick={() => setOrderType('limit')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-l-md border transition-colors ${orderType === 'limit'
-                            ? 'bg-[#FFFF00]/20 border-[#FFFF00]/50 text-[#FFFF00]'
+                            ? 'bg-[#FFFF00] border-[#FFFF00] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
@@ -148,7 +148,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     <button
                         onClick={() => setOrderType('market')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-r-md border-t border-r border-b transition-colors ${orderType === 'market'
-                            ? 'bg-[#FFFF00]/20 border-[#FFFF00]/50 text-[#FFFF00]'
+                            ? 'bg-[#FFFF00] border-[#FFFF00] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
@@ -160,7 +160,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                 <div className="relative">
                     <button
                         onClick={() => setShowLeverageDropdown(!showLeverageDropdown)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-[#FFFF00]/20 border border-[#FFFF00]/50 rounded text-[#FFFF00]"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-[#FFFF00] border border-[#FFFF00] rounded text-black"
                     >
                         {Math.min(leverage, maxLeverage)}x
                         <ChevronDown className="w-3 h-3" />
@@ -241,7 +241,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             />
                             <button
                                 onClick={() => market?.price && setPrice(formatPrice(market.price))}
-                                className="text-[10px] text-[#FFFF00] font-medium border border-[#FFFF00]/50 px-1.5 py-0.5 rounded"
+                                className="text-[10px] text-black bg-[#FFFF00] font-medium border border-[#FFFF00] px-1.5 py-0.5 rounded"
                             >
                                 Mid
                             </button>
