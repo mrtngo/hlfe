@@ -18,7 +18,7 @@ import { BarChart3, History, User, Trophy } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
-    const { selectedMarket, setSelectedMarket, address, agentWalletEnabled, builderFeeApproved } = useHyperliquid();
+    const { selectedMarket, setSelectedMarket, address, agentWalletEnabled, builderFeeApproved, builderFeeChecked } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard'>('home');
     const [showSetupWizard, setShowSetupWizard] = useState(false);
@@ -26,8 +26,15 @@ export default function Home() {
     // Auto-prompt setup wizard when entering trading view if setup not complete
     useEffect(() => {
         if (view === 'trading' && authenticated) {
+            // Wait for builder fee check to complete before showing wizard
+            // This prevents the modal from flashing/persisting while the async check runs
+            if (BUILDER_CONFIG.enabled && !builderFeeChecked) {
+                return;
+            }
+
             const needsAgentWallet = !agentWalletEnabled;
-            const needsBuilderFee = BUILDER_CONFIG.enabled && !builderFeeApproved;
+            // Only check builder fee if it's enabled and we've finished checking
+            const needsBuilderFee = BUILDER_CONFIG.enabled && builderFeeChecked && !builderFeeApproved;
             const setupNeeded = needsAgentWallet || needsBuilderFee;
 
             // Check if already dismissed this session
@@ -37,7 +44,7 @@ export default function Home() {
                 setShowSetupWizard(true);
             }
         }
-    }, [view, authenticated, agentWalletEnabled, builderFeeApproved]);
+    }, [view, authenticated, agentWalletEnabled, builderFeeApproved, builderFeeChecked]);
 
     const handleWizardClose = () => {
         setShowSetupWizard(false);

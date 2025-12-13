@@ -95,7 +95,7 @@ export default function OrderPanel() {
         }
 
         // Check if setup is needed
-        if (!agentWalletEnabled) {
+        if (!agentWalletEnabled || (BUILDER_CONFIG.enabled && !builderFeeApproved)) {
             setShowSetupWizard(true);
             return;
         }

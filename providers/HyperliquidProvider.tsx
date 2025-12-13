@@ -133,6 +133,7 @@ interface HyperliquidContextType {
     // Builder Fee (Rayo trading fees on mainnet)
     builderFeeApproved: boolean;
     builderFeeLoading: boolean;
+    builderFeeChecked: boolean;
     approveBuilderFee: () => Promise<{ success: boolean; message: string }>;
     checkBuilderFeeApproval: () => Promise<boolean>;
 
@@ -348,6 +349,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     // Builder fee state (for mainnet trading fees)
     const [builderFeeApproved, setBuilderFeeApproved] = useState(false);
     const [builderFeeLoading, setBuilderFeeLoading] = useState(false);
+    const [builderFeeChecked, setBuilderFeeChecked] = useState(false);
 
     // DEX abstraction state (required for Trade.xyz stocks)
     const [dexAbstractionEnabled, setDexAbstractionEnabled] = useState(false);
@@ -1169,6 +1171,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             return false;
         } finally {
             setBuilderFeeLoading(false);
+            setBuilderFeeChecked(true);
         }
     }, [address]);
 
@@ -2380,6 +2383,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         // Builder fee (mainnet trading fees)
         builderFeeApproved,
         builderFeeLoading,
+        builderFeeChecked,
         approveBuilderFee,
         checkBuilderFeeApproval,
         // DEX abstraction (required for Trade.xyz stocks)
