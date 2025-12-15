@@ -19,3 +19,11 @@ export {
     POSITION_SIDES,
     ORDER_SIDES,
 } from './trading';
+
+export {
+    ARBITRUM_CHAIN_ID,
+    HYPERLIQUID_BRIDGE_ADDRESS,
+    ARBITRUM_USDC_ADDRESS,
+    MIN_BRIDGE_DEPOSIT,
+    USDC_ABI,
+} from './bridge';
