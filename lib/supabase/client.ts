@@ -40,6 +40,8 @@ export interface Trade {
     entry_price: number;
     exit_price: number | null;
     pnl: number | null;
+    fee: number | null;
+    tid: string | null;
     status: 'open' | 'closed';
     opened_at: string;
     closed_at: string | null;
@@ -199,12 +201,21 @@ export const db = {
             sz: string;
             side: string;
             closedPnl: string;
+            fee?: string;
+            tid?: number | string;
             dir?: string;
         }>): Promise<{ synced: number; totalPnl: number }> {
             console.log('🔄 Syncing trades from fills for user:', userId, 'fills count:', fills.length);
 
-            // First delete all existing trades for this user
-            await this.deleteAllByUser(userId);
+            // Get existing trade IDs (tids) to avoid duplicates
+            // We use the 'tid' column which stores the Hyperliquid trade ID
+            const { data: existingTrades } = await supabase
+                .from('trades')
+                .select('tid')
+                .eq('user_id', userId)
+                .not('tid', 'is', null);
+
+            const existingTids = new Set((existingTrades || []).map(t => String(t.tid)));
 
             let synced = 0;
             let totalPnl = 0;
@@ -212,9 +223,14 @@ export const db = {
             // Only import fills with closedPnl (completed trades)
             for (const fill of fills) {
                 const pnl = parseFloat(fill.closedPnl || '0');
+                const fee = parseFloat(fill.fee || '0');
+                const tid = fill.tid ? String(fill.tid) : null;
 
-                // Skip fills with 0 PnL (opening trades or dust)
-                if (pnl === 0) continue;
+                // Skip fills with 0 PnL (opening trades or dust) unless they have a fee
+                if (pnl === 0 && fee === 0) continue;
+
+                // Skip if we already have this trade
+                if (tid && existingTids.has(tid)) continue;
 
                 totalPnl += pnl;
 
@@ -233,6 +249,8 @@ export const db = {
                     entry_price: parseFloat(fill.px),
                     exit_price: parseFloat(fill.px),
                     pnl: pnl,
+                    fee: fee,
+                    tid: tid,
                     status: 'closed',
                 };
 
@@ -247,10 +265,12 @@ export const db = {
 
                 if (!error) {
                     synced++;
+                } else {
+                    console.error('Error inserting trade:', error);
                 }
             }
 
-            console.log(`✅ Synced ${synced} trades, total PnL: $${totalPnl.toFixed(2)}`);
+            console.log(`✅ Synced ${synced} new trades, total PnL processed: $${totalPnl.toFixed(2)}`);
             return { synced, totalPnl };
         },
     },

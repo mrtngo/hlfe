@@ -20,14 +20,14 @@ export function isTradeXyzAsset(name: string, onlyIsolated: boolean): boolean {
     // 1. In our known list of stock tickers
     // 2. Have onlyIsolated === true (HIP-3 markets)
     // 3. Are recognizable stock tickers (2-5 uppercase letters, or XYZ100)
-    
+
     // Strip -PERP suffix if present (testnet format)
     const cleanName = name.replace(/-PERP$/i, '').toUpperCase();
     const isKnownTicker = TRADEXYZ_ASSETS.includes(cleanName);
-    
+
     // Stock tickers are typically 2-5 uppercase letters, or special cases like XYZ100
     const looksLikeStock = /^[A-Z]{2,5}$/.test(cleanName) || cleanName === 'XYZ100';
-    
+
     // If it's an isolated market (HIP-3) and looks like a stock ticker, it's likely a Trade.xyz asset
     // OR if it's in our known list
     return onlyIsolated && (isKnownTicker || looksLikeStock);
@@ -66,14 +66,42 @@ export function useMarketData(): MarketData {
             // Initialize the client
             await publicClient.connect();
 
-            // Get meta info (list of available assets) - Core markets
-            const meta = await publicClient.info.perpetuals.getMeta();
+            // Fetch Core data and Trade.xyz data in parallel
+            // We group independent requests to maximize parallelism
 
-            // Get all mids (current prices)
-            const allMids = await publicClient.info.getAllMids();
+            const [
+                meta,
+                allMids,
+                metaAndAssetCtxs,
+                tradeXyzData,
+                dexMids
+            ] = await Promise.all([
+                // 1. Core Meta (needed for universe)
+                publicClient.info.perpetuals.getMeta(),
 
-            // Get 24h data - Core markets
-            const metaAndAssetCtxs = await publicClient.info.perpetuals.getMetaAndAssetCtxs();
+                // 2. All Mids (current prices for core)
+                publicClient.info.getAllMids(),
+
+                // 3. Core 24h Data
+                publicClient.info.perpetuals.getMetaAndAssetCtxs(),
+
+                // 4. Trade.xyz Meta & Asset Ctxs
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'metaAndAssetCtxs',
+                        dex: 'xyz'
+                    })
+                }).then(res => res.ok ? res.json() : null).catch(() => null),
+
+                // 5. Trade.xyz Mids
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'allMids', dex: 'xyz' })
+                }).then(res => res.ok ? res.json() : null).catch(() => null)
+            ]);
 
             // Process markets
             const processedMarkets: Market[] = [];
@@ -83,7 +111,7 @@ export function useMarketData(): MarketData {
                 universe: any[],
                 assetCtxs: any[],
                 isFromDex: boolean = false,
-                dexMids?: any
+                dexMidsMap?: any
             ) => {
                 if (!universe || !assetCtxs || universe.length === 0) return;
 
@@ -102,7 +130,7 @@ export function useMarketData(): MarketData {
                     // Also strip -PERP suffix for cleaner UI display
                     let cleanName = asset.name.replace(/^xyz:/i, '').replace(/-PERP$/i, '');
                     const symbol = `${cleanName}-USD`;
-                    
+
                     // Get price: prefer markPx or midPx from asset context (most reliable for DEX assets)
                     // Fallback to mids lookup, then prevDayPx
                     let price = 0;
@@ -110,14 +138,14 @@ export function useMarketData(): MarketData {
                         price = parseFloat(assetCtx.markPx);
                     } else if (assetCtx.midPx) {
                         price = parseFloat(assetCtx.midPx);
-                    } else if (isFromDex && dexMids) {
+                    } else if (isFromDex && dexMidsMap) {
                         // Try DEX-specific mids
-                        price = parseFloat(dexMids[asset.name] || dexMids[cleanName] || '0');
-                    } else if (!isFromDex) {
+                        price = parseFloat(dexMidsMap[asset.name] || dexMidsMap[cleanName] || '0');
+                    } else if (!isFromDex && allMids) {
                         // Try core mids
                         price = parseFloat(allMids[asset.name] || allMids[cleanName] || '0');
                     }
-                    
+
                     // Final fallback to prevDayPx
                     if (price === 0 && assetCtx.prevDayPx) {
                         price = parseFloat(assetCtx.prevDayPx);
@@ -137,11 +165,11 @@ export function useMarketData(): MarketData {
                     const szDecimals = asset.szDecimals ?? 0;
                     const maxLeverage = asset.maxLeverage ?? 1;
                     const onlyIsolated = asset.onlyIsolated ?? false;
-                    
+
                     // Identify Trade.xyz stock markets
                     // If from DEX "xyz", mark as stock
                     const isStock = isFromDex || isTradeXyzAsset(cleanName, onlyIsolated);
-                    
+
 
                     processedMarkets.push({
                         symbol,
@@ -161,67 +189,34 @@ export function useMarketData(): MarketData {
             };
 
             // Process core markets
-            const assetCtxs = Array.isArray(metaAndAssetCtxs) && metaAndAssetCtxs.length === 2 
-                ? metaAndAssetCtxs[1] 
+            const assetCtxs = Array.isArray(metaAndAssetCtxs) && metaAndAssetCtxs.length === 2
+                ? metaAndAssetCtxs[1]
                 : [];
 
             if (meta && meta.universe && assetCtxs.length > 0) {
                 processMarkets(meta.universe, assetCtxs, false);
             }
 
-            // Fetch Trade.xyz (DEX "xyz") markets
-            try {
-                // First, get the meta and asset contexts
-                const tradeXyzResponse = await fetch(`${API_URL}/info`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        type: 'metaAndAssetCtxs',
-                        dex: 'xyz'
-                    })
-                });
-
-                if (tradeXyzResponse.ok) {
-                    const tradeXyzData = await tradeXyzResponse.json();
-                    
-                    if (Array.isArray(tradeXyzData) && tradeXyzData.length === 2) {
-                        const [tradeXyzMeta, tradeXyzAssetCtxs] = tradeXyzData;
-                        if (tradeXyzMeta && tradeXyzMeta.universe && tradeXyzAssetCtxs) {
-                            let dexMids = {};
-                            try {
-                                const dexMidsResponse = await fetch(`${API_URL}/info`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ type: 'allMids', dex: 'xyz' })
-                                });
-                                
-                                if (dexMidsResponse.ok) {
-                                    const dexMidsData = await dexMidsResponse.json();
-                                    dexMids = dexMidsData.mids || dexMidsData || {};
-                                }
-                            } catch (midsError) {
-                                // Continue without DEX mids
-                            }
-                            
-                            processMarkets(tradeXyzMeta.universe, tradeXyzAssetCtxs, true, dexMids);
-                        }
-                    }
+            // Process Trade.xyz markets if data fetched successfully
+            if (Array.isArray(tradeXyzData) && tradeXyzData.length === 2) {
+                const [tradeXyzMeta, tradeXyzAssetCtxs] = tradeXyzData;
+                if (tradeXyzMeta && tradeXyzMeta.universe && tradeXyzAssetCtxs) {
+                    const dexMidsMap = dexMids?.mids || dexMids || {};
+                    processMarkets(tradeXyzMeta.universe, tradeXyzAssetCtxs, true, dexMidsMap);
                 }
-            } catch (dexError) {
-                // Don't fail the whole fetch if DEX request fails
             }
 
             setMarkets(processedMarkets);
             setError(null);
         } catch (err) {
             console.error('Error fetching market data:', err);
-            
+
             // Check if it's a rate limit error (429)
-            const isRateLimited = err instanceof Error && 
-                (err.message.includes('429') || 
-                 err.message.includes('Too Many Requests') ||
-                 err.message.includes('rate limit'));
-            
+            const isRateLimited = err instanceof Error &&
+                (err.message.includes('429') ||
+                    err.message.includes('Too Many Requests') ||
+                    err.message.includes('rate limit'));
+
             if (isRateLimited && retryCount < 3) {
                 // Exponential backoff: 30s, 60s, 120s
                 const backoffMs = Math.min(30000 * Math.pow(2, retryCount), 120000);
@@ -229,7 +224,7 @@ export function useMarketData(): MarketData {
                 setTimeout(() => fetchMarketData(retryCount + 1), backoffMs);
                 return;
             }
-            
+
             setError(err instanceof Error ? err.message : 'Failed to fetch market data');
 
             // Set some default markets in case of error to avoid empty UI (only if we have no markets)

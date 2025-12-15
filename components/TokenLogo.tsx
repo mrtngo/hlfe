@@ -401,11 +401,17 @@ function getCryptoLogoUrls(symbol: string): string[] {
     return urls;
 }
 
-export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLogoProps) {
-    const [errorIndex, setErrorIndex] = useState(0);
+// Global cache for working logo URLs to prevent 404 spam
+const logoCache = new Map<string, string>();
 
+export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLogoProps) {
     // Get the base symbol (remove -USD, -PERP, etc.)
     const baseSymbol = symbol.replace(/-USD$/, '').replace(/-PERP$/, '').toUpperCase();
+
+    // Check cache first
+    const cachedUrl = logoCache.get(baseSymbol);
+    const [useCached, setUseCached] = useState(!!cachedUrl);
+    const [errorIndex, setErrorIndex] = useState(0);
 
     // Check if this is a stock
     const isStock = isStockSymbol(baseSymbol);
@@ -422,11 +428,12 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
         logoUrls = getCryptoLogoUrls(baseSymbol);
     }
 
-    // Get current URL to try (based on how many have failed)
-    const currentUrl = logoUrls[errorIndex];
+    // Determine which URL to use
+    // If cached, use that. Otherwise use current index from list.
+    const currentUrl = useCached ? cachedUrl : logoUrls[errorIndex];
 
     // If we've exhausted all URLs, show letter fallback
-    if (!currentUrl || errorIndex >= logoUrls.length) {
+    if (!currentUrl || (!useCached && errorIndex >= logoUrls.length)) {
         return (
             <div
                 className={`rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
@@ -458,9 +465,22 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
                 height={size}
                 className="w-full h-full object-cover rounded-full"
                 unoptimized
+                onLoad={() => {
+                    // Success! Cache this URL for future use
+                    if (!useCached) {
+                        logoCache.set(baseSymbol, currentUrl);
+                    }
+                }}
                 onError={() => {
-                    // Try next URL in the list
-                    setErrorIndex(prev => prev + 1);
+                    // If cached URL failed (rare), clear cache and try list
+                    if (useCached) {
+                        logoCache.delete(baseSymbol);
+                        setUseCached(false);
+                        setErrorIndex(0);
+                    } else {
+                        // Try next URL in the list
+                        setErrorIndex(prev => prev + 1);
+                    }
                 }}
             />
         </div>

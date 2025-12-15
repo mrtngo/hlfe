@@ -58,22 +58,38 @@ export function useUserData(address: string | null): UserDataResult {
         try {
             const normalizedAddress = address.toLowerCase();
 
-            // Fetch fills with caching
-            const fillsData = await cachedFetch<any[]>(
-                `user_fills:${normalizedAddress}`,
-                async () => {
-                    const client = createHyperliquidClient();
-                    const result = await client.info.getUserFills(normalizedAddress);
-                    return result || [];
-                },
-                60000 // 1 minute cache
-            );
+            // Parallelize fetching fills and funding
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+
+            const [fillsData, fundingData] = await Promise.all([
+                // Fetch fills with caching
+                cachedFetch<any[]>(
+                    `user_fills:${normalizedAddress}`,
+                    async () => {
+                        const client = createHyperliquidClient();
+                        const result = await client.info.getUserFills(normalizedAddress);
+                        return result || [];
+                    },
+                    60000 // 1 minute cache
+                ),
+                // Fetch funding with caching (last 90 days)
+                cachedFetch<any[]>(
+                    `user_funding:${normalizedAddress}`,
+                    async () => {
+                        const client = createHyperliquidClient();
+                        const result = await client.info.perpetuals.getUserFunding(normalizedAddress, ninetyDaysAgo);
+                        return result || [];
+                    },
+                    60000 // 1 minute cache
+                )
+            ]);
+
             setFills(fillsData as Fill[]);
 
             // Calculate 30-day PnL
-            if (fillsData.length > 0) {
-                const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-                const totalPnl = fillsData
+            if (fillsData && fillsData.length > 0) {
+                const totalPnl = (fillsData as Fill[])
                     .filter((fill: Fill) => fill.time >= thirtyDaysAgo)
                     .reduce((sum: number, fill: Fill) => sum + parseFloat(fill.closedPnl || '0'), 0);
                 setThirtyDayPnl(totalPnl);
@@ -81,17 +97,7 @@ export function useUserData(address: string | null): UserDataResult {
                 setThirtyDayPnl(0);
             }
 
-            // Fetch funding with caching (last 90 days)
-            const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-            const fundingData = await cachedFetch<any[]>(
-                `user_funding:${normalizedAddress}`,
-                async () => {
-                    const client = createHyperliquidClient();
-                    const result = await client.info.perpetuals.getUserFunding(normalizedAddress, ninetyDaysAgo);
-                    return result || [];
-                },
-                60000 // 1 minute cache
-            );
+            setFunding(fundingData as FundingEntry[]);
             setFunding(fundingData as FundingEntry[]);
 
             userDataFetchedRef.current = normalizedAddress;

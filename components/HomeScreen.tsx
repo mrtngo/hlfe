@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, memo, useCallback, useRef } from 'react';
+import { useState, useEffect, memo, useCallback, useRef, useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2 } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
+import FeeCalculatorModal from '@/components/FeeCalculatorModal';
 import PortfolioChart from '@/components/PortfolioChart';
 import DepositModal from '@/components/DepositModal';
 import ShareModal from '@/components/ShareModal';
@@ -32,6 +33,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const [showAddDropdown, setShowAddDropdown] = useState(false);
     const [sharePosition, setSharePosition] = useState<Position | null>(null);
     const [showDepositModal, setShowDepositModal] = useState(false);
+    const [showFeeCalculator, setShowFeeCalculator] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -97,24 +99,35 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
     // 30-day PnL now comes from the provider (cached)
     // Calculate 30-day movement percentage
-    const thirtyDayMovement = account.equity > 0 ? ((thirtyDayPnl / account.equity) * 100) : 0;
+    const thirtyDayMovement = useMemo(() => {
+        return account.equity > 0 ? ((thirtyDayPnl / account.equity) * 100) : 0;
+    }, [account.equity, thirtyDayPnl]);
 
     // Calculate top gainers and losers
-    const cryptoMarkets = markets.filter(m => !m.isStock && m.change24h !== undefined);
-    const stockMarkets = markets.filter(m => m.isStock && m.change24h !== undefined);
+    const { cryptoGainers, cryptoLosers, stockGainers, stockLosers } = useMemo(() => {
+        const cryptoMarkets = markets.filter(m => !m.isStock && m.change24h !== undefined);
+        const stockMarkets = markets.filter(m => m.isStock && m.change24h !== undefined);
 
-    const cryptoGainers = [...cryptoMarkets]
-        .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
-        .slice(0, 5);
-    const cryptoLosers = [...cryptoMarkets]
-        .sort((a, b) => (a.change24h || 0) - (b.change24h || 0))
-        .slice(0, 5);
-    const stockGainers = [...stockMarkets]
-        .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
-        .slice(0, 5);
-    const stockLosers = [...stockMarkets]
-        .sort((a, b) => (a.change24h || 0) - (b.change24h || 0))
-        .slice(0, 5);
+        const cGainers = [...cryptoMarkets]
+            .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
+            .slice(0, 5);
+        const cLosers = [...cryptoMarkets]
+            .sort((a, b) => (a.change24h || 0) - (b.change24h || 0))
+            .slice(0, 5);
+        const sGainers = [...stockMarkets]
+            .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
+            .slice(0, 5);
+        const sLosers = [...stockMarkets]
+            .sort((a, b) => (a.change24h || 0) - (b.change24h || 0))
+            .slice(0, 5);
+
+        return {
+            cryptoGainers: cGainers,
+            cryptoLosers: cLosers,
+            stockGainers: sGainers,
+            stockLosers: sLosers
+        };
+    }, [markets]);
 
     if (!mounted) {
         return (
@@ -153,7 +166,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     }
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto flex flex-col gap-8">
             {/* Hero Section - Greeting and Portfolio */}
             <div className="glass-card p-8 relative overflow-hidden" style={{ marginBottom: '32px' }}>
                 <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
@@ -190,7 +203,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             <div style={{ marginBottom: '32px' }}>
                 <button
                     onClick={() => setShowDepositModal(true)}
-                    className="w-full py-4 bg-[#FFFF00] text-black font-bold rounded-2xl hover:bg-[#FFFF33] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                    className="w-full py-4 bg-[#FFFF00] mb-8 text-black font-bold rounded-2xl hover:bg-[#FFFF33] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                 >
                     <CreditCard className="w-5 h-5" />
                     Deposit
@@ -280,7 +293,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Top Movers - Crypto */}
             {cryptoGainers.length > 0 && (
-                <div className="glass-card p-6 mb-6">
+                <div className="glass-card p-6" style={{ marginBottom: '32px' }}>
                     <h2 className="text-2xl font-bold text-white mb-6 text-center">🔥 Cripto Hot</h2>
                     <div className="grid grid-cols-2 gap-6">
                         {/* Gainers */}
@@ -353,7 +366,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Top Movers - Stocks */}
             {stockGainers.length > 0 && (
-                <div className="glass-card p-6 mb-6">
+                <div className="glass-card p-6" style={{ marginBottom: '32px' }}>
                     <h2 className="text-2xl font-bold text-white mb-6 text-center">📈 Acciones Hot</h2>
                     <div className="grid grid-cols-2 gap-6">
                         {/* Gainers */}
@@ -423,6 +436,35 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     </div>
                 </div>
             )}
+
+            {/* Fee Calculator Banner */}
+            <button
+                onClick={() => setShowFeeCalculator(true)}
+                className="w-full glass-card p-4 flex items-center justify-between group hover:border-[#FFFF00]/50 transition-all active:scale-[0.99] relative overflow-hidden"
+                style={{ marginBottom: '32px' }}
+            >
+                {/* Background Gradient Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FFFF00]/0 via-[#FFFF00]/5 to-[#FFFF00]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
+
+                <div className="flex items-center gap-3 relative z-10">
+                    <div className="w-10 h-10 rounded-full bg-[#FFFF00] flex items-center justify-center shadow-[0_0_15px_rgba(255,255,0,0.4)]">
+                        <DollarSign className="w-5 h-5 text-black" />
+                    </div>
+                    <div className="text-left">
+                        <h3 className="font-bold text-white text-base">Comparar Tarifas 2025</h3>
+                        <p className="text-xs text-coffee-medium">Descubre cuánto ahorras operando en Rayo</p>
+                    </div>
+                </div>
+                <div className="bg-[#FFFF00]/10 p-2 rounded-full">
+                    <ArrowUpRight className="w-5 h-5 text-[#FFFF00]" />
+                </div>
+            </button>
+
+            {/* Fee Calculator Modal */}
+            <FeeCalculatorModal
+                isOpen={showFeeCalculator}
+                onClose={() => setShowFeeCalculator(false)}
+            />
 
             {/* Watchlist */}
             <div className="glass-card p-6">

@@ -137,12 +137,25 @@ export default function Home() {
                     right: 0,
                     zIndex: 9999,
                     backgroundColor: '#000000',
-                    height: '75px',
-                    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                    height: 'calc(75px + env(safe-area-inset-bottom))', // Include safe area in height
+                    paddingBottom: 'env(safe-area-inset-bottom)', // Push content up
+                    borderTop: '1px solid rgba(255, 255, 0, 0.2)', // Move border here for consistency
+                    boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.5)', // Add shadow to hide potential background bleed
                 }}
-                className="border-t border-[#FFFF00]/20"
             >
-                <div className="flex items-center justify-between h-full w-[90%] max-w-2xl mx-auto">
+                {/* Background filler for bounce/overscroll */}
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        height: '1000px', // Excessive height to cover any bounce
+                        backgroundColor: '#000000'
+                    }}
+                />
+
+                <div className="flex items-center justify-between h-[75px] w-[90%] max-w-2xl mx-auto relative z-10">
                     {/* Home */}
                     <button
                         onClick={() => setView('home')}
