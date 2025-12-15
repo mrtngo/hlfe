@@ -63,12 +63,11 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     const formatCurrency = (value: number, maximumFractionDigits: number = 2) => {
         if (currency === 'COP') {
             const copValue = value * exchangeRate;
-            return new Intl.NumberFormat('es-CO', {
-                style: 'currency',
-                currency: 'COP',
+            // Use 'es-CO' for dots/commas but manually add COP prefix to avoid ambiguity
+            return `COP ${new Intl.NumberFormat('es-CO', {
                 maximumFractionDigits: 0,
                 minimumFractionDigits: 0
-            }).format(copValue);
+            }).format(copValue)}`;
         }
 
         return new Intl.NumberFormat('en-US', {

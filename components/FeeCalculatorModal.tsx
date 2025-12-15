@@ -145,17 +145,23 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
 
                         <div className="relative group">
                             <div className="absolute inset-0 bg-[#FFFF00]/10 blur-xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-                            <div className="relative flex items-center justify-center gap-2">
+                            <div className="relative flex items-center justify-center gap-2 border-b border-white/10 group-focus-within:border-[#FFFF00]/50 transition-colors pb-2">
+                                <span className="text-2xl font-black text-coffee-medium select-none">
+                                    {currency === 'USD' ? '$' : 'COP'}
+                                </span>
                                 <input
                                     type="number"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    className="w-full bg-transparent text-center text-4xl font-black text-white focus:outline-none placeholder-white/20 font-mono tracking-tight"
+                                    className="w-full bg-transparent text-center text-4xl font-black text-white focus:outline-none placeholder-white/20 font-mono tracking-tight appearance-none"
                                     placeholder="0"
                                     min="0"
+                                    step="1000"
                                 />
                             </div>
-                            <div className="text-xs text-coffee-medium mt-1 font-mono">{currency}</div>
+                            <div className="text-[10px] text-coffee-medium mt-2 font-mono uppercase tracking-widest opacity-60">
+                                Ingresa tu monto
+                            </div>
                         </div>
 
                         {/* Quick Selects */}
