@@ -408,12 +408,12 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
                 {/* Watchlist items */}
                 {watchlistMarkets.length === 0 ? (
-                    <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
+                    <div id="home-market-list" className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
                         <p>{t.home.noTokensInWatchlist}</p>
                         <p className="text-xs mt-2 opacity-60">{t.home.tapToAddTokens}</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div id="home-market-list" className="space-y-4">
                         {watchlistMarkets.map((market) => (
                             <WatchlistItem
                                 key={market.name}

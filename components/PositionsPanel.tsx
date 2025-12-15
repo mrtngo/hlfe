@@ -64,7 +64,7 @@ export default function PositionsPanel() {
 
     return (
         <>
-            <div className="overflow-hidden h-full flex flex-col min-w-0">
+            <div id="trading-positions-panel" className="overflow-hidden h-full flex flex-col min-w-0">
                 <div className="p-4 border-b border-white/10">
                     <h3 className="text-sm font-semibold text-white">{t.positions.title}</h3>
                 </div>

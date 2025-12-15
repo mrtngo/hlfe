@@ -154,7 +154,7 @@ export default function OrderPanel() {
     };
 
     return (
-        <div className="h-full flex flex-col min-w-0">
+        <div id="trading-order-panel" className="h-full flex flex-col min-w-0">
             {/* Mode Toggle Header - HIDDEN FOR NOW, keeping code for later */}
             <div className="hidden">
                 <div className="p-3">

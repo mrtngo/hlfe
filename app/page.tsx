@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useOnboarding } from '@/hooks/useOnboarding';
 import { usePrivy } from '@privy-io/react-auth';
 import OrderPanel from '@/components/OrderPanel';
 import PositionsPanel from '@/components/PositionsPanel';
@@ -22,6 +23,13 @@ export default function Home() {
     const { ready, authenticated, login } = usePrivy();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard'>('home');
     const [showSetupWizard, setShowSetupWizard] = useState(false);
+
+    // Initialize onboarding tour
+    useOnboarding({
+        enabled: true,
+        setView,
+        currentView: view
+    });
 
     // Auto-prompt setup wizard when entering trading view if setup not complete
     useEffect(() => {
@@ -94,7 +102,7 @@ export default function Home() {
                 ) : (
                     <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
                         {/* Market Selector */}
-                        <div className="px-4 pt-4 mb-24">
+                        <div className="px-4 pt-4 mb-24" id="trading-market-selector">
                             <MarketSelector />
                         </div>
 
@@ -157,6 +165,7 @@ export default function Home() {
                     {/* Trading */}
                     <button
                         onClick={() => setView('trading')}
+                        id="nav-trade-tab"
                         className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'trading' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
@@ -203,6 +212,7 @@ export default function Home() {
                     <button
                         onClick={handleProfileClick}
                         disabled={!ready}
+                        id="nav-profile-tab"
                         className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'profile' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',

@@ -490,3 +490,95 @@ h6 { font-size: 1rem; }
     min-height: 56px;
   }
 }
+
+/* === Driver.js Theme Overrides for Rayo === */
+.driver-popover {
+  background-color: #1A1A1A !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 1.5rem !important; /* using radius-xl to match cards */
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 0, 0.05) !important;
+  padding: 1.5rem !important;
+}
+
+.driver-popover-title {
+  color: #FFFF00 !important; /* Neon Yellow */
+  font-family: var(--font-plus-jakarta), sans-serif !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.driver-popover-description {
+  color: #CCCCCC !important;
+  font-family: var(--font-inter), sans-serif !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Navigation Buttons */
+.driver-popover-footer {
+  margin-top: 1rem !important;
+}
+
+.driver-popover-btn {
+  background-color: #252525 !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 9999px !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+  transition: all 0.2s ease !important;
+}
+
+.driver-popover-btn:hover {
+  background-color: #333333 !important;
+  color: #FFFFFF !important;
+}
+
+/* Next/Done Button - Highlighted */
+.driver-popover-next-btn {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  border: none !important;
+  box-shadow: 0 0 10px rgba(255, 255, 0, 0.3) !important;
+}
+
+.driver-popover-next-btn:hover {
+  background-color: #FFFF33 !important;
+  box-shadow: 0 0 15px rgba(255, 255, 0, 0.5) !important;
+}
+
+/* Arrow */
+.driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #1A1A1A !important;
+}
+
+.driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #1A1A1A !important;
+}
+
+.driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #1A1A1A !important;
+}
+
+.driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #1A1A1A !important;
+}
+
+/* Progress Steps (if enabled) */
+.driver-popover-progress-text {
+  color: #888888 !important;
+}
+
+/* Close Button */
+.driver-popover-close-btn {
+  color: #888888 !important;
+}
+
+.driver-popover-close-btn:hover {
+  color: #FFFFFF !important;
+}

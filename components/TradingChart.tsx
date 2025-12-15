@@ -130,7 +130,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
     };
 
     return (
-        <div className="h-full flex flex-col min-w-0">
+        <div id="trading-chart" className="h-full flex flex-col min-w-0">
             <div className="mt-20 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <h3 className="text-sm font-semibold text-white">
