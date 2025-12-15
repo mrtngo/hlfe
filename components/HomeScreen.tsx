@@ -99,6 +99,23 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     // Calculate 30-day movement percentage
     const thirtyDayMovement = account.equity > 0 ? ((thirtyDayPnl / account.equity) * 100) : 0;
 
+    // Calculate top gainers and losers
+    const cryptoMarkets = markets.filter(m => !m.isStock && m.change24h !== undefined);
+    const stockMarkets = markets.filter(m => m.isStock && m.change24h !== undefined);
+
+    const cryptoGainers = [...cryptoMarkets]
+        .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
+        .slice(0, 5);
+    const cryptoLosers = [...cryptoMarkets]
+        .sort((a, b) => (a.change24h || 0) - (b.change24h || 0))
+        .slice(0, 5);
+    const stockGainers = [...stockMarkets]
+        .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
+        .slice(0, 5);
+    const stockLosers = [...stockMarkets]
+        .sort((a, b) => (a.change24h || 0) - (b.change24h || 0))
+        .slice(0, 5);
+
     if (!mounted) {
         return (
             <div className="flex items-center justify-center h-full">
@@ -257,6 +274,152 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+            )}
+
+            {/* Top Movers - Crypto */}
+            {cryptoGainers.length > 0 && (
+                <div className="glass-card p-6 mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-6 text-center">🔥 Cripto Hot</h2>
+                    <div className="grid grid-cols-2 gap-6">
+                        {/* Gainers */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-8 h-8 rounded-full bg-[#34C759]/20 flex items-center justify-center">
+                                    <TrendingUp className="w-4 h-4 text-[#34C759]" />
+                                </div>
+                                <span className="font-bold text-[#34C759]">Ganadores</span>
+                            </div>
+                            <div className="space-y-3">
+                                {cryptoGainers.map((market, idx) => {
+                                    const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                                    return (
+                                        <button
+                                            key={market.name}
+                                            onClick={() => {
+                                                setSelectedMarket(market.symbol);
+                                                if (onTokenClick) onTokenClick(market.symbol);
+                                            }}
+                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] hover:from-[#2C2C2E] hover:to-[#3C3C3E] transition-all active:scale-[0.98]"
+                                        >
+                                            <span className="text-xs font-bold text-[#FFD60A] min-w-[20px]">#{idx + 1}</span>
+                                            <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
+                                            <div className="flex-1 text-left">
+                                                <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
+                                                <div className="text-xs text-[#FFD60A] font-mono">${market.price?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}</div>
+                                            </div>
+                                            <span className="text-[#34C759] font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        {/* Losers */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-8 h-8 rounded-full bg-[#FF3B30]/20 flex items-center justify-center">
+                                    <TrendingDown className="w-4 h-4 text-[#FF3B30]" />
+                                </div>
+                                <span className="font-bold text-[#FF3B30]">Perdedores</span>
+                            </div>
+                            <div className="space-y-3">
+                                {cryptoLosers.map((market, idx) => {
+                                    const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                                    return (
+                                        <button
+                                            key={market.name}
+                                            onClick={() => {
+                                                setSelectedMarket(market.symbol);
+                                                if (onTokenClick) onTokenClick(market.symbol);
+                                            }}
+                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] hover:from-[#2C2C2E] hover:to-[#3C3C3E] transition-all active:scale-[0.98]"
+                                        >
+                                            <span className="text-xs font-bold text-[#FFD60A] min-w-[20px]">#{idx + 1}</span>
+                                            <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
+                                            <div className="flex-1 text-left">
+                                                <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
+                                                <div className="text-xs text-[#FFD60A] font-mono">${market.price?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}</div>
+                                            </div>
+                                            <span className="text-[#FF3B30] font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Top Movers - Stocks */}
+            {stockGainers.length > 0 && (
+                <div className="glass-card p-6 mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-6 text-center">📈 Acciones Hot</h2>
+                    <div className="grid grid-cols-2 gap-6">
+                        {/* Gainers */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-8 h-8 rounded-full bg-[#34C759]/20 flex items-center justify-center">
+                                    <TrendingUp className="w-4 h-4 text-[#34C759]" />
+                                </div>
+                                <span className="font-bold text-[#34C759]">Ganadores</span>
+                            </div>
+                            <div className="space-y-3">
+                                {stockGainers.map((market, idx) => {
+                                    const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                                    return (
+                                        <button
+                                            key={market.name}
+                                            onClick={() => {
+                                                setSelectedMarket(market.symbol);
+                                                if (onTokenClick) onTokenClick(market.symbol);
+                                            }}
+                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] hover:from-[#2C2C2E] hover:to-[#3C3C3E] transition-all active:scale-[0.98]"
+                                        >
+                                            <span className="text-xs font-bold text-[#FFD60A] min-w-[20px]">#{idx + 1}</span>
+                                            <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
+                                            <div className="flex-1 text-left">
+                                                <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
+                                                <div className="text-xs text-[#FFD60A] font-mono">${market.price?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}</div>
+                                            </div>
+                                            <span className="text-[#34C759] font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        {/* Losers */}
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-8 h-8 rounded-full bg-[#FF3B30]/20 flex items-center justify-center">
+                                    <TrendingDown className="w-4 h-4 text-[#FF3B30]" />
+                                </div>
+                                <span className="font-bold text-[#FF3B30]">Perdedores</span>
+                            </div>
+                            <div className="space-y-3">
+                                {stockLosers.map((market, idx) => {
+                                    const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                                    return (
+                                        <button
+                                            key={market.name}
+                                            onClick={() => {
+                                                setSelectedMarket(market.symbol);
+                                                if (onTokenClick) onTokenClick(market.symbol);
+                                            }}
+                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] hover:from-[#2C2C2E] hover:to-[#3C3C3E] transition-all active:scale-[0.98]"
+                                        >
+                                            <span className="text-xs font-bold text-[#FFD60A] min-w-[20px]">#{idx + 1}</span>
+                                            <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
+                                            <div className="flex-1 text-left">
+                                                <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
+                                                <div className="text-xs text-[#FFD60A] font-mono">${market.price?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}</div>
+                                            </div>
+                                            <span className="text-[#FF3B30] font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -80,6 +80,151 @@ const SYMBOL_TO_COINGECKO_ID: Record<string, string> = {
     'KAS': 'kaspa',
     'TON': 'the-open-network',
     'TAO': 'bittensor',
+    // Additional tokens
+    'FLOKI': 'floki',
+    'MEW': 'cat-in-a-dogs-world',
+    'POPCAT': 'popcat',
+    'NEIRO': 'neiro-on-eth',
+    'PNUT': 'peanut-the-squirrel',
+    'ACT': 'act-i-the-ai-prophecy',
+    'GOAT': 'goatseus-maximus',
+    'MOODENG': 'moo-deng',
+    'BRETT': 'based-brett',
+    'MOG': 'mog-coin',
+    'SPX': 'spx6900',
+    'FARTCOIN': 'fartcoin',
+    'AI16Z': 'ai16z',
+    'VIRTUAL': 'virtual-protocol',
+    'AIXBT': 'aixbt',
+    'ZEREBRO': 'zerebro',
+    'GRIFFAIN': 'griffain',
+    'TRUMP': 'official-trump',
+    'MELANIA': 'official-melania-meme',
+    'VINE': 'vine-coin',
+    'ANIME': 'anime-token',
+    '1000PEPE': 'pepe',
+    '1000SHIB': 'shiba-inu',
+    '1000BONK': 'bonk',
+    '1000FLOKI': 'floki',
+    'kPEPE': 'pepe',
+    'kSHIB': 'shiba-inu',
+    'kBONK': 'bonk',
+    'kFLOKI': 'floki',
+    'EOS': 'eos',
+    'XMR': 'monero',
+    'DASH': 'dash',
+    'ZEC': 'zcash',
+    'BCH': 'bitcoin-cash',
+    'ETC': 'ethereum-classic',
+    'THETA': 'theta-token',
+    'XTZ': 'tezos',
+    'NEO': 'neo',
+    'IOTA': 'iota',
+    'ZIL': 'zilliqa',
+    'ENJ': 'enjincoin',
+    'CHZ': 'chiliz',
+    'BAT': 'basic-attention-token',
+    'COMP': 'compound-governance-token',
+    'YFI': 'yearn-finance',
+    'SUSHI': 'sushi',
+    '1INCH': '1inch',
+    'CAKE': 'pancakeswap-token',
+    'KAVA': 'kava',
+    'CELO': 'celo',
+    'FLOW': 'flow',
+    'ROSE': 'oasis-network',
+    'ONE': 'harmony',
+    'ANKR': 'ankr',
+    'OCEAN': 'ocean-protocol',
+    'GRT': 'the-graph',
+    'AUDIO': 'audius',
+    'LRC': 'loopring',
+    'MASK': 'mask-network',
+    'SKL': 'skale',
+    'STORJ': 'storj',
+    'API3': 'api3',
+    'BAND': 'band-protocol',
+    'RLC': 'iexec-rlc',
+    'NKN': 'nkn',
+    'CTSI': 'cartesi',
+    'COTI': 'coti',
+    'CELR': 'celer-network',
+    'LINA': 'linear-finance',
+    'ALICE': 'my-neighbor-alice',
+    'SLP': 'smooth-love-potion',
+    'C98': 'coin98',
+    'DENT': 'dent',
+    'HOT': 'holotoken',
+    'MTL': 'metal',
+    'OGN': 'origin-protocol',
+    'RSR': 'reserve-rights-token',
+    'SXP': 'solar',
+    'TRU': 'truefi',
+    'REEF': 'reef',
+    'DYDX': 'dydx',
+    'RAY': 'raydium',
+    'ORCA': 'orca',
+    'MSOL': 'marinade-staked-sol',
+    'HNT': 'helium',
+    'MOBILE': 'helium-mobile',
+    'IOT': 'helium-iot',
+    'RNDR': 'render-token',
+    'AR': 'arweave',
+    'BEAM': 'beam-2',
+    'PRIME': 'echelon-prime',
+    'MAVIA': 'heroes-of-mavia',
+    'PIXEL': 'pixels',
+    'PORTAL': 'portal-2',
+    'XAI': 'xai-blockchain',
+    'ALT': 'altlayer',
+    'MANTA': 'manta-network',
+    'DYM': 'dymension',
+    'AEVO': 'aevo-exchange',
+    'WEN': 'wen-4',
+    'BOME': 'book-of-meme',
+    'SLERF': 'slerf',
+    'ETHFI': 'ether-fi',
+    'OMNI': 'omni-network',
+    'REZ': 'renzo',
+    'BB': 'bouncebit',
+    'NOT': 'notcoin',
+    'ZK': 'zksync',
+    'ZRO': 'layerzero',
+    'LISTA': 'lista-dao',
+    'IO': 'io-net',
+    'BLAST': 'blast',
+    'DOGS': 'dogs-2',
+    'EIGEN': 'eigenlayer',
+    'HMSTR': 'hamster-kombat',
+    'CATI': 'catizen',
+    'DRIFT': 'drift-protocol',
+    'GRASS': 'grass',
+    'DBR': 'de-brug',
+    'SCR': 'scroll',
+    'COW': 'cow-protocol',
+    'MOVE': 'movement',
+    'ME': 'magic-eden',
+    'PENGU': 'pudgy-penguins',
+    'USUAL': 'usual',
+    'BIO': 'bio-protocol',
+    'SONIC': 'sonic-3',
+    'PLUME': 'plume-network',
+    'AVAAI': 'holoworld-ai',
+    'COOKIE': 'cookie',
+    'SWARMS': 'swarms',
+    'BUZZ': 'buzzkill',
+    'MAX': 'max-2',
+    'JELLYJELLY': 'jelly-ai',
+    'KAITO': 'kaito',
+    'IP': 'infinitepay',
+    'BERA': 'berachain',
+    'TST': 'bnb-chain-test',
+    'LAYER': 'unilayer',
+    'NIL': 'nil',
+    'RED': 'red',
+    'HFUN': 'hfun',
+    'PARTI': 'particle',
+    'FORM': 'form',
 };
 
 // Stock symbol to Twitter handle mapping for unavatar.io
@@ -230,9 +375,34 @@ function isStockSymbol(symbol: string): boolean {
     return symbol in STOCK_TO_TWITTER;
 }
 
+// Dynamic logo sources that accept ticker symbols
+function getCryptoLogoUrls(symbol: string): string[] {
+    const lowerSymbol = symbol.toLowerCase();
+    const coingeckoId = SYMBOL_TO_COINGECKO_ID[symbol];
+
+    const urls: string[] = [];
+
+    // 1. cryptocurrency-icons GitHub CDN (very comprehensive)
+    urls.push(`https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${lowerSymbol}.png`);
+
+    // 2. If we have a CoinGecko ID mapping, use jsDelivr CDN
+    if (coingeckoId) {
+        urls.push(`https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${coingeckoId}/standard.png`);
+    }
+
+    // 3. Try CoinGecko CDN with the symbol as ID (works for many coins)
+    urls.push(`https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${lowerSymbol}/standard.png`);
+
+    // 4. Direct CoinGecko assets with known URLs
+    if (TOKEN_LOGOS[symbol]) {
+        urls.push(TOKEN_LOGOS[symbol]);
+    }
+
+    return urls;
+}
+
 export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLogoProps) {
-    const [imgError, setImgError] = useState(false);
-    const [fallbackError, setFallbackError] = useState(false);
+    const [errorIndex, setErrorIndex] = useState(0);
 
     // Get the base symbol (remove -USD, -PERP, etc.)
     const baseSymbol = symbol.replace(/-USD$/, '').replace(/-PERP$/, '').toUpperCase();
@@ -241,24 +411,22 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
     const isStock = isStockSymbol(baseSymbol);
 
     // Get logo URLs based on asset type
-    let primaryUrl: string | null = null;
-    let fallbackUrl: string | null = null;
+    let logoUrls: string[] = [];
 
     if (isStock) {
         // For stocks, use unavatar.io (Twitter profile images)
-        primaryUrl = getUnavatarUrl(baseSymbol);
-        fallbackUrl = null; // No fallback for stocks
+        const url = getUnavatarUrl(baseSymbol);
+        if (url) logoUrls.push(url);
     } else {
-        // For crypto, use CoinGecko -> jsDelivr
-        primaryUrl = TOKEN_LOGOS[baseSymbol] || null;
-        fallbackUrl = getJsDelivrUrl(baseSymbol);
+        // For crypto, get multiple fallback URLs
+        logoUrls = getCryptoLogoUrls(baseSymbol);
     }
 
-    // Determine which URL to use
-    const logoUrl = imgError ? fallbackUrl : primaryUrl;
+    // Get current URL to try (based on how many have failed)
+    const currentUrl = logoUrls[errorIndex];
 
-    // If we have both errors or no URLs available, show letter fallback
-    if ((imgError && fallbackError) || (!logoUrl && !fallbackUrl)) {
+    // If we've exhausted all URLs, show letter fallback
+    if (!currentUrl || errorIndex >= logoUrls.length) {
         return (
             <div
                 className={`rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
@@ -277,49 +445,24 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
         );
     }
 
-    // Try logo URL (primary or fallback)
-    const urlToUse = logoUrl || fallbackUrl;
-
-    if (urlToUse) {
-        return (
-            <div
-                className={`rounded-full overflow-hidden flex-shrink-0 ${isStock ? 'bg-white' : 'bg-white/10'} ${className}`}
-                style={{ width: size, height: size }}
-            >
-                <Image
-                    src={urlToUse}
-                    alt={baseSymbol}
-                    width={size}
-                    height={size}
-                    className="w-full h-full object-cover rounded-full"
-                    unoptimized
-                    onError={() => {
-                        if (!imgError) {
-                            setImgError(true);
-                        } else {
-                            setFallbackError(true);
-                        }
-                    }}
-                />
-            </div>
-        );
-    }
-
-    // Final fallback - letter
+    // Try current URL, on error move to next
     return (
         <div
-            className={`rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
-            style={{
-                width: size,
-                height: size,
-                background: isStock
-                    ? 'linear-gradient(135deg, #1E3A5F 0%, #2D5A87 100%)'
-                    : 'linear-gradient(135deg, #FFD60A 0%, #FF9500 100%)'
-            }}
+            className={`rounded-full overflow-hidden flex-shrink-0 ${isStock ? 'bg-white' : 'bg-white/10'} ${className}`}
+            style={{ width: size, height: size }}
         >
-            <span className="text-white font-bold" style={{ fontSize: size / 2.5 }}>
-                {baseSymbol.charAt(0)}
-            </span>
+            <Image
+                src={currentUrl}
+                alt={baseSymbol}
+                width={size}
+                height={size}
+                className="w-full h-full object-cover rounded-full"
+                unoptimized
+                onError={() => {
+                    // Try next URL in the list
+                    setErrorIndex(prev => prev + 1);
+                }}
+            />
         </div>
     );
 }
