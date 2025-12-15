@@ -3,6 +3,7 @@
 import { useState, useEffect, memo, useCallback, useRef, useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign } from 'lucide-react';
@@ -25,6 +26,7 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenProps = {}) {
     const { t } = useLanguage();
+    const { currency, toggleCurrency, formatCurrency } = useCurrency();
     const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
     const { user } = useUser();
@@ -172,8 +174,14 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
                 <div className="relative z-10">
                     {/* Greeting */}
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 text-center">
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 text-center relative">
                         {t.home.hi}, {getUsername()}
+                        <button
+                            onClick={toggleCurrency}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all border border-white/10 text-coffee-medium hover:text-white"
+                        >
+                            {currency}
+                        </button>
                     </h1>
 
                     {/* Portfolio Value and 30-day Movement */}
@@ -181,12 +189,12 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <div className="text-center">
                             <div className="text-sm text-coffee-medium mb-2">{t.home.portfolioValue}</div>
                             <div className="text-5xl md:text-6xl font-bold text-white tracking-tight">
-                                ${portfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {formatCurrency(portfolioValue)}
                             </div>
                             <div className="text-sm text-coffee-medium mt-2">
                                 30d: <span className={thirtyDayMovement >= 0 ? 'text-bullish' : 'text-bearish'}>
                                     {thirtyDayMovement >= 0 ? '+' : ''}{thirtyDayMovement.toFixed(2)}%
-                                    {thirtyDayPnl !== 0 && ` (${thirtyDayPnl >= 0 ? '+' : ''}$${Math.abs(thirtyDayPnl).toFixed(2)})`}
+                                    {thirtyDayPnl !== 0 && ` (${thirtyDayPnl >= 0 ? '+' : ''}${formatCurrency(Math.abs(thirtyDayPnl))})`}
                                 </span>
                             </div>
                         </div>
@@ -247,7 +255,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                     <ArrowDownRight className="w-4 h-4" />
                                                 )}
                                                 <span className="font-bold font-mono text-lg">
-                                                    ${Math.abs(position.unrealizedPnl).toFixed(2)}
+                                                    {formatCurrency(Math.abs(position.unrealizedPnl))}
                                                 </span>
                                             </div>
                                             <span className="text-xs font-semibold font-mono">
@@ -262,15 +270,15 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-coffee-medium">Entry</span>
-                                            <span className="font-mono text-white">${position.entryPrice.toFixed(2)}</span>
+                                            <span className="font-mono text-white">{formatCurrency(position.entryPrice)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-coffee-medium">Mark</span>
-                                            <span className="font-mono text-white">${position.markPrice.toFixed(2)}</span>
+                                            <span className="font-mono text-white">{formatCurrency(position.markPrice)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-coffee-medium">Liq</span>
-                                            <span className="font-mono text-bearish">${position.liquidationPrice.toFixed(2)}</span>
+                                            <span className="font-mono text-bearish">{formatCurrency(position.liquidationPrice)}</span>
                                         </div>
                                     </div>
                                     {/* Share Button */}
@@ -320,7 +328,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
                                             <div className="flex-1 text-left">
                                                 <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
-                                                <div className="text-xs text-[#FFD60A] font-mono">${market.price?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}</div>
+                                                <div className="text-xs text-[#FFD60A] font-mono">{market.price ? formatCurrency(market.price) : '0'}</div>
                                             </div>
                                             <span className="text-[#34C759] font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</span>
                                         </button>
@@ -352,7 +360,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
                                             <div className="flex-1 text-left">
                                                 <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
-                                                <div className="text-xs text-[#FFD60A] font-mono">${market.price?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}</div>
+                                                <div className="text-xs text-[#FFD60A] font-mono">{market.price ? formatCurrency(market.price) : '0'}</div>
                                             </div>
                                             <span className="text-[#FF3B30] font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</span>
                                         </button>
@@ -393,7 +401,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
                                             <div className="flex-1 text-left">
                                                 <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
-                                                <div className="text-xs text-[#FFD60A] font-mono">${market.price?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}</div>
+                                                <div className="text-xs text-[#FFD60A] font-mono">{market.price ? formatCurrency(market.price) : '0'}</div>
                                             </div>
                                             <span className="text-[#34C759] font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</span>
                                         </button>
@@ -425,7 +433,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
                                             <div className="flex-1 text-left">
                                                 <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
-                                                <div className="text-xs text-[#FFD60A] font-mono">${market.price?.toLocaleString('en-US', { maximumFractionDigits: 2 }) || '0'}</div>
+                                                <div className="text-xs text-[#FFD60A] font-mono">{market.price ? formatCurrency(market.price) : '0'}</div>
                                             </div>
                                             <span className="text-[#FF3B30] font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</span>
                                         </button>
@@ -600,7 +608,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                             {/* Right: Price + Change */}
                                                             <div className="text-right shrink-0">
                                                                 <div className="font-mono font-bold text-base" style={{ color: '#FFFFFF' }}>
-                                                                    ${market.price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                                                                    {market.price ? formatCurrency(market.price) : '0.00'}
                                                                 </div>
                                                                 <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
                                                                     {marketIsPositive ? (
@@ -671,6 +679,7 @@ interface WatchlistItemProps {
 }
 
 const WatchlistItem = memo(({ market, onTokenClick, onRemove }: WatchlistItemProps) => {
+    const { formatCurrency } = useCurrency();
     const priceChangePercent = market.change24h || 0;
     const isPositive = priceChangePercent >= 0;
     const cleanTicker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
@@ -718,7 +727,7 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove }: WatchlistItemPro
                 {/* Price and Change - Right aligned, responsive sizing */}
                 <div className="flex flex-col items-end shrink-0">
                     <div className="text-[#FFD60A] font-bold text-base md:text-xl font-mono mb-0.5 whitespace-nowrap">
-                        ${market.price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}
+                        {market.price ? formatCurrency(market.price) : '0.00'}
                     </div>
                     <div className={`text-sm md:text-base font-semibold whitespace-nowrap ${isPositive ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
                         {isPositive ? '+' : ''}{priceChangePercent.toFixed(2)}%

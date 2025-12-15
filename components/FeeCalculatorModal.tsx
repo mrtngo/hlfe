@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, TrendingUp, DollarSign, Trophy, Info } from 'lucide-react';
+import { useCurrency } from '@/context/CurrencyContext';
 
 interface FeeCalculatorModalProps {
     isOpen: boolean;
@@ -10,52 +11,80 @@ interface FeeCalculatorModalProps {
 }
 
 export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorModalProps) {
-    const [amount, setAmount] = useState<number>(5000000); // Default 5M COP
+    const { currency, exchangeRate, formatCurrency } = useCurrency();
+    const [amount, setAmount] = useState<string>('5000000'); // Store as string for better input handling
     const [activeTab, setActiveTab] = useState<'standard' | 'dividends' | 'usa'>('standard');
 
-    const formatCOP = (val: number) => {
-        return new Intl.NumberFormat('es-CO', {
-            style: 'currency',
-            currency: 'COP',
-            maximumFractionDigits: 0,
-            minimumFractionDigits: 0
-        }).format(val);
-    };
+    // Initialize with a reasonable default based on currency
+    useEffect(() => {
+        if (isOpen) {
+            setAmount(currency === 'COP' ? '5000000' : '1000');
+        }
+    }, [currency, isOpen]);
+
+    const numericAmount = parseFloat(amount) || 0;
 
     const calculation = useMemo(() => {
-        // 1. TRII
-        let triiCost = (amount < 5000000) ? 14875 : (amount * 0.002975);
-        // Note: Dividends cost for Trii is technically different (spread + fee) but keeping simple for comparison
-        if (activeTab === 'dividends') triiCost += 0;
+        // Normalize everything to USD for calculation if dealing with crypto/stocks often, 
+        // OR normalize everything to COP if that's the base.
+        // For this specific calculator, it compares Colombian brokers (Trii/Tyba) which charge in COP.
+        // Rayo charges in USD/USDC but we want to show comparison in the selected currency.
 
-        // 2. BANCOLOMBIA
-        let bancolombiaCost = 0;
-        if (amount >= 200000 && amount <= 10000000) bancolombiaCost = 23800;
-        else if (amount > 10000000) bancolombiaCost = amount * 0.00238;
+        // Let's assume the input `amount` is in the CURRENT selected currency.
 
-        // 3. TYBA
-        const tybaCost = amount * 0.015; // Spread
+        let amountInCOP = numericAmount;
+        let amountInUSD = numericAmount;
 
-        // 4. RAYO - 0.075% Taker Fee
-        const rayoCost = amount * 0.00075;
+        if (currency === 'USD') {
+            amountInCOP = numericAmount * exchangeRate;
+        } else {
+            amountInUSD = numericAmount / exchangeRate;
+        }
+
+        // 1. TRII (Charges in COP)
+        // Commission: 11.900 + IVA = ~14.161 (approx, using provided older 14875 value or standard fee)
+        // Let's use the user provided logic: < 5M ? 14875 : 0.2975%
+        let triiCostCOP = (amountInCOP < 5000000) ? 14875 : (amountInCOP * 0.002975);
+        if (activeTab === 'dividends') triiCostCOP += 0;
+
+        // 2. BANCOLOMBIA (Charges in COP)
+        let bancolombiaCostCOP = 0;
+        if (amountInCOP >= 200000 && amountInCOP <= 10000000) bancolombiaCostCOP = 23800;
+        else if (amountInCOP > 10000000) bancolombiaCostCOP = amountInCOP * 0.00238;
+
+        // 3. TYBA (Spread)
+        const tybaCostCOP = amountInCOP * 0.015;
+
+        // 4. RAYO - 0.075% Taker Fee (Charges in USD usually, but represented here)
+        // Rayo fee is 0.075% of volume.
+        const rayoCostUSD = amountInUSD * 0.00075;
+        const rayoCostCOP = rayoCostUSD * exchangeRate;
+
+        // Convert costs back to selected currency for display
+        const convertToDisplay = (copValue: number) => {
+            if (currency === 'COP') return copValue;
+            return copValue / exchangeRate;
+        };
+
+        const rayoDisplay = currency === 'COP' ? rayoCostCOP : rayoCostUSD;
 
         const competitors = [
-            { name: 'Trii', cost: triiCost, color: '#00D1FF', handle: 'somostrii' },
-            { name: 'Bancolombia', cost: bancolombiaCost, color: '#FDDA24', handle: 'Bancolombia' },
-            { name: 'Tyba', cost: tybaCost, color: '#6A5ACD', handle: 'tyba_latam' }
+            { name: 'Trii', cost: convertToDisplay(triiCostCOP), color: '#00D1FF', handle: 'somostrii' },
+            { name: 'Bancolombia', cost: convertToDisplay(bancolombiaCostCOP), color: '#FDDA24', handle: 'Bancolombia' },
+            { name: 'Tyba', cost: convertToDisplay(tybaCostCOP), color: '#6A5ACD', handle: 'tyba_latam' }
         ].sort((a, b) => a.cost - b.cost);
 
         // Calculate savings vs the cheapest competitor
         const cheapestCompetitor = competitors[0];
-        const savings = cheapestCompetitor.cost - rayoCost;
+        const savings = cheapestCompetitor.cost - rayoDisplay;
 
         return {
-            rayo: rayoCost,
+            rayo: rayoDisplay,
             competitors,
             savings: savings > 0 ? savings : 0,
             bestCompetitor: cheapestCompetitor
         };
-    }, [amount, activeTab]);
+    }, [numericAmount, activeTab, currency, exchangeRate]);
 
     const [mounted, setMounted] = useState(false);
 
@@ -120,26 +149,27 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                 <input
                                     type="number"
                                     value={amount}
-                                    onChange={(e) => setAmount(Number(e.target.value))}
+                                    onChange={(e) => setAmount(e.target.value)}
                                     className="w-full bg-transparent text-center text-4xl font-black text-white focus:outline-none placeholder-white/20 font-mono tracking-tight"
                                     placeholder="0"
+                                    min="0"
                                 />
                             </div>
-                            <div className="text-xs text-coffee-medium mt-1 font-mono">COP</div>
+                            <div className="text-xs text-coffee-medium mt-1 font-mono">{currency}</div>
                         </div>
 
                         {/* Quick Selects */}
                         <div className="flex justify-center gap-2 flex-wrap">
-                            {[1000000, 5000000, 10000000].map((val) => (
+                            {(currency === 'COP' ? [1000000, 5000000, 10000000] : [250, 1000, 2500]).map((val) => (
                                 <button
                                     key={val}
-                                    onClick={() => setAmount(val)}
-                                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${amount === val
+                                    onClick={() => setAmount(val.toString())}
+                                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${numericAmount === val
                                         ? 'bg-[#FFFF00] text-black shadow-[0_0_10px_rgba(255,255,0,0.3)]'
                                         : 'bg-white/5 text-white hover:bg-white/10'
                                         }`}
                                 >
-                                    {(val / 1000000)}M
+                                    {currency === 'COP' ? `${val / 1000000}M` : `$${val}`}
                                 </button>
                             ))}
                         </div>
@@ -152,10 +182,10 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                             <span className="text-[#FFFF00] font-bold text-xs tracking-wide">AHORRO ESTIMADO</span>
                         </div>
                         <div className="text-3xl font-black text-white mb-1 font-mono">
-                            {formatCOP(calculation.savings)}
+                            {formatCurrency(calculation.savings)}
                         </div>
                         <p className="text-[10px] text-coffee-medium">
-                            vs. {calculation.competitors[0].name} (Siguiente mejor opción)
+                            vs. {calculation.bestCompetitor.name} (Siguiente mejor opción)
                         </p>
                     </div>
 
@@ -198,7 +228,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                 </div>
                             </div>
                             <div className="text-right relative z-10">
-                                <div className="text-xl font-black text-black font-mono !text-black" style={{ color: '#000000' }}>{formatCOP(calculation.rayo)}</div>
+                                <div className="text-xl font-black text-black font-mono !text-black" style={{ color: '#000000' }}>{formatCurrency(calculation.rayo)}</div>
                                 <div className="text-black/70 text-[9px] font-bold uppercase !text-black/70" style={{ color: 'rgba(0,0,0,0.7)' }}>Costo Total</div>
                             </div>
                         </div>
@@ -235,7 +265,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-sm font-bold text-white font-mono">{formatCOP(comp.cost)}</div>
+                                        <div className="text-sm font-bold text-white font-mono">{formatCurrency(comp.cost)}</div>
                                         <div className="text-coffee-medium text-[9px]">+{(comp.cost / (calculation.rayo || 1)).toFixed(1)}x vs Rayo</div>
                                     </div>
                                 </div>

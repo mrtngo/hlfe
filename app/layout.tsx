@@ -4,6 +4,7 @@ import { LanguageProvider } from '@/hooks/useLanguage';
 import { HyperliquidProvider } from '@/providers/HyperliquidProvider';
 import { PrivyProvider } from '@/providers/PrivyProvider';
 import { UserProvider } from '@/hooks/useUser';
+import { CurrencyProvider } from '@/context/CurrencyContext';
 
 // Rayo Typography System - Variable Fonts
 import "@fontsource-variable/plus-jakarta-sans";
@@ -49,11 +50,13 @@ export default function RootLayout({
             <body className="min-h-screen bg-background font-sans antialiased overscroll-none font-inter">
                 <PrivyProvider>
                     <LanguageProvider>
-                        <HyperliquidProvider>
-                            <UserProvider>
-                                {children}
-                            </UserProvider>
-                        </HyperliquidProvider>
+                        <CurrencyProvider>
+                            <HyperliquidProvider>
+                                <UserProvider>
+                                    {children}
+                                </UserProvider>
+                            </HyperliquidProvider>
+                        </CurrencyProvider>
                     </LanguageProvider>
                 </PrivyProvider>
             </body>
