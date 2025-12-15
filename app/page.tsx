@@ -135,10 +135,10 @@ export default function Home() {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    top: 'auto',
                     zIndex: 9999,
                     backgroundColor: '#000000',
-                    height: '75px'
+                    height: '75px',
+                    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
                 }}
                 className="border-t border-[#FFFF00]/20"
             >
