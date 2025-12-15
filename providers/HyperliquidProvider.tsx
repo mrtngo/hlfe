@@ -1950,6 +1950,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Capture original position before any updates (for PnL calculation and DB recording)
                 const originalPosition = positions.find(p => p.symbol === symbol);
 
+                let orderId = '';
+                let orderFee = 0;
                 if (result.response?.type === 'order' && result.response?.data?.statuses) {
                     const statuses = result.response.data.statuses;
                     for (const status of statuses) {
@@ -1959,10 +1961,17 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         }
                         if (status.resting) {
                             console.log('✅ Order resting with ID:', status.resting.oid);
+                            orderId = status.resting.oid.toString(); // Ensure string
                         }
                         if (status.filled) {
                             orderFilled = true;
                             // Extract filled size and price from status if available
+                            if (status.filled.oid) {
+                                orderId = status.filled.oid.toString();
+                            }
+                            if (status.filled.fee) {
+                                orderFee = parseFloat(status.filled.fee);
+                            }
                             if (status.filled.totalSz) {
                                 filledSize = parseFloat(status.filled.totalSz);
                             }
@@ -2211,6 +2220,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     exit_price: actualFilledPrice,    // Closing fill price
                                     pnl: realizedPnl ?? null,
                                     status: 'closed',
+                                    tid: orderId || `sim-${Date.now()}`, // Fallback if no ID found
+                                    fee: orderFee || 0
                                 });
                                 console.log('📊 Closed trade result:', result);
                             } else if (isClosing) {
@@ -2225,6 +2236,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     exit_price: actualFilledPrice,    // Closing fill price
                                     pnl: realizedPnl || 0,
                                     status: 'closed',
+                                    tid: orderId || `sim-${Date.now()}`,
+                                    fee: orderFee || 0
                                 });
                                 console.log('📊 Closed trade (no PnL) result:', result);
                             } else {
@@ -2238,6 +2251,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     exit_price: null,
                                     pnl: null,
                                     status: 'open',
+                                    tid: orderId || `sim-${Date.now()}`,
+                                    fee: orderFee || 0
                                 });
                                 console.log('📊 Open trade result:', result);
                             }
