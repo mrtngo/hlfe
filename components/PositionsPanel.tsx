@@ -3,13 +3,16 @@
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Share2 } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from './OrderNotification';
+import ShareModal from './ShareModal';
+import { Position } from '@/types/hyperliquid';
 
 export default function PositionsPanel() {
     const { t, formatCurrency, formatPercent } = useLanguage();
     const { positions, closePosition, loading, markets, refreshAccountData, setSelectedMarket } = useHyperliquid();
     const [closeNotification, setCloseNotification] = useState<OrderNotificationData | null>(null);
+    const [sharePosition, setSharePosition] = useState<Position | null>(null);
 
     const handleClosePosition = async (symbol: string) => {
         if (confirm(t.positions.closePosition)) {
@@ -130,17 +133,29 @@ export default function PositionsPanel() {
                                         </div>
                                     </div>
 
-                                    {/* Close button - outside the clickable area */}
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleClosePosition(position.symbol);
-                                        }}
-                                        disabled={loading}
-                                        className="w-full py-4 px-4 bg-[#FFFF00] hover:bg-[#FFFF33] text-black rounded-full text-base font-bold transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,0,0.3)]"
-                                    >
-                                        {t.positions.close}
-                                    </button>
+                                    {/* Action buttons */}
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSharePosition(position);
+                                            }}
+                                            className="py-3 px-4 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-bold transition-all flex items-center gap-2"
+                                        >
+                                            <Share2 className="w-4 h-4" />
+                                            Share
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleClosePosition(position.symbol);
+                                            }}
+                                            disabled={loading}
+                                            className="flex-1 py-3 px-4 bg-[#FFFF00] hover:bg-[#FFFF33] text-black rounded-full text-sm font-bold transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                                        >
+                                            {t.positions.close}
+                                        </button>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -153,6 +168,15 @@ export default function PositionsPanel() {
                 order={closeNotification}
                 onClose={() => setCloseNotification(null)}
             />
+
+            {/* Share Modal */}
+            {sharePosition && (
+                <ShareModal
+                    isOpen={!!sharePosition}
+                    onClose={() => setSharePosition(null)}
+                    position={sharePosition}
+                />
+            )}
         </>
     );
 }

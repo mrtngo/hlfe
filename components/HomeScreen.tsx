@@ -5,12 +5,14 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2 } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import PortfolioChart from '@/components/PortfolioChart';
 import DepositModal from '@/components/DepositModal';
+import ShareModal from '@/components/ShareModal';
 import type { Market } from '@/hooks/useHyperliquid';
+import type { Position } from '@/types/hyperliquid';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
 
 const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
@@ -28,6 +30,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const [watchlist, setWatchlist] = useState<string[]>([]);
     const [mounted, setMounted] = useState(false);
     const [showAddDropdown, setShowAddDropdown] = useState(false);
+    const [sharePosition, setSharePosition] = useState<Position | null>(null);
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -240,6 +243,17 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             <span className="font-mono text-bearish">${position.liquidationPrice.toFixed(2)}</span>
                                         </div>
                                     </div>
+                                    {/* Share Button */}
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSharePosition(position);
+                                        }}
+                                        className="mt-3 w-full py-2 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Share2 className="w-4 h-4" />
+                                        Share
+                                    </button>
                                 </div>
                             );
                         })}
@@ -431,6 +445,15 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 isOpen={showDepositModal}
                 onClose={() => setShowDepositModal(false)}
             />
+
+            {/* Share Modal */}
+            {sharePosition && (
+                <ShareModal
+                    isOpen={!!sharePosition}
+                    onClose={() => setSharePosition(null)}
+                    position={sharePosition}
+                />
+            )}
         </div>
     );
 }
