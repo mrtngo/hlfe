@@ -16,7 +16,7 @@ type MarginMode = 'isolated' | 'cross';
 
 export default function OrderPanel() {
     const { t, formatCurrency } = useLanguage();
-    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData, agentWalletEnabled, builderFeeApproved } = useHyperliquid();
+    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData, agentWalletEnabled, builderFeeApproved, setupAgentWallet, approveBuilderFee } = useHyperliquid();
 
     const [mode, setMode] = useState<OrderMode>('basic');
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
@@ -36,6 +36,8 @@ export default function OrderPanel() {
     const [success, setSuccess] = useState<string>('');
     const [orderNotification, setOrderNotification] = useState<OrderNotificationData | null>(null);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
+    const [setupLoading, setSetupLoading] = useState(false);
+    const [setupError, setSetupError] = useState<string>('');
 
     const market = getMarket(selectedMarket);
     const displaySymbol = selectedMarket?.replace(/-(USD|PERP)$/i, '') || selectedMarket;
@@ -624,6 +626,53 @@ export default function OrderPanel() {
                             : `${t.order.placeOrder} ${orderSide === 'long' ? t.order.long : t.order.short}`
                     )}
                 </button>
+
+                {/* Inline Setup Prompt - Shows when agent wallet or builder fee not approved */}
+                {connected && (!agentWalletEnabled || (BUILDER_CONFIG.enabled && !builderFeeApproved)) && (
+                    <div className="mt-4 p-4 bg-[#FFFF00]/10 border border-[#FFFF00]/30 rounded-xl">
+                        <p className="text-sm text-[#FFFF00] font-semibold mb-3">
+                            ⚡ Configuración Requerida
+                        </p>
+                        <p className="text-xs text-white/70 mb-3">
+                            {!agentWalletEnabled
+                                ? 'Habilita el Agente para operar sin firmar cada transacción.'
+                                : 'Aprueba la tarifa para comenzar a operar.'}
+                        </p>
+                        {setupError && (
+                            <p className="text-xs text-red-400 mb-3">{setupError}</p>
+                        )}
+                        <button
+                            onClick={async () => {
+                                setSetupLoading(true);
+                                setSetupError('');
+                                try {
+                                    if (!agentWalletEnabled) {
+                                        await setupAgentWallet();
+                                    } else if (BUILDER_CONFIG.enabled && !builderFeeApproved) {
+                                        await approveBuilderFee();
+                                    }
+                                } catch (err) {
+                                    setSetupError(err instanceof Error ? err.message : 'Error al configurar');
+                                } finally {
+                                    setSetupLoading(false);
+                                }
+                            }}
+                            disabled={setupLoading}
+                            className="w-full py-3 bg-[#FFFF00] text-black rounded-lg font-bold text-sm hover:bg-[#FFFF33] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {setupLoading ? (
+                                <>
+                                    <div className="spinner" style={{ borderTopColor: '#000' }} />
+                                    Procesando...
+                                </>
+                            ) : !agentWalletEnabled ? (
+                                'Habilitar Agente'
+                            ) : (
+                                'Aprobar Tarifa'
+                            )}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Order Notification */}
