@@ -25,6 +25,8 @@ export interface Position {
     leverage: number;
     /** Unrealized profit/loss in USD */
     unrealizedPnl: number;
+    /** Raw P&L reported by exchange (fallback) */
+    exchangePnl?: number;
     /** Unrealized P&L as percentage */
     unrealizedPnlPercent: number;
     /** Whether this is a stock/equity position (Trade.xyz) */
