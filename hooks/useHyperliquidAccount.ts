@@ -180,7 +180,7 @@ export function useHyperliquidAccount(
                     equity: parseFloat(mainMargin.accountValue || '0'),
                     availableMargin: parseFloat(mainMargin.accountValue || '0') - parseFloat(mainMargin.totalMarginUsed || '0'),
                     usedMargin: parseFloat(mainMargin.totalMarginUsed || '0'),
-                    unrealizedPnl: 0,
+                    unrealizedPnl: parseFloat((userState as any)?.crossMarginSummary?.totalUnrealizedPnl || '0'),
                     unrealizedPnlPercent: 0,
                 },
                 positions: userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || []
@@ -194,7 +194,7 @@ export function useHyperliquidAccount(
                         equity: parseFloat(dexMargin.accountValue || '0'),
                         availableMargin: parseFloat(dexMargin.accountValue || '0') - parseFloat(dexMargin.totalMarginUsed || '0'),
                         usedMargin: parseFloat(dexMargin.totalMarginUsed || '0'),
-                        unrealizedPnl: 0,
+                        unrealizedPnl: parseFloat((dexStateData as any)?.crossMarginSummary?.totalUnrealizedPnl || '0'),
                         unrealizedPnlPercent: 0,
                     },
                     positions: dexStateData.assetPositions?.map((p: any) => {
@@ -276,7 +276,7 @@ export function useHyperliquidAccount(
                     equity: parseFloat(mainMargin.accountValue || '0'),
                     availableMargin: parseFloat(mainMargin.accountValue || '0') - parseFloat(mainMargin.totalMarginUsed || '0'),
                     usedMargin: parseFloat(mainMargin.totalMarginUsed || '0'),
-                    unrealizedPnl: 0,
+                    unrealizedPnl: parseFloat((userState as any)?.crossMarginSummary?.totalUnrealizedPnl || '0'),
                     unrealizedPnlPercent: 0,
                 },
                 positions: userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || []
@@ -290,7 +290,7 @@ export function useHyperliquidAccount(
                         equity: parseFloat(dexMarginData.accountValue || '0'),
                         availableMargin: parseFloat(dexMarginData.accountValue || '0') - parseFloat(dexMarginData.totalMarginUsed || '0'),
                         usedMargin: parseFloat(dexMarginData.totalMarginUsed || '0'),
-                        unrealizedPnl: 0,
+                        unrealizedPnl: parseFloat((dexStateData as any)?.crossMarginSummary?.totalUnrealizedPnl || '0'),
                         unrealizedPnlPercent: 0,
                     },
                     positions: dexStateData.assetPositions?.map((p: any) => {
@@ -340,7 +340,7 @@ export function useHyperliquidAccount(
                             equity: accountValue,
                             availableMargin: accountValue - totalMarginUsed,
                             usedMargin: totalMarginUsed,
-                            unrealizedPnl: 0,
+                            unrealizedPnl: parseFloat(data.crossMarginSummary?.totalUnrealizedPnl || '0'),
                             unrealizedPnlPercent: 0,
                         },
                         positions: data.assetPositions?.map((p: any) => {
@@ -447,18 +447,29 @@ export function useHyperliquidAccount(
             };
         });
 
-        const totalEquity = perpState.account.equity + dexState.account.equity + totalUnrealizedPnl;
-        const totalBalance = perpState.account.balance + dexState.account.balance;
+        // Real-time calculation: Equity = (Main Account Value - Reported PnL) + (DEX Account Value - Reported PnL) + Total Live PnL + Spot Balances
+        const perpCash = perpState.account.equity - (perpState.account.unrealizedPnl || 0);
+        const dexCash = dexState.account.equity - (dexState.account.unrealizedPnl || 0);
+        const spotCash = spotBalances.reduce((sum, b) => {
+            // Include everything that is likely USDC or stabilized (using 1.0 as a safe multiplier for USDC)
+            if (b.coin === 'USDC' || b.coin === 'PURR') {
+                return sum + parseFloat(b.total);
+            }
+            return sum;
+        }, 0);
+
+        const totalCashBalance = perpCash + dexCash + spotCash;
+        const totalEquity = totalCashBalance + totalUnrealizedPnl;
         const totalUsedMargin = perpState.account.usedMargin + dexState.account.usedMargin;
 
         return {
             mergedAccount: {
-                balance: totalBalance,
+                balance: totalCashBalance,
                 equity: totalEquity,
-                availableMargin: totalBalance - totalUsedMargin,
+                availableMargin: totalCashBalance - totalUsedMargin,
                 usedMargin: totalUsedMargin,
                 unrealizedPnl: totalUnrealizedPnl,
-                unrealizedPnlPercent: totalBalance > 0 ? (totalUnrealizedPnl / totalBalance) * 100 : 0,
+                unrealizedPnlPercent: totalCashBalance > 0 ? (totalUnrealizedPnl / totalCashBalance) * 100 : 0,
             },
             mergedPositions: positionsWithRealtimePnl
         };
