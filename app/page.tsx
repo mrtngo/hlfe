@@ -15,13 +15,14 @@ import Leaderboard from '@/components/Leaderboard';
 import Profile from '@/components/Profile';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
-import { BarChart3, History, User, Trophy } from 'lucide-react';
+import SpotTradingPanel from '@/components/SpotTradingPanel';
+import { BarChart3, History, User, Trophy, Coins } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
     const { selectedMarket, setSelectedMarket, address, agentWalletEnabled, builderFeeApproved, builderFeeChecked } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot'>('home');
     const [showSetupWizard, setShowSetupWizard] = useState(false);
 
     // Initialize onboarding tour
@@ -98,6 +99,10 @@ export default function Home() {
                 ) : view === 'leaderboard' ? (
                     <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                         <Leaderboard />
+                    </div>
+                ) : view === 'spot' ? (
+                    <div className="max-w-4xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
+                        <SpotTradingPanel />
                     </div>
                 ) : (
                     <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
@@ -189,6 +194,21 @@ export default function Home() {
                     >
                         <BarChart3 className="w-7 h-7" strokeWidth={2} />
                         <span className="text-[11px] font-semibold">{t.nav.trade}</span>
+                    </button>
+
+                    {/* Spot */}
+                    <button
+                        onClick={() => setView('spot')}
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'spot' ? 'scale-110' : ''}`}
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            filter: view === 'spot' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: view === 'spot' ? 1 : 0.6
+                        }}
+                    >
+                        <Coins className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">Spot</span>
                     </button>
 
                     {/* History */}

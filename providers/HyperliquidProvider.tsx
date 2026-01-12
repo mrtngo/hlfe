@@ -21,6 +21,7 @@ import { useWalletClient } from 'wagmi';
 import { apiCache } from '@/lib/api-cache';
 import { db } from '@/lib/supabase/client';
 import { useUserData } from '@/hooks/useUserData';
+import { useHyperliquidAccount } from '@/hooks/useHyperliquidAccount';
 
 export type { Market };
 
@@ -116,6 +117,7 @@ interface HyperliquidContextType {
     account: AccountState;
     positions: Position[];
     orders: Order[];
+    spotBalances: any[];
 
     // User Data (cached)
     fills: Fill[];
@@ -156,21 +158,24 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [isConnected, setIsConnected] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const [positions, setPositions] = useState<Position[]>([]);
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [account, setAccount] = useState<AccountState>({
-        balance: 0,
-        equity: 0,
-        availableMargin: 0,
-        usedMargin: 0,
-        unrealizedPnl: 0,
-        unrealizedPnlPercent: 0,
-    });
     const [selectedMarket, setSelectedMarket] = useState<string>('BTC-USD');
 
     // Use real market data - This is now the ONLY place calling useMarketData
     const { markets: realMarkets, loading: marketsLoading } = useMarketData();
     const [markets, setMarkets] = useState<Market[]>([]);
+
+    // Use account hook for state management
+    const {
+        account,
+        positions,
+        orders,
+        spotBalances,
+        loading: accountLoading,
+        refreshAccountData: refreshAccountDataHook,
+        setAccount,
+        setPositions,
+        setOrders
+    } = useHyperliquidAccount(address, isConnected, markets);
 
     // Update markets from real data
     // Use startTransition to defer state updates and avoid hydration issues
@@ -1415,21 +1420,52 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const market = markets.find(m => m.symbol === symbol);
-            if (!market) {
+            // If it's a spot market (usually contains /) and not in perpetuals, we need to handle it
+            const isSpot = symbol.includes('/');
+
+            if (!market && !isSpot) {
                 throw new Error(`Market not found: ${symbol}. Available markets: ${markets.map(m => m.symbol).join(', ') || 'none loaded yet'}`);
             }
 
             // Check if this is a Trade.xyz (DEX) asset
-            const isTradeXyzAsset = market.isStock === true;
+            const isTradeXyzAsset = market?.isStock === true;
 
             let meta: any;
-            let assetIndex: number;
-            let assetName: string;
+            let assetIndex: number = -1;
+            let assetName: string = '';
             let actualSzDecimals: number | undefined; // szDecimals from fresh API data
             let referencePrice: number | null = null; // Store reference price for Trade.xyz assets
-            const baseCoin = symbol.split('-')[0]; // e.g., "TSLA" from "TSLA-USD"
+            const baseCoin = symbol.split('-')[0].split('/')[0]; // e.g., "TSLA" from "TSLA-USD" or "HYPE" from "HYPE/USDC"
 
-            if (isTradeXyzAsset) {
+            if (isSpot) {
+                // Fetch spot metadata to find asset index
+                console.log('📊 Spot market detected, fetching spot meta...');
+                const spotMetaResponse = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'spotMetaAndAssetCtxs' })
+                });
+
+                if (!spotMetaResponse.ok) {
+                    throw new Error(`Failed to fetch spot meta: ${spotMetaResponse.status}`);
+                }
+
+                const [spotMeta, spotContexts] = await spotMetaResponse.json();
+                assetName = baseCoin;
+
+                // Find pair index in universe
+                const pairIndex = spotMeta.universe.findIndex((p: any) => p.name === symbol || (p.tokens[0] === spotMeta.tokens.find((t: any) => t.name === baseCoin)?.index));
+                if (pairIndex === -1) {
+                    throw new Error(`Spot pair not found for ${symbol}`);
+                }
+
+                assetIndex = pairIndex;
+                const spotCtx = spotContexts[pairIndex];
+                referencePrice = spotCtx?.markPx ? parseFloat(spotCtx.markPx) : null;
+                actualSzDecimals = spotMeta.tokens.find((t: any) => t.name === baseCoin)?.szDecimals;
+
+                console.log(`✅ Found spot asset at index ${assetIndex}: ${assetName}, price: ${referencePrice}`);
+            } else if (isTradeXyzAsset) {
                 // For Trade.xyz assets, fetch meta and asset contexts from DEX endpoint
                 console.log('📊 Trade.xyz asset detected, fetching DEX meta...');
                 const dexMetaResponse = await fetch(`${API_URL}/info`, {
@@ -1740,8 +1776,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             console.log('📝 Order Request before orderToWire:', JSON.stringify(orderRequest, null, 2));
 
             // For HIP-3 DEX assets (Trade.xyz), use 110000 + index offset
-            // Similar to spot assets using 10000 + index
-            const wireAssetIndex = isTradeXyzAsset ? 110000 + assetIndex : assetIndex;
+            // For spot assets use 10000 + index
+            const wireAssetIndex = isTradeXyzAsset ? 110000 + assetIndex : (isSpot ? 10000 + assetIndex : assetIndex);
             console.log('📝 Asset Index:', assetIndex, 'Wire Asset Index:', wireAssetIndex, 'Asset Name:', assetName);
             const wireOrder = orderToWire(orderRequest, wireAssetIndex);
 
@@ -2387,6 +2423,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         account,
         positions,
         orders,
+        spotBalances,
         // Cached user data
         fills,
         funding,

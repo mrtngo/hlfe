@@ -12,10 +12,18 @@ import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import type { Position, Order, AccountState, Market } from '@/types';
 import { DEFAULT_ACCOUNT_STATE } from '@/types';
 
+interface SpotBalance {
+    coin: string;
+    token: number;
+    hold: string;
+    total: string;
+}
+
 interface AccountHookState {
     account: AccountState;
     positions: Position[];
     orders: Order[];
+    spotBalances: SpotBalance[];
     loading: boolean;
     rateLimited: boolean;
 }
@@ -99,6 +107,7 @@ export function useHyperliquidAccount(
     const [account, setAccount] = useState<AccountState>(DEFAULT_ACCOUNT_STATE);
     const [positions, setPositions] = useState<Position[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
+    const [spotBalances, setSpotBalances] = useState<SpotBalance[]>([]);
     const [loading, setLoading] = useState(false);
     const [rateLimited, setRateLimited] = useState(false);
     const [retryAfter, setRetryAfter] = useState<number | null>(null);
@@ -217,6 +226,28 @@ export function useHyperliquidAccount(
 
                     setPositions(activePositions);
                 }
+
+                // Fetch Spot Clearinghouse State
+                try {
+                    const spotResponse = await fetch(`${API_URL}/info`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'spotClearinghouseState',
+                            user: normalizedAddress,
+                        }),
+                    });
+
+                    if (spotResponse.ok) {
+                        const spotState = await spotResponse.json();
+                        if (spotState?.balances) {
+                            setSpotBalances(spotState.balances);
+                            console.log('✅ Fetched Spot balances:', spotState.balances.length);
+                        }
+                    }
+                } catch (spotErr) {
+                    console.warn('⚠️ Failed to fetch Spot balances:', spotErr);
+                }
             }
         } catch (err: any) {
             console.error('❌ Error fetching account data:', err);
@@ -301,6 +332,27 @@ export function useHyperliquidAccount(
                 }
 
                 setPositions(activePositions);
+
+                // Refresh Spot balances
+                try {
+                    const spotResponse = await fetch(`${API_URL}/info`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'spotClearinghouseState',
+                            user: normalizedAddress,
+                        }),
+                    });
+
+                    if (spotResponse.ok) {
+                        const spotState = await spotResponse.json();
+                        if (spotState?.balances) {
+                            setSpotBalances(spotState.balances);
+                        }
+                    }
+                } catch (spotErr) {
+                    console.warn('⚠️ Failed to refresh Spot balances:', spotErr);
+                }
             }
         } catch (error) {
             console.error('❌ [REFRESH] Failed to refresh account data:', error);
@@ -392,6 +444,7 @@ export function useHyperliquidAccount(
         account,
         positions,
         orders,
+        spotBalances,
         loading,
         rateLimited,
         refreshAccountData,
