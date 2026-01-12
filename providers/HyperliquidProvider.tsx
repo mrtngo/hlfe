@@ -138,6 +138,7 @@ interface HyperliquidContextType {
     builderFeeChecked: boolean;
     approveBuilderFee: () => Promise<{ success: boolean; message: string }>;
     checkBuilderFeeApproval: () => Promise<boolean>;
+    lastUpdated: number;
 
     // DEX Abstraction (required for Trade.xyz stocks)
     dexAbstractionEnabled: boolean;
@@ -171,6 +172,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         orders,
         spotBalances,
         loading: accountLoading,
+        lastUpdated,
         refreshAccountData: refreshAccountDataHook,
         setAccount,
         setPositions,
@@ -2442,6 +2444,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         dexAbstractionEnabled,
         dexAbstractionLoading,
         enableDexAbstraction,
+        lastUpdated,
     };
 
     return (
