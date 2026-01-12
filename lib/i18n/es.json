@@ -349,7 +349,10 @@
     "connectWallet": "Conecta Billetera para Ver",
     "warningTitle": "Envía solo USDC en Arbitrum",
     "warningText": "Enviar cualquier otro activo o usar otra red puede resultar en la pérdida permanente de fondos.",
-    "hyperliquidLink": "Depositar vía Hyperliquid Bridge"
+    "hyperliquidLink": "Depositar vía Hyperliquid Bridge",
+    "tabStandard": "Depósito de Activos",
+    "tabBridge": "Bridge",
+    "tabTransfer": "Transferencia"
   },
   "tooltips": {
     "leverage": "El apalancamiento multiplica tu exposición. Mayor apalancamiento = Mayor riesgo.",

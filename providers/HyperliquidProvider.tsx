@@ -1640,7 +1640,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             let finalPx: number;
             if (type === 'market') {
                 // For Trade.xyz assets, prefer reference price if available
-                const currentPrice = (isTradeXyzAsset && referencePrice) ? referencePrice : (market.price || price || 0);
+                const currentPrice = (isTradeXyzAsset && referencePrice) ? referencePrice : (market?.price || price || 0);
 
                 if (currentPrice <= 0) {
                     throw new Error('Invalid price: Market price must be greater than 0');
@@ -1649,7 +1649,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 console.log('💰 Price calculation:', {
                     isTradeXyzAsset,
                     referencePrice,
-                    marketPrice: market.price,
+                    marketPrice: market?.price,
                     currentPrice,
                     isBuy
                 });
@@ -1695,7 +1695,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     });
                 }
             } else {
-                finalPx = price || market.price;
+                finalPx = price || market?.price || 0;
             }
 
             if (finalPx <= 0) {
@@ -1713,7 +1713,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // - ETH (~$3k): tick size = 0.1 (10 cents)
             // - Small coins (<$100): tick size = 0.01 (1 cent) or 0.001
             // We can estimate from the current price
-            const currentPriceLevel = market.price || finalPx;
+            const currentPriceLevel = market?.price || finalPx;
             if (currentPriceLevel >= 10000) {
                 tickSize = 1.0; // BTC-level prices: whole dollars
             } else if (currentPriceLevel >= 100) {
@@ -1736,7 +1736,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // Round size based on asset's szDecimals (HIP-3 markets have specific precision requirements)
             // For Trade.xyz assets, use szDecimals from fresh DEX meta (actualSzDecimals)
             // For core assets, use cached market.szDecimals
-            const szDecimalsToUse = actualSzDecimals ?? market.szDecimals;
+            const szDecimalsToUse = actualSzDecimals ?? market?.szDecimals;
             console.log('📊 Using szDecimals for size rounding:', szDecimalsToUse);
 
             let roundedSize = size;
@@ -1781,7 +1781,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             console.log('📝 Asset Index:', assetIndex, 'Wire Asset Index:', wireAssetIndex, 'Asset Name:', assetName);
             const wireOrder = orderToWire(orderRequest, wireAssetIndex);
 
-            console.log('📝 Market szDecimals:', market.szDecimals);
+            console.log('📝 Market szDecimals:', market?.szDecimals);
             console.log('📝 Original size:', size, 'Rounded size:', roundedSize);
             console.log('📝 Formatted price:', formattedPrice, 'Formatted size:', formattedSize);
             console.log('📝 Wire order:', JSON.stringify(wireOrder, null, 2));
@@ -2040,7 +2040,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     }
 
                     const orderValue = filledSize * filledPrice;
-                    const marginUsed = orderValue / (leverage || market.maxLeverage || 1);
+                    const marginUsed = orderValue / (leverage || market?.maxLeverage || 1);
 
                     // Update account balance optimistically
                     setAccount(prev => {
@@ -2141,7 +2141,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                                         side: isBuy ? 'long' : 'short',
                                                         size: Math.abs(sizeDiff),
                                                         entryPrice: filledPrice,
-                                                        markPrice: market.price || filledPrice,
+                                                        markPrice: market?.price || filledPrice,
                                                         unrealizedPnl: 0,
                                                         unrealizedPnlPercent: 0,
                                                     }
@@ -2173,9 +2173,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     side: isBuy ? 'long' : 'short',
                                     size: filledSize,
                                     entryPrice: filledPrice,
-                                    markPrice: market.price || filledPrice,
+                                    markPrice: market?.price || filledPrice,
                                     liquidationPrice: 0, // Will be updated by WebSocket position updates
-                                    leverage: leverage || market.maxLeverage || 1,
+                                    leverage: leverage || market?.maxLeverage || 1,
                                     unrealizedPnl: 0,
                                     unrealizedPnlPercent: 0,
                                 };
