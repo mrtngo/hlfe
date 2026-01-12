@@ -68,6 +68,19 @@ export interface LeaderboardEntry {
     loss_count: number;
 }
 
+export interface TrollboxMessage {
+    id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    is_system?: boolean;
+    user?: {
+        wallet_address: string;
+        username: string | null;
+        avatar_url: string | null;
+    };
+}
+
 // Helper functions for common operations
 export const db = {
     // User operations
@@ -366,6 +379,82 @@ export const db = {
             if (error) {
                 console.error('Error adding referral earnings:', error);
             }
+        },
+    },
+
+    // Trollbox operations
+    trollbox: {
+        async getRecent(limit: number = 50): Promise<TrollboxMessage[]> {
+            const { data, error } = await supabase
+                .from('trollbox_messages')
+                .select(`
+                    *,
+                    user:users (
+                        wallet_address,
+                        username,
+                        avatar_url
+                    )
+                `)
+                .order('created_at', { ascending: false })
+                .limit(limit);
+
+            if (error) {
+                console.error('Error fetching trollbox messages:', error);
+                return [];
+            }
+            return (data || []).reverse();
+        },
+
+        async sendMessage(userId: string, content: string): Promise<TrollboxMessage | null> {
+            const { data, error } = await supabase
+                .from('trollbox_messages')
+                .insert({
+                    user_id: userId,
+                    content: content,
+                })
+                .select(`
+                    *,
+                    user:users (
+                        wallet_address,
+                        username,
+                        avatar_url
+                    )
+                `)
+                .single();
+
+            if (error) {
+                console.error('Error sending message:', error);
+                return null;
+            }
+            return data;
+        },
+
+        subscribe(callback: (message: TrollboxMessage) => void) {
+            return supabase
+                .channel('trollbox_messages')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'trollbox_messages',
+                    },
+                    async (payload) => {
+                        // Fetch the user data for the new message
+                        const { data: userData } = await supabase
+                            .from('users')
+                            .select('wallet_address, username, avatar_url')
+                            .eq('id', payload.new.user_id)
+                            .single();
+
+                        const fullMessage: TrollboxMessage = {
+                            ...payload.new as TrollboxMessage,
+                            user: userData || undefined
+                        };
+                        callback(fullMessage);
+                    }
+                )
+                .subscribe();
         },
     },
 };

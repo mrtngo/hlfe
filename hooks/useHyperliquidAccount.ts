@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { createHyperliquidClient, API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
+import { createHyperliquidClient, API_URL } from '@/lib/hyperliquid/client';
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import type { Position, Order, AccountState, Market } from '@/types';
 import { DEFAULT_ACCOUNT_STATE } from '@/types';
@@ -26,6 +26,7 @@ interface AccountHookState {
     spotBalances: SpotBalance[];
     loading: boolean;
     rateLimited: boolean;
+    lastUpdated: number;
 }
 
 interface AccountHookActions {
@@ -104,12 +105,21 @@ export function useHyperliquidAccount(
     isConnected: boolean,
     markets: Market[]
 ): AccountHookResult {
-    const [account, setAccount] = useState<AccountState>(DEFAULT_ACCOUNT_STATE);
-    const [positions, setPositions] = useState<Position[]>([]);
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [spotBalances, setSpotBalances] = useState<SpotBalance[]>([]);
     const [loading, setLoading] = useState(false);
     const [rateLimited, setRateLimited] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState(Date.now());
+
+    // Separate states for different clearinghouses to prevent overwriting
+    const [perpState, setPerpState] = useState<{ account: AccountState; positions: Position[] }>({
+        account: DEFAULT_ACCOUNT_STATE,
+        positions: []
+    });
+    const [dexState, setDexState] = useState<{ account: AccountState; positions: Position[] }>({
+        account: DEFAULT_ACCOUNT_STATE,
+        positions: []
+    });
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [spotBalances, setSpotBalances] = useState<SpotBalance[]>([]);
     const [retryAfter, setRetryAfter] = useState<number | null>(null);
     const initialFetchDone = useRef(false);
     const fetchingAccount = useRef(false);
@@ -138,7 +148,7 @@ export function useHyperliquidAccount(
             await client.connect();
 
             // Fetch main, DEX (xyz), and Spot states in parallel for speed & aggregation
-            const [userState, dexState, spotStateResponse] = await Promise.all([
+            const [userState, dexStateData, spotStateResponse] = await Promise.all([
                 client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -163,48 +173,39 @@ export function useHyperliquidAccount(
             setRateLimited(false);
             setRetryAfter(null);
 
-            // AGGREGATE ACCOUNT STATE
             const mainMargin = userState?.marginSummary || {};
-            const dexMargin = dexState?.marginSummary || {};
-
-            const totalAccountValue = parseFloat(mainMargin.accountValue || '0') +
-                parseFloat(dexMargin.accountValue || '0');
-            const totalMarginUsed = parseFloat(mainMargin.totalMarginUsed || '0') +
-                parseFloat(dexMargin.totalMarginUsed || '0');
-
-            setAccount({
-                balance: totalAccountValue,
-                equity: totalAccountValue,
-                availableMargin: totalAccountValue - totalMarginUsed,
-                usedMargin: totalMarginUsed,
-                unrealizedPnl: 0,
-                unrealizedPnlPercent: 0,
+            setPerpState({
+                account: {
+                    balance: parseFloat(mainMargin.accountValue || '0'),
+                    equity: parseFloat(mainMargin.accountValue || '0'),
+                    availableMargin: parseFloat(mainMargin.accountValue || '0') - parseFloat(mainMargin.totalMarginUsed || '0'),
+                    usedMargin: parseFloat(mainMargin.totalMarginUsed || '0'),
+                    unrealizedPnl: 0,
+                    unrealizedPnlPercent: 0,
+                },
+                positions: userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || []
             });
 
-            // PROCESS POSITIONS
-            const activePositions: Position[] = [];
-
-            // 1. Main positions
-            if (userState?.assetPositions && Array.isArray(userState.assetPositions)) {
-                for (const pos of userState.assetPositions) {
-                    const parsed = parsePosition(pos, markets);
-                    if (parsed) activePositions.push(parsed);
-                }
+            if (dexStateData) {
+                const dexMargin = dexStateData.marginSummary || {};
+                setDexState({
+                    account: {
+                        balance: parseFloat(dexMargin.accountValue || '0'),
+                        equity: parseFloat(dexMargin.accountValue || '0'),
+                        availableMargin: parseFloat(dexMargin.accountValue || '0') - parseFloat(dexMargin.totalMarginUsed || '0'),
+                        usedMargin: parseFloat(dexMargin.totalMarginUsed || '0'),
+                        unrealizedPnl: 0,
+                        unrealizedPnlPercent: 0,
+                    },
+                    positions: dexStateData.assetPositions?.map((p: any) => {
+                        const parsed = parsePosition(p, markets);
+                        if (parsed) parsed.isStock = true;
+                        return parsed;
+                    }).filter(Boolean) as Position[] || []
+                });
             }
 
-            // 2. DEX (XYZ) positions
-            if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
-                for (const pos of dexState.assetPositions) {
-                    const parsed = parsePosition(pos, markets);
-                    if (parsed) {
-                        parsed.isStock = true;
-                        activePositions.push(parsed);
-                    }
-                }
-                console.log('✅ Fetched DEX positions:', dexState.assetPositions.length);
-            }
-
-            setPositions(activePositions);
+            setLastUpdated(Date.now());
 
             // 3. Spot balances
             if (spotStateResponse?.ok) {
@@ -247,7 +248,7 @@ export function useHyperliquidAccount(
             await client.connect();
 
             // Fetch states in parallel
-            const [userState, dexState, spotStateResponse] = await Promise.all([
+            const [userState, dexStateData, spotStateResponse] = await Promise.all([
                 client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -268,46 +269,39 @@ export function useHyperliquidAccount(
                 }).catch(() => null)
             ]);
 
-            // AGGREGATE ACCOUNT STATE
             const mainMargin = userState?.marginSummary || {};
-            const dexMargin = dexState?.marginSummary || {};
+            setPerpState({
+                account: {
+                    balance: parseFloat(mainMargin.accountValue || '0'),
+                    equity: parseFloat(mainMargin.accountValue || '0'),
+                    availableMargin: parseFloat(mainMargin.accountValue || '0') - parseFloat(mainMargin.totalMarginUsed || '0'),
+                    usedMargin: parseFloat(mainMargin.totalMarginUsed || '0'),
+                    unrealizedPnl: 0,
+                    unrealizedPnlPercent: 0,
+                },
+                positions: userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || []
+            });
 
-            const totalAccountValue = parseFloat(mainMargin.accountValue || '0') +
-                parseFloat(dexMargin.accountValue || '0');
-            const totalMarginUsed = parseFloat(mainMargin.totalMarginUsed || '0') +
-                parseFloat(dexMargin.totalMarginUsed || '0');
-
-            setAccount(prev => ({
-                ...prev,
-                balance: totalAccountValue,
-                equity: totalAccountValue,
-                availableMargin: totalAccountValue - totalMarginUsed,
-                usedMargin: totalMarginUsed,
-            }));
-
-            // PROCESS POSITIONS
-            const activePositions: Position[] = [];
-
-            // 1. Main positions
-            if (userState?.assetPositions && Array.isArray(userState.assetPositions)) {
-                for (const pos of userState.assetPositions) {
-                    const parsed = parsePosition(pos, markets);
-                    if (parsed) activePositions.push(parsed);
-                }
+            if (dexStateData) {
+                const dexMarginData = dexStateData.marginSummary || {};
+                setDexState({
+                    account: {
+                        balance: parseFloat(dexMarginData.accountValue || '0'),
+                        equity: parseFloat(dexMarginData.accountValue || '0'),
+                        availableMargin: parseFloat(dexMarginData.accountValue || '0') - parseFloat(dexMarginData.totalMarginUsed || '0'),
+                        usedMargin: parseFloat(dexMarginData.totalMarginUsed || '0'),
+                        unrealizedPnl: 0,
+                        unrealizedPnlPercent: 0,
+                    },
+                    positions: dexStateData.assetPositions?.map((p: any) => {
+                        const parsed = parsePosition(p, markets);
+                        if (parsed) parsed.isStock = true;
+                        return parsed;
+                    }).filter(Boolean) as Position[] || []
+                });
             }
 
-            // 2. DEX (XYZ) positions
-            if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
-                for (const pos of dexState.assetPositions) {
-                    const parsed = parsePosition(pos, markets);
-                    if (parsed) {
-                        parsed.isStock = true;
-                        activePositions.push(parsed);
-                    }
-                }
-            }
-
-            setPositions(activePositions);
+            setLastUpdated(Date.now());
 
             // 3. Spot balances
             if (spotStateResponse?.ok) {
@@ -326,8 +320,8 @@ export function useHyperliquidAccount(
      */
     useEffect(() => {
         if (!isConnected || !address) {
-            setAccount(DEFAULT_ACCOUNT_STATE);
-            setPositions([]);
+            setPerpState({ account: DEFAULT_ACCOUNT_STATE, positions: [] });
+            setDexState({ account: DEFAULT_ACCOUNT_STATE, positions: [] });
             setOrders([]);
             initialFetchDone.current = false;
             return;
@@ -336,26 +330,45 @@ export function useHyperliquidAccount(
         // WebSocket callbacks for account updates
         const callbacks = {
             onAccountUpdate: (data: any) => {
+                const isDex = data.isDex || data.dex === 'xyz';
                 if (data.marginSummary) {
                     const accountValue = parseFloat(data.marginSummary.accountValue || '0');
                     const totalMarginUsed = parseFloat(data.marginSummary.totalMarginUsed || '0');
-                    setAccount(prev => ({
-                        ...prev,
-                        balance: accountValue,
-                        equity: accountValue,
-                        availableMargin: accountValue - totalMarginUsed,
-                        usedMargin: totalMarginUsed,
-                    }));
+                    const newState = {
+                        account: {
+                            balance: accountValue,
+                            equity: accountValue,
+                            availableMargin: accountValue - totalMarginUsed,
+                            usedMargin: totalMarginUsed,
+                            unrealizedPnl: 0,
+                            unrealizedPnlPercent: 0,
+                        },
+                        positions: data.assetPositions?.map((p: any) => {
+                            const parsed = parsePosition(p, markets);
+                            if (parsed && isDex) parsed.isStock = true;
+                            return parsed;
+                        }).filter(Boolean) as Position[] || []
+                    };
+
+                    if (isDex) {
+                        setDexState(newState);
+                    } else {
+                        setPerpState(newState);
+                    }
+                    setLastUpdated(Date.now());
                 }
             },
             onPositionUpdate: (assetPositions: any[]) => {
                 if (Array.isArray(assetPositions)) {
-                    const activePositions: Position[] = [];
-                    for (const pos of assetPositions) {
-                        const parsed = parsePosition(pos, markets);
-                        if (parsed) activePositions.push(parsed);
+                    const parsedPositions = assetPositions.map(p => parsePosition(p, markets)).filter(Boolean) as Position[];
+                    const isDex = parsedPositions.some(p => p.isStock);
+
+                    if (isDex) {
+                        setDexState(prev => ({ ...prev, positions: parsedPositions }));
+                    } else {
+                        setPerpState(prev => ({ ...prev, positions: parsedPositions }));
                     }
-                    setPositions(activePositions);
+                    setLastUpdated(Date.now());
                 }
             },
             onOrderUpdate: (ordersData: any) => {
@@ -402,16 +415,66 @@ export function useHyperliquidAccount(
         };
     }, [isConnected, address, markets, fetchInitialAccountData]);
 
+    // MERGE STATES AND CALCULATE REAL-TIME PNL
+    const { mergedAccount, mergedPositions } = (() => {
+        const allPositions = [...perpState.positions, ...dexState.positions];
+
+        // Calculate real-time PnL for all positions based on latest markets.price
+        let totalUnrealizedPnl = 0;
+        const positionsWithRealtimePnl = allPositions.map(pos => {
+            const market = markets.find(m => m.name === pos.name);
+            if (!market || market.price === 0) return pos;
+
+            const side = pos.side;
+            const size = pos.size;
+            const entryPx = pos.entryPrice;
+            const markPx = market.price;
+
+            const pnl = side === 'long'
+                ? (markPx - entryPx) * size
+                : (entryPx - markPx) * size;
+
+            const margin = (entryPx * size) / pos.leverage;
+            const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
+
+            totalUnrealizedPnl += pnl;
+
+            return {
+                ...pos,
+                markPrice: markPx,
+                unrealizedPnl: pnl,
+                unrealizedPnlPercent: pnlPercent
+            };
+        });
+
+        const totalEquity = perpState.account.equity + dexState.account.equity + totalUnrealizedPnl;
+        const totalBalance = perpState.account.balance + dexState.account.balance;
+        const totalUsedMargin = perpState.account.usedMargin + dexState.account.usedMargin;
+
+        return {
+            mergedAccount: {
+                balance: totalBalance,
+                equity: totalEquity,
+                availableMargin: totalBalance - totalUsedMargin,
+                usedMargin: totalUsedMargin,
+                unrealizedPnl: totalUnrealizedPnl,
+                unrealizedPnlPercent: totalBalance > 0 ? (totalUnrealizedPnl / totalBalance) * 100 : 0,
+            },
+            mergedPositions: positionsWithRealtimePnl
+        };
+    })();
+
     return {
-        account,
-        positions,
+        account: mergedAccount,
+        positions: mergedPositions,
         orders,
         spotBalances,
         loading,
         rateLimited,
+        lastUpdated,
         refreshAccountData,
-        setAccount,
-        setPositions,
+        setAccount: () => { }, // No-op as it's derivative now
+        setPositions: () => { }, // No-op
         setOrders,
     };
 }

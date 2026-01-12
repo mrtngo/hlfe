@@ -13,17 +13,30 @@ import MarketSelector from '@/components/MarketSelector';
 import OrderHistory from '@/components/OrderHistory';
 import Leaderboard from '@/components/Leaderboard';
 import Profile from '@/components/Profile';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotTradingPanel from '@/components/SpotTradingPanel';
-import { BarChart3, History, User, Trophy, Coins } from 'lucide-react';
+import Trollbox from '@/components/Trollbox';
+import { BarChart3, History, User, Trophy, Coins, MessageSquare } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
-    const { selectedMarket, setSelectedMarket, address, agentWalletEnabled, builderFeeApproved, builderFeeChecked } = useHyperliquid();
+    const {
+        selectedMarket,
+        setSelectedMarket,
+        address,
+        agentWalletEnabled,
+        builderFeeApproved,
+        builderFeeChecked,
+        refreshAccountData,
+        refreshUserData,
+        lastUpdated
+    } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot'>('home');
     const [showSetupWizard, setShowSetupWizard] = useState(false);
+    const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
     // Initialize onboarding tour
     useOnboarding({
@@ -77,59 +90,74 @@ export default function Home() {
     return (
         <div className="min-h-screen flex flex-col bg-bg-primary">
             {/* Main Content - No header, extra top padding for breathing room */}
-            <main className="flex-1 container px-4 pb-6 max-w-[1920px] w-[90%] mx-auto" style={{ paddingBottom: '120px', paddingTop: '48px' }}>
-                {view === 'home' ? (
-                    <div className="overflow-y-auto mt-6" style={{ paddingBottom: '100px' }}>
-                        <HomeScreen
-                            onTokenClick={(symbol) => {
-                                setSelectedMarket(symbol);
-                                setView('trading');
-                            }}
-                            onTradeClick={() => setView('trading')}
-                        />
-                    </div>
-                ) : view === 'history' ? (
-                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                        <OrderHistory />
-                    </div>
-                ) : view === 'profile' ? (
-                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                        <Profile />
-                    </div>
-                ) : view === 'leaderboard' ? (
-                    <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                        <Leaderboard />
-                    </div>
-                ) : view === 'spot' ? (
-                    <div className="max-w-4xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
-                        <SpotTradingPanel />
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
-                        {/* Market Selector */}
-                        <div className="px-4 pt-4 mb-24" id="trading-market-selector">
-                            <MarketSelector />
+            <main className="flex-1 relative" style={{ paddingBottom: '120px' }}>
+                <PullToRefresh onRefresh={async () => {
+                    await Promise.all([refreshAccountData(), refreshUserData()]);
+                }}>
+                    <div className="container px-4 pt-[48px] max-w-[1920px] w-[90%] mx-auto">
+                        {/* Live Sync Indicator */}
+                        <div className="flex items-center gap-1.5 mb-2 px-2 opacity-50 text-[10px] uppercase tracking-wider font-bold text-primary-400">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                            </span>
+                            Live Sync • {new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                         </div>
 
-                        {/* Chart Section - Full Width with padding */}
-                        <div className="flex-1 min-h-0 mt-14 px-4">
-                            <TradingChart />
-                        </div>
-
-                        {/* Bottom Grid - Positions, Orders */}
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 flex-1 min-h-0 px-4">
-                            {/* Left - Positions */}
-                            <div className="h-full overflow-hidden">
-                                <PositionsPanel />
+                        {view === 'home' ? (
+                            <div className="mt-6" style={{ paddingBottom: '100px' }}>
+                                <HomeScreen
+                                    onTokenClick={(symbol) => {
+                                        setSelectedMarket(symbol);
+                                        setView('trading');
+                                    }}
+                                    onTradeClick={() => setView('trading')}
+                                />
                             </div>
-
-                            {/* Right - Order Panel */}
-                            <div className="h-full overflow-hidden">
-                                <OrderPanel />
+                        ) : view === 'history' ? (
+                            <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <OrderHistory />
                             </div>
-                        </div>
+                        ) : view === 'profile' ? (
+                            <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <Profile />
+                            </div>
+                        ) : view === 'leaderboard' ? (
+                            <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <Leaderboard />
+                            </div>
+                        ) : view === 'spot' ? (
+                            <div className="max-w-4xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
+                                <SpotTradingPanel />
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
+                                {/* Market Selector */}
+                                <div className="px-4 pt-4 mb-24" id="trading-market-selector">
+                                    <MarketSelector />
+                                </div>
+
+                                {/* Chart Section - Full Width with padding */}
+                                <div className="flex-1 min-h-0 mt-14 px-4">
+                                    <TradingChart />
+                                </div>
+
+                                {/* Bottom Grid - Positions, Orders */}
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 flex-1 min-h-0 px-4">
+                                    {/* Left - Positions */}
+                                    <div className="h-full overflow-hidden">
+                                        <PositionsPanel />
+                                    </div>
+
+                                    {/* Right - Order Panel */}
+                                    <div className="h-full overflow-hidden">
+                                        <OrderPanel />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                </PullToRefresh>
             </main>
 
 
@@ -270,6 +298,21 @@ export default function Home() {
                     </button>
                 </div>
             </nav>
+
+            {/* Trollbox Component */}
+            <Trollbox isOpen={isTrollboxOpen} onClose={() => setIsTrollboxOpen(false)} />
+
+            {/* Floating Chat Button (if not visible in mobile nav enough) */}
+            <button
+                onClick={() => setIsTrollboxOpen(!isTrollboxOpen)}
+                className="fixed bottom-24 right-6 w-14 h-14 bg-[#FFFF00] rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 z-50 text-black border-4 border-black group"
+                style={{
+                    boxShadow: '0 10px 30px rgba(255, 255, 0, 0.4)'
+                }}
+            >
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black animate-pulse" />
+                <MessageSquare className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+            </button>
 
             {/* Trading Setup Wizard - Auto-prompt */}
             <TradingSetupWizard
