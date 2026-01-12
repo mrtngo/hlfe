@@ -137,116 +137,81 @@ export function useHyperliquidAccount(
             const client = createHyperliquidClient();
             await client.connect();
 
-            // Get user clearinghouse state (account info)
-            let userState;
-            try {
-                userState = await client.info.perpetuals.getClearinghouseState(normalizedAddress, false);
-            } catch (apiError: any) {
-                // Handle rate limiting
-                if (apiError?.code === 'RATE_LIMITED' || apiError?.message?.includes('rate limit') || apiError?.message?.includes('429')) {
-                    setRateLimited(true);
-                    setRetryAfter(Date.now() + 60000);
-                    console.warn('⚠️ Rate limited, will retry later');
-                    return;
-                }
-
-                // Handle network errors
-                if (apiError?.code === 'NETWORK_ERROR' || apiError?.message?.includes('network')) {
-                    console.error('🌐 Network error fetching account data:', apiError.message);
-                    return;
-                }
-
-                // Handle unknown errors (often means account doesn't exist)
-                if (apiError?.message?.includes('unknown error') || apiError?.code === 'UNKNOWN_ERROR') {
-                    console.warn('⚠️ API returned unknown error - account may not exist on chain');
-                    return;
-                }
-
-                throw apiError;
-            }
+            // Fetch main, DEX (xyz), and Spot states in parallel for speed & aggregation
+            const [userState, dexState, spotStateResponse] = await Promise.all([
+                client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'clearinghouseState',
+                        user: normalizedAddress,
+                        dex: 'xyz'
+                    })
+                }).then(res => res.ok ? res.json() : null).catch(() => null),
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'spotClearinghouseState',
+                        user: normalizedAddress,
+                    }),
+                }).catch(() => null)
+            ]);
 
             // Success - reset rate limiting
             setRateLimited(false);
             setRetryAfter(null);
 
-            if (userState && typeof userState === 'object') {
-                // Extract account values
-                const marginSummary = userState.marginSummary;
-                if (marginSummary) {
-                    const accountValue = parseFloat(marginSummary.accountValue || '0');
-                    const totalMarginUsed = parseFloat(marginSummary.totalMarginUsed || '0');
+            // AGGREGATE ACCOUNT STATE
+            const mainMargin = userState?.marginSummary || {};
+            const dexMargin = dexState?.marginSummary || {};
 
-                    setAccount({
-                        balance: accountValue,
-                        equity: accountValue,
-                        availableMargin: accountValue - totalMarginUsed,
-                        usedMargin: totalMarginUsed,
-                        unrealizedPnl: 0,
-                        unrealizedPnlPercent: 0,
-                    });
+            const totalAccountValue = parseFloat(mainMargin.accountValue || '0') +
+                parseFloat(dexMargin.accountValue || '0');
+            const totalMarginUsed = parseFloat(mainMargin.totalMarginUsed || '0') +
+                parseFloat(dexMargin.totalMarginUsed || '0');
+
+            setAccount({
+                balance: totalAccountValue,
+                equity: totalAccountValue,
+                availableMargin: totalAccountValue - totalMarginUsed,
+                usedMargin: totalMarginUsed,
+                unrealizedPnl: 0,
+                unrealizedPnlPercent: 0,
+            });
+
+            // PROCESS POSITIONS
+            const activePositions: Position[] = [];
+
+            // 1. Main positions
+            if (userState?.assetPositions && Array.isArray(userState.assetPositions)) {
+                for (const pos of userState.assetPositions) {
+                    const parsed = parsePosition(pos, markets);
+                    if (parsed) activePositions.push(parsed);
                 }
+            }
 
-                // Extract core perps positions
-                if (userState.assetPositions && Array.isArray(userState.assetPositions)) {
-                    const activePositions: Position[] = [];
-                    for (const pos of userState.assetPositions) {
-                        const parsed = parsePosition(pos, markets);
-                        if (parsed) activePositions.push(parsed);
+            // 2. DEX (XYZ) positions
+            if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
+                for (const pos of dexState.assetPositions) {
+                    const parsed = parsePosition(pos, markets);
+                    if (parsed) {
+                        parsed.isStock = true;
+                        activePositions.push(parsed);
                     }
-
-                    // Also fetch Trade.xyz DEX positions
-                    try {
-                        const dexResponse = await fetch('https://api.hyperliquid.xyz/info', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                type: 'clearinghouseState',
-                                user: normalizedAddress,
-                                dex: 'xyz'
-                            })
-                        });
-
-                        if (dexResponse.ok) {
-                            const dexState = await dexResponse.json();
-                            if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
-                                for (const pos of dexState.assetPositions) {
-                                    const parsed = parsePosition(pos, markets);
-                                    if (parsed) {
-                                        // Mark as stock position
-                                        parsed.isStock = true;
-                                        activePositions.push(parsed);
-                                    }
-                                }
-                                console.log('✅ Fetched DEX positions:', dexState.assetPositions.length);
-                            }
-                        }
-                    } catch (dexErr) {
-                        console.warn('⚠️ Failed to fetch DEX positions:', dexErr);
-                    }
-
-                    setPositions(activePositions);
                 }
+                console.log('✅ Fetched DEX positions:', dexState.assetPositions.length);
+            }
 
-                // Fetch Spot Clearinghouse State
-                try {
-                    const spotResponse = await fetch(`${API_URL}/info`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'spotClearinghouseState',
-                            user: normalizedAddress,
-                        }),
-                    });
+            setPositions(activePositions);
 
-                    if (spotResponse.ok) {
-                        const spotState = await spotResponse.json();
-                        if (spotState?.balances) {
-                            setSpotBalances(spotState.balances);
-                            console.log('✅ Fetched Spot balances:', spotState.balances.length);
-                        }
-                    }
-                } catch (spotErr) {
-                    console.warn('⚠️ Failed to fetch Spot balances:', spotErr);
+            // 3. Spot balances
+            if (spotStateResponse?.ok) {
+                const spotState = await spotStateResponse.json();
+                if (spotState?.balances) {
+                    setSpotBalances(spotState.balances);
+                    console.log('✅ Fetched Spot balances:', spotState.balances.length);
                 }
             }
         } catch (err: any) {
@@ -281,77 +246,74 @@ export function useHyperliquidAccount(
             const client = createHyperliquidClient();
             await client.connect();
 
-            const userState = await client.info.perpetuals.getClearinghouseState(normalizedAddress, false);
+            // Fetch states in parallel
+            const [userState, dexState, spotStateResponse] = await Promise.all([
+                client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'clearinghouseState',
+                        user: normalizedAddress,
+                        dex: 'xyz'
+                    })
+                }).then(res => res.ok ? res.json() : null).catch(() => null),
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'spotClearinghouseState',
+                        user: normalizedAddress,
+                    }),
+                }).catch(() => null)
+            ]);
 
-            if (userState) {
-                const marginSummary = userState.marginSummary || {};
-                const accountValue = parseFloat(marginSummary.accountValue || '0');
-                const totalMarginUsed = parseFloat(marginSummary.totalMarginUsed || '0');
+            // AGGREGATE ACCOUNT STATE
+            const mainMargin = userState?.marginSummary || {};
+            const dexMargin = dexState?.marginSummary || {};
 
-                setAccount(prev => ({
-                    ...prev,
-                    balance: accountValue,
-                    equity: accountValue,
-                    availableMargin: accountValue - totalMarginUsed,
-                    usedMargin: totalMarginUsed,
-                }));
+            const totalAccountValue = parseFloat(mainMargin.accountValue || '0') +
+                parseFloat(dexMargin.accountValue || '0');
+            const totalMarginUsed = parseFloat(mainMargin.totalMarginUsed || '0') +
+                parseFloat(dexMargin.totalMarginUsed || '0');
 
-                const assetPositions = userState.assetPositions || [];
-                const activePositions: Position[] = [];
-                for (const pos of assetPositions) {
+            setAccount(prev => ({
+                ...prev,
+                balance: totalAccountValue,
+                equity: totalAccountValue,
+                availableMargin: totalAccountValue - totalMarginUsed,
+                usedMargin: totalMarginUsed,
+            }));
+
+            // PROCESS POSITIONS
+            const activePositions: Position[] = [];
+
+            // 1. Main positions
+            if (userState?.assetPositions && Array.isArray(userState.assetPositions)) {
+                for (const pos of userState.assetPositions) {
                     const parsed = parsePosition(pos, markets);
                     if (parsed) activePositions.push(parsed);
                 }
+            }
 
-                // Also fetch Trade.xyz DEX positions
-                try {
-                    const dexResponse = await fetch('https://api.hyperliquid.xyz/info', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'clearinghouseState',
-                            user: normalizedAddress,
-                            dex: 'xyz'
-                        })
-                    });
-
-                    if (dexResponse.ok) {
-                        const dexState = await dexResponse.json();
-                        if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
-                            for (const pos of dexState.assetPositions) {
-                                const parsed = parsePosition(pos, markets);
-                                if (parsed) {
-                                    parsed.isStock = true;
-                                    activePositions.push(parsed);
-                                }
-                            }
-                        }
+            // 2. DEX (XYZ) positions
+            if (dexState?.assetPositions && Array.isArray(dexState.assetPositions)) {
+                for (const pos of dexState.assetPositions) {
+                    const parsed = parsePosition(pos, markets);
+                    if (parsed) {
+                        parsed.isStock = true;
+                        activePositions.push(parsed);
                     }
-                } catch (dexErr) {
-                    console.warn('⚠️ Failed to fetch DEX positions on refresh:', dexErr);
                 }
+            }
 
-                setPositions(activePositions);
+            setPositions(activePositions);
 
-                // Refresh Spot balances
-                try {
-                    const spotResponse = await fetch(`${API_URL}/info`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'spotClearinghouseState',
-                            user: normalizedAddress,
-                        }),
-                    });
-
-                    if (spotResponse.ok) {
-                        const spotState = await spotResponse.json();
-                        if (spotState?.balances) {
-                            setSpotBalances(spotState.balances);
-                        }
-                    }
-                } catch (spotErr) {
-                    console.warn('⚠️ Failed to refresh Spot balances:', spotErr);
+            // 3. Spot balances
+            if (spotStateResponse?.ok) {
+                const spotState = await spotStateResponse.json();
+                if (spotState?.balances) {
+                    setSpotBalances(spotState.balances);
                 }
             }
         } catch (error) {

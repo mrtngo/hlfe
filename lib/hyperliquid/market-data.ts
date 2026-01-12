@@ -25,6 +25,10 @@ export function isTradeXyzAsset(name: string, onlyIsolated: boolean): boolean {
     const cleanName = name.replace(/-PERP$/i, '').toUpperCase();
     const isKnownTicker = TRADEXYZ_ASSETS.includes(cleanName);
 
+    // Explicitly exclude pre-market crypto tickers that look like stocks
+    const CRYPTO_ISOLATED = ['LIT', 'MEGA', 'FOGO'];
+    if (CRYPTO_ISOLATED.includes(cleanName)) return false;
+
     // Stock tickers are typically 2-5 uppercase letters, or special cases like XYZ100
     const looksLikeStock = /^[A-Z]{2,5}$/.test(cleanName) || cleanName === 'XYZ100';
 
