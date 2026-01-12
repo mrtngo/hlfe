@@ -6,7 +6,7 @@
  * Extracted from HyperliquidProvider for better separation of concerns
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { createHyperliquidClient, API_URL } from '@/lib/hyperliquid/client';
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import type { Position, Order, AccountState, Market } from '@/types';
@@ -439,7 +439,7 @@ export function useHyperliquidAccount(
     }, [isConnected, address, markets, fetchInitialAccountData]);
 
     // MERGE STATES AND CALCULATE REAL-TIME PNL
-    const { mergedAccount, mergedPositions } = (() => {
+    const { mergedAccount, mergedPositions } = useMemo(() => {
         const allPositions = [...perpState.positions, ...dexState.positions];
 
         // Calculate real-time PnL for all positions based on latest markets.price
@@ -503,7 +503,7 @@ export function useHyperliquidAccount(
             },
             mergedPositions: positionsWithRealtimePnl
         };
-    })();
+    }, [perpState, dexState, markets, spotBalances]);
 
     return {
         account: mergedAccount,
