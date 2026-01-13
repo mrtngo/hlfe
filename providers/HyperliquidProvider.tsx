@@ -156,7 +156,7 @@ interface HyperliquidContextType {
 const HyperliquidContext = createContext<HyperliquidContextType | undefined>(undefined);
 
 export function HyperliquidProvider({ children }: { children: ReactNode }) {
-    const { t } = useLanguage();
+    const { t, formatCurrency } = useLanguage();
     const { ready, authenticated } = usePrivy();
     const { wallets } = useWallets();
     const { data: walletClient } = useWalletClient();
