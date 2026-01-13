@@ -3,19 +3,26 @@
 import { PrivyProvider as PrivyAuth } from '@privy-io/react-auth';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { arbitrumSepolia, arbitrum } from 'viem/chains';
+import { arbitrumSepolia, arbitrum, mainnet, polygon, base, optimism, avalanche, bsc } from 'viem/chains';
 import { createConfig, http } from 'wagmi';
 
 const queryClient = new QueryClient();
 
-// Create wagmi config
+// Create wagmi config with all supported chains for cross-chain bridging
 const wagmiConfig = createConfig({
-    chains: [arbitrumSepolia, arbitrum],
+    chains: [arbitrum, mainnet, polygon, base, optimism, avalanche, bsc, arbitrumSepolia],
     transports: {
-        [arbitrumSepolia.id]: http(),
         [arbitrum.id]: http(),
+        [mainnet.id]: http(),
+        [polygon.id]: http(),
+        [base.id]: http(),
+        [optimism.id]: http(),
+        [avalanche.id]: http(),
+        [bsc.id]: http(),
+        [arbitrumSepolia.id]: http(),
     },
 });
+
 
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
     // Check if we're on HTTPS (embedded wallets require HTTPS)
@@ -29,8 +36,8 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
             theme: 'dark',
             accentColor: '#3b82f6',
         },
-        defaultChain: arbitrumSepolia,
-        supportedChains: [arbitrumSepolia, arbitrum],
+        defaultChain: arbitrum,
+        supportedChains: [arbitrum, mainnet, polygon, base, optimism, avalanche, bsc, arbitrumSepolia],
     };
 
     // Only add embeddedWallets config if on HTTPS

@@ -18,6 +18,7 @@ import {
 } from '@/lib/constants';
 import { generateDepositAddress } from '@/lib/hyperunit';
 import TokenLogo from '@/components/TokenLogo';
+import RhinoBridge from '@/components/RhinoBridge';
 
 interface DepositModalProps {
     isOpen: boolean;
@@ -780,7 +781,7 @@ function SpotPerpTransfer() {
 export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
     const { address } = useHyperliquid();
     const { t } = useLanguage();
-    const [activeTab, setActiveTab] = useState<'assets' | 'bridge' | 'transfer'>('assets');
+    const [activeTab, setActiveTab] = useState<'assets' | 'bridge' | 'crosschain' | 'transfer'>('assets');
     const [copied, setCopied] = useState(false);
     const [mounted, setMounted] = useState(false);
 
@@ -901,6 +902,23 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                             {t.depositModal.tabBridge}
                         </button>
                         <button
+                            onClick={() => setActiveTab('crosschain')}
+                            style={{
+                                paddingBottom: '12px',
+                                marginTop: '12px',
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                color: activeTab === 'crosschain' ? '#8b5cf6' : 'rgba(255, 255, 255, 0.4)',
+                                borderBottom: `2px solid ${activeTab === 'crosschain' ? '#8b5cf6' : 'transparent'}`,
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            Multi-Chain
+                        </button>
+                        <button
                             onClick={() => setActiveTab('transfer')}
                             style={{
                                 paddingBottom: '12px',
@@ -931,6 +949,7 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                         />
                     )}
                     {activeTab === 'bridge' && <BridgeDeposit />}
+                    {activeTab === 'crosschain' && <RhinoBridge onComplete={() => setActiveTab('bridge')} />}
                     {activeTab === 'transfer' && <SpotPerpTransfer />}
                 </div>
             </div>
