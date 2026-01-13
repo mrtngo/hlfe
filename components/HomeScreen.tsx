@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, memo, useCallback, useRef, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign, ArrowLeftRight } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import FeeCalculatorModal from '@/components/FeeCalculatorModal';
@@ -25,6 +26,7 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenProps = {}) {
+    const router = useRouter();
     const { t } = useLanguage();
     const { currency, toggleCurrency, formatCurrency } = useCurrency();
     const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl } = useHyperliquid();
@@ -485,6 +487,41 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 isOpen={showFeeCalculator}
                 onClose={() => setShowFeeCalculator(false)}
             />
+
+            {/* Spot Trading Banner */}
+            <button
+                onClick={() => router.push('/spot')}
+                className="w-full p-5 flex items-center justify-between group transition-all active:scale-[0.98] relative overflow-hidden rounded-2xl"
+                style={{
+                    marginBottom: '32px',
+                    background: 'linear-gradient(135deg, rgba(0, 100, 0, 0.2) 0%, rgba(0, 50, 0, 0.3) 100%)',
+                    border: '2px solid rgba(52, 199, 89, 0.4)',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(52, 199, 89, 0.15)',
+                }}
+            >
+                {/* Background Gradient Effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#34C759]/0 via-[#34C759]/10 to-[#34C759]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
+
+                <div className="flex items-center gap-4 relative z-10">
+                    <div
+                        className="w-14 h-14 rounded-full bg-[#34C759] flex items-center justify-center"
+                        style={{ boxShadow: '0 0 20px rgba(52, 199, 89, 0.5)' }}
+                    >
+                        <ArrowLeftRight className="w-7 h-7 text-white" strokeWidth={2.5} />
+                    </div>
+                    <div className="text-left">
+                        <h3 className="font-bold text-white text-lg mb-1" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}>
+                            Spot Trading
+                        </h3>
+                        <p className="text-sm font-medium text-[#34C759]">
+                            Buy & sell BTC, ETH, HYPE, SOL
+                        </p>
+                    </div>
+                </div>
+                <div className="bg-[#34C759] p-3 rounded-xl shadow-lg">
+                    <ArrowUpRight className="w-6 h-6 text-white" strokeWidth={2.5} />
+                </div>
+            </button>
 
             {/* Watchlist */}
             <div className="glass-card p-6">
