@@ -10,6 +10,7 @@ import PositionsPanel from '@/components/PositionsPanel';
 import HomeScreen from '@/components/HomeScreen';
 import TradingChart from '@/components/TradingChart';
 import MarketSelector from '@/components/MarketSelector';
+import MarketStats from '@/components/MarketStats';
 import OrderHistory from '@/components/OrderHistory';
 import Leaderboard from '@/components/Leaderboard';
 import Profile from '@/components/Profile';
@@ -140,6 +141,7 @@ export default function Home() {
                                 {/* Market Selector */}
                                 <div className="px-4 pt-4 mb-24" id="trading-market-selector">
                                     <MarketSelector />
+                                    <MarketStats />
                                 </div>
 
                                 {/* Chart Section - Full Width with padding */}

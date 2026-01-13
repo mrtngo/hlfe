@@ -222,47 +222,81 @@ export default function MarketSelector() {
                                             borderColor: isSelected ? undefined : 'rgba(255, 255, 255, 0.12)',
                                         }}
                                     >
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex-1 flex items-center gap-2">
-                                                <TokenLogo symbol={market.symbol} size={24} />
-                                                <div className="flex items-center gap-2">
-                                                    <div
-                                                        className="font-semibold text-sm px-2 py-0.5 rounded"
-                                                        style={{
-                                                            color: '#FFFFFF',
-                                                            background: 'rgba(0,0,0,0.6)',
-                                                            textShadow: '0 0 6px rgba(0,0,0,0.6)'
-                                                        }}
-                                                    >
-                                                        {market.name}
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex-1 flex items-center gap-2">
+                                                    <TokenLogo symbol={market.symbol} size={24} />
+                                                    <div className="flex items-center gap-2">
+                                                        <div
+                                                            className="font-semibold text-sm px-2 py-0.5 rounded"
+                                                            style={{
+                                                                color: '#FFFFFF',
+                                                                background: 'rgba(0,0,0,0.6)',
+                                                                textShadow: '0 0 6px rgba(0,0,0,0.6)'
+                                                            }}
+                                                        >
+                                                            {market.name}
+                                                        </div>
+                                                        <span className="text-[11px] px-2 py-0.5 rounded border border-white/15 bg-black/70 text-white font-semibold">
+                                                            {market.symbol}
+                                                        </span>
+                                                        {market.onlyIsolated && (
+                                                            <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">
+                                                                Isolated
+                                                            </span>
+                                                        )}
+                                                        {market.isStock && (
+                                                            <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-semibold">
+                                                                Stock
+                                                            </span>
+                                                        )}
                                                     </div>
-                                                    <span className="text-[11px] px-2 py-0.5 rounded border border-white/15 bg-black/70 text-white font-semibold">
-                                                        {market.symbol}
-                                                    </span>
-                                                    {market.onlyIsolated && (
-                                                        <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">
-                                                            Isolated
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-mono font-semibold text-sm text-white">
+                                                        {formatCurrency(market.price)}
+                                                    </div>
+                                                    <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'}`}>
+                                                        {marketIsPositive ? (
+                                                            <TrendingUp className="w-3 h-3" />
+                                                        ) : (
+                                                            <TrendingDown className="w-3 h-3" />
+                                                        )}
+                                                        <span className="font-mono font-semibold">
+                                                            {formatPercent(Math.abs(market.change24h))}
                                                         </span>
-                                                    )}
-                                                    {market.isStock && (
-                                                        <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-semibold">
-                                                            Stock
-                                                        </span>
-                                                    )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <div className="font-mono font-semibold text-sm text-white">
-                                                    {formatCurrency(market.price)}
+
+                                            {/* Market Stats Row */}
+                                            <div className="flex items-center gap-3 text-[10px] font-mono">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-white/50">Lev:</span>
+                                                    <span className="text-purple-400 font-bold">{market.maxLeverage}x</span>
                                                 </div>
-                                                <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'}`}>
-                                                    {marketIsPositive ? (
-                                                        <TrendingUp className="w-3 h-3" />
-                                                    ) : (
-                                                        <TrendingDown className="w-3 h-3" />
-                                                    )}
-                                                    <span className="font-mono font-semibold">
-                                                        {formatPercent(Math.abs(market.change24h))}
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-white/50">Vol:</span>
+                                                    <span className="text-cyan-400 font-bold">
+                                                        {market.volume24h >= 1_000_000_000
+                                                            ? `$${(market.volume24h / 1_000_000_000).toFixed(1)}B`
+                                                            : market.volume24h >= 1_000_000
+                                                            ? `$${(market.volume24h / 1_000_000).toFixed(1)}M`
+                                                            : `$${(market.volume24h / 1_000).toFixed(0)}K`
+                                                        }
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-white/50">OI:</span>
+                                                    <span className="text-yellow-400 font-bold">
+                                                        {(() => {
+                                                            const oi = market.openInterest * market.price;
+                                                            return oi >= 1_000_000_000
+                                                                ? `$${(oi / 1_000_000_000).toFixed(1)}B`
+                                                                : oi >= 1_000_000
+                                                                ? `$${(oi / 1_000_000).toFixed(1)}M`
+                                                                : `$${(oi / 1_000).toFixed(0)}K`;
+                                                        })()}
                                                     </span>
                                                 </div>
                                             </div>

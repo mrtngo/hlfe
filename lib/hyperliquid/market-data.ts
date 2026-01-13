@@ -46,6 +46,7 @@ export interface Market {
     high24h: number;
     low24h: number;
     fundingRate: number;
+    openInterest: number;
     szDecimals: number;
     maxLeverage: number;
     onlyIsolated: boolean;
@@ -166,6 +167,9 @@ export function useMarketData(): MarketData {
                     // Get 24h volume
                     const volume24h = parseFloat(assetCtx.dayNtlVlm || '0');
 
+                    // Get open interest (in USD)
+                    const openInterest = parseFloat(assetCtx.openInterest || '0');
+
                     // Extract HIP-3 metadata from asset object
                     const szDecimals = asset.szDecimals ?? 0;
                     const maxLeverage = asset.maxLeverage ?? 1;
@@ -185,6 +189,7 @@ export function useMarketData(): MarketData {
                         high24h: price, // Will be updated via WebSocket
                         low24h: price,  // Will be updated via WebSocket
                         fundingRate,
+                        openInterest,
                         szDecimals,
                         maxLeverage,
                         onlyIsolated: isFromDex ? true : onlyIsolated, // Trade.xyz markets are always isolated
@@ -245,6 +250,7 @@ export function useMarketData(): MarketData {
                             high24h: 97000,
                             low24h: 97000,
                             fundingRate: 0,
+                            openInterest: 0,
                             szDecimals: 0,
                             maxLeverage: 20,
                             onlyIsolated: false,
@@ -259,6 +265,7 @@ export function useMarketData(): MarketData {
                             high24h: 3450,
                             low24h: 3450,
                             fundingRate: 0,
+                            openInterest: 0,
                             szDecimals: 0,
                             maxLeverage: 20,
                             onlyIsolated: false,
