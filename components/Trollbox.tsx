@@ -132,12 +132,20 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
 
     return (
         <div
-            className="fixed inset-y-0 right-0 w-full sm:w-[420px] z-[100] flex flex-col shadow-2xl transition-all duration-300 ease-in-out transform"
+            className={`fixed z-[100] flex flex-col shadow-2xl transition-all duration-500 ease-out ${
+                isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+            }`}
             style={{
-                background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.98) 0%, rgba(10, 10, 10, 0.95) 100%)',
+                top: '50%',
+                right: '20px',
+                transform: 'translateY(-50%)',
+                width: 'min(420px, calc(100vw - 40px))',
+                maxHeight: 'min(700px, calc(100vh - 100px))',
+                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(20, 20, 20, 0.95) 100%)',
                 backdropFilter: 'blur(20px)',
-                borderLeft: '2px solid rgba(255, 255, 0, 0.3)',
-                boxShadow: '-10px 0 40px rgba(0,0,0,0.7), 0 0 20px rgba(255, 255, 0, 0.1)'
+                border: '2px solid rgba(255, 255, 0, 0.4)',
+                borderRadius: '24px',
+                boxShadow: '-10px 10px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255, 255, 0, 0.2), inset 0 0 20px rgba(255, 255, 0, 0.05)',
             }}
         >
             {/* Header */}

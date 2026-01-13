@@ -165,15 +165,16 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                         </div>
 
                         {/* Quick Selects */}
-                        <div className="flex justify-center gap-2 flex-wrap">
+                        <div className="flex justify-center gap-3 flex-wrap">
                             {(currency === 'COP' ? [1000000, 5000000, 10000000] : [250, 1000, 2500]).map((val) => (
                                 <button
                                     key={val}
                                     onClick={() => setAmount(val.toString())}
-                                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${numericAmount === val
-                                        ? 'bg-[#FFFF00] text-black shadow-[0_0_10px_rgba(255,255,0,0.3)]'
-                                        : 'bg-white/5 text-white hover:bg-white/10'
+                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg ${numericAmount === val
+                                        ? 'bg-[#FFFF00] text-black'
+                                        : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
                                         }`}
+                                    style={numericAmount === val ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.4)' } : {}}
                                 >
                                     {currency === 'COP' ? `${val / 1000000}M` : `$${val}`}
                                 </button>
@@ -196,7 +197,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     </div>
 
                     {/* Tabs */}
-                    <div className="bg-white/5 p-1 rounded-xl grid grid-cols-3 gap-1">
+                    <div className="bg-black/40 p-2 rounded-xl grid grid-cols-3 gap-2">
                         {[
                             { id: 'standard', label: 'Estándar', icon: TrendingUp },
                             { id: 'dividends', label: 'Dividendos', icon: DollarSign },
@@ -205,12 +206,13 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`py-2 rounded-lg text-[10px] font-bold flex flex-col items-center gap-1 transition-all ${activeTab === tab.id
-                                    ? 'bg-[#1A1A1A] text-[#FFFF00] shadow-lg'
-                                    : 'text-coffee-medium hover:text-white'
+                                className={`py-3 rounded-xl text-sm font-bold flex flex-col items-center gap-1.5 transition-all ${activeTab === tab.id
+                                    ? 'bg-[#FFFF00] text-black shadow-lg'
+                                    : 'bg-white/10 text-white hover:bg-white/15 border border-white/20'
                                     }`}
+                                style={activeTab === tab.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
                             >
-                                <tab.icon className={`w-3 h-3 ${activeTab === tab.id ? 'text-[#FFFF00]' : 'opacity-50'}`} />
+                                <tab.icon className="w-5 h-5" strokeWidth={2.5} />
                                 {tab.label}
                             </button>
                         ))}

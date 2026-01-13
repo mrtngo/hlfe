@@ -336,35 +336,42 @@ export default function Profile() {
                     )}
 
                     {/* Builder Fee - Checkmark */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <Shield className="w-5 h-5 text-coffee-medium" />
-                            <span className="text-white text-sm">{profile.builderFee || 'Comisión Builder'}</span>
+                            <Shield className="w-5 h-5 text-[#FFFF00]" />
+                            <span className="text-white text-sm font-medium">{profile.builderFee || 'Comisión Builder'}</span>
                         </div>
                         {builderFeeApproved ? (
-                            <Check className="w-5 h-5 text-[#FFFF00]" />
+                            <div className="flex items-center gap-2 px-4 py-2 bg-[#FFFF00]/10 border border-[#FFFF00] rounded-xl">
+                                <Check className="w-5 h-5 text-[#FFFF00]" />
+                                <span className="text-[#FFFF00] text-sm font-bold">Active</span>
+                            </div>
                         ) : (
                             <button
                                 onClick={handleApproveBuilderFee}
                                 disabled={approvingFee}
-                                className="px-3 py-1.5 border border-[#FFFF00] text-[#FFFF00] rounded-lg text-xs font-semibold hover:bg-[#FFFF00] hover:text-black transition-all"
+                                className="px-5 py-2.5 bg-[#FFFF00] text-black rounded-xl text-sm font-bold hover:bg-[#FFD700] transition-all disabled:opacity-50 shadow-lg"
+                                style={{ boxShadow: '0 4px 12px rgba(255, 255, 0, 0.3)' }}
                             >
-                                {approvingFee ? <Loader2 className="w-4 h-4 animate-spin" /> : (profile.approve || 'Aprobar')}
+                                {approvingFee ? <Loader2 className="w-5 h-5 animate-spin" /> : (profile.approve || 'Aprobar')}
                             </button>
                         )}
                     </div>
                     {feeError && (
-                        <div className="text-xs text-red-400 ml-8">{feeError}</div>
+                        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-2 mt-2">{feeError}</div>
                     )}
 
                     {/* Stock Trading (DEX Abstraction) - Required for Trade.xyz stocks */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <Zap className="w-5 h-5 text-coffee-medium" />
-                            <span className="text-white text-sm">{profile.stockTrading || 'Stock Trading'}</span>
+                            <Zap className="w-5 h-5 text-[#4169E1]" />
+                            <span className="text-white text-sm font-medium">{profile.stockTrading || 'Stock Trading'}</span>
                         </div>
                         {dexAbstractionEnabled ? (
-                            <Check className="w-5 h-5 text-[#FFFF00]" />
+                            <div className="flex items-center gap-2 px-4 py-2 bg-[#4169E1]/10 border border-[#4169E1] rounded-xl">
+                                <Check className="w-5 h-5 text-[#4169E1]" />
+                                <span className="text-[#4169E1] text-sm font-bold">Active</span>
+                            </div>
                         ) : (
                             <button
                                 onClick={async () => {
@@ -377,41 +384,44 @@ export default function Profile() {
                                     }
                                 }}
                                 disabled={dexAbstractionLoading}
-                                className="px-3 py-1.5 border border-[#FFFF00] text-[#FFFF00] rounded-lg text-xs font-semibold hover:bg-[#FFFF00] hover:text-black transition-all"
+                                className="px-5 py-2.5 bg-[#4169E1] text-white rounded-xl text-sm font-bold hover:bg-[#5179F1] transition-all disabled:opacity-50 shadow-lg"
+                                style={{ boxShadow: '0 4px 12px rgba(65, 105, 225, 0.3)' }}
                             >
-                                {dexAbstractionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (profile.enable || 'Enable')}
+                                {dexAbstractionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (profile.enable || 'Enable')}
                             </button>
                         )}
                     </div>
 
                     {/* Export Wallet */}
                     {privyUser?.wallet?.connectorType === 'embedded' && (
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <Share2 className="w-5 h-5 text-coffee-medium" />
-                                <span className="text-white text-sm">{profile.exportWallet || 'Exportar Billetera'}</span>
+                                <Share2 className="w-5 h-5 text-purple-400" />
+                                <span className="text-white text-sm font-medium">{profile.exportWallet || 'Export Wallet'}</span>
                             </div>
                             <button
                                 onClick={exportWallet}
-                                className="px-4 py-1.5 border border-white/40 text-white rounded-full text-xs font-medium hover:bg-white/10 transition-all"
+                                className="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-500 transition-all shadow-lg"
+                                style={{ boxShadow: '0 4px 12px rgba(147, 51, 234, 0.3)' }}
                             >
-                                {profile.exportWallet || 'Exportar Billetera'}
+                                Export
                             </button>
                         </div>
                     )}
 
                     {/* Sync Trades */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <RefreshCw className="w-5 h-5 text-coffee-medium" />
-                            <span className="text-white text-sm">{profile.syncTrades || 'Sincronizar Operaciones'}</span>
+                            <RefreshCw className="w-5 h-5 text-cyan-400" />
+                            <span className="text-white text-sm font-medium">{profile.syncTrades || 'Sync Trades'}</span>
                         </div>
                         <button
                             onClick={handleSyncTrades}
                             disabled={syncing}
-                            className="px-4 py-1.5 border border-white/40 text-white rounded-full text-xs font-medium hover:bg-white/10 transition-all flex items-center gap-1.5 disabled:opacity-50"
+                            className="px-5 py-2.5 bg-cyan-600 text-white rounded-xl text-sm font-bold hover:bg-cyan-500 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg"
+                            style={{ boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)' }}
                         >
-                            {syncing && <Loader2 className="w-3 h-3 animate-spin" />}
+                            {syncing && <Loader2 className="w-4 h-4 animate-spin" />}
                             {syncResult || (language === 'es' ? 'Sincronizar' : 'Sync')}
                         </button>
                     </div>

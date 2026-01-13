@@ -448,23 +448,35 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             {/* Fee Calculator Banner */}
             <button
                 onClick={() => setShowFeeCalculator(true)}
-                className="w-full glass-card p-4 flex items-center justify-between group hover:border-[#FFFF00]/50 transition-all active:scale-[0.99] relative overflow-hidden"
-                style={{ marginBottom: '32px' }}
+                className="w-full p-5 flex items-center justify-between group transition-all active:scale-[0.98] relative overflow-hidden rounded-2xl"
+                style={{
+                    marginBottom: '32px',
+                    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 20, 0.9) 100%)',
+                    border: '2px solid rgba(255, 255, 0, 0.4)',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 0, 0.15)',
+                }}
             >
                 {/* Background Gradient Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFFF00]/0 via-[#FFFF00]/5 to-[#FFFF00]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FFFF00]/0 via-[#FFFF00]/10 to-[#FFFF00]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
 
-                <div className="flex items-center gap-3 relative z-10">
-                    <div className="w-10 h-10 rounded-full bg-[#FFFF00] flex items-center justify-center shadow-[0_0_15px_rgba(255,255,0,0.4)]">
-                        <DollarSign className="w-5 h-5 text-black" />
+                <div className="flex items-center gap-4 relative z-10">
+                    <div
+                        className="w-14 h-14 rounded-full bg-[#FFFF00] flex items-center justify-center"
+                        style={{ boxShadow: '0 0 20px rgba(255, 255, 0, 0.5)' }}
+                    >
+                        <DollarSign className="w-7 h-7 text-black" strokeWidth={2.5} />
                     </div>
                     <div className="text-left">
-                        <h3 className="font-bold text-white text-base">Comparar Tarifas 2025</h3>
-                        <p className="text-xs text-coffee-medium">Descubre cuánto ahorras operando en Rayo</p>
+                        <h3 className="font-bold text-white text-lg mb-1" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}>
+                            Comparar Tarifas 2025
+                        </h3>
+                        <p className="text-sm font-medium" style={{ color: '#FFD700' }}>
+                            Descubre cuánto ahorras operando en Rayo
+                        </p>
                     </div>
                 </div>
-                <div className="bg-[#FFFF00]/10 p-2 rounded-full">
-                    <ArrowUpRight className="w-5 h-5 text-[#FFFF00]" />
+                <div className="bg-[#FFFF00] p-3 rounded-xl shadow-lg">
+                    <ArrowUpRight className="w-6 h-6 text-black" strokeWidth={2.5} />
                 </div>
             </button>
 
