@@ -56,6 +56,7 @@ export interface MarketData {
     markets: Market[];
     loading: boolean;
     error: string | null;
+    refreshMarketData: () => Promise<void>;
 }
 
 export function useMarketData(): MarketData {
@@ -284,7 +285,12 @@ export function useMarketData(): MarketData {
         };
     }, [fetchMarketData]);
 
-    return { markets, loading, error };
+    // Expose refresh function for manual refresh (e.g., pull-to-refresh)
+    const refreshMarketData = useCallback(async () => {
+        await fetchMarketData();
+    }, [fetchMarketData]);
+
+    return { markets, loading, error, refreshMarketData };
 }
 
 export function subscribeToMarketPrices(

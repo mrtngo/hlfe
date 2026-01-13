@@ -126,6 +126,7 @@ interface HyperliquidContextType {
     userDataLoading: boolean;
     refreshUserData: () => Promise<void>;
     refreshAccountData: () => Promise<void>; // Force refresh account, positions, orders
+    refreshMarketData: () => Promise<void>; // Force refresh market prices and data
     syncTrades: () => Promise<{ synced: number; totalPnl: number } | null>; // Sync trades from Hyperliquid fills
 
     // Agent Wallet
@@ -162,7 +163,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [selectedMarket, setSelectedMarket] = useState<string>('BTC-USD');
 
     // Use real market data - This is now the ONLY place calling useMarketData
-    const { markets: realMarkets, loading: marketsLoading } = useMarketData();
+    const { markets: realMarkets, loading: marketsLoading, refreshMarketData } = useMarketData();
     const [markets, setMarkets] = useState<Market[]>([]);
 
     // Use account hook for state management
@@ -1703,6 +1704,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         userDataLoading,
         refreshUserData,
         refreshAccountData,
+        refreshMarketData,
         syncTrades,
         // Builder fee (mainnet trading fees)
         builderFeeApproved,

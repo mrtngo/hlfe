@@ -31,6 +31,7 @@ export default function Home() {
         builderFeeChecked,
         refreshAccountData,
         refreshUserData,
+        refreshMarketData,
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
@@ -92,7 +93,11 @@ export default function Home() {
             {/* Main Content - No header, extra top padding for breathing room */}
             <main className="flex-1 relative" style={{ paddingBottom: '120px' }}>
                 <PullToRefresh onRefresh={async () => {
-                    await Promise.all([refreshAccountData(), refreshUserData()]);
+                    await Promise.all([
+                        refreshAccountData(),
+                        refreshUserData(),
+                        refreshMarketData()
+                    ]);
                 }}>
                     <div className="container px-4 pt-[48px] max-w-[1920px] w-[90%] mx-auto">
                         {/* Live Sync Indicator */}
