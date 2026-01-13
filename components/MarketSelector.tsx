@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Search, ChevronDown, TrendingUp, TrendingDown, X } from 'lucide-react';
+import { Search, ChevronDown, TrendingUp, TrendingDown, X, Filter } from 'lucide-react';
 import TokenLogo from '@/components/TokenLogo';
+import { db, Category } from '@/lib/supabase/client';
 
 type MarketTab = 'crypto' | 'stocks';
 
@@ -14,12 +15,24 @@ export default function MarketSelector() {
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<MarketTab>('crypto');
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Fetch categories on mount
+    useEffect(() => {
+        const fetchCategories = async () => {
+            const cats = await db.categories.getAllWithCounts();
+            setCategories(cats);
+        };
+        fetchCategories();
+    }, []);
 
     const currentMarket = markets.find(m => m.symbol === selectedMarket) || markets[0];
     const isPositive = (currentMarket?.change24h ?? 0) >= 0;
 
     const filteredMarkets = markets.filter((market) => {
+        // Tab filtering (crypto vs stocks)
         if (activeTab === 'stocks') {
             const isStockMarket = market.isStock === true;
             const isIsolatedMarket = market.onlyIsolated === true;
@@ -29,8 +42,54 @@ export default function MarketSelector() {
             if (isStockMarket || market.onlyIsolated === true) return false;
         }
 
+        // Search query filtering
         const query = searchQuery.toLowerCase();
-        return market.symbol.toLowerCase().includes(query) || market.name.toLowerCase().includes(query);
+        const matchesSearch = market.symbol.toLowerCase().includes(query) || market.name.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+
+        // Category filtering (if a category is selected)
+        // This is a simple implementation - for full functionality, you'd need to query the database
+        // For now, we'll use simple heuristics based on category slugs
+        if (selectedCategory) {
+            const category = categories.find(c => c.slug === selectedCategory);
+            if (!category) return true;
+
+            // Simple category matching based on asset names and types
+            // This is a fallback until assets are fully synced with the database
+            const name = market.name.toLowerCase();
+            const symbol = market.symbol.toLowerCase();
+
+            switch (selectedCategory) {
+                case 'layer-1':
+                    return ['btc', 'eth', 'sol', 'avax', 'dot', 'atom', 'ada', 'near', 'sui', 'apt', 'bnb', 'xrp', 'ltc', 'trx', 'ton', 'xmr', 'zec', 'doge'].includes(name);
+                case 'layer-2':
+                    return ['arb', 'op', 'matic', 'imx'].includes(name);
+                case 'defi':
+                    return ['uni', 'aave', 'mkr', 'crv', 'ldo', 'blur'].includes(name);
+                case 'privacy':
+                    return ['xmr', 'zec'].includes(name);
+                case 'infrastructure':
+                    return ['link', 'grt', 'fil', 'ar', 'rndr'].includes(name);
+                case 'ai':
+                    return ['fet', 'rndr', 'nvda', 'msft', 'googl', 'meta'].includes(name);
+                case 'gaming':
+                    return ['axs', 'sand', 'mana', 'imx'].includes(name);
+                case 'meme':
+                    return ['doge', 'shib', 'pepe', 'wif'].includes(name);
+                case 'nft':
+                    return ['blur', 'axs', 'sand', 'mana', 'imx'].includes(name);
+                case 'storage':
+                    return ['fil', 'ar'].includes(name);
+                case 'oracle':
+                    return ['link'].includes(name);
+                case 'stocks':
+                    return market.isStock === true;
+                default:
+                    return true;
+            }
+        }
+
+        return true;
     });
 
     useEffect(() => {
@@ -171,6 +230,61 @@ export default function MarketSelector() {
                             </button>
                         </div>
                     </div>
+
+                    {/* Category Filter */}
+                    {categories.length > 0 && (
+                        <div className="p-4 border-b border-white/10">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Filter className="w-3.5 h-3.5 text-white/60" />
+                                <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
+                                    Categories
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedCategory(null)}
+                                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
+                                        selectedCategory === null
+                                            ? 'bg-[#FFFF00] text-black'
+                                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                    }`}
+                                >
+                                    All
+                                </button>
+                                {categories
+                                    .filter(cat => {
+                                        // Only show relevant categories for the current tab
+                                        if (activeTab === 'stocks') {
+                                            return cat.slug === 'stocks' || cat.slug === 'ai' || cat.slug === 'commodities' || cat.slug === 'forex';
+                                        } else {
+                                            return cat.slug !== 'stocks' && cat.slug !== 'commodities' && cat.slug !== 'forex';
+                                        }
+                                    })
+                                    .map((category) => (
+                                        <button
+                                            key={category.id}
+                                            type="button"
+                                            onClick={() => setSelectedCategory(category.slug)}
+                                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
+                                                selectedCategory === category.slug
+                                                    ? 'text-black'
+                                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                            }`}
+                                            style={{
+                                                backgroundColor: selectedCategory === category.slug ? category.color || '#FFFF00' : undefined,
+                                            }}
+                                        >
+                                            {category.icon && <span className="mr-1">{category.icon}</span>}
+                                            {category.name}
+                                            {category.asset_count !== undefined && category.asset_count > 0 && (
+                                                <span className="ml-1 opacity-60">({category.asset_count})</span>
+                                            )}
+                                        </button>
+                                    ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div className="p-4 border-b border-white/10">
                         <div className="relative">

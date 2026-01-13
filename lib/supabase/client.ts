@@ -81,6 +81,31 @@ export interface TrollboxMessage {
     };
 }
 
+export interface Category {
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    color: string | null;
+    icon: string | null;
+    sort_order: number;
+    asset_count?: number;
+}
+
+export interface Asset {
+    id: string;
+    symbol: string;
+    name: string;
+    full_name: string | null;
+    description: string | null;
+    is_stock: boolean;
+    is_crypto: boolean;
+    market_cap: number | null;
+    logo_url: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
 // Helper functions for common operations
 export const db = {
     // User operations
@@ -455,6 +480,109 @@ export const db = {
                     }
                 )
                 .subscribe();
+        },
+    },
+
+    // Categories operations
+    categories: {
+        async getAll(): Promise<Category[]> {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*')
+                .order('sort_order', { ascending: true });
+
+            if (error) {
+                console.error('Error fetching categories:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getAllWithCounts(): Promise<Category[]> {
+            const { data, error } = await supabase.rpc('get_categories_with_counts');
+
+            if (error) {
+                console.error('Error fetching categories with counts:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getBySlug(slug: string): Promise<Category | null> {
+            const { data, error } = await supabase
+                .from('categories')
+                .select('*')
+                .eq('slug', slug)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching category:', error);
+            }
+            return data;
+        },
+    },
+
+    // Assets operations
+    assets: {
+        async getAll(): Promise<Asset[]> {
+            const { data, error } = await supabase
+                .from('assets')
+                .select('*')
+                .order('symbol', { ascending: true });
+
+            if (error) {
+                console.error('Error fetching assets:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getBySymbol(symbol: string): Promise<Asset | null> {
+            const { data, error } = await supabase
+                .from('assets')
+                .select('*')
+                .eq('symbol', symbol)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Error fetching asset:', error);
+            }
+            return data;
+        },
+
+        async getByCategory(categorySlug: string): Promise<Asset[]> {
+            const { data, error } = await supabase.rpc('get_assets_by_category', {
+                category_slug: categorySlug,
+            });
+
+            if (error) {
+                console.error('Error fetching assets by category:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getCategoriesForAsset(assetId: string): Promise<Category[]> {
+            const { data, error } = await supabase
+                .from('asset_categories')
+                .select(`
+                    category:categories (
+                        id,
+                        name,
+                        slug,
+                        description,
+                        color,
+                        icon,
+                        sort_order
+                    )
+                `)
+                .eq('asset_id', assetId);
+
+            if (error) {
+                console.error('Error fetching asset categories:', error);
+                return [];
+            }
+            return (data || []).map(item => item.category as any).filter(Boolean);
         },
     },
 };
