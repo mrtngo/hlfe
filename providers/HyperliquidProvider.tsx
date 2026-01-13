@@ -110,6 +110,12 @@ interface HyperliquidContextType {
         leverage?: number,
         reduceOnly?: boolean
     ) => Promise<any>;
+    placeTriggerOrder: (
+        symbol: string,
+        triggerType: 'tp' | 'sl',
+        triggerPrice: number,
+        size: number
+    ) => Promise<any>;
     cancelOrder: (orderId: string) => Promise<void>;
     closePosition: (symbol: string) => Promise<void>;
 
@@ -1628,6 +1634,163 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [isConnected, address, markets, t]);
 
+    // Place trigger order (Stop Loss or Take Profit)
+    const placeTriggerOrder = useCallback(async (
+        symbol: string,
+        triggerType: 'tp' | 'sl',
+        triggerPrice: number,
+        size: number
+    ): Promise<{ success: boolean; message: string }> => {
+        if (!isConnected || !address) {
+            throw new Error(t.errors.walletNotConnected);
+        }
+
+        setLoading(true);
+        try {
+            // Find the market and asset index
+            const market = markets.find(m => m.symbol === symbol);
+            if (!market) {
+                throw new Error(`Market not found: ${symbol}`);
+            }
+
+            const baseCoin = symbol.split('-')[0];
+            const assetName = `${baseCoin}-PERP`;
+
+            // Get asset metadata
+            const client = createHyperliquidClient();
+            const meta = await client.info.perpetuals.getMeta();
+            const assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+
+            if (assetIndex === -1) {
+                throw new Error(`Asset not found: ${assetName}`);
+            }
+
+            // Find current position to determine side
+            const position = positions.find(p => p.symbol === symbol);
+            if (!position) {
+                throw new Error('No open position found for this symbol');
+            }
+
+            // For TP: if long, sell. if short, buy
+            // For SL: if long, sell. if short, buy (same as TP but triggered opposite direction)
+            const orderSide = position.side === 'long' ? 'sell' : 'buy';
+            const isBuy = orderSide === 'buy';
+
+            // Round size to sz_decimals
+            const roundingMultiplier = Math.pow(10, market.szDecimals);
+            const roundedSize = Math.floor(size * roundingMultiplier) / roundingMultiplier;
+
+            // Import SDK for floatToWire and signL1Action
+            const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
+            const { floatToWire, signL1Action } = hyperliquidSDK;
+
+            // Format values using SDK
+            const formattedPrice = floatToWire(triggerPrice);
+            const formattedSize = floatToWire(roundedSize);
+
+            // Construct trigger order wire
+            const orderWire = {
+                a: assetIndex,
+                b: isBuy,
+                p: formattedPrice,  // Trigger price
+                s: formattedSize,
+                r: true,  // reduceOnly = true (closes position)
+                t: {
+                    trigger: {
+                        triggerPx: formattedPrice,
+                        isMarket: true,
+                        tpsl: triggerType  // 'tp' or 'sl'
+                    }
+                }
+            };
+
+            // Sign and send order
+
+            const actionPayload = {
+                type: 'order',
+                orders: [orderWire],
+                grouping: 'na'
+            };
+
+            // Get signing wallet
+            let browserWallet: any = null;
+            const agent = getAgentWallet();
+            const agentSigner = getAgentSigner();
+            const isApproved = isAgentApproved(address);
+
+            if (agentWalletEnabled && agent && agentSigner && isApproved) {
+                browserWallet = {
+                    address: agent.address,
+                    getAddress: async () => agent.address.toLowerCase(),
+                    signTypedData: async (domain: any, types: any, value: any) => {
+                        const { EIP712Domain, ...restTypes } = types;
+                        return await agentSigner.signTypedData(domain, restTypes, value);
+                    },
+                };
+            } else {
+                const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+                let signingProvider = null;
+
+                if (embeddedWallet) {
+                    signingProvider = await embeddedWallet.getEthereumProvider();
+                } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                    signingProvider = (window as any).ethereum;
+                }
+
+                if (signingProvider) {
+                    const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+                    browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
+                }
+            }
+
+            if (!browserWallet) {
+                throw new Error('Could not get signing wallet');
+            }
+
+            const nonce = Date.now();
+            const signature = await signL1Action(
+                browserWallet as any,
+                actionPayload,
+                null,
+                nonce,
+                !IS_TESTNET
+            );
+
+            const payload = {
+                action: actionPayload,
+                nonce,
+                signature,
+                vaultAddress: null,
+            };
+
+            const response = await fetch(`${API_URL}/exchange`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            console.log('Trigger order result:', result);
+
+            if (result.status === 'ok') {
+                // Refresh orders to show the new trigger order
+                setTimeout(() => refreshAccountData(), 500);
+
+                return {
+                    success: true,
+                    message: `${triggerType === 'tp' ? 'Take Profit' : 'Stop Loss'} set at ${formatCurrency(triggerPrice)}`
+                };
+            } else {
+                throw new Error(result.response || 'Failed to place trigger order');
+            }
+        } catch (error: any) {
+            console.error('Failed to place trigger order:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    }, [isConnected, address, markets, positions, t, agentWalletEnabled, wallets, refreshAccountData]);
+
     // Cancel order
     const cancelOrder = useCallback(async (orderId: string) => {
         if (!isConnected || !address) {
@@ -1691,6 +1854,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         setupAgentWallet,
         getMarket,
         placeOrder,
+        placeTriggerOrder,
         cancelOrder,
         closePosition,
         account,

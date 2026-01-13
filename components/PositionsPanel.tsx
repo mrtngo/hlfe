@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { TrendingUp, Share2 } from 'lucide-react';
+import { TrendingUp, Share2, Target } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from './OrderNotification';
 import ShareModal from './ShareModal';
+import SetSLTPModal from './SetSLTPModal';
 import { Position } from '@/types/hyperliquid';
 
 export default function PositionsPanel() {
@@ -13,6 +14,7 @@ export default function PositionsPanel() {
     const { positions, closePosition, loading, markets, refreshAccountData, setSelectedMarket } = useHyperliquid();
     const [closeNotification, setCloseNotification] = useState<OrderNotificationData | null>(null);
     const [sharePosition, setSharePosition] = useState<Position | null>(null);
+    const [slTpPosition, setSlTpPosition] = useState<Position | null>(null);
 
     const handleClosePosition = async (symbol: string) => {
         if (confirm(t.positions.closePosition)) {
@@ -138,12 +140,22 @@ export default function PositionsPanel() {
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
+                                                setSlTpPosition(position);
+                                            }}
+                                            className="py-3 px-4 bg-gradient-to-r from-green-600 to-red-600 hover:from-green-500 hover:to-red-500 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-lg"
+                                            style={{ boxShadow: '0 4px 16px rgba(34, 197, 94, 0.3)' }}
+                                        >
+                                            <Target className="w-4 h-4" />
+                                            SL/TP
+                                        </button>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
                                                 setSharePosition(position);
                                             }}
-                                            className="py-3 px-4 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm font-bold transition-all flex items-center gap-2"
+                                            className="py-3 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2"
                                         >
                                             <Share2 className="w-4 h-4" />
-                                            Share
                                         </button>
                                         <button
                                             onClick={(e) => {
@@ -151,7 +163,8 @@ export default function PositionsPanel() {
                                                 handleClosePosition(position.symbol);
                                             }}
                                             disabled={loading}
-                                            className="flex-1 py-3 px-4 bg-[#FFFF00] hover:bg-[#FFFF33] text-black rounded-full text-sm font-bold transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                                            className="flex-1 py-3 px-4 bg-[#FFFF00] hover:bg-[#FFFF33] text-black rounded-xl text-sm font-bold transition-all active:scale-[0.98] shadow-lg"
+                                            style={{ boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' }}
                                         >
                                             {t.positions.close}
                                         </button>
@@ -175,6 +188,15 @@ export default function PositionsPanel() {
                     isOpen={!!sharePosition}
                     onClose={() => setSharePosition(null)}
                     position={sharePosition}
+                />
+            )}
+
+            {/* SL/TP Modal */}
+            {slTpPosition && (
+                <SetSLTPModal
+                    isOpen={!!slTpPosition}
+                    onClose={() => setSlTpPosition(null)}
+                    position={slTpPosition}
                 />
             )}
         </>

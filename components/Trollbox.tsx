@@ -131,29 +131,41 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
     if (!isOpen) return null;
 
     return (
-        <div
-            className={`fixed z-[100] flex flex-col shadow-2xl transition-all duration-500 ease-out ${
-                isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-            }`}
-            style={{
-                top: '50%',
-                right: '20px',
-                transform: 'translateY(-50%)',
-                width: 'min(420px, calc(100vw - 40px))',
-                maxHeight: 'min(700px, calc(100vh - 100px))',
-                background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(20, 20, 20, 0.95) 100%)',
-                backdropFilter: 'blur(20px)',
-                border: '2px solid rgba(255, 255, 0, 0.4)',
-                borderRadius: '24px',
-                boxShadow: '-10px 10px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255, 255, 0, 0.2), inset 0 0 20px rgba(255, 255, 0, 0.05)',
-            }}
-        >
+        <>
+            {/* Backdrop overlay */}
+            <div
+                className="fixed inset-0 z-[99] transition-opacity duration-300"
+                style={{
+                    background: 'rgba(0, 0, 0, 0.6)',
+                    backdropFilter: 'blur(4px)',
+                }}
+                onClick={onClose}
+            />
+
+            {/* Trollbox Panel */}
+            <div
+                className="fixed z-[100] flex flex-col shadow-2xl animate-in slide-in-from-right-10 fade-in duration-300"
+                style={{
+                    top: '50%',
+                    right: '20px',
+                    transform: 'translateY(-50%)',
+                    width: 'min(420px, calc(100vw - 40px))',
+                    maxHeight: 'min(700px, calc(100vh - 100px))',
+                    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(20, 20, 20, 0.95) 100%)',
+                    backdropFilter: 'blur(20px)',
+                    border: '2px solid rgba(255, 255, 0, 0.4)',
+                    borderRadius: '24px',
+                    boxShadow: '-10px 10px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255, 255, 0, 0.2), inset 0 0 20px rgba(255, 255, 0, 0.05)',
+                }}
+            >
             {/* Header */}
             <div
                 className="flex items-center justify-between p-4 border-b shrink-0"
                 style={{
                     borderColor: 'rgba(255, 255, 0, 0.2)',
-                    background: 'rgba(0, 0, 0, 0.5)'
+                    background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 100%)',
+                    borderTopLeftRadius: '22px',
+                    borderTopRightRadius: '22px',
                 }}
             >
                 <div className="flex items-center gap-3">
@@ -171,10 +183,10 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                 </div>
                 <button
                     onClick={onClose}
-                    className="p-2 hover:bg-white/10 rounded-full transition-all hover:rotate-90"
-                    style={{ transition: 'all 0.2s' }}
+                    className="p-2.5 hover:bg-red-500/20 rounded-full transition-all hover:rotate-90 border border-transparent hover:border-red-500/30"
+                    style={{ transition: 'all 0.3s' }}
                 >
-                    <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                    <X className="w-5 h-5 text-gray-400 hover:text-red-400" strokeWidth={2.5} />
                 </button>
             </div>
 
@@ -270,6 +282,8 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                 style={{
                     borderColor: 'rgba(255, 255, 0, 0.2)',
                     background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%)',
+                    borderBottomLeftRadius: '22px',
+                    borderBottomRightRadius: '22px',
                 }}
             >
                 {!address ? (
@@ -341,5 +355,6 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                 )}
             </div>
         </div>
+        </>
     );
 }
