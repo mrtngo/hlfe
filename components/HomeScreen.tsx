@@ -17,6 +17,7 @@ import ShareModal from '@/components/ShareModal';
 import type { Market } from '@/hooks/useHyperliquid';
 import type { Position } from '@/types/hyperliquid';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
+import { CATEGORIES, getTokenCategories, isInCategory, type TokenCategory } from '@/lib/token-categories';
 
 const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
 
@@ -39,6 +40,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showFeeCalculator, setShowFeeCalculator] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<TokenCategory>('l1');
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -702,6 +704,65 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 )}
             </div>
 
+            {/* Categories Section */}
+            <div className="glass-card p-6 mt-8">
+                {/* Category Tabs */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide mb-6">
+                    {CATEGORIES.filter(cat => cat.id !== 'watchlist').map((category) => (
+                        <button
+                            key={category.id}
+                            onClick={() => setSelectedCategory(category.id)}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm whitespace-nowrap transition-all shrink-0 ${
+                                selectedCategory === category.id
+                                    ? 'bg-[#FFFF00] text-black shadow-lg'
+                                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/10'
+                            }`}
+                            style={selectedCategory === category.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
+                        >
+                            <span className="text-base">{category.emoji}</span>
+                            <span>{category.label}</span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Category Description */}
+                <div className="mb-4 text-center">
+                    <p className="text-white/50 text-sm">
+                        {CATEGORIES.find(c => c.id === selectedCategory)?.description}
+                    </p>
+                </div>
+
+                {/* Category Markets */}
+                {(() => {
+                    const categoryMarkets = markets.filter(m => {
+                        const baseSymbol = m.name.replace('-USD', '').replace('-PERP', '');
+                        return isInCategory(baseSymbol, selectedCategory);
+                    }).sort((a, b) => (b.volume24h || 0) - (a.volume24h || 0));
+
+                    if (categoryMarkets.length === 0) {
+                        return (
+                            <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
+                                <p>No assets in this category</p>
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div className="space-y-4">
+                            {categoryMarkets.map((market) => (
+                                <WatchlistItem
+                                    key={market.name}
+                                    market={market}
+                                    onTokenClick={handleTokenClick}
+                                    onRemove={() => {}} // Categories don't have remove functionality
+                                    showRemoveButton={false}
+                                />
+                            ))}
+                        </div>
+                    );
+                })()}
+            </div>
+
             {/* Deposit Modal */}
             <DepositModal
                 isOpen={showDepositModal}
@@ -725,9 +786,10 @@ interface WatchlistItemProps {
     market: Market;
     onTokenClick: (symbol: string) => void;
     onRemove: (name: string) => void;
+    showRemoveButton?: boolean;
 }
 
-const WatchlistItem = memo(({ market, onTokenClick, onRemove }: WatchlistItemProps) => {
+const WatchlistItem = memo(({ market, onTokenClick, onRemove, showRemoveButton = true }: WatchlistItemProps) => {
     const { formatCurrency } = useCurrency();
     const priceChangePercent = market.change24h || 0;
     const isPositive = priceChangePercent >= 0;
@@ -744,13 +806,15 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove }: WatchlistItemPro
             onClick={() => onTokenClick(market.symbol)}
         >
             {/* Remove button - appears on hover */}
-            <button
-                onClick={handleRemove}
-                className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF3B30] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-[#FF5545] z-10"
-                aria-label="Remove from watchlist"
-            >
-                <X className="w-3.5 h-3.5 text-white" />
-            </button>
+            {showRemoveButton && (
+                <button
+                    onClick={handleRemove}
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF3B30] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-[#FF5545] z-10"
+                    aria-label="Remove from watchlist"
+                >
+                    <X className="w-3.5 h-3.5 text-white" />
+                </button>
+            )}
 
             <div className="flex items-center gap-2 md:gap-4">
                 {/* Token Logo */}
