@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useWallets } from '@privy-io/react-auth';
@@ -21,6 +22,16 @@ import {
 } from 'lucide-react';
 import TokenLogo from '@/components/TokenLogo';
 import { API_URL } from '@/lib/hyperliquid/client';
+
+// Dynamic import for CandlestickChart
+const CandlestickChart = dynamic(() => import('@/components/CandlestickChart'), {
+    ssr: false,
+    loading: () => (
+        <div className="flex items-center justify-center h-[200px] bg-[#0a0a0a]">
+            <Loader2 className="w-6 h-6 text-[#FFFF00] animate-spin" />
+        </div>
+    ),
+});
 
 // Spot assets to support
 const SPOT_ASSETS = [
@@ -113,10 +124,18 @@ export default function SpotTradingPage() {
                         };
                     });
 
-                    setPairs(pairsWithData);
+                    // Deduplicate pairs by baseName - keep only the first occurrence of each
+                    const seenBaseNames = new Set<string>();
+                    const uniquePairs = pairsWithData.filter(p => {
+                        if (!p.baseName || seenBaseNames.has(p.baseName)) return false;
+                        seenBaseNames.add(p.baseName);
+                        return true;
+                    });
+
+                    setPairs(uniquePairs);
 
                     // Find the pair for selected asset
-                    const pair = pairsWithData.find(p => p.baseName === selectedAsset.symbol);
+                    const pair = uniquePairs.find(p => p.baseName === selectedAsset.symbol);
                     setSelectedPair(pair || null);
                 }
             }
@@ -318,16 +337,14 @@ export default function SpotTradingPage() {
                             <button
                                 key={asset.symbol}
                                 onClick={() => setSelectedAsset(asset)}
-                                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all ${
-                                    selectedAsset.symbol === asset.symbol
+                                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all ${selectedAsset.symbol === asset.symbol
                                         ? 'bg-[#FFFF00]/20 border border-[#FFFF00]/50'
                                         : 'border border-transparent hover:bg-white/5'
-                                }`}
+                                    }`}
                             >
                                 <TokenLogo symbol={asset.symbol} size={20} />
-                                <span className={`text-xs font-bold ${
-                                    selectedAsset.symbol === asset.symbol ? 'text-[#FFFF00]' : 'text-white/60'
-                                }`}>
+                                <span className={`text-xs font-bold ${selectedAsset.symbol === asset.symbol ? 'text-[#FFFF00]' : 'text-white/60'
+                                    }`}>
                                     {asset.symbol}
                                 </span>
                             </button>
@@ -353,27 +370,34 @@ export default function SpotTradingPage() {
                     <div className="flex gap-2 p-1 bg-[#0D0D0D] rounded-xl">
                         <button
                             onClick={() => setIsBuy(true)}
-                            className={`flex-1 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
-                                isBuy
+                            className={`flex-1 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${isBuy
                                     ? 'bg-[#34C759] text-white'
                                     : 'bg-transparent text-white/50 hover:text-white'
-                            }`}
+                                }`}
                         >
                             <ArrowDown className="w-4 h-4" />
                             Buy
                         </button>
                         <button
                             onClick={() => setIsBuy(false)}
-                            className={`flex-1 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${
-                                !isBuy
+                            className={`flex-1 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${!isBuy
                                     ? 'bg-[#FF3B30] text-white'
                                     : 'bg-transparent text-white/50 hover:text-white'
-                            }`}
+                                }`}
                         >
                             <ArrowUp className="w-4 h-4" />
                             Sell
                         </button>
                     </div>
+                </div>
+
+                {/* Price Chart */}
+                <div className="px-3 pb-3">
+                    <CandlestickChart
+                        symbol={selectedAsset.symbol}
+                        height={200}
+                        showVolume={false}
+                    />
                 </div>
 
                 {/* Order Panel */}
@@ -456,11 +480,10 @@ export default function SpotTradingPage() {
                     <button
                         onClick={handleOrder}
                         disabled={loading || !isValidAmount || !connected || !selectedPair}
-                        className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${
-                            isBuy
+                        className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg ${isBuy
                                 ? 'bg-[#34C759] hover:bg-[#2DB34F] text-white'
                                 : 'bg-[#FF3B30] hover:bg-[#E5342B] text-white'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
                         style={!loading && isValidAmount ? { boxShadow: `0 4px 16px ${isBuy ? 'rgba(52, 199, 89, 0.3)' : 'rgba(255, 59, 48, 0.3)'}` } : {}}
                     >
                         {loading ? (
@@ -493,31 +516,28 @@ export default function SpotTradingPage() {
                 <div className="flex border-t border-b border-[#FFFF00]/20 bg-black">
                     <button
                         onClick={() => setBottomTab('balances')}
-                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${
-                            bottomTab === 'balances'
+                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${bottomTab === 'balances'
                                 ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
                                 : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
-                        }`}
+                            }`}
                     >
                         Balances
                     </button>
                     <button
                         onClick={() => setBottomTab('orders')}
-                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${
-                            bottomTab === 'orders'
+                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${bottomTab === 'orders'
                                 ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
                                 : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
-                        }`}
+                            }`}
                     >
                         Orders
                     </button>
                     <button
                         onClick={() => setBottomTab('history')}
-                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${
-                            bottomTab === 'history'
+                        className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${bottomTab === 'history'
                                 ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
                                 : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
-                        }`}
+                            }`}
                     >
                         History
                     </button>
