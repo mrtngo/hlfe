@@ -68,7 +68,7 @@ export default function Leaderboard() {
             {/* Header */}
             <div className="text-center">
                 <div className="inline-flex items-center gap-3 mb-2">
-                    <Trophy className="w-8 h-8 text-[#FFFF00]" />
+                    <Trophy className="w-8 h-8 text-brand" />
                     <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
                 </div>
                 <p className="text-coffee-medium">Top traders ranked by PnL</p>
@@ -81,7 +81,7 @@ export default function Leaderboard() {
                         key={p}
                         onClick={() => setPeriod(p)}
                         className={`flex-1 py-3 rounded-xl font-semibold transition-all ${period === p
-                                ? 'bg-[#FFFF00] text-black'
+                                ? 'bg-brand text-black'
                                 : 'text-coffee-medium hover:text-white'
                             }`}
                     >
@@ -92,11 +92,11 @@ export default function Leaderboard() {
 
             {/* Current User's Rank (if not in top 100) */}
             {userRank && (
-                <div className="glass-card p-4 border-2 border-[#FFFF00]/30 bg-[#FFFF00]/5">
+                <div className="glass-card p-4 border-2 border-[#FFFF00]/30 bg-brand/5">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#FFFF00]/20 flex items-center justify-center">
-                                <Award className="w-5 h-5 text-[#FFFF00]" />
+                            <div className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center">
+                                <Award className="w-5 h-5 text-brand" />
                             </div>
                             <div>
                                 <div className="text-sm text-coffee-medium">Your Rank</div>
@@ -134,7 +134,7 @@ export default function Leaderboard() {
                             <div
                                 key={entry.user_id}
                                 className={`flex items-center gap-4 p-4 rounded-2xl border transition-all ${getRankBg(entry.rank)
-                                    } ${isCurrentUser ? 'ring-2 ring-[#FFFF00]/50' : ''}`}
+                                    } ${isCurrentUser ? 'ring-2 ring-brand/50' : ''}`}
                             >
                                 {/* Rank */}
                                 <div className="w-10 flex-shrink-0 flex justify-center">
@@ -144,11 +144,11 @@ export default function Leaderboard() {
                                 {/* User Info */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <span className={`font-semibold truncate ${isCurrentUser ? 'text-[#FFFF00]' : 'text-white'}`}>
+                                        <span className={`font-semibold truncate ${isCurrentUser ? 'text-brand' : 'text-white'}`}>
                                             {entry.username ? `@${entry.username}` : formatAddress(entry.wallet_address)}
                                         </span>
                                         {isCurrentUser && (
-                                            <span className="text-xs bg-[#FFFF00]/20 text-[#FFFF00] px-2 py-0.5 rounded-full">
+                                            <span className="text-xs bg-brand/20 text-brand px-2 py-0.5 rounded-full">
                                                 You
                                             </span>
                                         )}

@@ -101,10 +101,10 @@ export default function PositionsPanel() {
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <div className={`font-mono font-semibold text-sm ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'}`}>
+                                                <div className={`font-mono font-semibold text-sm ${isPositive ? 'text-positive' : 'text-negative'}`}>
                                                     {formatCurrency(position.unrealizedPnl)}
                                                 </div>
-                                                <div className={`text-xs font-semibold ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'}`}>
+                                                <div className={`text-xs font-semibold ${isPositive ? 'text-positive' : 'text-negative'}`}>
                                                     {isPositive ? '+' : ''}{formatPercent(position.unrealizedPnlPercent)}
                                                 </div>
                                             </div>
@@ -163,8 +163,7 @@ export default function PositionsPanel() {
                                                 handleClosePosition(position.symbol);
                                             }}
                                             disabled={loading}
-                                            className="flex-1 py-3 px-4 bg-[#FFFF00] hover:bg-[#FFFF33] text-black rounded-xl text-sm font-bold transition-all active:scale-[0.98] shadow-lg"
-                                            style={{ boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' }}
+                                            className="flex-1 py-3 px-4 bg-brand hover:bg-brand-hover text-black rounded-xl text-sm font-bold transition-all active:scale-[0.98] shadow-glow-brand"
                                         >
                                             {t.positions.close}
                                         </button>

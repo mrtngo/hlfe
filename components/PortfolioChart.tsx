@@ -267,7 +267,7 @@ function PortfolioChart() {
                                 opacity: isSelected ? 1 : 0.5
                             }}
                         >
-                            <span className={`text-xs font-semibold ${isSelected ? 'text-[#FFFF00]' : 'text-[#FFFF00]/50'}`}>
+                            <span className={`text-xs font-semibold ${isSelected ? 'text-brand' : 'text-brand/50'}`}>
                                 {option}
                             </span>
                         </button>

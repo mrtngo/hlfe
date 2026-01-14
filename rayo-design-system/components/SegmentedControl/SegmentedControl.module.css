@@ -1,0 +1,72 @@
+/* ==========================================================================
+   RAYO DESIGN SYSTEM - Segmented Control Styles
+   ========================================================================== */
+
+.container {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-bg-tertiary);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+.fullWidth .segment {
+  flex: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   SIZES
+   --------------------------------------------------------------------------- */
+
+.sm {
+  padding: 3px;
+}
+
+.sm .segment {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.md .segment {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   SEGMENT
+   --------------------------------------------------------------------------- */
+
+.segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: var(--font-medium);
+  color: var(--color-text-tertiary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.segment:hover:not(.active) {
+  color: var(--color-text-secondary);
+}
+
+.segment:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 1px;
+}
+
+/* Active state */
+.active {
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  font-weight: var(--font-semibold);
+}

@@ -55,7 +55,7 @@ export default function ReferralPage() {
     if (!user) {
         return (
             <div className="max-w-2xl mx-auto text-center py-12">
-                <Gift className="w-16 h-16 mx-auto mb-4 text-[#FFFF00] opacity-50" />
+                <Gift className="w-16 h-16 mx-auto mb-4 text-brand opacity-50" />
                 <h2 className="text-xl font-bold text-white mb-2">Connect to view referrals</h2>
                 <p className="text-coffee-medium">Login to get your unique referral code</p>
             </div>
@@ -67,7 +67,7 @@ export default function ReferralPage() {
             {/* Header */}
             <div className="text-center">
                 <div className="inline-flex items-center gap-3 mb-2">
-                    <Gift className="w-8 h-8 text-[#FFFF00]" />
+                    <Gift className="w-8 h-8 text-brand" />
                     <h1 className="text-3xl font-bold text-white">Referrals</h1>
                 </div>
                 <p className="text-coffee-medium">Invite friends and earn 10% of their trading fees</p>
@@ -76,24 +76,24 @@ export default function ReferralPage() {
             {/* Referral Link Card */}
             <div className="glass-card p-6 space-y-4">
                 <div className="flex items-center gap-2 text-lg font-semibold text-white">
-                    <Share2 className="w-5 h-5 text-[#FFFF00]" />
+                    <Share2 className="w-5 h-5 text-brand" />
                     Your Referral Link
                 </div>
 
                 <div className="bg-black/40 rounded-2xl p-4 flex items-center gap-3">
-                    <code className="flex-1 text-sm text-[#FFFF00] font-mono truncate">
+                    <code className="flex-1 text-sm text-brand font-mono truncate">
                         {referralLink || 'Loading...'}
                     </code>
                     <button
                         onClick={copyReferralLink}
-                        className="flex-shrink-0 p-3 bg-[#FFFF00] text-black rounded-xl hover:opacity-90 transition-all"
+                        className="flex-shrink-0 p-3 bg-brand text-black rounded-xl hover:opacity-90 transition-all"
                     >
                         {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     </button>
                 </div>
 
                 <div className="text-sm text-coffee-medium text-center">
-                    Your code: <span className="text-[#FFFF00] font-mono font-bold">{user.referral_code || '---'}</span>
+                    Your code: <span className="text-brand font-mono font-bold">{user.referral_code || '---'}</span>
                 </div>
             </div>
 
@@ -101,8 +101,8 @@ export default function ReferralPage() {
             <div className="grid grid-cols-2 gap-4">
                 <div className="glass-card p-5">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-[#FFFF00]/10 flex items-center justify-center">
-                            <Users className="w-5 h-5 text-[#FFFF00]" />
+                        <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center">
+                            <Users className="w-5 h-5 text-brand" />
                         </div>
                         <div className="text-sm text-coffee-medium">Referrals</div>
                     </div>
@@ -113,8 +113,8 @@ export default function ReferralPage() {
 
                 <div className="glass-card p-5">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-[#FFFF00]/10 flex items-center justify-center">
-                            <DollarSign className="w-5 h-5 text-[#FFFF00]" />
+                        <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center">
+                            <DollarSign className="w-5 h-5 text-brand" />
                         </div>
                         <div className="text-sm text-coffee-medium">Earned</div>
                     </div>
@@ -129,21 +129,21 @@ export default function ReferralPage() {
                 <h2 className="text-lg font-bold text-white">How it Works</h2>
                 <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#FFFF00]/20 flex items-center justify-center text-[#FFFF00] font-bold text-sm">1</div>
+                        <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand font-bold text-sm">1</div>
                         <div>
                             <div className="font-semibold text-white">Share your link</div>
                             <div className="text-sm text-coffee-medium">Send your referral link to friends</div>
                         </div>
                     </div>
                     <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#FFFF00]/20 flex items-center justify-center text-[#FFFF00] font-bold text-sm">2</div>
+                        <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand font-bold text-sm">2</div>
                         <div>
                             <div className="font-semibold text-white">They sign up & trade</div>
                             <div className="text-sm text-coffee-medium">Friends join using your link and start trading</div>
                         </div>
                     </div>
                     <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#FFFF00]/20 flex items-center justify-center text-[#FFFF00] font-bold text-sm">3</div>
+                        <div className="w-8 h-8 rounded-full bg-brand/20 flex items-center justify-center text-brand font-bold text-sm">3</div>
                         <div>
                             <div className="font-semibold text-white">Earn 10% of fees</div>
                             <div className="text-sm text-coffee-medium">You earn 10% of the builder fees from their trades</div>
@@ -155,7 +155,7 @@ export default function ReferralPage() {
             {/* Referred Users List */}
             <div className="glass-card p-6 space-y-4">
                 <div className="flex items-center gap-2">
-                    <UserPlus className="w-5 h-5 text-[#FFFF00]" />
+                    <UserPlus className="w-5 h-5 text-brand" />
                     <h2 className="text-lg font-bold text-white">Your Referrals</h2>
                 </div>
 
@@ -175,8 +175,8 @@ export default function ReferralPage() {
                                 className="flex items-center justify-between p-3 bg-white/5 rounded-xl"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-[#FFFF00]/10 flex items-center justify-center">
-                                        <Users className="w-4 h-4 text-[#FFFF00]" />
+                                    <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center">
+                                        <Users className="w-4 h-4 text-brand" />
                                     </div>
                                     <span className="text-white">
                                         {referredUser.username ? `@${referredUser.username}` : formatAddress(referredUser.wallet_address)}

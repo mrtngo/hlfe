@@ -106,9 +106,9 @@ export default function OrderHistory() {
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                         {isLong ? (
-                                            <TrendingUp className="w-4 h-4 text-[#FFFF00]" />
+                                            <TrendingUp className="w-4 h-4 text-brand" />
                                         ) : (
-                                            <TrendingDown className="w-4 h-4 text-[#FF4444]" />
+                                            <TrendingDown className="w-4 h-4 text-negative" />
                                         )}
                                         <span className="font-semibold text-white">
                                             {isLong ? (history.long || 'Long') : (history.short || 'Short')} {order.symbol.replace('-USD', '')}
@@ -134,7 +134,7 @@ export default function OrderHistory() {
                                     {order.pnl !== 0 && (
                                         <div className="flex justify-between pt-2 border-t border-white/10">
                                             <span className="text-coffee-medium">{history.realizedPnl || 'Realized P&L'}</span>
-                                            <span className={`font-mono font-bold ${isPositive ? 'text-[#FFFF00]' : 'text-[#FF4444]'}`}>
+                                            <span className={`font-mono font-bold ${isPositive ? 'text-brand' : 'text-negative'}`}>
                                                 {isPositive ? '+' : ''}${order.pnl.toFixed(2)}
                                             </span>
                                         </div>

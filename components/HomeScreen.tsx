@@ -215,7 +215,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             <div style={{ marginBottom: '32px' }}>
                 <button
                     onClick={() => setShowDepositModal(true)}
-                    className="w-full py-4 bg-[#FFFF00] mb-8 text-black font-bold rounded-2xl hover:bg-[#FFFF33] transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                    className="w-full py-4 bg-brand mb-8 text-black font-bold rounded-2xl hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                 >
                     <CreditCard className="w-5 h-5" />
                     Deposit
@@ -465,7 +465,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
                 <div className="flex items-center gap-4 relative z-10">
                     <div
-                        className="w-14 h-14 rounded-full bg-[#FFFF00] flex items-center justify-center"
+                        className="w-14 h-14 rounded-full bg-brand flex items-center justify-center"
                         style={{ boxShadow: '0 0 20px rgba(255, 255, 0, 0.5)' }}
                     >
                         <DollarSign className="w-7 h-7 text-black" strokeWidth={2.5} />
@@ -479,7 +479,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         </p>
                     </div>
                 </div>
-                <div className="bg-[#FFFF00] p-3 rounded-xl shadow-lg">
+                <div className="bg-brand p-3 rounded-xl shadow-lg">
                     <ArrowUpRight className="w-6 h-6 text-black" strokeWidth={2.5} />
                 </div>
             </button>
@@ -540,7 +540,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             }}
                             onClick={() => setShowAddDropdown(!showAddDropdown)}
                         >
-                            <Plus className="w-7 h-7 text-[#FFFF00]" style={{ filter: 'drop-shadow(0 0 4px rgba(255, 255, 0, 0.4))' }} />
+                            <Plus className="w-7 h-7 text-brand" style={{ filter: 'drop-shadow(0 0 4px rgba(255, 255, 0, 0.4))' }} />
                         </button>
 
                         {/* Add Token Modal */}
@@ -714,7 +714,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             onClick={() => setSelectedCategory(category.id)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm whitespace-nowrap transition-all shrink-0 ${
                                 selectedCategory === category.id
-                                    ? 'bg-[#FFFF00] text-black shadow-lg'
+                                    ? 'bg-brand text-black shadow-lg'
                                     : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/10'
                             }`}
                             style={selectedCategory === category.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}

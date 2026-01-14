@@ -203,7 +203,7 @@ export default function OrderPanel() {
                                 onClick={() => setOrderSide('long')}
                                 className={`flex-1 py-6 rounded-2xl font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'long'
                                     ? 'bg-gradient-to-b from-[#FFFF00] to-[#FFD700] text-black shadow-[0_0_30px_rgba(255,255,0,0.5),0_4px_15px_rgba(0,0,0,0.3)] scale-[1.02] border-2 border-[#FFFF33]'
-                                    : 'bg-[#0D0D0D] text-[#FFFF00] border-2 border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:bg-[#FFFF00]/5'
+                                    : 'bg-[#0D0D0D] text-brand border-2 border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:bg-brand/5'
                                     }`}
                                 style={orderSide === 'long' ? { color: '#000' } : undefined}
                             >
@@ -214,7 +214,7 @@ export default function OrderPanel() {
                                 onClick={() => setOrderSide('short')}
                                 className={`flex-1 py-6 rounded-2xl font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'short'
                                     ? 'bg-gradient-to-b from-[#FF4444] to-[#CC0000] text-white shadow-[0_0_30px_rgba(255,68,68,0.5),0_4px_15px_rgba(0,0,0,0.3)] scale-[1.02] border-2 border-[#FF6666]'
-                                    : 'bg-[#0D0D0D] text-[#FF4444] border-2 border-[#FF4444]/20 hover:border-[#FF4444]/50 hover:bg-[#FF4444]/5'
+                                    : 'bg-[#0D0D0D] text-negative border-2 border-[#FF4444]/20 hover:border-[#FF4444]/50 hover:bg-[#FF4444]/5'
                                     }`}
                                 style={orderSide === 'short' ? { color: '#FFFFFF' } : undefined}
                             >
@@ -227,7 +227,7 @@ export default function OrderPanel() {
                         <div>
                             <div className="flex justify-between items-center mb-3">
                                 <label className="text-base text-coffee-medium">Margin</label>
-                                <span className="text-xl font-bold text-[#FFFF00]">{formatCurrency(marginValue)}</span>
+                                <span className="text-xl font-bold text-brand">{formatCurrency(marginValue)}</span>
                             </div>
 
                             <input
@@ -274,7 +274,7 @@ export default function OrderPanel() {
                         <div>
                             <div className="flex justify-between items-center mb-2">
                                 <label className="text-sm text-coffee-medium">{t.order.leverage}</label>
-                                <span className="text-lg font-bold text-[#FFFF00]">{leverage}x</span>
+                                <span className="text-lg font-bold text-brand">{leverage}x</span>
                             </div>
                             <div className="flex gap-3">
                                 {/* Decrease leverage buttons */}
@@ -588,7 +588,7 @@ export default function OrderPanel() {
                     </div>
                 )}
                 {success && (
-                    <div className="flex items-center gap-2 p-3 bg-[#FFFF00]/10 border border-[#FFFF00]/20 rounded-lg text-sm text-[#FFFF00]">
+                    <div className="flex items-center gap-2 p-3 bg-brand/10 border border-[#FFFF00]/20 rounded-lg text-sm text-brand">
                         <Info className="w-4 h-4 shrink-0" />
                         <span>{success}</span>
                     </div>
@@ -608,7 +608,7 @@ export default function OrderPanel() {
                     onClick={handlePlaceOrder}
                     disabled={loading || (connected && agentWalletEnabled && (tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE))}
                     className={`w-full rounded-xl text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
-                        ? 'bg-[#FFFF00] hover:bg-[#FFFF33] text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
+                        ? 'bg-brand hover:bg-brand-hover text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
                         : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'
                         }`}
                     style={orderSide === 'long' ? { color: '#000', minHeight: '80px' } : { minHeight: '80px' }}
@@ -629,8 +629,8 @@ export default function OrderPanel() {
 
                 {/* Inline Setup Prompt - Shows when agent wallet or builder fee not approved */}
                 {connected && (!agentWalletEnabled || (BUILDER_CONFIG.enabled && !builderFeeApproved)) && (
-                    <div className="mt-4 p-4 bg-[#FFFF00]/10 border border-[#FFFF00]/30 rounded-xl">
-                        <p className="text-sm text-[#FFFF00] font-semibold mb-3">
+                    <div className="mt-4 p-4 bg-brand/10 border border-[#FFFF00]/30 rounded-xl">
+                        <p className="text-sm text-brand font-semibold mb-3">
                             ⚡ Configuración Requerida
                         </p>
                         <p className="text-xs text-white/70 mb-3">
@@ -658,7 +658,7 @@ export default function OrderPanel() {
                                 }
                             }}
                             disabled={setupLoading}
-                            className="w-full py-3 bg-[#FFFF00] text-black rounded-lg font-bold text-sm hover:bg-[#FFFF33] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-brand text-black rounded-lg font-bold text-sm hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {setupLoading ? (
                                 <>

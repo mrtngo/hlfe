@@ -1,28 +1,27 @@
+/* Import Rayo Design System Tokens */
+@import '../rayo-design-system/styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Rayo Brand Identity */
-    /* Neon Yellow: #FFFF00, Black: #000000, Dark Grey: #1A1A1A, White: #FFFFFF, Gold: #FFD700 */
-    
-    --background: 0 0% 0%; /* Pure Black #000000 */
-    --foreground: 0 0% 100%; /* White #FFFFFF */
+    /* Tailwind HSL color format (required for Tailwind's color utilities) */
+    /* These reference the design system tokens above */
+    --background: 0 0% 0%; /* var(--color-bg-primary) */
+    --foreground: 0 0% 100%; /* var(--color-text-primary) */
 
     /* Surface colors */
-    --card: 0 0% 10%; /* Dark Grey #1A1A1A */
+    --card: 0 0% 10%; /* var(--color-bg-elevated) */
     --card-foreground: 0 0% 100%;
 
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
 
-    /* Neon Yellow Primary #FFFF00 */
-    --primary: 60 100% 50%;
-    --primary-foreground: 0 0% 0%; /* Black text on yellow */
-
-    /* Gold accent #FFD700 */
-    --gold: 51 100% 50%;
+    /* Brand Yellow Primary - #FACC15 */
+    --primary: 43 96% 53%; /* var(--color-brand-primary) */
+    --primary-foreground: 0 0% 0%; /* var(--color-text-on-brand) */
 
     /* Secondary - Dark surfaces */
     --secondary: 0 0% 10%;
@@ -34,66 +33,14 @@
     --accent: 0 0% 15%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%; /* var(--color-negative) */
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 15%;
     --input: 0 0% 10%;
-    --ring: 60 100% 50%; /* Neon Yellow */
+    --ring: 43 96% 53%; /* var(--color-brand-primary) */
 
     --radius: 1rem;
-
-    /* Rayo Brand Colors */
-    --color-primary: #FFFF00; /* Neon Yellow */
-    --color-primary-light: #FFFF33;
-    --color-primary-dark: #E6E600;
-    --color-gold: #FFD700;
-    --color-secondary: #FFD700; /* Gold */
-    --color-secondary-light: #FFE033;
-    --color-secondary-dark: #CCAA00;
-    
-    /* Trading colors - Keep cyan for buy to differentiate from primary */
-    --color-bullish: #FFFF00; /* Neon Yellow for Buy */
-    --color-bullish-light: #FFFF33;
-    --color-bullish-dark: #E6E600;
-    --color-bearish: #FF4444;
-    --color-bearish-light: #FF6666;
-    --color-bearish-dark: #CC0000;
-    
-    /* Text colors */
-    --color-coffee-dark: #FFFFFF;
-    --color-coffee-medium: #888888;
-    --color-coffee-light: #555555;
-    
-    /* Background colors - Pure blacks */
-    --bg-primary: #000000;
-    --bg-secondary: #1A1A1A;
-    --bg-tertiary: #252525;
-    --bg-hover: #303030;
-    --bg-glass: rgba(26, 26, 26, 0.9);
-
-    /* Shadows */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
-    --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
-    --shadow-xl: 0 24px 48px rgba(0, 0, 0, 0.7), 0 8px 16px rgba(0, 0, 0, 0.5);
-    
-    /* Neon glow effect */
-    --glow-yellow: 0 0 20px rgba(255, 255, 0, 0.3), 0 0 40px rgba(255, 255, 0, 0.1);
-
-    /* Border Radius */
-    --radius-sm: 0.5rem;
-    --radius-md: 0.75rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
-    --radius-2xl: 2rem;
-    --radius-3xl: 3rem;
-    --radius-full: 9999px;
-
-    /* Transitions */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   * {
@@ -155,7 +102,7 @@ h6 { font-size: 1rem; }
 
 /* Glass Morphism - Dark theme */
 .glass {
-  background: var(--bg-glass);
+  background: rgba(26, 26, 26, 0.9);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -165,14 +112,14 @@ h6 { font-size: 1rem; }
   background: rgba(26, 26, 26, 0.8);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.5rem;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-md);
   transition: all var(--transition-base);
 }
 
 .glass-card:hover {
-  border-color: rgba(255, 255, 0, 0.15);
+  border-color: var(--color-brand-primary-border);
 }
 
 /* Buttons - Rayo Style */
@@ -199,17 +146,17 @@ h6 { font-size: 1rem; }
   transform: none !important;
 }
 
-/* Primary Button - Neon Yellow */
+/* Primary Button - Brand Yellow */
 .btn-primary {
-  background: #FFFF00;
-  color: #000000;
-  font-weight: 700;
-  box-shadow: var(--glow-yellow);
+  background: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
+  font-weight: var(--font-bold);
+  box-shadow: var(--shadow-glow-brand);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #FFFF33;
-  box-shadow: 0 0 30px rgba(255, 255, 0, 0.4), 0 0 60px rgba(255, 255, 0, 0.2);
+  background: var(--color-brand-primary-hover);
+  box-shadow: var(--shadow-glow-brand);
   transform: scale(1.02);
 }
 
@@ -217,21 +164,21 @@ h6 { font-size: 1rem; }
   transform: scale(0.98);
 }
 
-/* Buy Button - Neon Yellow */
+/* Buy Button - Brand Yellow */
 .btn-buy {
-  background: #FFFF00;
-  color: #000000;
-  font-size: 1.125rem;
-  padding: 1rem 2rem;
-  font-weight: 700;
+  background: var(--color-brand-primary);
+  color: var(--color-text-on-brand);
+  font-size: var(--text-lg);
+  padding: var(--space-4) var(--space-8);
+  font-weight: var(--font-bold);
   border-radius: var(--radius-full);
   min-height: 52px;
-  box-shadow: var(--glow-yellow);
+  box-shadow: var(--shadow-glow-brand);
 }
 
 .btn-buy:hover:not(:disabled) {
-  background: #FFFF33;
-  box-shadow: 0 0 30px rgba(255, 255, 0, 0.5);
+  background: var(--color-brand-primary-hover);
+  box-shadow: var(--shadow-glow-brand);
   transform: scale(1.02);
 }
 
@@ -241,18 +188,18 @@ h6 { font-size: 1rem; }
 
 /* Sell Button - Dark with border */
 .btn-sell {
-  background: #1A1A1A;
-  color: #FFFFFF;
-  font-size: 1.125rem;
-  padding: 1rem 2rem;
-  font-weight: 700;
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  padding: var(--space-4) var(--space-8);
+  font-weight: var(--font-bold);
   border-radius: var(--radius-full);
   min-height: 52px;
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-sell:hover:not(:disabled) {
-  background: #252525;
+  background: var(--color-bg-hover);
   border-color: rgba(255, 255, 255, 0.4);
   transform: scale(1.02);
 }
@@ -264,68 +211,68 @@ h6 { font-size: 1rem; }
 /* Deposit/Outline Button - Dark with yellow border */
 .btn-outline {
   background: transparent;
-  color: #FFFF00;
-  border: 2px solid #FFFF00;
-  font-weight: 700;
+  color: var(--color-brand-primary);
+  border: 2px solid var(--color-brand-primary);
+  font-weight: var(--font-bold);
 }
 
 .btn-outline:hover:not(:disabled) {
-  background: rgba(255, 255, 0, 0.1);
-  box-shadow: var(--glow-yellow);
+  background: var(--color-brand-primary-muted);
+  box-shadow: var(--shadow-glow-brand);
 }
 
 .btn-secondary {
-  background: #1A1A1A;
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-subtle);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #252525;
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-default);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--color-coffee-medium);
+  color: var(--color-text-secondary);
   border: 1px solid transparent;
 }
 
 .btn-ghost:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.05);
-  color: #FFFFFF;
+  color: var(--color-text-primary);
 }
 
 /* Inputs - Rayo Style */
 .input {
   width: 100%;
-  padding: 1rem 1.25rem;
-  background: #1A1A1A;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg);
-  color: #FFFFFF;
-  font-size: 1rem;
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
   transition: all var(--transition-base);
-  font-family: var(--font-jetbrains);
+  font-family: var(--font-mono);
   min-height: 52px;
 }
 
 .input:focus {
   outline: none;
-  border-color: #FFFF00;
-  box-shadow: 0 0 0 2px rgba(255, 255, 0, 0.1);
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 2px var(--color-brand-primary-muted);
 }
 
 .input::placeholder {
-  color: #555555;
+  color: var(--color-text-muted);
 }
 
 /* Cards */
 .card {
-  background: #1A1A1A;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
   box-shadow: var(--shadow-md);
 }
 
@@ -333,40 +280,40 @@ h6 { font-size: 1rem; }
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-full);
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   white-space: nowrap;
 }
 
 .badge-success {
-  background: rgba(255, 255, 0, 0.15);
-  color: #FFFF00;
-  border: 1px solid rgba(255, 255, 0, 0.3);
+  background: var(--color-positive-muted);
+  color: var(--color-positive);
+  border: 1px solid var(--color-positive);
 }
 
 .badge-danger {
-  background: rgba(255, 68, 68, 0.15);
-  color: #FF4444;
-  border: 1px solid rgba(255, 68, 68, 0.3);
+  background: var(--color-negative-muted);
+  color: var(--color-negative);
+  border: 1px solid var(--color-negative);
 }
 
 .badge-warning {
-  background: rgba(255, 215, 0, 0.15);
-  color: #FFD700;
-  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+  border: 1px solid var(--color-warning);
 }
 
 /* Price Display */
 .price-positive {
-  color: #FFFF00;
-  font-weight: 600;
+  color: var(--color-positive);
+  font-weight: var(--font-semibold);
 }
 
 .price-negative {
-  color: #FF4444;
-  font-weight: 600;
+  color: var(--color-negative);
+  font-weight: var(--font-semibold);
 }
 
 /* Scrollbar */
@@ -376,17 +323,17 @@ h6 { font-size: 1rem; }
 }
 
 ::-webkit-scrollbar-track {
-  background: #1A1A1A;
+  background: var(--color-bg-elevated);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333333;
+  background: var(--color-border-emphasis);
   border-radius: var(--radius-full);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #444444;
+  background: var(--color-text-tertiary);
 }
 
 /* Animations */
@@ -421,8 +368,8 @@ h6 { font-size: 1rem; }
 
 /* Loading Spinner */
 .spinner {
-  border: 3px solid #1A1A1A;
-  border-top: 3px solid #FFFF00;
+  border: 3px solid var(--color-bg-elevated);
+  border-top: 3px solid var(--color-brand-primary);
   border-radius: 50%;
   width: 24px;
   height: 24px;
@@ -442,7 +389,7 @@ h6 { font-size: 1rem; }
 
 /* Text Gradient */
 .text-gradient {
-  background: linear-gradient(135deg, #FFFF00, #FFD700);
+  background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-primary-hover));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -493,92 +440,92 @@ h6 { font-size: 1rem; }
 
 /* === Driver.js Theme Overrides for Rayo === */
 .driver-popover {
-  background-color: #1A1A1A !important;
-  color: #FFFFFF !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 1.5rem !important; /* using radius-xl to match cards */
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 255, 0, 0.05) !important;
-  padding: 1.5rem !important;
+  background-color: var(--color-bg-elevated) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border-subtle) !important;
+  border-radius: var(--radius-2xl) !important;
+  box-shadow: var(--shadow-lg) !important;
+  padding: var(--space-6) !important;
 }
 
 .driver-popover-title {
-  color: #FFFF00 !important; /* Neon Yellow */
+  color: var(--color-brand-primary) !important;
   font-family: var(--font-plus-jakarta), sans-serif !important;
-  font-size: 1.25rem !important;
-  font-weight: 700 !important;
-  margin-bottom: 0.75rem !important;
+  font-size: var(--text-xl) !important;
+  font-weight: var(--font-bold) !important;
+  margin-bottom: var(--space-3) !important;
 }
 
 .driver-popover-description {
-  color: #CCCCCC !important;
+  color: var(--color-text-secondary) !important;
   font-family: var(--font-inter), sans-serif !important;
-  font-size: 0.95rem !important;
-  line-height: 1.5 !important;
-  margin-bottom: 1.5rem !important;
+  font-size: var(--text-sm) !important;
+  line-height: var(--leading-normal) !important;
+  margin-bottom: var(--space-6) !important;
 }
 
 /* Navigation Buttons */
 .driver-popover-footer {
-  margin-top: 1rem !important;
+  margin-top: var(--space-4) !important;
 }
 
 .driver-popover-btn {
-  background-color: #252525 !important;
-  color: #FFFFFF !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  border-radius: 9999px !important;
-  padding: 0.6rem 1.2rem !important;
-  font-size: 0.875rem !important;
-  font-weight: 600 !important;
+  background-color: var(--color-bg-hover) !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-border-subtle) !important;
+  border-radius: var(--radius-full) !important;
+  padding: var(--space-2) var(--space-5) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: var(--font-semibold) !important;
   text-shadow: none !important;
-  transition: all 0.2s ease !important;
+  transition: all var(--transition-base) !important;
 }
 
 .driver-popover-btn:hover {
-  background-color: #333333 !important;
-  color: #FFFFFF !important;
+  background-color: var(--color-border-emphasis) !important;
+  color: var(--color-text-primary) !important;
 }
 
 /* Next/Done Button - Highlighted */
 .driver-popover-next-btn {
-  background-color: #FFFF00 !important;
-  color: #000000 !important;
+  background-color: var(--color-brand-primary) !important;
+  color: var(--color-text-on-brand) !important;
   border: none !important;
-  box-shadow: 0 0 10px rgba(255, 255, 0, 0.3) !important;
+  box-shadow: var(--shadow-glow-brand) !important;
 }
 
 .driver-popover-next-btn:hover {
-  background-color: #FFFF33 !important;
-  box-shadow: 0 0 15px rgba(255, 255, 0, 0.5) !important;
+  background-color: var(--color-brand-primary-hover) !important;
+  box-shadow: var(--shadow-glow-brand) !important;
 }
 
 /* Arrow */
 .driver-popover-arrow-side-left.driver-popover-arrow {
-  border-left-color: #1A1A1A !important;
+  border-left-color: var(--color-bg-elevated) !important;
 }
 
 .driver-popover-arrow-side-right.driver-popover-arrow {
-  border-right-color: #1A1A1A !important;
+  border-right-color: var(--color-bg-elevated) !important;
 }
 
 .driver-popover-arrow-side-top.driver-popover-arrow {
-  border-top-color: #1A1A1A !important;
+  border-top-color: var(--color-bg-elevated) !important;
 }
 
 .driver-popover-arrow-side-bottom.driver-popover-arrow {
-  border-bottom-color: #1A1A1A !important;
+  border-bottom-color: var(--color-bg-elevated) !important;
 }
 
 /* Progress Steps (if enabled) */
 .driver-popover-progress-text {
-  color: #888888 !important;
+  color: var(--color-text-secondary) !important;
 }
 
 /* Close Button */
 .driver-popover-close-btn {
-  color: #888888 !important;
+  color: var(--color-text-secondary) !important;
 }
 
 .driver-popover-close-btn:hover {
-  color: #FFFFFF !important;
+  color: var(--color-text-primary) !important;
 }

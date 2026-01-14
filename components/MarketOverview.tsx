@@ -77,7 +77,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                 <div className="font-mono font-bold text-base text-white">
                                     {formatCurrency(currentMarket.price)}
                                 </div>
-                                <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'
+                                <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-positive' : 'text-negative'
                                     }`}>
                                     {isPositive ? (
                                         <TrendingUp className="w-3 h-3" />
@@ -184,7 +184,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                             <div className="font-mono font-semibold text-sm text-white">
                                                 {formatCurrency(market.price)}
                                             </div>
-                                            <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'
+                                            <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-positive' : 'text-negative'
                                                 }`}>
                                                 {isPositive ? (
                                                     <TrendingUp className="w-3 h-3" />

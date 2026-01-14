@@ -168,14 +168,14 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                 {/* Content */}
                 <div className="p-4 space-y-4">
                     {/* Info Banner */}
-                    <div className="bg-[#FFFF00]/10 border border-[#FFFF00]/20 rounded-xl p-3 flex gap-3">
-                        <ArrowUpRight className="w-5 h-5 text-[#FFFF00] shrink-0" />
+                    <div className="bg-brand/10 border border-[#FFFF00]/20 rounded-xl p-3 flex gap-3">
+                        <ArrowUpRight className="w-5 h-5 text-brand shrink-0" />
                         <div className="text-sm">
-                            <div className="font-semibold text-[#FFFF00] mb-1">Retiro a Arbitrum</div>
+                            <div className="font-semibold text-brand mb-1">Retiro a Arbitrum</div>
                             <div className="text-white/60">
                                 Los fondos llegarán a tu wallet en ~5 minutos.
                                 <br />
-                                <span className="text-[#FFFF00]">Fee: ${WITHDRAWAL_FEE} USDC</span>
+                                <span className="text-brand">Fee: ${WITHDRAWAL_FEE} USDC</span>
                             </div>
                         </div>
                     </div>
@@ -185,7 +185,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                         <span className="text-white/50">Disponible:</span>
                         <button
                             onClick={() => setAmount(availableBalance.toFixed(2))}
-                            className="text-white hover:text-[#FFFF00] transition-colors font-mono"
+                            className="text-white hover:text-brand transition-colors font-mono"
                         >
                             ${availableBalance.toFixed(2)}
                         </button>
@@ -202,7 +202,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                                 setSuccess(false);
                             }}
                             placeholder="0.00"
-                            className="w-full py-4 px-4 pr-20 bg-[#1A1A1A] border border-white/10 rounded-xl text-white text-lg font-mono focus:border-[#FFFF00]/50 focus:ring-2 focus:ring-[#FFFF00]/20 outline-none transition-all"
+                            className="w-full py-4 px-4 pr-20 bg-[#1A1A1A] border border-white/10 rounded-xl text-white text-lg font-mono focus:border-[#FFFF00]/50 focus:ring-2 focus:ring-brand/20 outline-none transition-all"
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white font-semibold">
                             USDC
@@ -215,7 +215,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                             <button
                                 key={pct}
                                 onClick={() => setAmount((availableBalance * pct / 100).toFixed(2))}
-                                className="flex-1 py-2 text-sm font-semibold text-white/60 hover:text-[#FFFF00] bg-white/5 hover:bg-[#FFFF00]/10 rounded-lg transition-all"
+                                className="flex-1 py-2 text-sm font-semibold text-white/60 hover:text-brand bg-white/5 hover:bg-brand/10 rounded-lg transition-all"
                             >
                                 {pct}%
                             </button>
@@ -235,7 +235,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                             </div>
                             <div className="border-t border-white/10 pt-2 flex justify-between">
                                 <span className="text-white/50">Recibirás</span>
-                                <span className={`font-mono font-bold ${netAmount > 0 ? 'text-[#FFFF00]' : 'text-red-400'}`}>
+                                <span className={`font-mono font-bold ${netAmount > 0 ? 'text-brand' : 'text-red-400'}`}>
                                     ${Math.max(0, netAmount).toFixed(2)}
                                 </span>
                             </div>
@@ -261,7 +261,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                     <button
                         onClick={handleWithdraw}
                         disabled={loading || !isValidAmount || !address}
-                        className="w-full py-4 bg-[#FFFF00] text-black font-bold rounded-xl hover:bg-[#FFFF33] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-brand text-black font-bold rounded-xl hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <>

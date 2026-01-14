@@ -98,7 +98,7 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
                     <div className={`p-2 rounded-full bg-black/80 backdrop-blur-md border border-[#FFFF00]/30 shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
                         <RefreshCw
                             size={18}
-                            className="text-[#FFFF00]"
+                            className="text-brand"
                             style={{
                                 transform: isRefreshing ? 'none' : `rotate(${pullDistance * 2}deg)`,
                             }}

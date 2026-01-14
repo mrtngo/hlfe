@@ -1,0 +1,61 @@
+/* ==========================================================================
+   RAYO DESIGN SYSTEM - Badge Styles
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: var(--font-medium);
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   SIZES
+   --------------------------------------------------------------------------- */
+
+.sm {
+  padding: 2px 6px;
+  font-size: var(--text-xs);
+}
+
+.md {
+  padding: 4px 10px;
+  font-size: var(--text-sm);
+}
+
+/* ---------------------------------------------------------------------------
+   VARIANTS
+   --------------------------------------------------------------------------- */
+
+.default {
+  background-color: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+}
+
+.brand {
+  background-color: var(--color-brand-primary-muted);
+  color: var(--color-brand-primary);
+}
+
+.positive {
+  background-color: var(--color-positive-muted);
+  color: var(--color-positive);
+}
+
+.negative {
+  background-color: var(--color-negative-muted);
+  color: var(--color-negative);
+}
+
+.info {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: var(--color-info);
+}
+
+.warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+}

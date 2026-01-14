@@ -102,8 +102,8 @@ export default function FeeCalculator() {
     return (
         <div className="glass-card p-6 space-y-6">
             <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-[#FFFF00]/20 flex items-center justify-center">
-                    <Calculator className="w-6 h-6 text-[#FFFF00]" />
+                <div className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center">
+                    <Calculator className="w-6 h-6 text-brand" />
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-white">Calculadora de Tarifas</h2>
@@ -116,7 +116,7 @@ export default function FeeCalculator() {
                 <div>
                     <label className="text-xs text-coffee-medium font-bold mb-2 block">Monto a Invertir (COP)</label>
                     <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FFFF00]" />
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand" />
                         <input
                             type="number"
                             value={amount}
@@ -143,21 +143,21 @@ export default function FeeCalculator() {
                     <div className="grid grid-cols-3 gap-2">
                         <button
                             onClick={() => setStrategy('standard')}
-                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'standard' ? 'bg-[#FFFF00] border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'standard' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Estándar
                         </button>
                         <button
                             onClick={() => setStrategy('dividends')}
-                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'dividends' ? 'bg-[#FFFF00] border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'dividends' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Dividendos
                         </button>
                         <button
                             onClick={() => setStrategy('usa')}
-                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'usa' ? 'bg-[#FFFF00] border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'usa' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Acciones USA
@@ -172,19 +172,19 @@ export default function FeeCalculator() {
                     <div
                         key={item.name}
                         className={`relative p-3 rounded-xl border transition-all ${item.highlight
-                                ? 'bg-[#FFFF00]/10 border-[#FFFF00] scale-[1.02] shadow-[0_0_20px_rgba(255,255,0,0.1)]'
+                                ? 'bg-brand/10 border-[#FFFF00] scale-[1.02] shadow-[0_0_20px_rgba(255,255,0,0.1)]'
                                 : 'bg-white/5 border-transparent opacity-80'
                             }`}
                     >
                         {item.highlight && (
-                            <div className="absolute -top-3 right-4 bg-[#FFFF00] text-black text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <div className="absolute -top-3 right-4 bg-brand text-black text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                 <Trophy className="w-3 h-3" /> MEJOR OPCIÓN
                             </div>
                         )}
 
                         <div className="flex justify-between items-center mb-1">
                             <span className={`font-bold ${item.highlight ? 'text-white' : 'text-coffee-medium'}`}>{item.name}</span>
-                            <span className={`font-mono font-bold ${item.highlight ? 'text-[#FFFF00] text-lg' : 'text-white'}`}>
+                            <span className={`font-mono font-bold ${item.highlight ? 'text-brand text-lg' : 'text-white'}`}>
                                 {formatCOP(item.cost)}
                             </span>
                         </div>
@@ -215,9 +215,9 @@ export default function FeeCalculator() {
 
             {/* Recommendation */}
             <div className="bg-white/5 p-3 rounded-xl flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-[#FFFF00] flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 text-brand flex-shrink-0 mt-0.5" />
                 <div>
-                    <h4 className="text-xs font-bold text-[#FFFF00] mb-1">Análisis Financiero</h4>
+                    <h4 className="text-xs font-bold text-brand mb-1">Análisis Financiero</h4>
                     <p className="text-xs text-white leading-relaxed">{recommendation}</p>
                 </div>
             </div>

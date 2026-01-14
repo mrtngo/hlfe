@@ -173,9 +173,9 @@ export default function Profile() {
                 {/* Avatar */}
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full border-2 border-[#FFFF00] flex items-center justify-center bg-transparent">
                     {userLoading ? (
-                        <Loader2 className="w-8 h-8 text-[#FFFF00] animate-spin" />
+                        <Loader2 className="w-8 h-8 text-brand animate-spin" />
                     ) : (
-                        <UserIcon className="w-10 h-10 text-[#FFFF00]" />
+                        <UserIcon className="w-10 h-10 text-brand" />
                     )}
                 </div>
 
@@ -198,7 +198,7 @@ export default function Profile() {
                             <button
                                 onClick={saveUsername}
                                 disabled={saving || tempUsername.length < 3}
-                                className="px-4 py-2 bg-[#FFFF00] text-black rounded-xl text-sm font-bold disabled:opacity-50"
+                                className="px-4 py-2 bg-brand text-black rounded-xl text-sm font-bold disabled:opacity-50"
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.save}
                             </button>
@@ -212,7 +212,7 @@ export default function Profile() {
                     </div>
                 ) : (
                     <h1
-                        className="text-2xl font-bold text-white text-center mb-2 cursor-pointer hover:text-[#FFFF00] transition-colors"
+                        className="text-2xl font-bold text-white text-center mb-2 cursor-pointer hover:text-brand transition-colors"
                         onClick={() => { setTempUsername(user?.username || ''); setIsEditingUsername(true); }}
                     >
                         @{displayName}
@@ -225,7 +225,7 @@ export default function Profile() {
                     </div>
                 )}
                 {success && (
-                    <div className="flex items-center justify-center gap-2 text-[#FFFF00] text-xs mb-2">
+                    <div className="flex items-center justify-center gap-2 text-brand text-xs mb-2">
                         <Check className="w-3 h-3" /> {success}
                     </div>
                 )}
@@ -233,12 +233,12 @@ export default function Profile() {
                 {/* Wallet Address */}
                 {address && (
                     <div className="flex items-center justify-center gap-2 mb-4">
-                        <div className="w-4 h-4 rounded bg-[#FFFF00]/20 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-sm bg-[#FFFF00]" />
+                        <div className="w-4 h-4 rounded bg-brand/20 flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-sm bg-brand" />
                         </div>
                         <span className="text-coffee-medium text-sm font-mono">{formatAddress(address)}</span>
-                        <button onClick={copyAddress} className="text-coffee-medium hover:text-[#FFFF00] transition-colors">
-                            {copied ? <Check className="w-4 h-4 text-[#FFFF00]" /> : <Copy className="w-4 h-4" />}
+                        <button onClick={copyAddress} className="text-coffee-medium hover:text-brand transition-colors">
+                            {copied ? <Check className="w-4 h-4 text-brand" /> : <Copy className="w-4 h-4" />}
                         </button>
                     </div>
                 )}
@@ -280,7 +280,7 @@ export default function Profile() {
                             <DollarSign className="w-3 h-3" />
                             {language === 'es' ? 'Recompensas Referidos' : 'Referral Rewards'}
                         </div>
-                        <div className="text-lg font-bold text-[#FFFF00] font-mono">
+                        <div className="text-lg font-bold text-brand font-mono">
                             ${referralRewards.toFixed(2)}
                         </div>
                     </div>
@@ -290,25 +290,25 @@ export default function Profile() {
             {/* ===== INVITE FRIENDS ===== */}
             <div className="bg-[#0D0D0D] border border-white/10 rounded-3xl p-5">
                 <div className="flex items-center gap-2 mb-4">
-                    <Gift className="w-5 h-5 text-[#FFFF00]" />
+                    <Gift className="w-5 h-5 text-brand" />
                     <h2 className="text-base font-bold text-white">{profile.inviteFriends || 'Invitar Amigos'}</h2>
                 </div>
 
                 {/* Referral Link Box */}
                 <div className="bg-[#1A1A1A] border border-[#FFFF00]/30 rounded-xl p-3 flex items-center gap-2 mb-3">
-                    <code className="flex-1 text-xs text-[#FFFF00] font-mono truncate">
+                    <code className="flex-1 text-xs text-brand font-mono truncate">
                         {referralLink || 'Loading...'}
                     </code>
                     <button
                         onClick={copyReferralLink}
-                        className="p-2 border border-[#FFFF00] rounded-lg text-[#FFFF00] hover:bg-[#FFFF00] hover:text-black transition-all"
+                        className="p-2 border border-[#FFFF00] rounded-lg text-brand hover:bg-brand hover:text-black transition-all"
                     >
                         {referralCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </button>
                 </div>
 
                 <p className="text-xs text-coffee-medium text-center mb-4">
-                    {profile.shareAndEarn || 'Comparte tu enlace y gana'} <span className="text-[#FFFF00] font-bold">10%</span> {profile.ofFees || 'de sus comisiones de trading.'}
+                    {profile.shareAndEarn || 'Comparte tu enlace y gana'} <span className="text-brand font-bold">10%</span> {profile.ofFees || 'de sus comisiones de trading.'}
                 </p>
 
                 {/* Stats */}
@@ -319,7 +319,7 @@ export default function Profile() {
                     </div>
                     <div className="text-center">
                         <div className="text-coffee-medium text-xs mb-1">{profile.earned || 'Ganado'}</div>
-                        <div className="text-lg font-bold text-[#FFFF00] font-mono">${loadingReferrals ? '...' : totalEarnings.toFixed(2)}</div>
+                        <div className="text-lg font-bold text-brand font-mono">${loadingReferrals ? '...' : totalEarnings.toFixed(2)}</div>
                     </div>
                 </div>
             </div>
@@ -327,7 +327,7 @@ export default function Profile() {
             {/* ===== SETTINGS ===== */}
             <div className="bg-[#0D0D0D] border border-white/10 rounded-3xl p-5">
                 <div className="flex items-center gap-2 mb-4">
-                    <div className="text-[#FFFF00]">⚙️</div>
+                    <div className="text-brand">⚙️</div>
                     <h2 className="text-base font-bold text-white">{language === 'es' ? 'Ajustes' : 'Settings'}</h2>
                 </div>
 
@@ -341,13 +341,13 @@ export default function Profile() {
                         <div className="flex border border-white/20 rounded-lg overflow-hidden">
                             <button
                                 onClick={() => setLanguage('en')}
-                                className={`px-3 py-1.5 text-xs font-semibold transition-all ${language === 'en' ? 'bg-[#FFFF00] text-black' : 'text-coffee-medium hover:text-white'}`}
+                                className={`px-3 py-1.5 text-xs font-semibold transition-all ${language === 'en' ? 'bg-brand text-black' : 'text-coffee-medium hover:text-white'}`}
                             >
                                 EN
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
-                                className={`px-3 py-1.5 text-xs font-semibold transition-all ${language === 'es' ? 'bg-[#FFFF00] text-black' : 'text-coffee-medium hover:text-white'}`}
+                                className={`px-3 py-1.5 text-xs font-semibold transition-all ${language === 'es' ? 'bg-brand text-black' : 'text-coffee-medium hover:text-white'}`}
                             >
                                 ES
                             </button>
@@ -364,7 +364,7 @@ export default function Profile() {
                             onClick={agentWalletEnabled ? handleDisableAgentWallet : handleSetupAgentWallet}
                             disabled={settingUpAgent}
                             style={{ width: '48px', height: '28px', minWidth: '48px' }}
-                            className={`rounded-full transition-all relative flex-shrink-0 cursor-pointer ${agentWalletEnabled ? 'bg-[#FFFF00] border-2 border-[#FFFF00]' : 'bg-white/20 border-2 border-white/30'}`}
+                            className={`rounded-full transition-all relative flex-shrink-0 cursor-pointer ${agentWalletEnabled ? 'bg-brand border-2 border-[#FFFF00]' : 'bg-white/20 border-2 border-white/30'}`}
                         >
                             {settingUpAgent ? (
                                 <Loader2 className="w-4 h-4 animate-spin absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-black pointer-events-none" />
@@ -383,19 +383,19 @@ export default function Profile() {
                     {/* Builder Fee - Checkmark */}
                     <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <Shield className="w-5 h-5 text-[#FFFF00]" />
+                            <Shield className="w-5 h-5 text-brand" />
                             <span className="text-white text-sm font-medium">{profile.builderFee || 'Comisión Builder'}</span>
                         </div>
                         {builderFeeApproved ? (
-                            <div className="flex items-center gap-2 px-4 py-2 bg-[#FFFF00]/10 border border-[#FFFF00] rounded-xl">
-                                <Check className="w-5 h-5 text-[#FFFF00]" />
-                                <span className="text-[#FFFF00] text-sm font-bold">Active</span>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-brand/10 border border-[#FFFF00] rounded-xl">
+                                <Check className="w-5 h-5 text-brand" />
+                                <span className="text-brand text-sm font-bold">Active</span>
                             </div>
                         ) : (
                             <button
                                 onClick={handleApproveBuilderFee}
                                 disabled={approvingFee}
-                                className="px-5 py-2.5 bg-[#FFFF00] text-black rounded-xl text-sm font-bold hover:bg-[#FFD700] transition-all disabled:opacity-50 shadow-lg"
+                                className="px-5 py-2.5 bg-brand text-black rounded-xl text-sm font-bold hover:bg-[#FFD700] transition-all disabled:opacity-50 shadow-lg"
                                 style={{ boxShadow: '0 4px 12px rgba(255, 255, 0, 0.3)' }}
                             >
                                 {approvingFee ? <Loader2 className="w-5 h-5 animate-spin" /> : (profile.approve || 'Aprobar')}
@@ -476,7 +476,7 @@ export default function Profile() {
             {/* ===== DISCONNECT BUTTON ===== */}
             <button
                 onClick={logout}
-                className="w-full py-4 bg-[#FFFF00] text-black font-bold rounded-2xl hover:bg-[#FFFF33] transition-all text-base"
+                className="w-full py-4 bg-brand text-black font-bold rounded-2xl hover:bg-brand-hover transition-all text-base"
             >
                 {t.wallet.disconnect || 'Desconectar'}
             </button>

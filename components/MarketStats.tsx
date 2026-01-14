@@ -3,10 +3,20 @@
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { TrendingUp, DollarSign, Activity, ArrowUpCircle, ArrowDownCircle, Zap } from 'lucide-react';
+import styles from './MarketStats.module.css';
+
+type StatVariant = 'brand' | 'info' | 'positive' | 'negative' | 'warning';
+
+interface StatItem {
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    value: string;
+    variant: StatVariant;
+}
 
 export default function MarketStats() {
     const { selectedMarket, getMarket } = useHyperliquid();
-    const { formatCurrency, formatPercent } = useLanguage();
+    const { formatCurrency } = useLanguage();
 
     const market = getMarket(selectedMarket);
 
@@ -35,85 +45,65 @@ export default function MarketStats() {
     };
 
     // Calculate 24h high/low from current price and 24h change
-    // This is an approximation until we get real high/low data
     const prevDayPrice = market.price / (1 + market.change24h / 100);
     const estimatedHigh = market.change24h >= 0 ? market.price : Math.max(market.price, prevDayPrice);
     const estimatedLow = market.change24h >= 0 ? Math.min(market.price, prevDayPrice) : market.price;
 
-    const stats = [
+    const stats: StatItem[] = [
         {
             icon: Activity,
             label: 'Open Interest',
             value: formatLargeNumber(openInterestUSD),
-            color: '#FFD60A', // Rayo yellow
+            variant: 'brand',
         },
         {
             icon: DollarSign,
             label: '24h Volume',
             value: formatLargeNumber(market.volume24h),
-            color: '#00D9FF', // Cyan
+            variant: 'info',
         },
         {
             icon: TrendingUp,
             label: 'Funding Rate',
             value: formatFundingRate(market.fundingRate),
-            color: market.fundingRate >= 0 ? '#00FF00' : '#FF4444',
+            variant: market.fundingRate >= 0 ? 'positive' : 'negative',
         },
         {
             icon: Zap,
             label: 'Max Leverage',
             value: `${market.maxLeverage}x`,
-            color: '#FF00FF', // Magenta
+            variant: 'warning',
         },
         {
             icon: ArrowUpCircle,
             label: '24h High',
             value: formatCurrency(estimatedHigh),
-            color: '#00FF00', // Green
+            variant: 'positive',
         },
         {
             icon: ArrowDownCircle,
             label: '24h Low',
             value: formatCurrency(estimatedLow),
-            color: '#FF4444', // Red
+            variant: 'negative',
         },
     ];
 
     return (
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className={styles.container}>
             {stats.map((stat, index) => {
                 const Icon = stat.icon;
                 return (
                     <div
                         key={index}
-                        className="rounded-lg p-2.5 transition-all"
-                        style={{
-                            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                            border: `1px solid ${stat.color}40`,
-                            boxShadow: `0 2px 8px rgba(0, 0, 0, 0.3), 0 0 8px ${stat.color}15`,
-                        }}
+                        className={`${styles.stat} ${styles[`stat--${stat.variant}`]}`}
                     >
-                        <div className="flex items-center gap-1.5 mb-1">
-                            <Icon
-                                className="w-3 h-3"
-                                style={{ color: stat.color }}
-                            />
-                            <span
-                                className="text-[9px] font-semibold uppercase tracking-wider"
-                                style={{
-                                    color: 'rgba(255, 255, 255, 0.6)',
-                                }}
-                            >
+                        <div className={styles.header}>
+                            <Icon className={`${styles.icon} ${styles[`icon--${stat.variant}`]}`} />
+                            <span className={styles.label}>
                                 {stat.label}
                             </span>
                         </div>
-                        <div
-                            className="font-mono font-bold text-xs"
-                            style={{
-                                color: stat.color,
-                                textShadow: `0 0 8px ${stat.color}40`,
-                            }}
-                        >
+                        <div className={`${styles.value} ${styles[`value--${stat.variant}`]}`}>
                             {stat.value}
                         </div>
                     </div>

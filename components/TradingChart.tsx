@@ -7,11 +7,12 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useCandleData, type Timeframe } from '@/hooks/useCandleData';
 import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Area, Scatter } from 'recharts';
 import { BarChart3, Maximize2 } from 'lucide-react';
+import { colors } from '@/rayo-design-system/styles/tokens';
 
-// Rayo Lightning Yellow
-const RAYO_YELLOW = '#FFD60A';
-const TRADE_GREEN = '#00FF00';
-const TRADE_RED = '#FF4444';
+// Design System Colors
+const CHART_BRAND = colors.brand.primary;      // #FACC15 - Brand yellow
+const CHART_POSITIVE = colors.positive;        // #22C55E - Green for entries
+const CHART_NEGATIVE = colors.negative;        // #EF4444 - Red for liquidations
 
 interface TradingChartProps {
     symbol?: string;
@@ -142,9 +143,9 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                     {/* Position markers legend */}
                     {currentPosition && (
                         <div className="flex items-center gap-3 text-xs">
-                            <span className="text-[#00FF00]">◆ Entry</span>
+                            <span className="text-positive">◆ Entry</span>
                             {currentPosition.liquidationPrice > 0 && (
-                                <span className="text-[#FF4444]">◆ Liq</span>
+                                <span className="text-negative">◆ Liq</span>
                             )}
                         </div>
                     )}
@@ -200,8 +201,8 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             <defs>
                                 {/* Rayo Yellow gradient for area fill */}
                                 <linearGradient id="fillRayo" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor={RAYO_YELLOW} stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor={RAYO_YELLOW} stopOpacity={0} />
+                                    <stop offset="5%" stopColor={CHART_BRAND} stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor={CHART_BRAND} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
                             {/* Hidden YAxis to set domain without showing it */}
@@ -209,7 +210,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             {/* No grid, no visible axes - clean minimal chart */}
                             <Tooltip
                                 content={<CustomTooltip />}
-                                cursor={{ stroke: RAYO_YELLOW, strokeWidth: 1, strokeDasharray: '5 5' }}
+                                cursor={{ stroke: CHART_BRAND, strokeWidth: 1, strokeDasharray: '5 5' }}
                             />
                             {/* Area fill with Rayo Yellow gradient */}
                             <Area
@@ -222,23 +223,23 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             <Line
                                 type="monotone"
                                 dataKey="price"
-                                stroke={RAYO_YELLOW}
+                                stroke={CHART_BRAND}
                                 strokeWidth={2}
                                 dot={false}
-                                activeDot={{ r: 5, fill: RAYO_YELLOW, stroke: RAYO_YELLOW, strokeWidth: 2 }}
+                                activeDot={{ r: 5, fill: CHART_BRAND, stroke: CHART_BRAND, strokeWidth: 2 }}
                             />
 
                             {/* Current position entry price line */}
                             {currentPosition && (
                                 <ReferenceLine
                                     y={currentPosition.entryPrice}
-                                    stroke={TRADE_GREEN}
+                                    stroke={CHART_POSITIVE}
                                     strokeWidth={2}
                                     strokeDasharray="8 4"
                                     label={{
                                         value: `◆ Entry $${currentPosition.entryPrice.toFixed(2)}`,
                                         position: 'insideBottomRight',
-                                        fill: TRADE_GREEN,
+                                        fill: CHART_POSITIVE,
                                         fontSize: 12,
                                         fontWeight: 'bold',
                                         style: {
@@ -253,13 +254,13 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             {currentPosition && currentPosition.liquidationPrice > 0 && (
                                 <ReferenceLine
                                     y={currentPosition.liquidationPrice}
-                                    stroke={TRADE_RED}
+                                    stroke={CHART_NEGATIVE}
                                     strokeWidth={2}
                                     strokeDasharray="4 2"
                                     label={{
                                         value: `◆ Liq $${currentPosition.liquidationPrice.toFixed(2)}`,
                                         position: 'insideBottomLeft',
-                                        fill: TRADE_RED,
+                                        fill: CHART_NEGATIVE,
                                         fontSize: 12,
                                         fontWeight: 'bold',
                                         style: {
@@ -287,14 +288,12 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                 setTimeframe(option.value);
                                 setSelectedLabel(option.label);
                             }}
-                            className="flex flex-col items-center px-2 py-2 transition-all border-none outline-none"
+                            className={`flex flex-col items-center px-2 py-2 transition-all border-none outline-none ${isSelected ? 'opacity-100' : 'opacity-50'}`}
                             style={{
-                                color: '#FFFF00',
                                 background: 'transparent',
-                                opacity: isSelected ? 1 : 0.5
                             }}
                         >
-                            <span className={`text-xs font-semibold ${isSelected ? 'text-[#FFFF00]' : 'text-[#FFFF00]/50'}`}>
+                            <span className="text-xs font-semibold text-brand">
                                 {option.label}
                             </span>
                         </button>

@@ -139,7 +139,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     <button
                         onClick={() => setOrderType('limit')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-l-md border transition-colors ${orderType === 'limit'
-                            ? 'bg-[#FFFF00] border-[#FFFF00] text-black'
+                            ? 'bg-brand border-[#FFFF00] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
@@ -148,7 +148,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     <button
                         onClick={() => setOrderType('market')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-r-md border-t border-r border-b transition-colors ${orderType === 'market'
-                            ? 'bg-[#FFFF00] border-[#FFFF00] text-black'
+                            ? 'bg-brand border-[#FFFF00] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
@@ -160,7 +160,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                 <div className="relative">
                     <button
                         onClick={() => setShowLeverageDropdown(!showLeverageDropdown)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-[#FFFF00] border border-[#FFFF00] rounded text-black"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-brand border border-[#FFFF00] rounded text-black"
                     >
                         {Math.min(leverage, maxLeverage)}x
                         <ChevronDown className="w-3 h-3" />
@@ -170,7 +170,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             className="absolute right-0 top-full mt-1 bg-[#111111] border border-[#FFFF00]/30 rounded-lg shadow-2xl z-50 p-3"
                             style={{ minWidth: '150px' }}
                         >
-                            <div className="text-center text-[#FFFF00] font-bold text-lg mb-2">
+                            <div className="text-center text-brand font-bold text-lg mb-2">
                                 {Math.min(leverage, maxLeverage)}x
                             </div>
                             <input
@@ -182,13 +182,13 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                                 className="w-full h-2 accent-[#FFFF00] bg-white/10 rounded-full"
                                 style={{ accentColor: '#FFFF00' }}
                             />
-                            <div className="flex justify-between text-[10px] text-[#FFFF00]/60 mt-1">
+                            <div className="flex justify-between text-[10px] text-brand/60 mt-1">
                                 <span>1x</span>
                                 <span>{maxLeverage}x</span>
                             </div>
                             <button
                                 onClick={() => setShowLeverageDropdown(false)}
-                                className="w-full mt-3 py-1.5 text-xs bg-[#FFFF00] text-black font-bold rounded"
+                                className="w-full mt-3 py-1.5 text-xs bg-brand text-black font-bold rounded"
                             >
                                 Confirm
                             </button>
@@ -221,15 +221,15 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
 
             {/* Available to Trade */}
             <div className="flex justify-between text-xs mb-3">
-                <span className="text-[#FFFF00]/60">Avail. to Trade</span>
-                <span className="text-[#FFFF00] font-mono">{availableMargin.toFixed(2)} USDC</span>
+                <span className="text-brand/60">Avail. to Trade</span>
+                <span className="text-brand font-mono">{availableMargin.toFixed(2)} USDC</span>
             </div>
 
             {/* Price Input (for limit orders) */}
             {orderType === 'limit' && (
                 <div className="mb-3">
                     <div className="flex items-center justify-between bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2.5">
-                        <span className="text-xs text-[#FFFF00]/60">Price (USDC)</span>
+                        <span className="text-xs text-brand/60">Price (USDC)</span>
                         <div className="flex items-center gap-2">
                             <input
                                 type="number"
@@ -241,7 +241,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             />
                             <button
                                 onClick={() => market?.price && setPrice(formatPrice(market.price))}
-                                className="text-[10px] text-black bg-[#FFFF00] font-medium border border-[#FFFF00] px-1.5 py-0.5 rounded"
+                                className="text-[10px] text-black bg-brand font-medium border border-[#FFFF00] px-1.5 py-0.5 rounded"
                             >
                                 Mid
                             </button>
@@ -253,7 +253,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             {/* Size Input */}
             <div className="mb-3">
                 <div className="flex items-center justify-between bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2.5">
-                    <span className="text-xs text-[#FFFF00]/60">Size</span>
+                    <span className="text-xs text-brand/60">Size</span>
                     <div className="flex items-center gap-2">
                         <input
                             type="number"
@@ -266,7 +266,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             className="w-24 text-right bg-transparent text-sm font-mono outline-none"
                             style={{ color: '#FFFF00' }}
                         />
-                        <span className="text-xs text-[#FFFF00]/50">{coin}</span>
+                        <span className="text-xs text-brand/50">{coin}</span>
                     </div>
                 </div>
             </div>
@@ -281,7 +281,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         step="25"
                         value={sizePercent}
                         onChange={(e) => setQuickSize(parseInt(e.target.value))}
-                        className="w-full h-1 bg-[#FFFF00]/20 rounded-lg appearance-none cursor-pointer accent-[#FFFF00]"
+                        className="w-full h-1 bg-brand/20 rounded-lg appearance-none cursor-pointer accent-[#FFFF00]"
                     />
                     {/* Tick marks */}
                     <div className="flex justify-between mt-1">
@@ -289,12 +289,12 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             <button
                                 key={tick}
                                 onClick={() => setQuickSize(tick)}
-                                className={`w-2 h-2 rounded-full transition-colors ${sizePercent >= tick ? 'bg-[#FFFF00]' : 'bg-[#FFFF00]/30'
+                                className={`w-2 h-2 rounded-full transition-colors ${sizePercent >= tick ? 'bg-brand' : 'bg-brand/30'
                                     }`}
                             />
                         ))}
                     </div>
-                    <div className="flex justify-between text-[9px] text-[#FFFF00]/50 mt-1">
+                    <div className="flex justify-between text-[9px] text-brand/50 mt-1">
                         <span>0%</span>
                         <span>25%</span>
                         <span>50%</span>
@@ -309,23 +309,23 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                 <label className="flex items-center gap-2 cursor-pointer">
                     <div
                         onClick={() => setReduceOnly(!reduceOnly)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${reduceOnly ? 'bg-[#FFFF00] border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${reduceOnly ? 'bg-brand border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
                             }`}
                     >
                         {reduceOnly && <Check className="w-3 h-3 text-black" />}
                     </div>
-                    <span className="text-xs text-[#FFFF00]/70">Reduce Only</span>
+                    <span className="text-xs text-brand/70">Reduce Only</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
                     <div
                         onClick={() => setEnableTpSl(!enableTpSl)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${enableTpSl ? 'bg-[#FFFF00] border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${enableTpSl ? 'bg-brand border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
                             }`}
                     >
                         {enableTpSl && <Check className="w-3 h-3 text-black" />}
                     </div>
-                    <span className="text-xs text-[#FFFF00]/70">Take Profit / Stop Loss</span>
+                    <span className="text-xs text-brand/70">Take Profit / Stop Loss</span>
                 </label>
             </div>
 
@@ -333,7 +333,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             {enableTpSl && (
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     <div className="bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2">
-                        <span className="text-[10px] text-[#FFFF00]/50 block mb-1">TP Price</span>
+                        <span className="text-[10px] text-brand/50 block mb-1">TP Price</span>
                         <input
                             type="number"
                             value={tpPrice}
@@ -344,7 +344,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         />
                     </div>
                     <div className="bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2">
-                        <span className="text-[10px] text-[#FFFF00]/50 block mb-1">SL Price</span>
+                        <span className="text-[10px] text-brand/50 block mb-1">SL Price</span>
                         <input
                             type="number"
                             value={slPrice}
@@ -360,16 +360,16 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             {/* Order Summary */}
             <div className="border-t border-[#FFFF00]/20 pt-3 mb-4 space-y-1">
                 <div className="flex justify-between text-xs">
-                    <span className="text-[#FFFF00]/50">Order Value</span>
-                    <span className="text-[#FFFF00] font-mono">${orderValue.toFixed(2)}</span>
+                    <span className="text-brand/50">Order Value</span>
+                    <span className="text-brand font-mono">${orderValue.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                    <span className="text-[#FFFF00]/50">Margin Required</span>
-                    <span className="text-[#FFFF00] font-mono">${margin.toFixed(2)}</span>
+                    <span className="text-brand/50">Margin Required</span>
+                    <span className="text-brand font-mono">${margin.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                    <span className="text-[#FFFF00]/50">Est. Liq. Price</span>
-                    <span className="text-[#FFFF00]/50 font-mono">---</span>
+                    <span className="text-brand/50">Est. Liq. Price</span>
+                    <span className="text-brand/50 font-mono">---</span>
                 </div>
             </div>
 

@@ -170,7 +170,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
             >
                 <div className="flex items-center gap-3">
                     <div className="relative">
-                        <MessageSquare className="w-6 h-6 text-[#FFFF00]" />
+                        <MessageSquare className="w-6 h-6 text-brand" />
                         <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse" />
                     </div>
                     <div>
@@ -205,9 +205,9 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                 ) : messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center p-8">
                         <div className="relative mb-4">
-                            <MessageSquare className="w-16 h-16 text-[#FFFF00]/20" />
+                            <MessageSquare className="w-16 h-16 text-brand/20" />
                             <div className="absolute inset-0 animate-pulse">
-                                <MessageSquare className="w-16 h-16 text-[#FFFF00]/10" />
+                                <MessageSquare className="w-16 h-16 text-brand/10" />
                             </div>
                         </div>
                         <h3 className="text-white font-bold text-lg mb-2">It's quiet here...</h3>
@@ -244,7 +244,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                                         >
                                             {msg.user?.username || (msg.user?.wallet_address ? `${msg.user.wallet_address.slice(0, 6)}...${msg.user.wallet_address.slice(-4)}` : 'System')}
                                             {isCurrentUser && (
-                                                <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-[#FFFF00]/20 text-[#FFFF00]">
+                                                <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-brand/20 text-brand">
                                                     YOU
                                                 </span>
                                             )}

@@ -124,7 +124,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
             {/* Modal Content */}
             <div className="relative bg-[#0A0A0A] border border-white/10 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
                 {/* Background Gradients */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FFFF00]/5 rounded-full blur-[80px] pointer-events-none translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-[80px] pointer-events-none translate-x-1/2 -translate-y-1/2" />
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 pb-2 border-b border-white/5 relative z-10">
@@ -144,7 +144,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                         <h2 className="text-xs font-bold text-coffee-medium tracking-widest uppercase">Monto de Inversión</h2>
 
                         <div className="relative group">
-                            <div className="absolute inset-0 bg-[#FFFF00]/10 blur-xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                            <div className="absolute inset-0 bg-brand/10 blur-xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
                             <div className="relative flex items-center justify-center gap-2 border-b border-white/10 group-focus-within:border-[#FFFF00]/50 transition-colors pb-2">
                                 <span className="text-2xl font-black text-coffee-medium select-none">
                                     {currency === 'USD' ? '$' : 'COP'}
@@ -171,7 +171,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                     key={val}
                                     onClick={() => setAmount(val.toString())}
                                     className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg ${numericAmount === val
-                                        ? 'bg-[#FFFF00] text-black'
+                                        ? 'bg-brand text-black'
                                         : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
                                         }`}
                                     style={numericAmount === val ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.4)' } : {}}
@@ -185,8 +185,8 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     {/* Savings Highlight */}
                     <div className="bg-gradient-to-br from-[#FFFF00]/10 to-[#FFFF00]/5 border border-[#FFFF00]/20 rounded-2xl p-4 text-center">
                         <div className="flex items-center justify-center gap-2 mb-1">
-                            <Trophy className="w-4 h-4 text-[#FFFF00]" />
-                            <span className="text-[#FFFF00] font-bold text-xs tracking-wide">AHORRO ESTIMADO</span>
+                            <Trophy className="w-4 h-4 text-brand" />
+                            <span className="text-brand font-bold text-xs tracking-wide">AHORRO ESTIMADO</span>
                         </div>
                         <div className="text-3xl font-black text-white mb-1 font-mono">
                             {formatCurrency(calculation.savings)}
@@ -207,7 +207,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`py-3 rounded-xl text-sm font-bold flex flex-col items-center gap-1.5 transition-all ${activeTab === tab.id
-                                    ? 'bg-[#FFFF00] text-black shadow-lg'
+                                    ? 'bg-brand text-black shadow-lg'
                                     : 'bg-white/10 text-white hover:bg-white/15 border border-white/20'
                                     }`}
                                 style={activeTab === tab.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
@@ -222,12 +222,12 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     <div className="space-y-3">
                         {/* Rayo Card */}
                         <div
-                            className="bg-[#FFFF00] rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group text-black"
+                            className="bg-brand rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group text-black"
                             style={{ color: '#000000' }}
                         >
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12" />
                             <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-10 h-10 rounded-lg bg-black text-[#FFFF00] flex items-center justify-center font-black text-lg italic shadow-md">
+                                <div className="w-10 h-10 rounded-lg bg-black text-brand flex items-center justify-center font-black text-lg italic shadow-md">
                                     R
                                 </div>
                                 <div>

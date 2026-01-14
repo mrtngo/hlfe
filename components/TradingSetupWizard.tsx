@@ -170,8 +170,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                     {/* Header */}
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#FFFF00]/20 flex items-center justify-center">
-                                <Zap className="w-5 h-5 text-[#FFFF00]" />
+                            <div className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center">
+                                <Zap className="w-5 h-5 text-brand" />
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-white">{wizard.title}</h2>
@@ -192,8 +192,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             {needsAgentWallet && (
                                 <>
                                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'intro' || step === 'agent'
-                                        ? 'bg-[#FFFF00]/20 text-[#FFFF00]'
-                                        : agentWalletEnabled ? 'bg-[#00FF00]/20 text-[#00FF00]' : 'bg-white/10 text-coffee-medium'
+                                        ? 'bg-brand/20 text-brand'
+                                        : agentWalletEnabled ? 'bg-[#00FF00]/20 text-positive' : 'bg-white/10 text-coffee-medium'
                                         }`}>
                                         {agentWalletEnabled ? <Check className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
                                         Agent
@@ -203,8 +203,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             )}
                             {needsBuilderFee && (
                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'builder'
-                                    ? 'bg-[#FFFF00]/20 text-[#FFFF00]'
-                                    : builderFeeApproved ? 'bg-[#00FF00]/20 text-[#00FF00]' : 'bg-white/10 text-coffee-medium'
+                                    ? 'bg-brand/20 text-brand'
+                                    : builderFeeApproved ? 'bg-[#00FF00]/20 text-positive' : 'bg-white/10 text-coffee-medium'
                                     }`}>
                                     {builderFeeApproved ? <Check className="w-3 h-3" /> : <DollarSign className="w-3 h-3" />}
                                     Builder Fee
@@ -219,7 +219,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             <div className="space-y-3">
                                 {needsAgentWallet && (
                                     <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
-                                        <Shield className="w-5 h-5 text-[#FFFF00] shrink-0 mt-0.5" />
+                                        <Shield className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-semibold text-white">{wizard.agentWallet.title}</p>
                                             <p className="text-xs text-coffee-medium">{wizard.agentWallet.description}</p>
@@ -228,7 +228,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 )}
                                 {needsBuilderFee && (
                                     <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
-                                        <DollarSign className="w-5 h-5 text-[#FFFF00] shrink-0 mt-0.5" />
+                                        <DollarSign className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-semibold text-white">{wizard.builderFee.title}</p>
                                             <p className="text-xs text-coffee-medium">{wizard.builderFee.description.replace('{{fee}}', builderFeeBps)}</p>
@@ -239,7 +239,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
 
                             <button
                                 onClick={() => setStep(needsAgentWallet ? 'agent' : 'builder')}
-                                className="w-full py-4 bg-[#FFFF00] text-black rounded-2xl font-bold text-base hover:bg-[#FFFF33] transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                                className="w-full py-4 bg-brand text-black rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                             >
                                 {wizard.letsGo}
                             </button>
@@ -255,8 +255,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                     {step === 'agent' && (
                         <div className="space-y-4">
                             <div className="text-center py-4">
-                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FFFF00]/20 flex items-center justify-center">
-                                    <Shield className="w-8 h-8 text-[#FFFF00]" />
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand/20 flex items-center justify-center">
+                                    <Shield className="w-8 h-8 text-brand" />
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-2">{wizard.agentWallet.title}</h3>
                                 <p className="text-sm text-coffee-medium">
@@ -265,7 +265,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             </div>
 
                             {error && (
-                                <div className="p-3 bg-[#FF4444]/10 border border-[#FF4444]/20 rounded-xl text-sm text-[#FF4444]">
+                                <div className="p-3 bg-[#FF4444]/10 border border-[#FF4444]/20 rounded-xl text-sm text-negative">
                                     {error}
                                 </div>
                             )}
@@ -273,7 +273,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             <button
                                 onClick={handleSetupAgent}
                                 disabled={loading}
-                                className="w-full py-4 bg-[#FFFF00] text-black rounded-2xl font-bold text-base hover:bg-[#FFFF33] transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-brand text-black rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <>
@@ -290,8 +290,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                     {step === 'builder' && (
                         <div className="space-y-4">
                             <div className="text-center py-4">
-                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FFFF00]/20 flex items-center justify-center">
-                                    <DollarSign className="w-8 h-8 text-[#FFFF00]" />
+                                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-brand/20 flex items-center justify-center">
+                                    <DollarSign className="w-8 h-8 text-brand" />
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-2">{wizard.builderFee.title}</h3>
                                 <p className="text-sm text-coffee-medium">
@@ -300,7 +300,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             </div>
 
                             {error && (
-                                <div className="p-3 bg-[#FF4444]/10 border border-[#FF4444]/20 rounded-xl text-sm text-[#FF4444]">
+                                <div className="p-3 bg-[#FF4444]/10 border border-[#FF4444]/20 rounded-xl text-sm text-negative">
                                     {error}
                                 </div>
                             )}
@@ -308,7 +308,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             <button
                                 onClick={handleApproveBuilder}
                                 disabled={loading}
-                                className="w-full py-4 bg-[#FFFF00] text-black rounded-2xl font-bold text-base hover:bg-[#FFFF33] transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-brand text-black rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <>
@@ -333,7 +333,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                         <div className="space-y-4">
                             <div className="text-center py-4">
                                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#00FF00]/20 flex items-center justify-center">
-                                    <Check className="w-10 h-10 text-[#00FF00]" />
+                                    <Check className="w-10 h-10 text-positive" />
                                 </div>
                                 <h3 className="text-xl font-bold text-white mb-2">{wizard.complete.title}</h3>
                                 <p className="text-sm text-coffee-medium">
@@ -343,12 +343,12 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
 
                             <div className="space-y-2">
                                 <div className="flex items-center gap-3 p-3 bg-[#00FF00]/10 rounded-xl">
-                                    <Check className="w-5 h-5 text-[#00FF00]" />
+                                    <Check className="w-5 h-5 text-positive" />
                                     <span className="text-sm text-white">{wizard.complete.agentActive}</span>
                                 </div>
                                 {builderFeeApproved && (
                                     <div className="flex items-center gap-3 p-3 bg-[#00FF00]/10 rounded-xl">
-                                        <Check className="w-5 h-5 text-[#00FF00]" />
+                                        <Check className="w-5 h-5 text-positive" />
                                         <span className="text-sm text-white">{wizard.complete.builderApproved}</span>
                                     </div>
                                 )}
@@ -356,7 +356,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
 
                             <button
                                 onClick={handleClose}
-                                className="w-full py-4 bg-[#FFFF00] text-black rounded-2xl font-bold text-base hover:bg-[#FFFF33] transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                                className="w-full py-4 bg-brand text-black rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                             >
                                 {wizard.complete.startTrading}
                             </button>

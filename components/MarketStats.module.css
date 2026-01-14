@@ -1,0 +1,112 @@
+/* Market Stats Component Styles */
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.stat {
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  transition: all var(--transition-base);
+}
+
+.stat--brand {
+  border: 1px solid var(--color-brand-primary-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 8px var(--color-brand-primary-muted);
+}
+
+.stat--info {
+  border: 1px solid rgba(59, 130, 246, 0.25); /* --color-info at 25% */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 8px rgba(59, 130, 246, 0.08);
+}
+
+.stat--positive {
+  border: 1px solid rgba(34, 197, 94, 0.25); /* --color-positive at 25% */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 8px var(--color-positive-muted);
+}
+
+.stat--negative {
+  border: 1px solid rgba(239, 68, 68, 0.25); /* --color-negative at 25% */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 8px var(--color-negative-muted);
+}
+
+.stat--warning {
+  border: 1px solid rgba(245, 158, 11, 0.25); /* --color-warning at 25% */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 8px rgba(245, 158, 11, 0.08);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.icon {
+  width: 12px;
+  height: 12px;
+}
+
+.icon--brand {
+  color: var(--color-brand-primary);
+}
+
+.icon--info {
+  color: var(--color-info);
+}
+
+.icon--positive {
+  color: var(--color-positive);
+}
+
+.icon--negative {
+  color: var(--color-negative);
+}
+
+.icon--warning {
+  color: var(--color-warning);
+}
+
+.label {
+  font-size: 9px;
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+.value {
+  font-family: var(--font-mono);
+  font-weight: var(--font-bold);
+  font-size: var(--text-xs);
+}
+
+.value--brand {
+  color: var(--color-brand-primary);
+  text-shadow: 0 0 8px var(--color-brand-primary-muted);
+}
+
+.value--info {
+  color: var(--color-info);
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.25);
+}
+
+.value--positive {
+  color: var(--color-positive);
+  text-shadow: 0 0 8px var(--color-positive-muted);
+}
+
+.value--negative {
+  color: var(--color-negative);
+  text-shadow: 0 0 8px var(--color-negative-muted);
+}
+
+.value--warning {
+  color: var(--color-warning);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
+}

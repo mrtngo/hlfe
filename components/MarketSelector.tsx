@@ -196,7 +196,7 @@ export default function MarketSelector() {
                                 <div className="font-mono font-bold text-sm text-white">
                                     {formatCurrency(currentMarket.price)}
                                 </div>
-                                <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'}`}>
+                                <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-positive' : 'text-negative'}`}>
                                     {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                     <span className="font-mono font-semibold">
                                         {formatPercent(Math.abs(currentMarket.change24h))}
@@ -246,7 +246,7 @@ export default function MarketSelector() {
                                     onClick={() => setSelectedCategory(null)}
                                     className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
                                         selectedCategory === null
-                                            ? 'bg-[#FFFF00] text-black'
+                                            ? 'bg-brand text-black'
                                             : 'bg-white/10 text-white/70 hover:bg-white/20'
                                     }`}
                                 >
@@ -370,7 +370,7 @@ export default function MarketSelector() {
                                                     <div className="font-mono font-semibold text-sm text-white">
                                                         {formatCurrency(market.price)}
                                                     </div>
-                                                    <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-[#00FF00]' : 'text-[#FF4444]'}`}>
+                                                    <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-positive' : 'text-negative'}`}>
                                                         {marketIsPositive ? (
                                                             <TrendingUp className="w-3 h-3" />
                                                         ) : (

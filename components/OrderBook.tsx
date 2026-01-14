@@ -153,12 +153,12 @@ export default function OrderBook({
         <div className="flex flex-col h-full bg-black overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2 bg-black border-b border-[#FFFF00]/20">
-                <span className="text-xs font-semibold text-[#FFFF00]">Order Book</span>
-                <span className="text-xs text-[#FFFF00]/60">{levels}x{levels}</span>
+                <span className="text-xs font-semibold text-brand">Order Book</span>
+                <span className="text-xs text-brand/60">{levels}x{levels}</span>
             </div>
 
             {/* Column headers */}
-            <div className="grid grid-cols-3 px-3 py-1 text-[10px] text-[#FFFF00]/50 font-medium border-b border-[#FFFF00]/10">
+            <div className="grid grid-cols-3 px-3 py-1 text-[10px] text-brand/50 font-medium border-b border-[#FFFF00]/10">
                 <span>Price</span>
                 <span className="text-right">Size</span>
                 <span className="text-right">Total</span>
