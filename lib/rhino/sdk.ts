@@ -19,11 +19,11 @@ export type SupportedChainKey = keyof typeof SUPPORTED_CHAINS;
 
 // Chain name mapping for Rhino API
 const CHAIN_NAME_MAP: Record<SupportedChainKey, string> = {
-  ethereum: 'ETHEREUM',
-  polygon: 'POLYGON',
-  base: 'BASE',
-  optimism: 'OPTIMISM',
-  arbitrum: 'ARBITRUM_ONE',
+  ethereum: 'ethereum',
+  polygon: 'polygon',
+  base: 'base',
+  optimism: 'optimism',
+  arbitrum: 'arbitrum',
 };
 
 /**
