@@ -1,18 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw } from 'lucide-react';
+import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign } from 'lucide-react';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 
 export default function Profile() {
     const { t, language, setLanguage } = useLanguage();
-    const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet, syncTrades, dexAbstractionEnabled, dexAbstractionLoading, enableDexAbstraction } = useHyperliquid();
+    const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet, syncTrades, dexAbstractionEnabled, dexAbstractionLoading, enableDexAbstraction, fills } = useHyperliquid();
     const { logout, exportWallet, user: privyUser } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
 
@@ -38,6 +38,24 @@ export default function Profile() {
 
     const [syncing, setSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState<string | null>(null);
+
+    // Calculate total volume from fills (sum of price * size for each fill)
+    const totalVolume = useMemo(() => {
+        if (!fills || fills.length === 0) return 0;
+        return fills.reduce((sum, fill) => {
+            const price = parseFloat(fill.px || '0');
+            const size = parseFloat(fill.sz || '0');
+            return sum + (price * size);
+        }, 0);
+    }, [fills]);
+
+    // Calculate referral rewards: 10% of builder fees from referred users' volume
+    // Builder fee is 0.03% (30 tenths of basis points), referral gets 10% of that = 0.003%
+    const referralRewards = useMemo(() => {
+        // totalEarnings from db already tracks this, but we can also estimate from referred users
+        // For now, use the existing totalEarnings which should be populated by the backend
+        return totalEarnings;
+    }, [totalEarnings]);
 
     const referralLink = user?.referral_code
         ? `${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${user.referral_code}`
@@ -225,7 +243,7 @@ export default function Profile() {
                     </div>
                 )}
 
-                {/* Stats */}
+                {/* Stats Row 1 - Equity & Margin */}
                 <div className="flex justify-center gap-12 mb-3">
                     <div className="text-center">
                         <div className="text-coffee-medium text-xs mb-1">{language === 'es' ? 'Capital' : 'Equity'}</div>
@@ -237,6 +255,33 @@ export default function Profile() {
                         <div className="text-coffee-medium text-xs mb-1">{language === 'es' ? 'Margen Disponible' : 'Available Margin'}</div>
                         <div className="text-xl font-bold text-white font-mono">
                             ${account.availableMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stats Row 2 - Total Volume */}
+                <div className="flex justify-center gap-12 pt-3 border-t border-white/10">
+                    <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 text-coffee-medium text-xs mb-1">
+                            <TrendingUp className="w-3 h-3" />
+                            {language === 'es' ? 'Volumen Total' : 'Total Volume'}
+                        </div>
+                        <div className="text-lg font-bold text-white font-mono">
+                            ${totalVolume >= 1000000
+                                ? (totalVolume / 1000000).toFixed(2) + 'M'
+                                : totalVolume >= 1000
+                                    ? (totalVolume / 1000).toFixed(1) + 'K'
+                                    : totalVolume.toFixed(2)
+                            }
+                        </div>
+                    </div>
+                    <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 text-coffee-medium text-xs mb-1">
+                            <DollarSign className="w-3 h-3" />
+                            {language === 'es' ? 'Recompensas Referidos' : 'Referral Rewards'}
+                        </div>
+                        <div className="text-lg font-bold text-[#FFFF00] font-mono">
+                            ${referralRewards.toFixed(2)}
                         </div>
                     </div>
                 </div>
