@@ -1,72 +1,250 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallets } from '@privy-io/react-auth';
 import {
     AlertCircle,
-    ExternalLink,
     RefreshCw,
-    Info
+    Info,
+    CheckCircle,
+    ArrowRight,
+    Loader2,
+    ExternalLink
 } from 'lucide-react';
 import {
-    buildRhinoWidgetUrl,
-    RHINO_WIDGET_THEME,
-    RHINO_API_KEY,
-} from '@/lib/rhino';
+    executeBridge,
+    type SupportedChainKey,
+    SUPPORTED_CHAINS
+} from '@/lib/rhino/sdk';
+import { formatUnits, parseUnits, type Address } from 'viem';
+import { tokens } from '@/lib/design-tokens';
 
 interface RhinoBridgeProps {
     onComplete?: () => void;
 }
 
+type BridgeStep = 'input' | 'confirming' | 'bridging' | 'success' | 'error';
+
 export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
     const { wallets } = useWallets();
     const activeWallet = wallets?.[0];
-    const [isLoading, setIsLoading] = useState(true);
-    const [showWidget, setShowWidget] = useState(false);
 
-    // Build the widget URL with current wallet address
-    const widgetUrl = useMemo(() => {
-        if (!activeWallet?.address) return '';
+    // Form state
+    const [fromChain, setFromChain] = useState<SupportedChainKey>('ethereum');
+    const [amount, setAmount] = useState('');
+    const [step, setStep] = useState<BridgeStep>('input');
+    const [error, setError] = useState('');
+    const [txHash, setTxHash] = useState('');
+    const [estimatedTime, setEstimatedTime] = useState('1-3 minutes');
 
-        return buildRhinoWidgetUrl({
-            apiKey: RHINO_API_KEY,
-            chainOut: 'ARBITRUM_ONE', // Bridge to Arbitrum
-            token: 'USDC',            // USDC only
-            recipient: activeWallet.address,
-            walletAddress: activeWallet.address, // Pre-connect with Privy wallet
-            mode: 'dark',
-            theme: RHINO_WIDGET_THEME,
-        });
-    }, [activeWallet?.address]);
+    // Chain options
+    const chainOptions: { key: SupportedChainKey; name: string; icon: string }[] = [
+        { key: 'ethereum', name: 'Ethereum', icon: 'ETH' },
+        { key: 'polygon', name: 'Polygon', icon: 'MATIC' },
+        { key: 'base', name: 'Base', icon: 'BASE' },
+        { key: 'optimism', name: 'Optimism', icon: 'OP' },
+    ];
 
-    // Listen for messages from the widget
-    useEffect(() => {
-        const handleMessage = (event: MessageEvent) => {
-            // Only accept messages from rhino.fi
-            if (!event.origin.includes('rhino.fi')) return;
+    const handleBridge = async () => {
+        if (!activeWallet || !amount) return;
 
-            console.log('Rhino widget message:', event.data);
+        setStep('confirming');
+        setError('');
 
-            // Handle bridge completion
-            if (event.data?.type === 'BRIDGE_COMPLETE' ||
-                event.data?.status === 'complete') {
+        try {
+            // Get Ethereum provider from Privy wallet
+            const provider = await activeWallet.getEthereumProvider();
+
+            // Switch to the source chain if needed
+            const sourceChainId = SUPPORTED_CHAINS[fromChain].id;
+            await activeWallet.switchChain(sourceChainId);
+
+            setStep('bridging');
+
+            // Execute the bridge using Rhino SDK
+            const result = await executeBridge({
+                fromChainKey: fromChain,
+                toChainKey: 'arbitrum', // Always bridge to Arbitrum
+                token: 'USDC',
+                amount: parseUnits(amount, 6).toString(),
+                walletAddress: activeWallet.address as Address,
+                ethereumProvider: provider,
+            });
+
+            setTxHash(result.hash);
+            setStep('success');
+
+            // Call completion callback after a delay
+            setTimeout(() => {
                 onComplete?.();
-            }
-        };
+            }, 3000);
 
-        window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
-    }, [onComplete]);
-
-    const handleIframeLoad = () => {
-        setIsLoading(false);
+        } catch (err: any) {
+            console.error('Bridge error:', err);
+            setError(err.message || 'Failed to bridge funds');
+            setStep('error');
+        }
     };
 
-    // Check if API key is configured
-    const hasApiKey = !!RHINO_API_KEY;
+    const handleReset = () => {
+        setStep('input');
+        setAmount('');
+        setError('');
+        setTxHash('');
+    };
 
+    // Check if amount is valid
+    const isValidAmount = amount && parseFloat(amount) > 0;
+
+    // Render different views based on step
+    if (!activeWallet) {
+        return (
+            <div style={{ textAlign: 'center', padding: '24px', color: 'rgba(255, 255, 255, 0.5)' }}>
+                Connect your wallet to bridge funds.
+            </div>
+        );
+    }
+
+    if (step === 'success') {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '20px',
+                padding: '32px 16px',
+                textAlign: 'center'
+            }}>
+                <CheckCircle style={{ width: '64px', height: '64px', color: tokens.positive }} />
+                <div>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                        Bridge Initiated!
+                    </div>
+                    <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '16px' }}>
+                        Your USDC is being bridged to Arbitrum
+                    </div>
+                    <div style={{ fontSize: '13px', color: tokens.brand }}>
+                        Estimated time: {estimatedTime}
+                    </div>
+                </div>
+
+                {txHash && (
+                    <a
+                        href={`https://etherscan.io/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            color: tokens.brand,
+                            fontSize: '14px',
+                            textDecoration: 'none',
+                            padding: '10px 16px',
+                            backgroundColor: 'rgba(250, 204, 21, 0.1)',
+                            borderRadius: tokens.radiusFull,
+                        }}
+                    >
+                        View Transaction <ExternalLink style={{ width: '14px', height: '14px' }} />
+                    </a>
+                )}
+
+                <div style={{
+                    padding: '12px',
+                    backgroundColor: 'rgba(250, 204, 21, 0.05)',
+                    border: '1px solid rgba(250, 204, 21, 0.2)',
+                    borderRadius: '10px',
+                    fontSize: '13px',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    width: '100%'
+                }}>
+                    <strong style={{ color: tokens.brand }}>Next Step:</strong> Once your USDC arrives on Arbitrum,
+                    use the "Bridge" tab in the Deposit Modal to complete your deposit to Hyperliquid.
+                </div>
+
+                <button
+                    onClick={handleReset}
+                    className="btn-primary"
+                    style={{ width: '100%', marginTop: '8px' }}
+                >
+                    Bridge More Funds
+                </button>
+            </div>
+        );
+    }
+
+    if (step === 'error') {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '20px',
+                padding: '32px 16px',
+                textAlign: 'center'
+            }}>
+                <AlertCircle style={{ width: '64px', height: '64px', color: tokens.negative }} />
+                <div>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                        Bridge Failed
+                    </div>
+                    <div style={{
+                        fontSize: '14px',
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        marginBottom: '16px',
+                        padding: '12px',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderRadius: '8px'
+                    }}>
+                        {error}
+                    </div>
+                </div>
+
+                <button
+                    onClick={handleReset}
+                    className="btn-secondary"
+                    style={{ width: '100%' }}
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
+    if (step === 'bridging' || step === 'confirming') {
+        return (
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '20px',
+                padding: '32px 16px',
+                textAlign: 'center'
+            }}>
+                <Loader2 style={{
+                    width: '64px',
+                    height: '64px',
+                    color: tokens.brand,
+                    animation: 'spin 1s linear infinite'
+                }} />
+                <div>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
+                        {step === 'confirming' ? 'Switching Network...' : 'Bridging Funds...'}
+                    </div>
+                    <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
+                        {step === 'confirming'
+                            ? 'Please confirm the network switch in your wallet'
+                            : 'Please confirm the transaction in your wallet'
+                        }
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Input form
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Info Banner */}
             <div style={{
                 backgroundColor: 'rgba(139, 92, 246, 0.1)',
@@ -82,312 +260,110 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                         Cross-Chain Bridge
                     </div>
                     <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                        Bridge USDC from Ethereum, Polygon, Base, and more to Arbitrum.
-                        Then complete deposit to Hyperliquid using the Bridge tab.
+                        Bridge USDC from Ethereum, Polygon, Base, and more to Arbitrum using your Privy wallet.
                     </div>
                 </div>
             </div>
 
-            {!activeWallet ? (
-                <div style={{ textAlign: 'center', padding: '24px', color: 'rgba(255, 255, 255, 0.5)' }}>
-                    Connect your wallet to bridge funds.
+            {/* Chain Selector */}
+            <div>
+                <label style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '8px', display: 'block' }}>
+                    From Chain
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                    {chainOptions.map((chain) => (
+                        <button
+                            key={chain.key}
+                            onClick={() => setFromChain(chain.key)}
+                            style={{
+                                padding: '12px',
+                                backgroundColor: fromChain === chain.key ? 'rgba(250, 204, 21, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+                                border: `1px solid ${fromChain === chain.key ? tokens.brand : 'rgba(255, 255, 255, 0.1)'}`,
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                color: fromChain === chain.key ? tokens.brand : 'white',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                            }}
+                        >
+                            {chain.name}
+                        </button>
+                    ))}
                 </div>
-            ) : !hasApiKey ? (
-                /* No API Key State */
+            </div>
+
+            {/* Arrow */}
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <ArrowRight style={{ width: '24px', height: '24px', color: 'rgba(255, 255, 255, 0.3)' }} />
+            </div>
+
+            {/* To Chain (Fixed) */}
+            <div>
+                <label style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '8px', display: 'block' }}>
+                    To Chain
+                </label>
                 <div style={{
-                    textAlign: 'center',
-                    padding: '32px 16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '16px'
+                    padding: '12px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    color: 'rgba(255, 255, 255, 0.7)',
                 }}>
-                    <AlertCircle style={{ width: '48px', height: '48px', color: '#FFFF00' }} />
-                    <div>
-                        <div style={{ fontSize: '16px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
-                            API Key Required
-                        </div>
-                        <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '16px' }}>
-                            To enable cross-chain bridging, add your rhino.fi API key to the environment.
-                        </div>
-                        <code style={{
-                            display: 'block',
-                            padding: '12px',
-                            backgroundColor: 'rgba(0,0,0,0.4)',
-                            borderRadius: '8px',
-                            fontSize: '12px',
-                            color: '#8b5cf6',
-                            marginBottom: '12px'
-                        }}>
-                            NEXT_PUBLIC_RHINO_API_KEY=your_key
-                        </code>
-                    </div>
-                    <a
-                        href="https://developers.rhino.fi"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            color: '#8b5cf6',
-                            fontSize: '14px',
-                            textDecoration: 'none',
-                            padding: '10px 16px',
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            borderRadius: '8px',
-                        }}
-                    >
-                        Get API Key <ExternalLink style={{ width: '14px', height: '14px' }} />
-                    </a>
+                    Arbitrum (for Hyperliquid deposit)
                 </div>
-            ) : !showWidget ? (
-                /* Pre-widget state - explain and show button */
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: '20px',
-                    padding: '24px 16px'
-                }}>
-                    {/* Steps explanation */}
-                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '12px',
-                            padding: '12px',
-                            backgroundColor: 'rgba(255,255,255,0.03)',
-                            borderRadius: '10px'
-                        }}>
-                            <div style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                backgroundColor: '#8b5cf6',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold',
-                                fontSize: '12px',
-                                flexShrink: 0,
-                            }}>1</div>
-                            <div>
-                                <div style={{ fontWeight: 600, color: 'white', fontSize: '14px' }}>
-                                    Select source chain
-                                </div>
-                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
-                                    Choose from Ethereum, Polygon, Base, Optimism & more
-                                </div>
-                            </div>
-                        </div>
+            </div>
 
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '12px',
-                            padding: '12px',
-                            backgroundColor: 'rgba(255,255,255,0.03)',
-                            borderRadius: '10px'
-                        }}>
-                            <div style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                backgroundColor: '#8b5cf6',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold',
-                                fontSize: '12px',
-                                flexShrink: 0,
-                            }}>2</div>
-                            <div>
-                                <div style={{ fontWeight: 600, color: 'white', fontSize: '14px' }}>
-                                    Bridge to Arbitrum
-                                </div>
-                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
-                                    Your USDC will arrive on Arbitrum in 1-3 minutes
-                                </div>
-                            </div>
-                        </div>
+            {/* Amount Input */}
+            <div>
+                <label style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '8px', display: 'block' }}>
+                    Amount (USDC)
+                </label>
+                <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00"
+                    className="input"
+                    style={{
+                        width: '100%',
+                        fontSize: '18px',
+                        fontFamily: 'var(--font-mono)',
+                    }}
+                />
+            </div>
 
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '12px',
-                            padding: '12px',
-                            backgroundColor: 'rgba(255,255,255,0.03)',
-                            borderRadius: '10px'
-                        }}>
-                            <div style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                backgroundColor: 'rgba(255,255,0,0.8)',
-                                color: 'black',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold',
-                                fontSize: '12px',
-                                flexShrink: 0,
-                            }}>3</div>
-                            <div>
-                                <div style={{ fontWeight: 600, color: 'white', fontSize: '14px' }}>
-                                    Deposit to Hyperliquid
-                                </div>
-                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>
-                                    Use the "Bridge" tab to complete your deposit
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            {/* Bridge Button */}
+            <button
+                onClick={handleBridge}
+                disabled={!isValidAmount}
+                className="btn-primary"
+                style={{ width: '100%', fontSize: '16px', padding: '16px' }}
+            >
+                Bridge to Arbitrum
+            </button>
 
-                    {/* Primary action - Open in new tab (recommended for embedded wallets) */}
-                    <a
-                        href={widgetUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            width: '100%',
-                            padding: '16px',
-                            backgroundColor: '#8b5cf6',
-                            color: 'white',
-                            fontWeight: 'bold',
-                            border: 'none',
-                            borderRadius: '12px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            fontSize: '15px',
-                            textDecoration: 'none',
-                        }}
-                    >
-                        <ExternalLink style={{ width: '18px', height: '18px' }} />
-                        Open Bridge (Recommended)
-                    </a>
-
-                    {/* Secondary action - Use in-app iframe */}
-                    <button
-                        onClick={() => setShowWidget(true)}
-                        style={{
-                            width: '100%',
-                            padding: '14px',
-                            backgroundColor: 'transparent',
-                            color: 'rgba(255,255,255,0.7)',
-                            fontWeight: 600,
-                            border: '1px solid rgba(255,255,255,0.2)',
-                            borderRadius: '12px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                            fontSize: '14px',
-                        }}
-                    >
-                        <RefreshCw style={{ width: '16px', height: '16px' }} />
-                        Use In-App Bridge
-                    </button>
-
-                    {/* Note about wallet connection */}
-                    <div style={{
-                        padding: '12px',
-                        backgroundColor: 'rgba(255, 255, 0, 0.05)',
-                        border: '1px solid rgba(255, 255, 0, 0.2)',
-                        borderRadius: '10px',
-                        fontSize: '12px',
-                        color: 'rgba(255, 255, 255, 0.6)',
-                    }}>
-                        <strong style={{ color: '#FFFF00' }}>💡 Tip:</strong> When prompted to connect wallet, select "WalletConnect" and scan the QR code with your wallet app, or copy your wallet address ({activeWallet.address.slice(0, 6)}...{activeWallet.address.slice(-4)}).
-                    </div>
-
-                    {/* Powered by */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        fontSize: '11px',
-                        color: 'rgba(255, 255, 255, 0.3)',
-                    }}>
-                        <Info style={{ width: '12px', height: '12px' }} />
-                        Powered by rhino.fi
-                    </div>
+            {/* Info */}
+            <div style={{
+                padding: '12px',
+                backgroundColor: 'rgba(250, 204, 21, 0.05)',
+                border: '1px solid rgba(250, 204, 21, 0.2)',
+                borderRadius: '10px',
+                fontSize: '12px',
+                color: 'rgba(255, 255, 255, 0.6)',
+                display: 'flex',
+                gap: '8px'
+            }}>
+                <Info style={{ width: '16px', height: '16px', flexShrink: 0, color: tokens.brand }} />
+                <div>
+                    After bridging to Arbitrum, use the "Bridge" tab to deposit USDC from Arbitrum to Hyperliquid.
+                    Estimated time: {estimatedTime}
                 </div>
-            ) : (
-                /* Widget embed */
-                <div style={{ position: 'relative', minHeight: '500px' }}>
-                    {isLoading && (
-                        <div style={{
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: 'rgba(0,0,0,0.5)',
-                            borderRadius: '12px',
-                            zIndex: 10,
-                        }}>
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                alignItems: 'center',
-                                gap: '12px',
-                                color: 'rgba(255,255,255,0.6)'
-                            }}>
-                                <RefreshCw style={{
-                                    width: '24px',
-                                    height: '24px',
-                                    animation: 'spin 1s linear infinite',
-                                    color: '#8b5cf6'
-                                }} />
-                                Loading bridge...
-                            </div>
-                        </div>
-                    )}
-
-                    <iframe
-                        src={widgetUrl}
-                        style={{
-                            width: '100%',
-                            height: '520px',
-                            border: 'none',
-                            borderRadius: '12px',
-                            backgroundColor: 'transparent',
-                        }}
-                        onLoad={handleIframeLoad}
-                        allow="clipboard-read; clipboard-write"
-                        scrolling="no"
-                    />
-
-                    {/* Back button */}
-                    <button
-                        onClick={() => {
-                            setShowWidget(false);
-                            setIsLoading(true);
-                        }}
-                        style={{
-                            marginTop: '12px',
-                            padding: '10px 16px',
-                            backgroundColor: 'transparent',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '8px',
-                            color: 'rgba(255,255,255,0.6)',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            width: '100%',
-                        }}
-                    >
-                        ← Back to instructions
-                    </button>
-                </div>
-            )}
+            </div>
         </div>
     );
 }
