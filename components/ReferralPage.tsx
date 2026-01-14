@@ -172,7 +172,7 @@ export default function ReferralPage() {
                         {referredUsers.map((referredUser) => (
                             <div
                                 key={referredUser.id}
-                                className="flex items-center justify-between p-3 bg-white/5 rounded-xl"
+                                className="flex items-center justify-between p-3 bg-bg-secondary rounded-xl"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center">

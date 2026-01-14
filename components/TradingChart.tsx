@@ -152,7 +152,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                     {/* Expand to Advanced Trading */}
                     <button
                         onClick={() => router.push(`/trade?symbol=${marketSymbol}`)}
-                        className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                        className="p-1.5 rounded-lg bg-bg-secondary hover:bg-bg-elevated transition-colors"
                         title="Advanced Trading"
                     >
                         <Maximize2 className="w-4 h-4 text-primary" />

@@ -182,7 +182,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         {t.home.hi}, {getUsername()}
                         <button
                             onClick={toggleCurrency}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all border border-white/10 text-coffee-medium hover:text-white"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-1 rounded-lg bg-bg-elevated hover:bg-bg-hover transition-all border border-white/10 text-coffee-medium hover:text-white"
                         >
                             {currency}
                         </button>
@@ -248,7 +248,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${isLong ? 'bg-bullish/10 text-bullish border-bullish/20' : 'bg-bearish/10 text-bearish border-bearish/20'}`}>
                                                     {isLong ? 'LONG' : 'SHORT'}
                                                 </span>
-                                                <span className="text-xs text-coffee-medium bg-white/5 px-1.5 py-0.5 rounded border border-white/5">{position.leverage}x</span>
+                                                <span className="text-xs text-coffee-medium bg-bg-secondary px-1.5 py-0.5 rounded border border-white/5">{position.leverage}x</span>
                                             </div>
                                         </div>
                                         <div className={`flex flex-col items-end ${pnlColor}`}>
@@ -291,7 +291,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             e.stopPropagation();
                                             setSharePosition(position);
                                         }}
-                                        className="mt-3 w-full py-2 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
+                                        className="mt-3 w-full py-2 px-4 bg-bg-elevated hover:bg-bg-hover text-white rounded-full text-sm font-bold transition-all flex items-center justify-center gap-2"
                                     >
                                         <Share2 className="w-4 h-4" />
                                         Share
@@ -577,7 +577,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                     setShowAddDropdown(false);
                                                     setSearchQuery('');
                                                 }}
-                                                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                                                className="p-1.5 hover:bg-bg-elevated rounded-lg transition-colors"
                                             >
                                                 <X className="w-4 h-4 text-white/70" />
                                             </button>
@@ -712,10 +712,10 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <button
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm whitespace-nowrap transition-all shrink-0 ${
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all shrink-0 ${
                                 selectedCategory === category.id
                                     ? 'bg-brand text-black shadow-lg'
-                                    : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border border-white/10'
+                                    : 'bg-bg-secondary text-white/60 hover:bg-bg-elevated hover:text-white border border-white/10'
                             }`}
                             style={selectedCategory === category.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
                         >

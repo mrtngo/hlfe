@@ -142,7 +142,7 @@ export default function Settings() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setLanguage('en')}
-                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${language === 'en'
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${language === 'en'
                                     ? 'bg-primary text-primary-foreground'
                                     : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
                                     }`}
@@ -151,7 +151,7 @@ export default function Settings() {
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
-                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${language === 'es'
+                                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${language === 'es'
                                     ? 'bg-primary text-primary-foreground'
                                     : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
                                     }`}

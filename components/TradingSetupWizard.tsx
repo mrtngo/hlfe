@@ -180,7 +180,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                         </div>
                         <button
                             onClick={handleClose}
-                            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+                            className="p-2 rounded-full hover:bg-bg-elevated transition-colors"
                         >
                             <X className="w-5 h-5 text-coffee-medium" />
                         </button>
@@ -193,7 +193,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                 <>
                                     <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'intro' || step === 'agent'
                                         ? 'bg-brand/20 text-brand'
-                                        : agentWalletEnabled ? 'bg-[#00FF00]/20 text-positive' : 'bg-white/10 text-coffee-medium'
+                                        : agentWalletEnabled ? 'bg-[#00FF00]/20 text-positive' : 'bg-bg-elevated text-coffee-medium'
                                         }`}>
                                         {agentWalletEnabled ? <Check className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
                                         Agent
@@ -204,7 +204,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             {needsBuilderFee && (
                                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${step === 'builder'
                                     ? 'bg-brand/20 text-brand'
-                                    : builderFeeApproved ? 'bg-[#00FF00]/20 text-positive' : 'bg-white/10 text-coffee-medium'
+                                    : builderFeeApproved ? 'bg-[#00FF00]/20 text-positive' : 'bg-bg-elevated text-coffee-medium'
                                     }`}>
                                     {builderFeeApproved ? <Check className="w-3 h-3" /> : <DollarSign className="w-3 h-3" />}
                                     Builder Fee
@@ -218,7 +218,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                         <div className="space-y-4">
                             <div className="space-y-3">
                                 {needsAgentWallet && (
-                                    <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                                    <div className="flex items-start gap-3 p-3 bg-bg-secondary rounded-xl">
                                         <Shield className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-semibold text-white">{wizard.agentWallet.title}</p>
@@ -227,7 +227,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                                     </div>
                                 )}
                                 {needsBuilderFee && (
-                                    <div className="flex items-start gap-3 p-3 bg-white/5 rounded-xl">
+                                    <div className="flex items-start gap-3 p-3 bg-bg-secondary rounded-xl">
                                         <DollarSign className="w-5 h-5 text-brand shrink-0 mt-0.5" />
                                         <div>
                                             <p className="text-sm font-semibold text-white">{wizard.builderFee.title}</p>

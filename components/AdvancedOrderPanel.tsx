@@ -179,7 +179,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                                 max={maxLeverage}
                                 value={Math.min(leverage, maxLeverage)}
                                 onChange={(e) => setLeverage(parseInt(e.target.value))}
-                                className="w-full h-2 accent-[#FFFF00] bg-white/10 rounded-full"
+                                className="w-full h-2 accent-[#FFFF00] bg-bg-elevated rounded-full"
                                 style={{ accentColor: '#FFFF00' }}
                             />
                             <div className="flex justify-between text-[10px] text-brand/60 mt-1">

@@ -247,7 +247,7 @@ export default function MarketSelector() {
                                     className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
                                         selectedCategory === null
                                             ? 'bg-brand text-black'
-                                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                            : 'bg-bg-elevated text-white/70 hover:bg-bg-hover'
                                     }`}
                                 >
                                     All
@@ -269,7 +269,7 @@ export default function MarketSelector() {
                                             className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
                                                 selectedCategory === category.slug
                                                     ? 'text-black'
-                                                    : 'bg-white/10 text-white/70 hover:bg-white/20'
+                                                    : 'bg-bg-elevated text-white/70 hover:bg-bg-hover'
                                             }`}
                                             style={{
                                                 backgroundColor: selectedCategory === category.slug ? category.color || '#FFFF00' : undefined,

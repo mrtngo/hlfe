@@ -190,7 +190,7 @@ export default function Profile() {
                                 setError(null);
                             }}
                             placeholder="username"
-                            className="w-full max-w-[200px] mx-auto block text-center text-xl font-bold bg-transparent border border-white/20 rounded-xl px-3 py-2 text-white placeholder-coffee-medium focus:outline-none focus:border-[#FFFF00] lowercase"
+                            className="w-full max-w-[200px] mx-auto block text-center text-xl font-bold bg-transparent border border-white/20 rounded-full px-3 py-2 text-white placeholder-coffee-medium focus:outline-none focus:border-[#FFFF00] lowercase"
                             maxLength={20}
                             autoFocus
                         />
@@ -198,13 +198,13 @@ export default function Profile() {
                             <button
                                 onClick={saveUsername}
                                 disabled={saving || tempUsername.length < 3}
-                                className="px-4 py-2 bg-brand text-black rounded-xl text-sm font-bold disabled:opacity-50"
+                                className="px-4 py-2 bg-brand text-black rounded-full text-sm font-bold disabled:opacity-50"
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.save}
                             </button>
                             <button
                                 onClick={() => { setIsEditingUsername(false); setError(null); }}
-                                className="px-4 py-2 bg-white/10 text-white rounded-xl text-sm font-bold"
+                                className="px-4 py-2 bg-bg-elevated text-white rounded-full text-sm font-bold"
                             >
                                 {t.common.cancel}
                             </button>
@@ -364,7 +364,7 @@ export default function Profile() {
                             onClick={agentWalletEnabled ? handleDisableAgentWallet : handleSetupAgentWallet}
                             disabled={settingUpAgent}
                             style={{ width: '48px', height: '28px', minWidth: '48px' }}
-                            className={`rounded-full transition-all relative flex-shrink-0 cursor-pointer ${agentWalletEnabled ? 'bg-brand border-2 border-[#FFFF00]' : 'bg-white/20 border-2 border-white/30'}`}
+                            className={`rounded-full transition-all relative flex-shrink-0 cursor-pointer ${agentWalletEnabled ? 'bg-brand border-2 border-[#FFFF00]' : 'bg-bg-hover border-2 border-white/30'}`}
                         >
                             {settingUpAgent ? (
                                 <Loader2 className="w-4 h-4 animate-spin absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-black pointer-events-none" />
@@ -395,7 +395,7 @@ export default function Profile() {
                             <button
                                 onClick={handleApproveBuilderFee}
                                 disabled={approvingFee}
-                                className="px-5 py-2.5 bg-brand text-black rounded-xl text-sm font-bold hover:bg-[#FFD700] transition-all disabled:opacity-50 shadow-lg"
+                                className="px-5 py-2.5 bg-brand text-black rounded-full text-sm font-bold hover:bg-[#FFD700] transition-all disabled:opacity-50 shadow-lg"
                                 style={{ boxShadow: '0 4px 12px rgba(255, 255, 0, 0.3)' }}
                             >
                                 {approvingFee ? <Loader2 className="w-5 h-5 animate-spin" /> : (profile.approve || 'Aprobar')}
@@ -429,7 +429,7 @@ export default function Profile() {
                                     }
                                 }}
                                 disabled={dexAbstractionLoading}
-                                className="px-5 py-2.5 bg-[#4169E1] text-white rounded-xl text-sm font-bold hover:bg-[#5179F1] transition-all disabled:opacity-50 shadow-lg"
+                                className="px-5 py-2.5 bg-[#4169E1] text-white rounded-full text-sm font-bold hover:bg-[#5179F1] transition-all disabled:opacity-50 shadow-lg"
                                 style={{ boxShadow: '0 4px 12px rgba(65, 105, 225, 0.3)' }}
                             >
                                 {dexAbstractionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (profile.enable || 'Enable')}
@@ -446,7 +446,7 @@ export default function Profile() {
                             </div>
                             <button
                                 onClick={exportWallet}
-                                className="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-500 transition-all shadow-lg"
+                                className="px-5 py-2.5 bg-purple-600 text-white rounded-full text-sm font-bold hover:bg-purple-500 transition-all shadow-lg"
                                 style={{ boxShadow: '0 4px 12px rgba(147, 51, 234, 0.3)' }}
                             >
                                 Export
@@ -463,7 +463,7 @@ export default function Profile() {
                         <button
                             onClick={handleSyncTrades}
                             disabled={syncing}
-                            className="px-5 py-2.5 bg-cyan-600 text-white rounded-xl text-sm font-bold hover:bg-cyan-500 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg"
+                            className="px-5 py-2.5 bg-cyan-600 text-white rounded-full text-sm font-bold hover:bg-cyan-500 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg"
                             style={{ boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)' }}
                         >
                             {syncing && <Loader2 className="w-4 h-4 animate-spin" />}

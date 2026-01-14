@@ -524,7 +524,7 @@ export default function OrderPanel() {
                                             ? 'bg-primary text-primary-foreground'
                                             : market?.onlyIsolated && m === 'cross'
                                                 ? 'bg-bg-tertiary/50 text-coffee-medium/50 cursor-not-allowed'
-                                                : 'bg-bg-tertiary text-coffee-medium hover:bg-white/10'
+                                                : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-elevated'
                                             }`}
                                     >
                                         {m}
@@ -607,7 +607,7 @@ export default function OrderPanel() {
                 <button
                     onClick={handlePlaceOrder}
                     disabled={loading || (connected && agentWalletEnabled && (tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE))}
-                    className={`w-full rounded-xl text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
+                    className={`w-full rounded-full text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
                         ? 'bg-brand hover:bg-brand-hover text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
                         : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'
                         }`}

@@ -131,7 +131,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     <h2 className="text-xl font-bold text-white">Comparar Tarifas</h2>
                     <button
                         onClick={onClose}
-                        className="p-2 -mr-2 text-coffee-medium hover:text-white hover:bg-white/10 rounded-full transition-colors"
+                        className="p-2 -mr-2 text-coffee-medium hover:text-white hover:bg-bg-elevated rounded-full transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -170,9 +170,9 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                 <button
                                     key={val}
                                     onClick={() => setAmount(val.toString())}
-                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg ${numericAmount === val
+                                    className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${numericAmount === val
                                         ? 'bg-brand text-black'
-                                        : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                                        : 'bg-bg-elevated text-white hover:bg-bg-hover border border-white/20'
                                         }`}
                                     style={numericAmount === val ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.4)' } : {}}
                                 >
@@ -206,9 +206,9 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`py-3 rounded-xl text-sm font-bold flex flex-col items-center gap-1.5 transition-all ${activeTab === tab.id
+                                className={`py-3 rounded-full text-sm font-bold flex flex-col items-center gap-1.5 transition-all ${activeTab === tab.id
                                     ? 'bg-brand text-black shadow-lg'
-                                    : 'bg-white/10 text-white hover:bg-white/15 border border-white/20'
+                                    : 'bg-bg-elevated text-white hover:bg-bg-hover border border-white/20'
                                     }`}
                                 style={activeTab === tab.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
                             >
@@ -225,7 +225,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                             className="bg-brand rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group text-black"
                             style={{ color: '#000000' }}
                         >
-                            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12" />
+                            <div className="absolute inset-0 bg-bg-hover translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12" />
                             <div className="flex items-center gap-3 relative z-10">
                                 <div className="w-10 h-10 rounded-lg bg-black text-brand flex items-center justify-center font-black text-lg italic shadow-md">
                                     R
@@ -245,7 +245,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                         <div className="space-y-2">
                             <h3 className="text-[10px] font-bold text-coffee-medium uppercase pl-1">La Competencia</h3>
                             {calculation.competitors.map((comp) => (
-                                <div key={comp.name} className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center justify-between hover:bg-white/10 transition-colors">
+                                <div key={comp.name} className="bg-bg-secondary border border-white/5 rounded-xl p-3 flex items-center justify-between hover:bg-bg-elevated transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div
                                             className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full flex-shrink-0 flex items-center justify-center font-bold text-black text-[10px] shadow-inner overflow-hidden bg-white"
@@ -264,7 +264,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                         </div>
                                         <div>
                                             <h3 className="text-white font-bold text-sm">{comp.name}</h3>
-                                            <div className="h-1 w-12 bg-white/10 rounded-full overflow-hidden mt-1">
+                                            <div className="h-1 w-12 bg-bg-elevated rounded-full overflow-hidden mt-1">
                                                 <div
                                                     className="h-full rounded-full"
                                                     style={{ width: '100%', backgroundColor: comp.color }}
@@ -282,7 +282,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     </div>
 
                     {/* Info Footnote */}
-                    <div className="bg-white/5 p-3 rounded-xl flex gap-2 text-[10px] text-coffee-medium leading-relaxed">
+                    <div className="bg-bg-secondary p-3 rounded-xl flex gap-2 text-[10px] text-coffee-medium leading-relaxed">
                         <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-white/40" />
                         <p>
                             Tarifas públicas 2025. Rayo Taker: 0.075%. Maker fees pueden ser menores.

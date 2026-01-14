@@ -170,7 +170,7 @@ export default function OrderBook({
                     {asks.map((level, i) => (
                         <div
                             key={`ask-${i}`}
-                            className="relative grid grid-cols-3 px-3 py-1 cursor-pointer hover:bg-white/5 transition-colors"
+                            className="relative grid grid-cols-3 px-3 py-1 cursor-pointer hover:bg-bg-secondary transition-colors"
                             onClick={() => handlePriceClick(level.price)}
                         >
                             {/* Depth bar */}
@@ -210,7 +210,7 @@ export default function OrderBook({
                 {bids.map((level, i) => (
                     <div
                         key={`bid-${i}`}
-                        className="relative grid grid-cols-3 px-3 py-1 cursor-pointer hover:bg-white/5 transition-colors"
+                        className="relative grid grid-cols-3 px-3 py-1 cursor-pointer hover:bg-bg-secondary transition-colors"
                         onClick={() => handlePriceClick(level.price)}
                     >
                         {/* Depth bar */}

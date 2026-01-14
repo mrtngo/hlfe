@@ -455,7 +455,7 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
     // Try current URL, on error move to next
     return (
         <div
-            className={`rounded-full overflow-hidden flex-shrink-0 ${isStock ? 'bg-white' : 'bg-white/10'} ${className}`}
+            className={`rounded-full overflow-hidden flex-shrink-0 ${isStock ? 'bg-white' : 'bg-bg-elevated'} ${className}`}
             style={{ width: size, height: size }}
         >
             <Image

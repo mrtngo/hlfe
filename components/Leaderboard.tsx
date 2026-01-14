@@ -60,7 +60,7 @@ export default function Leaderboard() {
         if (rank === 1) return 'bg-gradient-to-r from-yellow-500/20 to-transparent border-yellow-500/30';
         if (rank === 2) return 'bg-gradient-to-r from-gray-400/20 to-transparent border-gray-400/30';
         if (rank === 3) return 'bg-gradient-to-r from-amber-600/20 to-transparent border-amber-600/30';
-        return 'bg-white/5 border-white/10';
+        return 'bg-bg-secondary border-white/10';
     };
 
     return (
@@ -75,12 +75,12 @@ export default function Leaderboard() {
             </div>
 
             {/* Period Tabs */}
-            <div className="flex bg-white/5 rounded-2xl p-1">
+            <div className="flex bg-bg-secondary rounded-2xl p-1">
                 {(['daily', 'weekly', 'all'] as Period[]).map((p) => (
                     <button
                         key={p}
                         onClick={() => setPeriod(p)}
-                        className={`flex-1 py-3 rounded-xl font-semibold transition-all ${period === p
+                        className={`flex-1 py-3 rounded-full font-semibold transition-all ${period === p
                                 ? 'bg-brand text-black'
                                 : 'text-coffee-medium hover:text-white'
                             }`}

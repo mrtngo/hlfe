@@ -111,7 +111,7 @@ export default function PositionDisplay({ symbol }: PositionDisplayProps) {
                     )}
                 </button>
                 <button
-                    className="flex-1 py-2 bg-white/5 hover:bg-white/10 text-coffee-light text-xs font-semibold rounded-lg transition-colors"
+                    className="flex-1 py-2 bg-bg-secondary hover:bg-bg-elevated text-coffee-light text-xs font-semibold rounded-lg transition-colors"
                 >
                     Add TP/SL
                 </button>

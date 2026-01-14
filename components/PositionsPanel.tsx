@@ -142,7 +142,7 @@ export default function PositionsPanel() {
                                                 e.stopPropagation();
                                                 setSlTpPosition(position);
                                             }}
-                                            className="py-3 px-4 bg-gradient-to-r from-green-600 to-red-600 hover:from-green-500 hover:to-red-500 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 shadow-lg"
+                                            className="py-3 px-4 bg-gradient-to-r from-green-600 to-red-600 hover:from-green-500 hover:to-red-500 text-white rounded-full text-sm font-bold transition-all flex items-center gap-2 shadow-lg"
                                             style={{ boxShadow: '0 4px 16px rgba(34, 197, 94, 0.3)' }}
                                         >
                                             <Target className="w-4 h-4" />
@@ -153,7 +153,7 @@ export default function PositionsPanel() {
                                                 e.stopPropagation();
                                                 setSharePosition(position);
                                             }}
-                                            className="py-3 px-4 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2"
+                                            className="py-3 px-4 bg-bg-elevated hover:bg-bg-hover text-white rounded-full text-sm font-bold transition-all flex items-center gap-2"
                                         >
                                             <Share2 className="w-4 h-4" />
                                         </button>
@@ -163,7 +163,7 @@ export default function PositionsPanel() {
                                                 handleClosePosition(position.symbol);
                                             }}
                                             disabled={loading}
-                                            className="flex-1 py-3 px-4 bg-brand hover:bg-brand-hover text-black rounded-xl text-sm font-bold transition-all active:scale-[0.98] shadow-glow-brand"
+                                            className="flex-1 py-3 px-4 bg-brand hover:bg-brand-hover text-black rounded-full text-sm font-bold transition-all active:scale-[0.98] shadow-glow-brand"
                                         >
                                             {t.positions.close}
                                         </button>

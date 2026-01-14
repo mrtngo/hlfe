@@ -5,6 +5,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  /* Custom background utilities using design system tokens */
+  .bg-bg-primary { background-color: var(--color-bg-primary); }
+  .bg-bg-secondary { background-color: var(--color-bg-secondary); }
+  .bg-bg-tertiary { background-color: var(--color-bg-tertiary); }
+  .bg-bg-elevated { background-color: var(--color-bg-elevated); }
+  .bg-bg-hover { background-color: var(--color-bg-hover); }
+
+  /* Hover variants */
+  .hover\:bg-bg-primary:hover { background-color: var(--color-bg-primary); }
+  .hover\:bg-bg-secondary:hover { background-color: var(--color-bg-secondary); }
+  .hover\:bg-bg-tertiary:hover { background-color: var(--color-bg-tertiary); }
+  .hover\:bg-bg-elevated:hover { background-color: var(--color-bg-elevated); }
+  .hover\:bg-bg-hover:hover { background-color: var(--color-bg-hover); }
+}
+
 @layer base {
   :root {
     /* Tailwind HSL color format (required for Tailwind's color utilities) */

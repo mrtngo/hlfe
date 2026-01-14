@@ -130,7 +130,7 @@ export default function FeeCalculator() {
                             <button
                                 key={val}
                                 onClick={() => setAmount(val)}
-                                className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white hover:bg-white/10 transition-colors whitespace-nowrap"
+                                className="px-3 py-1 rounded-full bg-bg-secondary border border-white/10 text-xs text-white hover:bg-bg-elevated transition-colors whitespace-nowrap"
                             >
                                 {formatCOP(val)}
                             </button>
@@ -143,21 +143,21 @@ export default function FeeCalculator() {
                     <div className="grid grid-cols-3 gap-2">
                         <button
                             onClick={() => setStrategy('standard')}
-                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'standard' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'standard' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Estándar
                         </button>
                         <button
                             onClick={() => setStrategy('dividends')}
-                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'dividends' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'dividends' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Dividendos
                         </button>
                         <button
                             onClick={() => setStrategy('usa')}
-                            className={`p-2 rounded-xl border text-xs font-bold transition-all ${strategy === 'usa' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'usa' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Acciones USA
@@ -173,7 +173,7 @@ export default function FeeCalculator() {
                         key={item.name}
                         className={`relative p-3 rounded-xl border transition-all ${item.highlight
                                 ? 'bg-brand/10 border-[#FFFF00] scale-[1.02] shadow-[0_0_20px_rgba(255,255,0,0.1)]'
-                                : 'bg-white/5 border-transparent opacity-80'
+                                : 'bg-bg-secondary border-transparent opacity-80'
                             }`}
                     >
                         {item.highlight && (
@@ -190,7 +190,7 @@ export default function FeeCalculator() {
                         </div>
 
                         {/* Bar chart visual */}
-                        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden mb-2">
+                        <div className="h-1.5 w-full bg-bg-elevated rounded-full overflow-hidden mb-2">
                             <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
@@ -203,7 +203,7 @@ export default function FeeCalculator() {
                         {item.notes.length > 0 && (
                             <div className="flex flex-wrap gap-2">
                                 {item.notes.map((note, i) => (
-                                    <span key={i} className="text-[10px] bg-white/5 text-coffee-medium px-2 py-0.5 rounded flex items-center gap-1">
+                                    <span key={i} className="text-[10px] bg-bg-secondary text-coffee-medium px-2 py-0.5 rounded flex items-center gap-1">
                                         <Info className="w-3 h-3" /> {note}
                                     </span>
                                 ))}
@@ -214,7 +214,7 @@ export default function FeeCalculator() {
             </div>
 
             {/* Recommendation */}
-            <div className="bg-white/5 p-3 rounded-xl flex items-start gap-3">
+            <div className="bg-bg-secondary p-3 rounded-xl flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-brand flex-shrink-0 mt-0.5" />
                 <div>
                     <h4 className="text-xs font-bold text-brand mb-1">Análisis Financiero</h4>

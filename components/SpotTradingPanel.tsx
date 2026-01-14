@@ -370,9 +370,9 @@ export default function SpotTradingPanel() {
                             <button
                                 key={asset.symbol}
                                 onClick={() => handleAssetChange(asset)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm transition-all active:scale-95 ${isSelected
+                                className={`flex items-center gap-2 px-3 py-2 rounded-full font-semibold text-sm transition-all active:scale-95 ${isSelected
                                         ? 'bg-primary text-black'
-                                        : 'bg-white/5 text-white hover:bg-white/10 border border-white/10'
+                                        : 'bg-bg-secondary text-white hover:bg-bg-elevated border border-white/10'
                                     }`}
                             >
                                 <TokenLogo symbol={asset.symbol} size={20} />
@@ -455,7 +455,7 @@ export default function SpotTradingPanel() {
             {/* Trading Card */}
             <div className="glass-card p-6">
                 {/* Buy/Sell Toggle */}
-                <div className="flex gap-2 p-1 bg-white/5 rounded-xl mb-5">
+                <div className="flex gap-2 p-1 bg-bg-secondary rounded-xl mb-5">
                     <button
                         onClick={() => setIsBuy(true)}
                         className={`flex-1 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${isBuy
@@ -480,11 +480,11 @@ export default function SpotTradingPanel() {
 
                 {/* Balances */}
                 <div className="grid grid-cols-2 gap-3 mb-5">
-                    <div className="p-3 bg-white/5 border border-white/5 rounded-xl">
+                    <div className="p-3 bg-bg-secondary border border-white/5 rounded-xl">
                         <div className="text-[10px] text-coffee-medium mb-0.5">USDC</div>
                         <div className="text-white font-mono font-semibold">${usdcBalance.toFixed(2)}</div>
                     </div>
-                    <div className="p-3 bg-white/5 border border-white/5 rounded-xl">
+                    <div className="p-3 bg-bg-secondary border border-white/5 rounded-xl">
                         <div className="text-[10px] text-coffee-medium mb-0.5">{selectedAsset.symbol}</div>
                         <div className="text-white font-mono font-semibold">{baseBalance.toFixed(4)}</div>
                     </div>
@@ -511,7 +511,7 @@ export default function SpotTradingPanel() {
                                 setSuccess('');
                             }}
                             placeholder="0.00"
-                            className="w-full py-3 px-4 pr-16 bg-white/5 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-primary/50 outline-none"
+                            className="w-full py-3 px-4 pr-16 bg-bg-secondary border border-white/10 rounded-xl text-white text-lg font-mono focus:border-primary/50 outline-none"
                             style={{ fontSize: '16px' }}
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-coffee-medium text-sm font-semibold">
@@ -526,7 +526,7 @@ export default function SpotTradingPanel() {
                         <button
                             key={pct}
                             onClick={() => setAmount((maxAmount * pct / 100).toFixed(6))}
-                            className="flex-1 py-2 text-xs font-semibold text-white/50 hover:text-primary bg-white/5 hover:bg-primary/10 rounded-lg transition-all"
+                            className="flex-1 py-2 text-xs font-semibold text-white/50 hover:text-primary bg-bg-secondary hover:bg-primary/10 rounded-lg transition-all"
                         >
                             {pct}%
                         </button>
@@ -535,7 +535,7 @@ export default function SpotTradingPanel() {
 
                 {/* Order Summary */}
                 {amountNum > 0 && currentPrice > 0 && (
-                    <div className="p-3 bg-white/5 border border-white/10 rounded-xl mb-4 text-sm">
+                    <div className="p-3 bg-bg-secondary border border-white/10 rounded-xl mb-4 text-sm">
                         <div className="flex justify-between mb-1">
                             <span className="text-coffee-medium">Price</span>
                             <span className="text-white font-mono">{formatCurrency(currentPrice)}</span>
@@ -570,7 +570,7 @@ export default function SpotTradingPanel() {
                 <button
                     onClick={handleOrder}
                     disabled={loading || !isValidAmount || !connected || !selectedPair}
-                    className={`w-full py-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isBuy
+                    className={`w-full py-4 rounded-full font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isBuy
                             ? 'bg-bullish hover:brightness-110 text-white'
                             : 'bg-bearish hover:brightness-110 text-white'
                         } disabled:opacity-40 disabled:cursor-not-allowed`}

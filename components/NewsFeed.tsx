@@ -60,7 +60,7 @@ export function NewsFeed({ height = 600, showHeader = true }: NewsFeedProps) {
                         href="https://twitter.com/search?q=crypto%20OR%20bitcoin%20OR%20ethereum&src=typed_query&f=live"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg text-xs text-coffee-medium hover:text-brand hover:bg-white/10 transition-all"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-bg-secondary rounded-lg text-xs text-coffee-medium hover:text-brand hover:bg-bg-elevated transition-all"
                     >
                         <Twitter className="w-4 h-4" />
                         Live
@@ -87,13 +87,13 @@ export function NewsFeed({ height = 600, showHeader = true }: NewsFeedProps) {
                         href={`https://twitter.com/${account.handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-4 bg-white/5 rounded-xl border border-white/10 hover:border-[#FFFF00]/50 hover:bg-white/10 transition-all"
+                        className="group p-4 bg-bg-secondary rounded-xl border border-white/10 hover:border-[#FFFF00]/50 hover:bg-bg-elevated transition-all"
                     >
                         <div className="flex items-start justify-between mb-2">
                             <div className="w-10 h-10 bg-brand/20 rounded-full flex items-center justify-center">
                                 <Twitter className="w-5 h-5 text-brand" />
                             </div>
-                            <span className="text-[10px] px-2 py-0.5 bg-white/10 rounded-full text-coffee-medium">
+                            <span className="text-[10px] px-2 py-0.5 bg-bg-elevated rounded-full text-coffee-medium">
                                 {account.category}
                             </span>
                         </div>
@@ -116,7 +116,7 @@ export function NewsFeed({ height = 600, showHeader = true }: NewsFeedProps) {
                     href="https://twitter.com/i/lists/create"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-brand text-black font-bold rounded-xl hover:bg-[#FFD700] transition-all"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-brand text-black font-bold rounded-full hover:bg-[#FFD700] transition-all"
                 >
                     Create Your News List on X
                     <ExternalLink className="w-4 h-4" />

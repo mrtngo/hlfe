@@ -179,7 +179,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white/10 rounded-full transition-all"
+                        className="p-2 hover:bg-bg-elevated rounded-full transition-all"
                     >
                         <X className="w-5 h-5 text-gray-400 hover:text-white" />
                     </button>
@@ -188,7 +188,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                 {/* Body */}
                 <div className="p-5 space-y-5">
                     {/* Current Info */}
-                    <div className="bg-white/5 rounded-xl p-4 space-y-2">
+                    <div className="bg-bg-secondary rounded-xl p-4 space-y-2">
                         <div className="flex justify-between text-sm">
                             <span className="text-gray-400">Current Price:</span>
                             <span className="text-white font-mono font-bold">{formatCurrency(currentPrice)}</span>
@@ -254,7 +254,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                                                     setTakeProfitPercent(e.target.value);
                                                 }}
                                                 placeholder="e.g. 5"
-                                                className="w-full bg-white/5 border-2 border-green-500/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-green-500/50 transition-all pr-8"
+                                                className="w-full bg-bg-secondary border-2 border-green-500/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-green-500/50 transition-all pr-8"
                                                 step="0.1"
                                             />
                                             <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -270,7 +270,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
                                                     takeProfitPercent === percent.toString()
                                                         ? 'bg-green-600 text-white'
-                                                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                                                        : 'bg-bg-elevated text-gray-300 hover:bg-bg-hover'
                                                 }`}
                                             >
                                                 {percent}%
@@ -299,7 +299,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                                                     setTakeProfitPrice(e.target.value);
                                                 }}
                                                 placeholder={formatCurrency(currentPrice * 1.05)}
-                                                className="w-full bg-white/5 border-2 border-green-500/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-green-500/50 transition-all pr-8"
+                                                className="w-full bg-bg-secondary border-2 border-green-500/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-green-500/50 transition-all pr-8"
                                                 step="0.01"
                                             />
                                             <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -317,7 +317,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                             <button
                                 onClick={handleSetTP}
                                 disabled={isSubmitting || !takeProfitPrice}
-                                className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                                 style={{ boxShadow: '0 4px 16px rgba(34, 197, 94, 0.3)' }}
                             >
                                 <div className="flex items-center justify-center gap-2">
@@ -379,7 +379,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                                                     setStopLossPercent(e.target.value);
                                                 }}
                                                 placeholder="e.g. 2"
-                                                className="w-full bg-white/5 border-2 border-red-500/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-red-500/50 transition-all pr-8"
+                                                className="w-full bg-bg-secondary border-2 border-red-500/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-red-500/50 transition-all pr-8"
                                                 step="0.1"
                                             />
                                             <Percent className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -395,7 +395,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
                                                     stopLossPercent === percent.toString()
                                                         ? 'bg-red-600 text-white'
-                                                        : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                                                        : 'bg-bg-elevated text-gray-300 hover:bg-bg-hover'
                                                 }`}
                                             >
                                                 {percent}%
@@ -424,7 +424,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                                                     setStopLossPrice(e.target.value);
                                                 }}
                                                 placeholder={formatCurrency(currentPrice * 0.95)}
-                                                className="w-full bg-white/5 border-2 border-red-500/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-red-500/50 transition-all pr-8"
+                                                className="w-full bg-bg-secondary border-2 border-red-500/30 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-red-500/50 transition-all pr-8"
                                                 step="0.01"
                                             />
                                             <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -442,7 +442,7 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                             <button
                                 onClick={handleSetSL}
                                 disabled={isSubmitting || !stopLossPrice}
-                                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                                className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
                                 style={{ boxShadow: '0 4px 16px rgba(239, 68, 68, 0.3)' }}
                             >
                                 <div className="flex items-center justify-center gap-2">
