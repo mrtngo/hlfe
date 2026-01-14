@@ -12,6 +12,30 @@ export const ARBITRUM_USDC_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831
 // Minimum deposit amount (sending less than this will result in lost funds)
 export const MIN_BRIDGE_DEPOSIT = 5;
 
+// Hyperunit Spot Deposit Minimums and Fees
+export const HYPERUNIT_DEPOSIT_INFO = {
+    BTC: {
+        minDeposit: 0.0001,
+        fee: '~0.00005 BTC',
+        unit: 'BTC',
+    },
+    ETH: {
+        minDeposit: 0.001,
+        fee: '~0.0005 ETH',
+        unit: 'ETH',
+    },
+    SOL: {
+        minDeposit: 0.01,
+        fee: '~0.005 SOL',
+        unit: 'SOL',
+    },
+    USDC: {
+        minDeposit: 5,
+        fee: 'Network fees apply',
+        unit: 'USDC',
+    },
+} as const;
+
 // Minimal ABI for USDC interactions
 export const USDC_ABI = [
     {

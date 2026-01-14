@@ -13,6 +13,7 @@ import {
     HYPERLIQUID_BRIDGE_ADDRESS,
     ARBITRUM_USDC_ADDRESS,
     MIN_BRIDGE_DEPOSIT,
+    HYPERUNIT_DEPOSIT_INFO,
     USDC_ABI,
     getTokenFullName
 } from '@/lib/constants';
@@ -158,6 +159,36 @@ function AssetsDeposit({ address, t, copied, onCopy }: {
                             <Copy style={{ width: '16px', height: '16px', color: 'white' }} />
                         )}
                     </button>
+                </div>
+            </div>
+
+            {/* Minimum Deposit & Fee Info */}
+            <div style={{
+                backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                border: '1px solid rgba(139, 92, 246, 0.2)',
+                borderRadius: '12px',
+                padding: '12px',
+                marginBottom: '8px'
+            }}>
+                <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <div>
+                            <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '2px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Minimum Deposit
+                            </div>
+                            <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                                {HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO]?.minDeposit} {selectedAsset.symbol}
+                            </div>
+                        </div>
+                        <div>
+                            <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '2px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Network Fee
+                            </div>
+                            <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '11px' }}>
+                                {HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO]?.fee}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
