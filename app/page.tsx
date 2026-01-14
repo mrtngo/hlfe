@@ -19,7 +19,8 @@ import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotTradingPanel from '@/components/SpotTradingPanel';
 import Trollbox from '@/components/Trollbox';
-import { BarChart3, History, User, Trophy, Coins, MessageSquare } from 'lucide-react';
+import { NewsFeed } from '@/components/NewsFeed';
+import { BarChart3, History, User, Coins, MessageSquare, Newspaper } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
@@ -36,7 +37,7 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'news'>('home');
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
@@ -135,6 +136,11 @@ export default function Home() {
                         ) : view === 'spot' ? (
                             <div className="max-w-4xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
                                 <SpotTradingPanel />
+                            </div>
+                        ) : view === 'news' ? (
+                            <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <h1 className="text-2xl font-bold text-white mb-4 px-2">Crypto News</h1>
+                                <NewsFeed height={600} />
                             </div>
                         ) : (
                             <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
@@ -261,19 +267,19 @@ export default function Home() {
                         <span className="text-[11px] font-semibold">{t.nav.history}</span>
                     </button>
 
-                    {/* Leaderboard */}
+                    {/* News */}
                     <button
-                        onClick={() => setView('leaderboard')}
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'leaderboard' ? 'scale-110' : ''}`}
+                        onClick={() => setView('news')}
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'news' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
-                            filter: view === 'leaderboard' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: view === 'leaderboard' ? 1 : 0.6
+                            filter: view === 'news' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: view === 'news' ? 1 : 0.6
                         }}
                     >
-                        <Trophy className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">Ranks</span>
+                        <Newspaper className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">News</span>
                     </button>
 
                     {/* Profile/Account */}
