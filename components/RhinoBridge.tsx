@@ -33,6 +33,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
             chainOut: 'ARBITRUM_ONE', // Bridge to Arbitrum
             token: 'USDC',            // USDC only
             recipient: activeWallet.address,
+            walletAddress: activeWallet.address, // Pre-connect with Privy wallet
             mode: 'dark',
             theme: RHINO_WIDGET_THEME,
         });
@@ -243,8 +244,11 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                         </div>
                     </div>
 
-                    <button
-                        onClick={() => setShowWidget(true)}
+                    {/* Primary action - Open in new tab (recommended for embedded wallets) */}
+                    <a
+                        href={widgetUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
                             width: '100%',
                             padding: '16px',
@@ -259,11 +263,47 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                             justifyContent: 'center',
                             gap: '8px',
                             fontSize: '15px',
+                            textDecoration: 'none',
                         }}
                     >
-                        <RefreshCw style={{ width: '18px', height: '18px' }} />
-                        Start Cross-Chain Bridge
+                        <ExternalLink style={{ width: '18px', height: '18px' }} />
+                        Open Bridge (Recommended)
+                    </a>
+
+                    {/* Secondary action - Use in-app iframe */}
+                    <button
+                        onClick={() => setShowWidget(true)}
+                        style={{
+                            width: '100%',
+                            padding: '14px',
+                            backgroundColor: 'transparent',
+                            color: 'rgba(255,255,255,0.7)',
+                            fontWeight: 600,
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            fontSize: '14px',
+                        }}
+                    >
+                        <RefreshCw style={{ width: '16px', height: '16px' }} />
+                        Use In-App Bridge
                     </button>
+
+                    {/* Note about wallet connection */}
+                    <div style={{
+                        padding: '12px',
+                        backgroundColor: 'rgba(255, 255, 0, 0.05)',
+                        border: '1px solid rgba(255, 255, 0, 0.2)',
+                        borderRadius: '10px',
+                        fontSize: '12px',
+                        color: 'rgba(255, 255, 255, 0.6)',
+                    }}>
+                        <strong style={{ color: '#FFFF00' }}>💡 Tip:</strong> When prompted to connect wallet, select "WalletConnect" and scan the QR code with your wallet app, or copy your wallet address ({activeWallet.address.slice(0, 6)}...{activeWallet.address.slice(-4)}).
+                    </div>
 
                     {/* Powered by */}
                     <div style={{

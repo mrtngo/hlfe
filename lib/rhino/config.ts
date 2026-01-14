@@ -39,6 +39,7 @@ export function buildRhinoWidgetUrl(options: {
     chainOut?: string;
     token?: string;
     recipient?: string;
+    walletAddress?: string; // Pre-connected wallet address
     mode?: 'dark' | 'light';
     theme?: typeof RHINO_WIDGET_THEME;
 }): string {
@@ -63,9 +64,17 @@ export function buildRhinoWidgetUrl(options: {
         params.set('token', options.token);
     }
 
-    // Recipient address
+    // Recipient address (where funds end up)
     if (options.recipient) {
         params.set('recipient', options.recipient);
+    }
+
+    // Pre-connected wallet address - tells Rhino to use this wallet
+    // Multiple param names for compatibility with different widget versions
+    if (options.walletAddress) {
+        params.set('ethereumAddress', options.walletAddress);
+        params.set('walletAddress', options.walletAddress);
+        params.set('address', options.walletAddress);
     }
 
     // Custom theme
