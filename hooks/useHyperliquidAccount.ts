@@ -81,10 +81,19 @@ function parsePosition(pos: any, markets: Market[]): Position | null {
             : (entryPx - markPx) * size;
     }
 
-    // Calculate P&L % based on margin (not notional value)
+    // Estimate fees for unrealized PnL (entry + estimated exit fee)
+    // Hyperliquid fees: 0.045% market order + 0.03% builder fee = 0.075% total
     const notionalValue = entryPx * size;
+    const estimatedEntryFee = notionalValue * 0.00075; // 0.075% entry fee (market + builder)
+    const estimatedExitFee = (markPx * size) * 0.00075; // 0.075% exit fee (market + builder)
+    const totalEstimatedFees = estimatedEntryFee + estimatedExitFee;
+
+    // Net unrealized PnL = price PnL - estimated fees
+    const netPnl = pnl - totalEstimatedFees;
+
+    // Calculate P&L % based on margin (not notional value)
     const margin = notionalValue / leverage;
-    const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
+    const pnlPercent = margin > 0 ? (netPnl / margin) * 100 : 0;
 
     return {
         symbol,
@@ -95,7 +104,7 @@ function parsePosition(pos: any, markets: Market[]): Position | null {
         markPrice: markPx,
         liquidationPrice: liqPx,
         leverage,
-        unrealizedPnl: pnl,
+        unrealizedPnl: netPnl, // Net PnL after estimated fees
         exchangePnl,
         unrealizedPnlPercent: pnlPercent,
         isStock: market?.isStock ?? rawCoin.startsWith('xyz:'),
@@ -454,15 +463,25 @@ export function useHyperliquidAccount(
                     ? (markPx - pos.entryPrice) * pos.size
                     : (pos.entryPrice - markPx) * pos.size;
 
-                const margin = (pos.entryPrice * pos.size) / pos.leverage;
-                const pnlPercent = margin > 0 ? (pnl / margin) * 100 : 0;
+                // Estimate fees for unrealized PnL (entry + estimated exit fee)
+                // Hyperliquid fees: 0.045% market order + 0.03% builder fee = 0.075% total
+                const notionalValue = pos.entryPrice * pos.size;
+                const estimatedEntryFee = notionalValue * 0.00075; // 0.075% entry fee (market + builder)
+                const estimatedExitFee = (markPx * pos.size) * 0.00075; // 0.075% exit fee (market + builder)
+                const totalEstimatedFees = estimatedEntryFee + estimatedExitFee;
 
-                totalUnrealizedPnl += pnl;
+                // Net unrealized PnL = price PnL - estimated fees
+                const netPnl = pnl - totalEstimatedFees;
+
+                const margin = (pos.entryPrice * pos.size) / pos.leverage;
+                const pnlPercent = margin > 0 ? (netPnl / margin) * 100 : 0;
+
+                totalUnrealizedPnl += netPnl;
 
                 return {
                     ...pos,
                     markPrice: markPx,
-                    unrealizedPnl: pnl,
+                    unrealizedPnl: netPnl,
                     unrealizedPnlPercent: pnlPercent
                 };
             } else {

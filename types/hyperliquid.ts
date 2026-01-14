@@ -110,8 +110,12 @@ export interface Fill {
     dir?: string;
     /** Realized P&L from this fill */
     closedPnl: string;
-    /** Trading fee */
+    /** Trading fee (includes 0.045% market order + 0.03% builder fee from Hyperliquid) */
     fee?: string;
+    /** Builder fee component (if separated by API) */
+    builderFee?: string;
+    /** Token used to pay the fee */
+    feeToken?: string;
     /** Whether the order was crossed (taker) */
     crossed?: boolean;
     /** Allow additional fields from SDK */

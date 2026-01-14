@@ -60,11 +60,12 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     WITH filtered_trades AS (
-        SELECT 
+        SELECT
             t.user_id,
-            t.pnl,
-            CASE WHEN t.pnl > 0 THEN 1 ELSE 0 END as is_win,
-            CASE WHEN t.pnl < 0 THEN 1 ELSE 0 END as is_loss
+            -- Net PnL = realized PnL - fees
+            t.pnl - COALESCE(t.fee, 0) as net_pnl,
+            CASE WHEN (t.pnl - COALESCE(t.fee, 0)) > 0 THEN 1 ELSE 0 END as is_win,
+            CASE WHEN (t.pnl - COALESCE(t.fee, 0)) < 0 THEN 1 ELSE 0 END as is_loss
         FROM trades t
         WHERE t.status = 'closed'
         AND t.pnl IS NOT NULL
@@ -75,9 +76,9 @@ BEGIN
         )
     ),
     user_stats AS (
-        SELECT 
+        SELECT
             ft.user_id,
-            COALESCE(SUM(ft.pnl), 0) as total_pnl,
+            COALESCE(SUM(ft.net_pnl), 0) as total_pnl,
             COUNT(*) as trade_count,
             SUM(ft.is_win) as win_count,
             SUM(ft.is_loss) as loss_count

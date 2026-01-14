@@ -87,11 +87,15 @@ export function useUserData(address: string | null): UserDataResult {
 
             setFills(fillsData as Fill[]);
 
-            // Calculate 30-day PnL
+            // Calculate 30-day PnL (subtract fees for accurate net PnL)
             if (fillsData && fillsData.length > 0) {
                 const totalPnl = (fillsData as Fill[])
                     .filter((fill: Fill) => fill.time >= thirtyDaysAgo)
-                    .reduce((sum: number, fill: Fill) => sum + parseFloat(fill.closedPnl || '0'), 0);
+                    .reduce((sum: number, fill: Fill) => {
+                        const pnl = parseFloat(fill.closedPnl || '0');
+                        const fee = parseFloat(fill.fee || '0');
+                        return sum + (pnl - fee); // Net PnL = realized PnL - fees
+                    }, 0);
                 setThirtyDayPnl(totalPnl);
             } else {
                 setThirtyDayPnl(0);
