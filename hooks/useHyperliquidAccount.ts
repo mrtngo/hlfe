@@ -492,11 +492,15 @@ export function useHyperliquidAccount(
         const totalEquity = totalCashBalance + totalUnrealizedPnl;
         const totalUsedMargin = perpState.account.usedMargin + dexState.account.usedMargin;
 
+        // Available margin should be the sum of each clearinghouse's available margin
+        // This correctly accounts for margin requirements per position
+        const totalAvailableMargin = perpState.account.availableMargin + dexState.account.availableMargin;
+
         return {
             mergedAccount: {
                 balance: totalCashBalance,
                 equity: totalEquity,
-                availableMargin: totalCashBalance - totalUsedMargin,
+                availableMargin: Math.max(0, totalAvailableMargin), // Never negative
                 usedMargin: totalUsedMargin,
                 unrealizedPnl: totalUnrealizedPnl,
                 unrealizedPnlPercent: totalCashBalance > 0 ? (totalUnrealizedPnl / totalCashBalance) * 100 : 0,
