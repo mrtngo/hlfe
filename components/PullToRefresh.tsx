@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 interface PullToRefreshProps {
@@ -18,46 +18,59 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
     const MAX_PULL = 150;
 
     const handleTouchStart = (e: React.TouchEvent) => {
-        // Only trigger if at the top of the container
-        if (containerRef.current && containerRef.current.scrollTop === 0) {
+        // Only start pulling if at the very top AND not already refreshing
+        if (containerRef.current && containerRef.current.scrollTop <= 0 && !isRefreshing) {
             startY.current = e.touches[0].pageY;
             isPulling.current = true;
         }
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
-        if (!isPulling.current || isRefreshing) return;
+        // If refreshing, allow normal scrolling
+        if (isRefreshing) {
+            isPulling.current = false;
+            return;
+        }
+
+        if (!isPulling.current) return;
 
         const currentY = e.touches[0].pageY;
         const diff = currentY - startY.current;
 
-        if (diff > 0) {
+        // Only prevent default and show pull indicator when pulling DOWN
+        if (diff > 10) {
             // Apply resistance
             const distance = Math.min(diff * 0.5, MAX_PULL);
             setPullDistance(distance);
 
-            // Prevent default scroll when pulling down at top
-            if (e.cancelable) e.preventDefault();
-        } else {
+            // Only prevent scroll when actively pulling down
+            if (e.cancelable && containerRef.current && containerRef.current.scrollTop <= 0) {
+                e.preventDefault();
+            }
+        } else if (diff < 0) {
+            // User is scrolling up, cancel the pull and allow scroll
             isPulling.current = false;
+            setPullDistance(0);
         }
     };
 
     const handleTouchEnd = async () => {
-        if (!isPulling.current || isRefreshing) return;
+        if (!isPulling.current || isRefreshing) {
+            isPulling.current = false;
+            return;
+        }
 
         isPulling.current = false;
 
         if (pullDistance >= PULL_THRESHOLD) {
             setIsRefreshing(true);
-            setPullDistance(60); // Hold at refreshing position
+            setPullDistance(50); // Hold at refreshing position (smaller)
             try {
                 await onRefresh();
             } finally {
-                setTimeout(() => {
-                    setIsRefreshing(false);
-                    setPullDistance(0);
-                }, 500);
+                // Quick fade out
+                setIsRefreshing(false);
+                setPullDistance(0);
             }
         } else {
             setPullDistance(0);
@@ -72,35 +85,39 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
-            {/* Pull indicator */}
-            <div
-                className="absolute left-0 right-0 flex justify-center items-center overflow-hidden transition-transform duration-200 pointer-events-none"
-                style={{
-                    height: pullDistance,
-                    top: 0,
-                    opacity: pullDistance / PULL_THRESHOLD,
-                    transform: `translateY(${Math.min(pullDistance - 40, 0)}px)`
-                }}
-            >
-                <div className={`p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
-                    <RefreshCw
-                        size={20}
-                        className="text-primary-400"
-                        style={{
-                            transform: `rotate(${pullDistance * 2}deg)`,
-                            transition: isRefreshing ? 'none' : 'transform 0.1s linear'
-                        }}
-                    />
+            {/* Pull indicator - only visible when pulling or refreshing */}
+            {(pullDistance > 0 || isRefreshing) && (
+                <div
+                    className="absolute left-0 right-0 flex justify-center items-center overflow-hidden pointer-events-none z-50"
+                    style={{
+                        height: Math.max(pullDistance, isRefreshing ? 50 : 0),
+                        top: 0,
+                        opacity: isRefreshing ? 1 : pullDistance / PULL_THRESHOLD,
+                    }}
+                >
+                    <div className={`p-2 rounded-full bg-black/80 backdrop-blur-md border border-[#FFFF00]/30 shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
+                        <RefreshCw
+                            size={18}
+                            className="text-[#FFFF00]"
+                            style={{
+                                transform: isRefreshing ? 'none' : `rotate(${pullDistance * 2}deg)`,
+                            }}
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* Content with dynamic transform */}
+            {/* Content - minimal transform to avoid layout shift */}
             <div
-                className="transition-transform duration-200 will-change-transform h-full"
-                style={{ transform: `translateY(${pullDistance * 0.5}px)` }}
+                className="h-full"
+                style={{
+                    transform: pullDistance > 0 ? `translateY(${pullDistance * 0.3}px)` : 'none',
+                    transition: isPulling.current ? 'none' : 'transform 0.2s ease-out'
+                }}
             >
                 {children}
             </div>
         </div>
     );
 }
+
