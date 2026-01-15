@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { X, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useWallets } from '@privy-io/react-auth';
+import { X, ArrowLeftRight, Loader2, AlertCircle } from 'lucide-react';
+import { API_URL } from '@/lib/hyperliquid/client';
 
 interface TransferModalProps {
     isOpen: boolean;
@@ -10,194 +13,403 @@ interface TransferModalProps {
 }
 
 export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
-    const { account, transferBetweenSpotAndPerp, connected } = useHyperliquid();
+    const { wallets } = useWallets();
+    const { address, account } = useHyperliquid();
+    const activeWallet = wallets?.[0];
 
     const [amount, setAmount] = useState('');
     const [toPerp, setToPerp] = useState(true); // true = Spot → Perp, false = Perp → Spot
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Reset state when modal opens/closes
     useEffect(() => {
         if (!isOpen) {
             setAmount('');
-            setError(null);
-            setSuccess(null);
+            setError('');
+            setSuccess(false);
         }
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
+
+    const availableBalance = account?.availableMargin || 0;
+    const spotBalance = account?.spotBalance || 0;
+    const amountNum = parseFloat(amount || '0');
+    const sourceBalance = toPerp ? spotBalance : availableBalance;
+    const isValidAmount = amountNum > 0 && amountNum <= sourceBalance;
 
     const handleTransfer = async () => {
-        if (!connected) {
-            setError('Please connect your wallet first');
-            return;
-        }
-
-        const transferAmount = parseFloat(amount);
-        if (isNaN(transferAmount) || transferAmount <= 0) {
-            setError('Please enter a valid amount');
-            return;
-        }
-
-        // Check if user has enough balance
-        const sourceBalance = toPerp ? (account.spotBalance || 0) : account.availableMargin;
-        if (transferAmount > sourceBalance) {
-            setError(`Insufficient balance. You have ${sourceBalance.toFixed(2)} USDC available`);
-            return;
-        }
+        if (!activeWallet || !address || !isValidAmount) return;
 
         setLoading(true);
-        setError(null);
-        setSuccess(null);
+        setError('');
+        setSuccess(false);
 
         try {
-            const result = await transferBetweenSpotAndPerp(transferAmount, toPerp);
+            const provider = await activeWallet.getEthereumProvider();
+            const nonce = Date.now();
 
-            if (result.success) {
-                setSuccess(result.message);
+            // Prepare the transfer action - CORRECT FORMAT
+            const transferAction = {
+                type: 'usdClassTransfer',
+                hyperliquidChain: 'Mainnet',
+                signatureChainId: '0xa4b1',
+                amount: amount,
+                toPerp: toPerp,
+                nonce: nonce,
+            };
+
+            // EIP-712 domain
+            const domain = {
+                name: 'HyperliquidSignTransaction',
+                version: '1',
+                chainId: 42161,
+                verifyingContract: '0x0000000000000000000000000000000000000000',
+            };
+
+            // Sign with EIP-712
+            const signature = await provider.request({
+                method: 'eth_signTypedData_v4',
+                params: [
+                    address,
+                    JSON.stringify({
+                        domain,
+                        types: {
+                            EIP712Domain: [
+                                { name: 'name', type: 'string' },
+                                { name: 'version', type: 'string' },
+                                { name: 'chainId', type: 'uint256' },
+                                { name: 'verifyingContract', type: 'address' },
+                            ],
+                            'HyperliquidTransaction:UsdClassTransfer': [
+                                { name: 'hyperliquidChain', type: 'string' },
+                                { name: 'amount', type: 'string' },
+                                { name: 'toPerp', type: 'bool' },
+                                { name: 'nonce', type: 'uint64' },
+                            ],
+                        },
+                        primaryType: 'HyperliquidTransaction:UsdClassTransfer',
+                        message: {
+                            hyperliquidChain: 'Mainnet',
+                            amount: amount,
+                            toPerp: toPerp,
+                            nonce: nonce,
+                        },
+                    }),
+                ],
+            });
+
+            // Parse signature
+            const sig = signature.slice(2);
+            const r = '0x' + sig.slice(0, 64);
+            const s = '0x' + sig.slice(64, 128);
+            const v = parseInt(sig.slice(128, 130), 16);
+
+            // Send to Hyperliquid
+            const response = await fetch(`${API_URL}/exchange`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: transferAction,
+                    nonce,
+                    signature: { r, s, v },
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'ok' || result.response?.type === 'default') {
+                setSuccess(true);
                 setAmount('');
                 // Auto-close after 2 seconds
                 setTimeout(() => onClose(), 2000);
             } else {
-                setError(result.message);
+                throw new Error(result.response?.data || result.error || 'Transfer failed');
             }
         } catch (err: any) {
-            setError(err.message || 'Transfer failed');
+            console.error('Transfer error:', err);
+            setError(err.message || 'Failed to process transfer');
         } finally {
             setLoading(false);
         }
     };
 
-    const spotBalance = account?.spotBalance || 0;
-    const perpBalance = account?.availableMargin || 0;
+    const modalContent = (
+        <div
+            style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 9999,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px',
+            }}
+        >
+            {/* Backdrop */}
+            <div
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                    backdropFilter: 'blur(8px)',
+                }}
+                onClick={onClose}
+            />
 
-    return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-[#0A0A0A] border border-[#FFFF00]/30 rounded-xl max-w-md w-full p-6">
+            {/* Modal */}
+            <div
+                style={{
+                    position: 'relative',
+                    width: '100%',
+                    maxWidth: '400px',
+                    backgroundColor: '#0A0A0A',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '24px',
+                    padding: '24px',
+                }}
+            >
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold" style={{ color: 'var(--color-brand-primary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', margin: 0 }}>
                         Transfer USDC
                     </h2>
                     <button
                         onClick={onClose}
-                        className="text-white/60 hover:text-white transition-colors"
+                        style={{
+                            padding: '8px',
+                            borderRadius: '50%',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                        }}
                     >
-                        <X className="w-6 h-6" />
+                        <X style={{ width: '20px', height: '20px', color: 'white' }} />
                     </button>
                 </div>
 
-                {/* Balances Display */}
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                    <div className="bg-black border border-white/10 rounded-lg p-4">
-                        <div className="text-xs text-white/50 mb-1">Spot Balance</div>
-                        <div className="text-lg font-mono font-bold" style={{ color: 'var(--color-brand-primary)' }}>
-                            {spotBalance.toFixed(2)} <span className="text-sm">USDC</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* Info */}
+                    <div style={{
+                        backgroundColor: 'rgba(255, 255, 0, 0.1)',
+                        border: '1px solid rgba(255, 255, 0, 0.2)',
+                        borderRadius: '12px',
+                        padding: '12px',
+                        display: 'flex',
+                        gap: '12px'
+                    }}>
+                        <ArrowLeftRight style={{ width: '20px', height: '20px', color: '#FFFF00', flexShrink: 0 }} />
+                        <div style={{ fontSize: '13px' }}>
+                            <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>Transfer Between Accounts</div>
+                            <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                                Move USDC between your Spot and Perp accounts. Instant and free.
+                            </div>
                         </div>
                     </div>
-                    <div className="bg-black border border-white/10 rounded-lg p-4">
-                        <div className="text-xs text-white/50 mb-1">Perp Balance</div>
-                        <div className="text-lg font-mono font-bold" style={{ color: 'var(--color-brand-primary)' }}>
-                            {perpBalance.toFixed(2)} <span className="text-sm">USDC</span>
-                        </div>
-                    </div>
-                </div>
 
-                {/* Direction Toggle */}
-                <div className="mb-6">
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setToPerp(false)}
-                            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
-                                !toPerp
-                                    ? 'bg-[#FFFF00] text-black border-2 border-[#FFFF00]'
-                                    : 'bg-transparent text-white/60 border-2 border-white/20 hover:border-white/40'
-                            }`}
-                        >
-                            <ArrowLeft className="w-4 h-4" />
-                            Perp → Spot
-                        </button>
+                    {/* Direction Toggle */}
+                    <div style={{
+                        display: 'flex',
+                        gap: '8px',
+                        padding: '4px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                        borderRadius: '12px',
+                    }}>
                         <button
                             onClick={() => setToPerp(true)}
-                            className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 ${
-                                toPerp
-                                    ? 'bg-[#FFFF00] text-black border-2 border-[#FFFF00]'
-                                    : 'bg-transparent text-white/60 border-2 border-white/20 hover:border-white/40'
-                            }`}
+                            style={{
+                                flex: 1,
+                                padding: '12px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                fontWeight: 'bold',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                backgroundColor: toPerp ? '#FFFF00' : 'transparent',
+                                color: toPerp ? 'black' : 'rgba(255, 255, 255, 0.5)',
+                                transition: 'all 0.2s',
+                            }}
                         >
                             Spot → Perp
-                            <ArrowRight className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setToPerp(false)}
+                            style={{
+                                flex: 1,
+                                padding: '12px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                fontWeight: 'bold',
+                                fontSize: '13px',
+                                cursor: 'pointer',
+                                backgroundColor: !toPerp ? '#FFFF00' : 'transparent',
+                                color: !toPerp ? 'black' : 'rgba(255, 255, 255, 0.5)',
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            Perp → Spot
                         </button>
                     </div>
-                </div>
 
-                {/* Amount Input */}
-                <div className="mb-6">
-                    <label className="block text-xs text-white/50 mb-2">
-                        Amount to Transfer
-                    </label>
-                    <div className="relative">
-                        <input
-                            type="number"
-                            value={amount}
-                            onChange={(e) => {
-                                setAmount(e.target.value);
-                                setError(null);
-                                setSuccess(null);
-                            }}
-                            placeholder="0.00"
-                            step="0.01"
-                            min="0"
-                            className="w-full px-4 py-3 bg-black border border-[#FFFF00]/30 rounded-lg text-white text-lg font-mono focus:outline-none focus:border-[#FFFF00]"
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 text-sm">
-                            USDC
-                        </span>
-                    </div>
-                    {/* Max Button */}
-                    <button
-                        onClick={() => {
-                            const maxBalance = toPerp ? spotBalance : perpBalance;
-                            setAmount(maxBalance.toFixed(2));
-                        }}
-                        className="mt-2 text-xs text-[#FFFF00] hover:underline"
-                    >
-                        Use Max ({toPerp ? spotBalance.toFixed(2) : perpBalance.toFixed(2)} USDC)
-                    </button>
-                </div>
-
-                {/* Error Message */}
-                {error && (
-                    <div className="mb-4 p-3 bg-[#FF3B30]/10 border border-[#FF3B30]/30 rounded-lg">
-                        <p className="text-sm text-[#FF3B30]">{error}</p>
-                    </div>
-                )}
-
-                {/* Success Message */}
-                {success && (
-                    <div className="mb-4 p-3 bg-[#22C55E]/10 border border-[#22C55E]/30 rounded-lg">
-                        <p className="text-sm text-[#22C55E]">{success}</p>
-                    </div>
-                )}
-
-                {/* Transfer Button */}
-                <button
-                    onClick={handleTransfer}
-                    disabled={loading || !amount || parseFloat(amount) <= 0}
-                    className="w-full py-4 bg-[#FFFF00] text-black font-bold rounded-lg transition-all hover:bg-[#FDE047] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#FFFF00]"
-                >
-                    {loading ? (
-                        <div className="flex items-center justify-center gap-2">
-                            <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                            Transferring...
+                    {/* Balances */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '12px',
+                            padding: '12px'
+                        }}>
+                            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
+                                Spot Balance
+                            </div>
+                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
+                                ${spotBalance.toFixed(2)}
+                            </div>
                         </div>
-                    ) : (
-                        `Transfer ${amount || '0.00'} USDC`
+                        <div style={{
+                            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                            border: '1px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '12px',
+                            padding: '12px'
+                        }}>
+                            <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
+                                Perp Balance
+                            </div>
+                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
+                                ${availableBalance.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Amount Input */}
+                    <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
+                            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Amount:</span>
+                            <span
+                                style={{ color: 'white', cursor: 'pointer', textDecoration: 'underline' }}
+                                onClick={() => setAmount(sourceBalance.toFixed(2))}
+                            >
+                                Max: ${sourceBalance.toFixed(2)}
+                            </span>
+                        </div>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type="number"
+                                value={amount}
+                                onChange={(e) => {
+                                    setAmount(e.target.value);
+                                    setError('');
+                                    setSuccess(false);
+                                }}
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0"
+                                style={{
+                                    width: '100%',
+                                    padding: '16px',
+                                    paddingRight: '80px',
+                                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    borderRadius: '12px',
+                                    color: 'white',
+                                    fontSize: '18px',
+                                    fontFamily: 'monospace',
+                                    outline: 'none',
+                                }}
+                            />
+                            <span style={{
+                                position: 'absolute',
+                                right: '16px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: 'white',
+                                fontWeight: 'bold',
+                                fontSize: '14px'
+                            }}>
+                                USDC
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Transfer Button */}
+                    <button
+                        onClick={handleTransfer}
+                        disabled={loading || !isValidAmount || !address}
+                        style={{
+                            width: '100%',
+                            padding: '16px',
+                            backgroundColor: '#FFFF00',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            border: 'none',
+                            borderRadius: '12px',
+                            cursor: (loading || !isValidAmount) ? 'not-allowed' : 'pointer',
+                            opacity: (loading || !isValidAmount) ? 0.6 : 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                        }}
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+                                Processing...
+                            </>
+                        ) : (
+                            <>
+                                <ArrowLeftRight style={{ width: '16px', height: '16px' }} />
+                                Transfer
+                            </>
+                        )}
+                    </button>
+
+                    {/* Feedback */}
+                    {error && (
+                        <div style={{
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            border: '1px solid rgba(255, 107, 107, 0.3)',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            color: '#FF6B6B',
+                            fontSize: '13px',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '8px'
+                        }}>
+                            <AlertCircle style={{ width: '16px', height: '16px', flexShrink: 0, marginTop: '2px' }} />
+                            {error}
+                        </div>
                     )}
-                </button>
+                    {success && (
+                        <div style={{
+                            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                            border: '1px solid rgba(74, 222, 128, 0.3)',
+                            borderRadius: '8px',
+                            padding: '12px',
+                            color: '#4ade80',
+                            fontSize: '13px'
+                        }}>
+                            ✅ Transfer completed!
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 }

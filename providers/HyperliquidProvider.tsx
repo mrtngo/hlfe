@@ -119,7 +119,6 @@ interface HyperliquidContextType {
     ) => Promise<any>;
     cancelOrder: (orderId: string) => Promise<void>;
     closePosition: (symbol: string) => Promise<void>;
-    transferBetweenSpotAndPerp: (amount: number, toPerp: boolean) => Promise<{ success: boolean; message: string }>;
 
     // Account & Positions
     account: AccountState;
@@ -1841,122 +1840,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [positions, isConnected, address, placeOrder, t]);
 
-    // Transfer USDC between spot and perp accounts
-    const transferBetweenSpotAndPerp = useCallback(async (
-        amount: number,
-        toPerp: boolean
-    ): Promise<{ success: boolean; message: string }> => {
-        if (!isConnected || !address) {
-            return { success: false, message: t.errors.walletNotConnected };
-        }
-
-        if (amount <= 0) {
-            return { success: false, message: 'Amount must be greater than 0' };
-        }
-
-        setLoading(true);
-        try {
-            // Import SDK signing utilities
-            const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
-            const { signL1Action } = hyperliquidSDK;
-
-            // Get signing wallet (agent or user)
-            let signingWallet: any = null;
-            const agent = getAgentWallet();
-            const agentSigner = getAgentSigner();
-            const isApproved = isAgentApproved(address);
-
-            if (agentWalletEnabled && agent && agentSigner && isApproved) {
-                // Use agent wallet for transfer
-                signingWallet = {
-                    address: agent.address,
-                    getAddress: async () => agent.address.toLowerCase(),
-                    signTypedData: async (domain: any, types: any, value: any) => {
-                        const { EIP712Domain, ...restTypes } = types;
-                        return await agentSigner.signTypedData(domain, restTypes, value);
-                    },
-                };
-            } else {
-                // Use user wallet
-                const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
-                let signingProvider = null;
-
-                if (embeddedWallet) {
-                    signingProvider = await embeddedWallet.getEthereumProvider();
-                } else if (typeof window !== 'undefined' && (window as any).ethereum) {
-                    signingProvider = (window as any).ethereum;
-                }
-
-                if (signingProvider) {
-                    const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
-                    signingWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
-                }
-            }
-
-            if (!signingWallet) {
-                throw new Error('Could not get signing wallet');
-            }
-
-            // Construct transfer action
-            const transferAction = {
-                type: 'spotUser',
-                classTransfer: {
-                    usdc: Math.floor(amount * 1e6), // Convert to USDC micros (6 decimals)
-                    toPerp
-                }
-            };
-
-            const nonce = Date.now();
-            const signature = await signL1Action(
-                signingWallet,
-                transferAction,
-                null, // vaultAddress
-                nonce,
-                !IS_TESTNET // isMainnet
-            );
-
-            // Send to API
-            const response = await fetch(`${API_URL}/exchange`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: transferAction,
-                    nonce,
-                    signature
-                })
-            });
-
-            if (!response.ok) {
-                const error = await response.text();
-                throw new Error(`Failed to transfer: ${error}`);
-            }
-
-            const result = await response.json();
-            console.log('Transfer result:', result);
-
-            if (result.status === 'err') {
-                throw new Error(result.response || 'Transfer failed');
-            }
-
-            // Refresh account data to show updated balances
-            setTimeout(() => refreshAccountData(), 1000);
-
-            const direction = toPerp ? 'Spot → Perp' : 'Perp → Spot';
-            return {
-                success: true,
-                message: `Successfully transferred ${formatCurrency(amount)} (${direction})`
-            };
-        } catch (error: any) {
-            console.error('Transfer failed:', error);
-            return {
-                success: false,
-                message: error.message || 'Transfer failed'
-            };
-        } finally {
-            setLoading(false);
-        }
-    }, [isConnected, address, agentWalletEnabled, wallets, refreshAccountData, formatCurrency, t]);
-
     // Get market by symbol
     const getMarket = useCallback((symbol: string) => {
         return markets.find(m => m.symbol === symbol);
@@ -1978,7 +1861,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         placeTriggerOrder,
         cancelOrder,
         closePosition,
-        transferBetweenSpotAndPerp,
         account,
         positions,
         orders,
