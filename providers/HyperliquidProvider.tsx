@@ -954,11 +954,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         note: 'IOC fills at best price, this is just the max you\'ll pay'
                     });
                 } else {
-                    // For regular assets, use 0.3% slippage for market orders
+                    // For regular assets, use 0.5% slippage for market orders
                     // IOC orders fill at the BEST available price up to your limit
                     // This is a safety ceiling to ensure execution against resting orders
                     // The actual fill will be at the best available market price
-                    const slippagePercent = 0.003; // 0.3% max slippage
+                    const slippagePercent = 0.005; // 0.5% max slippage (balanced between execution and price protection)
 
                     if (isBuy) {
                         finalPx = currentPrice * (1 + slippagePercent);
@@ -967,11 +967,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     }
 
                     const slippageDollars = Math.abs(finalPx - currentPrice);
-                    console.log('💰 Market order with 0.3% slippage:', {
+                    console.log('💰 Market order with 0.5% max slippage:', {
                         currentPrice,
                         limitPrice: finalPx,
                         slippagePercent: (slippagePercent * 100).toFixed(1) + '%',
-                        slippageDollars: '$' + slippageDollars.toFixed(2),
+                        maxSlippageDollars: '$' + slippageDollars.toFixed(2),
                         note: 'IOC fills at best available price, this is just max slippage'
                     });
                 }
@@ -1628,6 +1628,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
             if (errorMessage.includes('Invalid signature') || errorMessage.includes('signature')) {
                 throw new Error('Signature failed. Please try again or reconnect your wallet.');
+            }
+            if (errorMessage.includes('could not immediately match') || errorMessage.includes('no matching orders')) {
+                throw new Error('Low liquidity: Market order failed. Try using a Limit order instead or increase your order size.');
             }
 
             throw error;
