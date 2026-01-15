@@ -523,6 +523,7 @@ export function useHyperliquidAccount(
                 usedMargin: totalUsedMargin,
                 unrealizedPnl: totalUnrealizedPnl,
                 unrealizedPnlPercent: totalCashBalance > 0 ? (totalUnrealizedPnl / totalCashBalance) * 100 : 0,
+                spotBalance: spotCash, // Add spot balance for transfers
             },
             mergedPositions: positionsWithRealtimePnl
         };

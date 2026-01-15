@@ -7,8 +7,9 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign } from 'lucide-react';
+import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign, ArrowLeftRight } from 'lucide-react';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import TransferModal from './TransferModal';
 
 export default function Profile() {
     const { t, language, setLanguage } = useLanguage();
@@ -38,6 +39,8 @@ export default function Profile() {
 
     const [syncing, setSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState<string | null>(null);
+
+    const [showTransferModal, setShowTransferModal] = useState(false);
 
     // Calculate total volume from fills (sum of price * size for each fill)
     const totalVolume = useMemo(() => {
@@ -285,7 +288,24 @@ export default function Profile() {
                         </div>
                     </div>
                 </div>
+
+                {/* Transfer Button */}
+                <div className="mt-6 pt-4 border-t border-white/10">
+                    <button
+                        onClick={() => setShowTransferModal(true)}
+                        className="w-full py-3 bg-[#FFFF00] text-black font-bold rounded-xl transition-all hover:bg-[#FDE047] flex items-center justify-center gap-2"
+                    >
+                        <ArrowLeftRight className="w-5 h-5" />
+                        {language === 'es' ? 'Transferir entre Spot y Perp' : 'Transfer Spot ↔ Perp'}
+                    </button>
+                </div>
             </div>
+
+            {/* Transfer Modal */}
+            <TransferModal
+                isOpen={showTransferModal}
+                onClose={() => setShowTransferModal(false)}
+            />
 
             {/* ===== INVITE FRIENDS ===== */}
             <div className="bg-[#0D0D0D] border border-white/10 rounded-3xl p-5">
