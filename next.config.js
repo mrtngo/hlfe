@@ -3,6 +3,12 @@ const nextConfig = {
   // Use webpack instead of Turbopack to avoid module type issues
   // This will be used when building with --webpack flag
   webpack: (config, { isServer }) => {
+    // Exclude Rhino SDK from webpack bundling on server (use as external)
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('@rhino.fi/sdk');
+    }
+
     // Ignore test files and other non-code files in node_modules
     config.module.rules.push({
       test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
