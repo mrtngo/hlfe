@@ -5,23 +5,21 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     // Exclude Rhino SDK from webpack bundling on server (use as external)
     if (isServer) {
-      config.externals = config.externals || [];
-      config.externals.push('@rhino.fi/sdk');
+      // Handle externals whether it's an array or function
+      if (Array.isArray(config.externals)) {
+        config.externals.push('@rhino.fi/sdk');
+      } else if (typeof config.externals === 'function') {
+        const originalExternals = config.externals;
+        config.externals = async (context, request, callback) => {
+          if (request === '@rhino.fi/sdk') {
+            return callback(null, `commonjs ${request}`);
+          }
+          return originalExternals(context, request, callback);
+        };
+      } else {
+        config.externals = ['@rhino.fi/sdk'];
+      }
     }
-
-    // Ignore test files and other non-code files in node_modules
-    config.module.rules.push({
-      test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
-      include: /node_modules/,
-      use: "ignore-loader",
-    });
-
-    // Ignore markdown, zip, and shell files in node_modules
-    config.module.rules.push({
-      test: /\.(md|zip|sh)$/,
-      include: /node_modules/,
-      use: "ignore-loader",
-    });
 
     // Resolve fallbacks for Node.js modules in browser
     if (!isServer) {
@@ -37,6 +35,8 @@ const nextConfig = {
       config.resolve.alias = {
         ...config.resolve.alias,
         '@react-native-async-storage/async-storage': false,
+        // Also prevent Rhino SDK from being bundled in client
+        '@rhino.fi/sdk': false,
       };
     }
 
