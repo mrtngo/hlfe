@@ -269,8 +269,8 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                                                 onClick={() => setTakeProfitPercent(percent.toString())}
                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
                                                     takeProfitPercent === percent.toString()
-                                                        ? 'bg-green-600 text-white'
-                                                        : 'bg-bg-elevated text-gray-300 hover:bg-bg-hover'
+                                                        ? 'bg-bullish text-white shadow-lg'
+                                                        : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
                                                 }`}
                                             >
                                                 {percent}%
@@ -394,8 +394,8 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
                                                 onClick={() => setStopLossPercent(percent.toString())}
                                                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
                                                     stopLossPercent === percent.toString()
-                                                        ? 'bg-red-600 text-white'
-                                                        : 'bg-bg-elevated text-gray-300 hover:bg-bg-hover'
+                                                        ? 'bg-bearish text-white shadow-lg'
+                                                        : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
                                                 }`}
                                             >
                                                 {percent}%

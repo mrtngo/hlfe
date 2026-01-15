@@ -395,9 +395,9 @@ export default function OrderPanel() {
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => setOrderSide('long')}
-                                className={`py-4 rounded-lg font-bold transition-all border-2 ${orderSide === 'long'
-                                    ? 'bg-primary text-primary-foreground border-primary shadow-lg'
-                                    : 'bg-primary/30 text-primary-foreground border-primary/30 hover:bg-primary/50'
+                                className={`py-4 rounded-full font-bold transition-all border-2 ${orderSide === 'long'
+                                    ? 'bg-brand text-black border-brand shadow-glow-brand'
+                                    : 'bg-brand/20 text-brand border-brand/40 hover:bg-brand/30'
                                     }`}
                             >
                                 <div className="flex items-center justify-center gap-2">
@@ -407,9 +407,9 @@ export default function OrderPanel() {
                             </button>
                             <button
                                 onClick={() => setOrderSide('short')}
-                                className={`py-4 rounded-lg font-bold transition-all border-2 ${orderSide === 'short'
+                                className={`py-4 rounded-full font-bold transition-all border-2 ${orderSide === 'short'
                                     ? 'bg-bearish text-white border-bearish shadow-lg'
-                                    : 'bg-bearish/30 text-white border-bearish/30 hover:bg-bearish/50'
+                                    : 'bg-bearish/20 text-bearish border-bearish/40 hover:bg-bearish/30'
                                     }`}
                             >
                                 <div className="flex items-center justify-center gap-2">

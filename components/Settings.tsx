@@ -200,9 +200,9 @@ export default function Settings() {
                                     <button
                                         onClick={handleSetupAgentWallet}
                                         disabled={settingUpAgent}
-                                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-4 py-2 bg-brand text-black rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                     >
-                                        {settingUpAgent ? 'Setting up...' : 'Enable'}
+                                        {settingUpAgent ? 'Setting up...' : 'Activar'}
                                     </button>
                                 )}
                             </div>
@@ -283,9 +283,9 @@ export default function Settings() {
                                     <button
                                         onClick={handleApproveBuilderFee}
                                         disabled={builderFeeLoading}
-                                        className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-4 py-2 bg-brand text-black rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                     >
-                                        {builderFeeLoading ? 'Approving...' : 'Approve'}
+                                        {builderFeeLoading ? 'Approving...' : 'Aprobar'}
                                     </button>
                                 )}
                             </div>
@@ -335,7 +335,7 @@ export default function Settings() {
 
                 {/* Powered by Hyperliquid */}
                 <div className="pt-8 pb-4 flex justify-center">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-primary rounded-full text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white font-semibold text-sm hover:bg-white/20 transition-colors">
                         <Zap className="w-4 h-4" />
                         Powered by Hyperliquid
                     </button>

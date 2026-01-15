@@ -47,7 +47,7 @@ export default function RootLayout({
             '--font-inter': '"Inter Variable", sans-serif',
             '--font-jetbrains': '"JetBrains Mono Variable", monospace',
         } as React.CSSProperties}>
-            <body className="min-h-screen bg-background font-sans antialiased overscroll-none font-inter">
+            <body className="min-h-screen bg-background font-sans antialiased font-inter">
                 <PrivyProvider>
                     <LanguageProvider>
                         <CurrencyProvider>
