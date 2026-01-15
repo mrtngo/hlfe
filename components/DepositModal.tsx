@@ -162,35 +162,37 @@ function AssetsDeposit({ address, t, copied, onCopy }: {
                 </div>
             </div>
 
-            {/* Minimum Deposit & Fee Info */}
-            <div style={{
-                backgroundColor: 'rgba(139, 92, 246, 0.05)',
-                border: '1px solid rgba(139, 92, 246, 0.2)',
-                borderRadius: '12px',
-                padding: '12px',
-                marginBottom: '8px'
-            }}>
-                <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                        <div>
-                            <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '2px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                Minimum Deposit
+            {/* Minimum Deposit & Fee Info - Only show for supported tokens */}
+            {selectedAsset && HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO] && (
+                <div style={{
+                    backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                    border: '1px solid rgba(139, 92, 246, 0.2)',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    marginBottom: '8px'
+                }}>
+                    <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <div>
+                                <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '2px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Minimum Deposit
+                                </div>
+                                <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                                    {HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO].minDeposit} {selectedAsset.symbol}
+                                </div>
                             </div>
-                            <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontFamily: 'monospace' }}>
-                                {HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO]?.minDeposit} {selectedAsset.symbol}
-                            </div>
-                        </div>
-                        <div>
-                            <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '2px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                Network Fee
-                            </div>
-                            <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '11px' }}>
-                                {HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO]?.fee}
+                            <div>
+                                <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '2px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    Network Fee
+                                </div>
+                                <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '11px' }}>
+                                    {HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO].fee}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Important Warning */}
             <div style={{
