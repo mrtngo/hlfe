@@ -236,6 +236,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}
                                 placeholder="0.00"
+                                step="any"
+                                min="0"
                                 className="w-24 text-right bg-transparent text-sm font-mono outline-none"
                                 style={{ color: '#FFFF00' }}
                             />
@@ -263,6 +265,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                                 setSizePercent(0);
                             }}
                             placeholder="0.0000"
+                            step="any"
+                            min="0"
                             className="w-24 text-right bg-transparent text-sm font-mono outline-none"
                             style={{ color: '#FFFF00' }}
                         />
@@ -339,6 +343,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             value={tpPrice}
                             onChange={(e) => setTpPrice(e.target.value)}
                             placeholder="---"
+                            step="any"
+                            min="0"
                             className="w-full bg-transparent text-sm font-mono outline-none"
                             style={{ color: '#FFFF00' }}
                         />
@@ -350,6 +356,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             value={slPrice}
                             onChange={(e) => setSlPrice(e.target.value)}
                             placeholder="---"
+                            step="any"
+                            min="0"
                             className="w-full bg-transparent text-sm font-mono outline-none"
                             style={{ color: '#FFFF00' }}
                         />

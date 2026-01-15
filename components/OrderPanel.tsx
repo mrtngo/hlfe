@@ -223,18 +223,34 @@ export default function OrderPanel() {
                             </button>
                         </div>
 
-                        {/* Margin Slider */}
+                        {/* Margin Input */}
                         <div>
                             <div className="flex justify-between items-center mb-3">
                                 <label className="text-base text-coffee-medium">Margin</label>
                                 <span className="text-xl font-bold text-brand">{formatCurrency(marginValue)}</span>
                             </div>
 
+                            {/* Direct margin input */}
+                            <input
+                                type="number"
+                                value={marginAmount}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setMarginAmount(val);
+                                }}
+                                placeholder="0.00"
+                                className="w-full px-4 py-3 bg-bg-tertiary border border-white/10 rounded-xl text-white text-lg font-semibold focus:outline-none focus:border-brand/50 mb-3"
+                                step="0.01"
+                                min="0"
+                                max={account.availableMargin}
+                            />
+
+                            {/* Slider */}
                             <input
                                 type="range"
                                 min="0"
                                 max={account.availableMargin > 0 ? account.availableMargin : 100}
-                                step="1"
+                                step="0.01"
                                 value={marginValue}
                                 onChange={(e) => {
                                     const val = Math.min(parseFloat(e.target.value), account.availableMargin);

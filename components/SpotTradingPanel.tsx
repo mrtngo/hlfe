@@ -511,6 +511,8 @@ export default function SpotTradingPanel() {
                                 setSuccess('');
                             }}
                             placeholder="0.00"
+                            step="any"
+                            min="0"
                             className="w-full py-3 px-4 pr-16 bg-bg-secondary border border-white/10 rounded-xl text-white text-lg font-mono focus:border-primary/50 outline-none"
                             style={{ fontSize: '16px' }}
                         />
