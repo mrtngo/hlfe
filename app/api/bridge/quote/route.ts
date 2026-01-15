@@ -4,7 +4,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { RhinoSdk } from '@rhino.fi/sdk';
 
 const RHINO_API_KEY = process.env.RHINO_API_KEY || '';
 
@@ -27,6 +26,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Dynamic import to avoid webpack issues during build
+    const { RhinoSdk } = await import('@rhino.fi/sdk');
 
     // Initialize Rhino SDK
     const rhino = RhinoSdk({ apiKey: RHINO_API_KEY });
