@@ -3,12 +3,22 @@ const nextConfig = {
   // Use webpack instead of Turbopack to avoid module type issues
   // This will be used when building with --webpack flag
   webpack: (config, { isServer }) => {
+    // BULLETPROOF: Ensure config.resolve exists
+    if (!config.resolve) {
+      config.resolve = {};
+    }
+
     // Exclude Rhino SDK from webpack bundling on server (use as external)
     if (isServer) {
-      // Handle externals whether it's an array or function
-      if (Array.isArray(config.externals)) {
+      // BULLETPROOF: Handle ALL possible states of config.externals
+      if (!config.externals) {
+        // If externals is undefined/null, initialize as array
+        config.externals = ['@rhino.fi/sdk'];
+      } else if (Array.isArray(config.externals)) {
+        // If it's already an array, push to it
         config.externals.push('@rhino.fi/sdk');
       } else if (typeof config.externals === 'function') {
+        // If it's a function, wrap it
         const originalExternals = config.externals;
         config.externals = async (context, request, callback) => {
           if (request === '@rhino.fi/sdk') {
@@ -17,18 +27,29 @@ const nextConfig = {
           return originalExternals(context, request, callback);
         };
       } else {
+        // If it's some other type (object, string, etc), replace with array
         config.externals = ['@rhino.fi/sdk'];
       }
     }
 
     // Resolve fallbacks for Node.js modules in browser
     if (!isServer) {
+      // BULLETPROOF: Ensure fallback object exists
+      if (!config.resolve.fallback) {
+        config.resolve.fallback = {};
+      }
+
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         net: false,
         tls: false,
       };
+
+      // BULLETPROOF: Ensure alias object exists
+      if (!config.resolve.alias) {
+        config.resolve.alias = {};
+      }
 
       // Fix MetaMask SDK trying to import React Native modules
       // This is a known issue with @metamask/sdk in web environments
