@@ -1717,7 +1717,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             };
 
             // CRITICAL: Trigger orders MUST use user wallet, NOT agent wallet
-            // Agent wallet needs to be registered with Hyperliquid first
+            // If agent wallet exists but isn't properly registered, clear it
+            const agent = getAgentWallet();
+            if (agent) {
+                console.log('⚠️ Agent wallet detected. Clearing it to use user wallet for trigger orders.');
+                console.log('Agent address that will be cleared:', agent.address);
+                clearAgentWallet();
+                setAgentWalletEnabled(false);
+            }
+
             console.log('🎯 Setting trigger order - FORCING user wallet only');
             console.log('User address:', address);
 
@@ -1740,14 +1748,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
             const lowercasedAddress = address.toLowerCase();
             const browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
-
-            // Verify we're NOT using agent wallet
-            const agent = getAgentWallet();
-            if (agent) {
-                console.log('⚠️ Agent wallet exists but will NOT be used for trigger orders');
-                console.log('Agent address:', agent.address);
-                console.log('User address:', lowercasedAddress);
-            }
 
             console.log('📝 Trigger Order Wire:', JSON.stringify(orderWire, null, 2));
             console.log('📝 Action Payload:', JSON.stringify(actionPayload, null, 2));
