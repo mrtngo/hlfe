@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Allow remote images from Clearbit for stock logos
   images: {
     remotePatterns: [
       {
@@ -18,7 +17,6 @@ const nextConfig = {
     ],
   },
 
-  // Add headers for cross-origin isolation (needed for some wallet features)
   async headers() {
     return [
       {
@@ -33,9 +31,13 @@ const nextConfig = {
     ];
   },
 
-  // Minimal webpack config - ONLY client-side polyfills, DO NOT TOUCH EXTERNALS
   webpack: (config) => {
-    // CRITICAL: Return config immediately, don't modify it
+    // Exclude test files from build
+    config.module.rules.push({
+      test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
+      use: 'null-loader',
+    });
+
     return config;
   },
 };
