@@ -1716,40 +1716,24 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 grouping: 'na'
             };
 
-            // Get signing wallet
-            let browserWallet: any = null;
-            const agent = getAgentWallet();
-            const agentSigner = getAgentSigner();
-            const isApproved = isAgentApproved(address);
+            // IMPORTANT: Trigger orders MUST be signed by the user's main wallet, NOT agent wallet
+            // Get user's wallet provider
+            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+            let signingProvider = null;
 
-            if (agentWalletEnabled && agent && agentSigner && isApproved) {
-                browserWallet = {
-                    address: agent.address,
-                    getAddress: async () => agent.address.toLowerCase(),
-                    signTypedData: async (domain: any, types: any, value: any) => {
-                        const { EIP712Domain, ...restTypes } = types;
-                        return await agentSigner.signTypedData(domain, restTypes, value);
-                    },
-                };
-            } else {
-                const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
-                let signingProvider = null;
-
-                if (embeddedWallet) {
-                    signingProvider = await embeddedWallet.getEthereumProvider();
-                } else if (typeof window !== 'undefined' && (window as any).ethereum) {
-                    signingProvider = (window as any).ethereum;
-                }
-
-                if (signingProvider) {
-                    const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
-                    browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
-                }
+            if (embeddedWallet) {
+                signingProvider = await embeddedWallet.getEthereumProvider();
+            } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                signingProvider = (window as any).ethereum;
             }
 
-            if (!browserWallet) {
-                throw new Error('Could not get signing wallet');
+            if (!signingProvider) {
+                throw new Error('Could not get wallet provider');
             }
+
+            // Create browser wallet with USER address (not agent)
+            const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+            const browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
 
             const nonce = Date.now();
             const signature = await signL1Action(
