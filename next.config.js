@@ -33,30 +33,9 @@ const nextConfig = {
     ];
   },
 
-  // Webpack config - NUCLEAR OPTION: Don't use --webpack flag, just use default
-  webpack: (config, { isServer }) => {
-    // Just return config as-is, don't mess with externals at all
-    // Let Next.js handle Rhino SDK however it wants
-
-    // Only set resolve fallbacks for client-side
-    if (!isServer) {
-      config.resolve = config.resolve || {};
-      config.resolve.fallback = config.resolve.fallback || {};
-
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-
-      config.resolve.alias = config.resolve.alias || {};
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        '@react-native-async-storage/async-storage': false,
-      };
-    }
-
+  // Minimal webpack config - ONLY client-side polyfills, DO NOT TOUCH EXTERNALS
+  webpack: (config) => {
+    // CRITICAL: Return config immediately, don't modify it
     return config;
   },
 };
