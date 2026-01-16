@@ -32,12 +32,10 @@ const nextConfig = {
   },
 
   webpack: (config) => {
-    // Exclude test files from build
     config.module.rules.push({
       test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
       use: 'null-loader',
     });
-
     return config;
   },
 };
