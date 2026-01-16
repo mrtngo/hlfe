@@ -34,7 +34,7 @@ const nextConfig = {
   webpack: (config) => {
     config.module.rules.push({
       test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
-      use: 'null-loader',
+      use: 'ignore-loader',
     });
     return config;
   },
