@@ -1716,12 +1716,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 grouping: 'na'
             };
 
-            // CRITICAL: Trigger orders (TP/SL) MUST be signed by the user's MAIN wallet
-            // Agent wallet does NOT work for trigger orders - Hyperliquid rejects them
-            console.log('🎯 Setting trigger order - ALWAYS using user wallet (not agent)');
+            // CRITICAL: Trigger orders MUST use user wallet, NOT agent wallet
+            // Agent wallet needs to be registered with Hyperliquid first
+            console.log('🎯 Setting trigger order - FORCING user wallet only');
             console.log('User address:', address);
 
-            // Get user's wallet provider (NOT agent)
+            // Get user's wallet provider (NEVER use agent wallet for trigger orders)
             let signingProvider = null;
             const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
 
@@ -1734,28 +1734,40 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             if (!signingProvider) {
-                throw new Error('No wallet provider found. Please connect your wallet.');
+                throw new Error('No wallet provider found');
             }
 
-            // Create BrowserWallet with USER's address (critical!)
             const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
             const lowercasedAddress = address.toLowerCase();
             const browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
 
+            // Verify we're NOT using agent wallet
+            const agent = getAgentWallet();
+            if (agent) {
+                console.log('⚠️ Agent wallet exists but will NOT be used for trigger orders');
+                console.log('Agent address:', agent.address);
+                console.log('User address:', lowercasedAddress);
+            }
+
             console.log('📝 Trigger Order Wire:', JSON.stringify(orderWire, null, 2));
             console.log('📝 Action Payload:', JSON.stringify(actionPayload, null, 2));
-            console.log('📝 Signing wallet address:', lowercasedAddress);
+            console.log('📝 Signing with USER address (NOT agent):', lowercasedAddress);
 
             const nonce = Date.now();
             const signature = await signL1Action(
                 browserWallet as any,
                 actionPayload,
-                null, // vaultAddress
+                null,
                 nonce,
-                !IS_TESTNET // isMainnet
+                !IS_TESTNET
             );
 
-            console.log('✅ Trigger order signed with user wallet');
+            console.log('✅ Signature created');
+            console.log('📝 Signature:', signature);
+
+            // Double-check the signer address
+            const walletAddress = await browserWallet.getAddress();
+            console.log('📝 Wallet address used for signing:', walletAddress);
 
             const payload = {
                 action: actionPayload,
@@ -1797,6 +1809,24 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     ? result.response
                     : JSON.stringify(result.response);
                 console.error('❌ Trigger order rejected:', errorMsg);
+
+                // Check if it's an agent wallet issue
+                if (errorMsg.includes('does not exist') || errorMsg.includes('API Wallet')) {
+                    console.warn('⚠️ Agent wallet detected in error. This might be interfering with trigger orders.');
+                    console.warn('⚠️ Disabling agent wallet. Please try again with normal signing.');
+
+                    // Disable agent wallet
+                    setAgentWalletEnabled(false);
+
+                    // Clear agent wallet from localStorage
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('hyperliquid_agent_approved');
+                        localStorage.removeItem('hyperliquid_agent_wallet');
+                    }
+
+                    throw new Error('Agent wallet interfered with trigger order. It has been disabled. Please try setting SL/TP again - you may need to sign the transaction.');
+                }
+
                 throw new Error(errorMsg || 'Failed to place trigger order');
             }
         } catch (error: any) {
