@@ -1,75 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Use webpack instead of Turbopack to avoid module type issues
-  // This will be used when building with --webpack flag
-  webpack: (config, { isServer }) => {
-    // BULLETPROOF: Ensure config.resolve exists
-    if (!config.resolve) {
-      config.resolve = {};
-    }
-
-    // Exclude Rhino SDK from webpack bundling on server (use as external)
-    if (isServer) {
-      // BULLETPROOF: Handle ALL possible states of config.externals
-      if (!config.externals) {
-        // If externals is undefined/null, initialize as array
-        config.externals = ['@rhino.fi/sdk'];
-      } else if (Array.isArray(config.externals)) {
-        // If it's already an array, push to it
-        config.externals.push('@rhino.fi/sdk');
-      } else if (typeof config.externals === 'function') {
-        // If it's a function, wrap it
-        const originalExternals = config.externals;
-        config.externals = async (context, request, callback) => {
-          if (request === '@rhino.fi/sdk') {
-            return callback(null, `commonjs ${request}`);
-          }
-          return originalExternals(context, request, callback);
-        };
-      } else {
-        // If it's some other type (object, string, etc), replace with array
-        config.externals = ['@rhino.fi/sdk'];
-      }
-    }
-
-    // Resolve fallbacks for Node.js modules in browser
-    if (!isServer) {
-      // BULLETPROOF: Ensure fallback object exists
-      if (!config.resolve.fallback) {
-        config.resolve.fallback = {};
-      }
-
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-
-      // BULLETPROOF: Ensure alias object exists
-      if (!config.resolve.alias) {
-        config.resolve.alias = {};
-      }
-
-      // Fix MetaMask SDK trying to import React Native modules
-      // This is a known issue with @metamask/sdk in web environments
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        '@react-native-async-storage/async-storage': false,
-        // Also prevent Rhino SDK from being bundled in client
-        '@rhino.fi/sdk': false,
-      };
-    }
-
-    return config;
-  },
-
-  // Empty turbopack config to allow webpack config
-  turbopack: {},
-
-  // Ensure we don't try to transpile missing packages
-  transpilePackages: [],
-
   // Allow remote images from Clearbit for stock logos
   images: {
     remotePatterns: [
@@ -101,6 +31,33 @@ const nextConfig = {
         ],
       },
     ];
+  },
+
+  // Webpack config - NUCLEAR OPTION: Don't use --webpack flag, just use default
+  webpack: (config, { isServer }) => {
+    // Just return config as-is, don't mess with externals at all
+    // Let Next.js handle Rhino SDK however it wants
+
+    // Only set resolve fallbacks for client-side
+    if (!isServer) {
+      config.resolve = config.resolve || {};
+      config.resolve.fallback = config.resolve.fallback || {};
+
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+
+      config.resolve.alias = config.resolve.alias || {};
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@react-native-async-storage/async-storage': false,
+      };
+    }
+
+    return config;
   },
 };
 
