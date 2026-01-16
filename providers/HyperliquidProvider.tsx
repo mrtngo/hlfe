@@ -1716,33 +1716,46 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 grouping: 'na'
             };
 
-            // IMPORTANT: Trigger orders MUST be signed by the user's main wallet, NOT agent wallet
-            // Get user's wallet provider
-            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+            // CRITICAL: Trigger orders (TP/SL) MUST be signed by the user's MAIN wallet
+            // Agent wallet does NOT work for trigger orders - Hyperliquid rejects them
+            console.log('🎯 Setting trigger order - ALWAYS using user wallet (not agent)');
+            console.log('User address:', address);
+
+            // Get user's wallet provider (NOT agent)
             let signingProvider = null;
+            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
 
             if (embeddedWallet) {
                 signingProvider = await embeddedWallet.getEthereumProvider();
+                console.log('✅ Using Privy embedded wallet');
             } else if (typeof window !== 'undefined' && (window as any).ethereum) {
                 signingProvider = (window as any).ethereum;
+                console.log('✅ Using external wallet (MetaMask/etc)');
             }
 
             if (!signingProvider) {
-                throw new Error('Could not get wallet provider');
+                throw new Error('No wallet provider found. Please connect your wallet.');
             }
 
-            // Create browser wallet with USER address (not agent)
+            // Create BrowserWallet with USER's address (critical!)
             const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
-            const browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
+            const lowercasedAddress = address.toLowerCase();
+            const browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
+
+            console.log('📝 Trigger Order Wire:', JSON.stringify(orderWire, null, 2));
+            console.log('📝 Action Payload:', JSON.stringify(actionPayload, null, 2));
+            console.log('📝 Signing wallet address:', lowercasedAddress);
 
             const nonce = Date.now();
             const signature = await signL1Action(
                 browserWallet as any,
                 actionPayload,
-                null,
+                null, // vaultAddress
                 nonce,
-                !IS_TESTNET
+                !IS_TESTNET // isMainnet
             );
+
+            console.log('✅ Trigger order signed with user wallet');
 
             const payload = {
                 action: actionPayload,
@@ -1751,16 +1764,27 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 vaultAddress: null,
             };
 
+            console.log('📤 Sending trigger order to API...');
+
             const response = await fetch(`${API_URL}/exchange`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
 
+            console.log('📥 API Response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ API Error Response:', errorText);
+                throw new Error(`API Error (${response.status}): ${errorText}`);
+            }
+
             const result = await response.json();
-            console.log('Trigger order result:', result);
+            console.log('📥 Trigger order API result:', JSON.stringify(result, null, 2));
 
             if (result.status === 'ok') {
+                console.log('✅ Trigger order placed successfully!');
                 // Refresh orders to show the new trigger order
                 setTimeout(() => refreshAccountData(), 500);
 
@@ -1769,7 +1793,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     message: `${triggerType === 'tp' ? 'Take Profit' : 'Stop Loss'} set at ${formatCurrency(triggerPrice)}`
                 };
             } else {
-                throw new Error(result.response || 'Failed to place trigger order');
+                const errorMsg = typeof result.response === 'string'
+                    ? result.response
+                    : JSON.stringify(result.response);
+                console.error('❌ Trigger order rejected:', errorMsg);
+                throw new Error(errorMsg || 'Failed to place trigger order');
             }
         } catch (error: any) {
             console.error('Failed to place trigger order:', error);
