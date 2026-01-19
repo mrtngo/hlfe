@@ -224,8 +224,25 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Open Positions */}
             {positions.length > 0 && (
-                <div className="glass-card p-6" style={{ marginBottom: '32px' }}>
-                    <h2 className="text-2xl font-bold mb-6 text-white">{t.home.openPositions}</h2>
+                <div
+                    className="rounded-3xl p-6"
+                    style={{
+                        marginBottom: '32px',
+                        background: 'linear-gradient(135deg, rgba(20, 20, 25, 0.95) 0%, rgba(15, 15, 20, 0.98) 100%)',
+                        border: '2px solid rgba(250, 204, 21, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(250, 204, 21, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                    }}
+                >
+                    {/* Section Header */}
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+                        <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(250, 204, 21, 0.3)' }}>
+                            <TrendingUp className="w-5 h-5 text-brand" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">{t.home.openPositions}</h2>
+                            <p className="text-xs text-white/50">{positions.length} active position{positions.length !== 1 ? 's' : ''}</p>
+                        </div>
+                    </div>
                     <div className="space-y-3">
                         {positions.map((position) => {
                             const isLong = position.side === 'long';
@@ -305,8 +322,21 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Top Movers - Crypto */}
             {cryptoGainers.length > 0 && (
-                <div className="glass-card p-6" style={{ marginBottom: '32px' }}>
-                    <h2 className="text-2xl font-bold text-white mb-6 text-center">🔥 Cripto Hot</h2>
+                <div
+                    className="rounded-3xl p-6"
+                    style={{
+                        marginBottom: '32px',
+                        background: 'linear-gradient(135deg, rgba(25, 20, 15, 0.95) 0%, rgba(20, 15, 10, 0.98) 100%)',
+                        border: '2px solid rgba(255, 149, 0, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 149, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                    }}
+                >
+                    {/* Section Header */}
+                    <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b border-white/10">
+                        <span className="text-2xl">🔥</span>
+                        <h2 className="text-xl font-bold text-white">Cripto Hot</h2>
+                        <span className="text-xs px-2 py-1 rounded-full bg-orange-500/20 text-orange-400 font-semibold">24h</span>
+                    </div>
                     <div className="grid grid-cols-2 gap-6">
                         {/* Gainers */}
                         <div>
@@ -378,8 +408,21 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Top Movers - Stocks */}
             {stockGainers.length > 0 && (
-                <div className="glass-card p-6" style={{ marginBottom: '32px' }}>
-                    <h2 className="text-2xl font-bold text-white mb-6 text-center">📈 Acciones Hot</h2>
+                <div
+                    className="rounded-3xl p-6"
+                    style={{
+                        marginBottom: '32px',
+                        background: 'linear-gradient(135deg, rgba(15, 25, 20, 0.95) 0%, rgba(10, 20, 15, 0.98) 100%)',
+                        border: '2px solid rgba(52, 199, 89, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(52, 199, 89, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                    }}
+                >
+                    {/* Section Header */}
+                    <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b border-white/10">
+                        <span className="text-2xl">📈</span>
+                        <h2 className="text-xl font-bold text-white">Acciones Hot</h2>
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 font-semibold">24h</span>
+                    </div>
                     <div className="grid grid-cols-2 gap-6">
                         {/* Gainers */}
                         <div>
@@ -526,11 +569,25 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             </button>
 
             {/* Watchlist */}
-            <div className="glass-card p-6">
-                {/* Header with title and add button */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="w-12" /> {/* Spacer for centering */}
-                    <h2 className="text-2xl font-bold text-white">{t.home.watchlist}</h2>
+            <div
+                className="rounded-3xl p-6"
+                style={{
+                    background: 'linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%)',
+                    border: '2px solid rgba(99, 102, 241, 0.3)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                }}
+            >
+                {/* Section Header */}
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}>
+                            <span className="text-lg">⭐</span>
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">{t.home.watchlist}</h2>
+                            <p className="text-xs text-white/50">{watchlistMarkets.length} tokens tracked</p>
+                        </div>
+                    </div>
                     <div className="relative" ref={dropdownRef}>
                         <button
                             className="p-2 transition-all"
@@ -683,7 +740,6 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         )}
                     </div>
                 </div>
-
                 {/* Watchlist items */}
                 {watchlistMarkets.length === 0 ? (
                     <div id="home-market-list" className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
@@ -705,18 +761,35 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             </div>
 
             {/* Categories Section */}
-            <div className="glass-card p-6 mt-8">
+            <div
+                className="rounded-3xl p-6 mt-8"
+                style={{
+                    background: 'linear-gradient(135deg, rgba(25, 15, 25, 0.95) 0%, rgba(20, 10, 20, 0.98) 100%)',
+                    border: '2px solid rgba(168, 85, 247, 0.3)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                }}
+            >
+                {/* Section Header */}
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>
+                        <span className="text-lg">🏷️</span>
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-white">Browse by Category</h2>
+                        <p className="text-xs text-white/50">Explore tokens by sector</p>
+                    </div>
+                </div>
+
                 {/* Category Tabs */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide mb-6">
                     {CATEGORIES.filter(cat => cat.id !== 'watchlist').map((category) => (
                         <button
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all shrink-0 ${
-                                selectedCategory === category.id
-                                    ? 'bg-brand text-black shadow-lg'
-                                    : 'bg-bg-secondary text-white/60 hover:bg-bg-elevated hover:text-white border border-white/10'
-                            }`}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all shrink-0 ${selectedCategory === category.id
+                                ? 'bg-brand text-black shadow-lg'
+                                : 'bg-bg-secondary text-white/60 hover:bg-bg-elevated hover:text-white border border-white/10'
+                                }`}
                             style={selectedCategory === category.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
                         >
                             <span className="text-base">{category.emoji}</span>
@@ -754,7 +827,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                     key={market.name}
                                     market={market}
                                     onTokenClick={handleTokenClick}
-                                    onRemove={() => {}} // Categories don't have remove functionality
+                                    onRemove={() => { }} // Categories don't have remove functionality
                                     showRemoveButton={false}
                                 />
                             ))}
@@ -770,14 +843,16 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             />
 
             {/* Share Modal */}
-            {sharePosition && (
-                <ShareModal
-                    isOpen={!!sharePosition}
-                    onClose={() => setSharePosition(null)}
-                    position={sharePosition}
-                />
-            )}
-        </div>
+            {
+                sharePosition && (
+                    <ShareModal
+                        isOpen={!!sharePosition}
+                        onClose={() => setSharePosition(null)}
+                        position={sharePosition}
+                    />
+                )
+            }
+        </div >
     );
 }
 
