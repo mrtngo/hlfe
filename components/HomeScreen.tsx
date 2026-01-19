@@ -762,7 +762,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Categories Section */}
             <div
-                className="rounded-3xl p-6 mt-8"
+                className="rounded-3xl p-6 mt-12"
                 style={{
                     background: 'linear-gradient(135deg, rgba(25, 15, 25, 0.95) 0%, rgba(20, 10, 20, 0.98) 100%)',
                     border: '2px solid rgba(168, 85, 247, 0.3)',
