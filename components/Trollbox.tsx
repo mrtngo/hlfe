@@ -39,16 +39,46 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
     const [isSending, setIsSending] = useState(false);
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [onlineCount, setOnlineCount] = useState(0);
+    const [showScrollButton, setShowScrollButton] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
     const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const userScrolledRef = useRef(false);
+    const prevMessagesLengthRef = useRef(0);
 
-    // Scroll to bottom whenever messages change
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll to bottom
+    const scrollToBottom = (smooth = true) => {
+        messagesEndRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+        userScrolledRef.current = false;
+        setShowScrollButton(false);
     };
 
+    // Check if user is at bottom
+    const isAtBottom = () => {
+        const container = messagesContainerRef.current;
+        if (!container) return true;
+        const threshold = 100; // pixels from bottom
+        return container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    };
+
+    // Handle scroll events
+    const handleScroll = () => {
+        const atBottom = isAtBottom();
+        setShowScrollButton(!atBottom);
+        if (!atBottom) {
+            userScrolledRef.current = true;
+        }
+    };
+
+    // Auto-scroll only when: 1) user is at bottom, 2) new messages arrive, or 3) user sends message
     useEffect(() => {
-        if (isOpen) {
+        if (!isOpen) return;
+
+        const isNewMessage = messages.length > prevMessagesLengthRef.current;
+        prevMessagesLengthRef.current = messages.length;
+
+        // Auto-scroll if: user hasn't manually scrolled up OR they're at the bottom
+        if (isNewMessage && (!userScrolledRef.current || isAtBottom())) {
             scrollToBottom();
         }
     }, [messages, isOpen]);
@@ -120,6 +150,8 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                 setNewMessage('');
                 // Immediately fetch new messages to show the sent message
                 await fetchMessages();
+                // Always scroll to bottom when user sends a message
+                setTimeout(() => scrollToBottom(), 100);
             }
         } catch (error) {
             console.error('Failed to send message:', error);
@@ -132,6 +164,25 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
 
     return (
         <>
+            {/* Custom Scrollbar Styles */}
+            <style jsx>{`
+                .trollbox-messages::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .trollbox-messages::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: 10px;
+                }
+                .trollbox-messages::-webkit-scrollbar-thumb {
+                    background: linear-gradient(180deg, rgba(250, 204, 21, 0.6), rgba(250, 204, 21, 0.4));
+                    border-radius: 10px;
+                    border: 2px solid rgba(0, 0, 0, 0.2);
+                }
+                .trollbox-messages::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(180deg, rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.6));
+                }
+            `}</style>
+
             {/* Backdrop overlay */}
             <div
                 className="fixed inset-0 z-[99] transition-opacity duration-300"
@@ -192,9 +243,13 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
 
             {/* Messages Area */}
             <div
-                className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide"
+                ref={messagesContainerRef}
+                onScroll={handleScroll}
+                className="trollbox-messages flex-1 overflow-y-auto p-4 space-y-3"
                 style={{
                     background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50px)',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: 'rgba(250, 204, 21, 0.5) rgba(0, 0, 0, 0.2)',
                 }}
             >
                 {isLoading ? (
@@ -275,6 +330,22 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                 )}
                 <div ref={messagesEndRef} />
             </div>
+
+            {/* Scroll to Bottom Button */}
+            {showScrollButton && (
+                <button
+                    onClick={() => scrollToBottom()}
+                    className="absolute bottom-24 right-8 p-3 rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all z-10 animate-bounce"
+                    style={{
+                        background: 'linear-gradient(135deg, #FFFF00, #FFD700)',
+                        boxShadow: '0 4px 20px rgba(255, 255, 0, 0.5)',
+                    }}
+                >
+                    <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                    </svg>
+                </button>
+            )}
 
             {/* Input Area */}
             <div
