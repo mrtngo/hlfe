@@ -19,7 +19,13 @@ import {
 } from '@/lib/constants';
 import { generateDepositAddress } from '@/lib/hyperunit';
 import TokenLogo from '@/components/TokenLogo';
-import RhinoBridge from '@/components/RhinoBridge';
+import dynamic from 'next/dynamic';
+
+// Dynamically import RhinoBridge to avoid webpack bundling issues with @rhino.fi/sdk
+const RhinoBridge = dynamic(() => import('@/components/RhinoBridge'), {
+    ssr: false,
+    loading: () => <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.5)' }}>Loading bridge...</div>
+});
 
 interface DepositModalProps {
     isOpen: boolean;
