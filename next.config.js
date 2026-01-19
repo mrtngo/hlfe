@@ -31,7 +31,15 @@ const nextConfig = {
     ];
   },
 
-  // Empty turbopack config to silence the warning
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
+      use: 'ignore-loader',
+    });
+    return config;
+  },
+
+  // Use webpack explicitly
   turbopack: {},
 };
 
