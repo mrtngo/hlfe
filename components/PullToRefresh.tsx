@@ -18,8 +18,8 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
     const MAX_PULL = 150;
 
     const handleTouchStart = (e: React.TouchEvent) => {
-        // Only start pulling if at the very top AND not already refreshing
-        if (containerRef.current && containerRef.current.scrollTop <= 0 && !isRefreshing) {
+        // Only start pulling if at the very top of the page AND not already refreshing
+        if (window.scrollY <= 0 && !isRefreshing) {
             startY.current = e.touches[0].pageY;
             isPulling.current = true;
         }
@@ -43,8 +43,8 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
             const distance = Math.min(diff * 0.5, MAX_PULL);
             setPullDistance(distance);
 
-            // Only prevent scroll when actively pulling down
-            if (e.cancelable && containerRef.current && containerRef.current.scrollTop <= 0) {
+            // Only prevent scroll when actively pulling down at top of page
+            if (e.cancelable && window.scrollY <= 0) {
                 e.preventDefault();
             }
         } else if (diff < 0) {
