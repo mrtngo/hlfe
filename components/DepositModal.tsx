@@ -19,13 +19,12 @@ import {
 } from '@/lib/constants';
 import { generateDepositAddress } from '@/lib/hyperunit';
 import TokenLogo from '@/components/TokenLogo';
-import dynamic from 'next/dynamic';
-
-// Dynamically import RhinoBridge to avoid webpack bundling issues with @rhino.fi/sdk
-const RhinoBridge = dynamic(() => import('@/components/RhinoBridge'), {
-    ssr: false,
-    loading: () => <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.5)' }}>Loading bridge...</div>
-});
+// TEMPORARILY DISABLED: RhinoBridge causing build issues on Vercel
+// import dynamic from 'next/dynamic';
+// const RhinoBridge = dynamic(() => import('@/components/RhinoBridge'), {
+//     ssr: false,
+//     loading: () => <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.5)' }}>Loading bridge...</div>
+// });
 
 interface DepositModalProps {
     isOpen: boolean;
@@ -940,7 +939,8 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                         >
                             {t.depositModal.tabBridge}
                         </button>
-                        <button
+                        {/* TEMPORARILY DISABLED: RhinoBridge causing build issues */}
+                        {/* <button
                             onClick={() => setActiveTab('crosschain')}
                             style={{
                                 paddingBottom: '12px',
@@ -956,7 +956,7 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                             }}
                         >
                             Multi-Chain
-                        </button>
+                        </button> */}
                         <button
                             onClick={() => setActiveTab('transfer')}
                             style={{
@@ -988,7 +988,8 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                         />
                     )}
                     {activeTab === 'bridge' && <BridgeDeposit />}
-                    {activeTab === 'crosschain' && <RhinoBridge onComplete={() => setActiveTab('bridge')} />}
+                    {/* TEMPORARILY DISABLED: RhinoBridge causing build issues */}
+                    {/* {activeTab === 'crosschain' && <RhinoBridge onComplete={() => setActiveTab('bridge')} />} */}
                     {activeTab === 'transfer' && <SpotPerpTransfer />}
                 </div>
             </div>

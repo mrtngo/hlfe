@@ -31,32 +31,11 @@ const nextConfig = {
     ];
   },
 
-  // Exclude rhino.fi SDK from webpack bundling to avoid build errors
-  serverExternalPackages: ['@rhino.fi/sdk'],
-
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     config.module.rules.push({
       test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
       use: 'ignore-loader',
     });
-
-    // Additional fallbacks for client-side builds
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-        stream: false,
-        http: false,
-        https: false,
-        zlib: false,
-        path: false,
-        os: false,
-      };
-    }
-
     return config;
   },
 };
