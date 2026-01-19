@@ -67,9 +67,24 @@ export default function OrderPanel() {
     const fee = exchangeFee + builderFee;
     const totalRequired = requiredMargin + fee;
 
-    const liquidationPrice = orderSide === 'long'
-        ? currentPrice * (1 - 1 / leverage)
-        : currentPrice * (1 + 1 / leverage);
+    // Hyperliquid liquidation formula accounting for maintenance margin
+    // Maintenance margin = 50% of initial margin at max leverage
+    // Maintenance leverage = maxLeverage * 2
+    // l = 1 / maintenance_leverage
+    const maintenanceLeverage = maxLeverage * 2;
+    const l = 1 / maintenanceLeverage;
+
+    // For isolated margin:
+    // liq_price = entry_price - side * margin / position_size / (1 - l * side)
+    // where side = 1 for long, -1 for short
+    const positionSizeInTokens = currentPrice > 0 ? notionalValue / currentPrice : 0;
+    const margin = requiredMargin;
+
+    const liquidationPrice = positionSizeInTokens > 0
+        ? (orderSide === 'long'
+            ? currentPrice - (margin / positionSizeInTokens) / (1 - l)  // Long: side = 1
+            : currentPrice + (margin / positionSizeInTokens) / (1 + l)) // Short: side = -1
+        : 0;
 
     const apiSide = orderSide === 'long' ? 'buy' : 'sell';
 
