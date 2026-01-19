@@ -118,6 +118,24 @@ export default function MarketSelector() {
 
     return (
         <div className="relative" ref={dropdownRef}>
+            {/* Custom Scrollbar Styles */}
+            <style jsx>{`
+                .market-list::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .market-list::-webkit-scrollbar-track {
+                    background: rgba(0, 0, 0, 0.3);
+                    border-radius: 10px;
+                }
+                .market-list::-webkit-scrollbar-thumb {
+                    background: linear-gradient(180deg, rgba(250, 204, 21, 0.6), rgba(250, 204, 21, 0.4));
+                    border-radius: 10px;
+                    border: 2px solid rgba(0, 0, 0, 0.3);
+                }
+                .market-list::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(180deg, rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.6));
+                }
+            `}</style>
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
@@ -174,11 +192,11 @@ export default function MarketSelector() {
 
             {isOpen && (
                 <div
-                    className="absolute top-full left-0 right-0 mt-2 rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-md"
+                    className="absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-2xl z-50 overflow-hidden"
                     style={{
-                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-                        border: '1px solid rgba(255, 255, 0, 0.35)',
-                        boxShadow: '0 10px 32px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 255, 0, 0.12)',
+                        backgroundColor: '#000000',
+                        border: '2px solid rgba(255, 255, 0, 0.5)',
+                        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 255, 0, 0.2)',
                     }}
                 >
                     <div className="p-4 border-b border-white/10">
@@ -207,24 +225,28 @@ export default function MarketSelector() {
                     </div>
 
                     <div className="p-4 border-b border-white/10">
-                        <div className="flex items-center gap-2 bg-primary/20 rounded-lg p-1">
+                        <div className="flex items-center gap-2 p-1 rounded-xl" style={{ backgroundColor: '#0a0a0a' }}>
                             <button
                                 type="button"
                                 onClick={() => setActiveTab('crypto')}
-                                className={`flex-1 py-2 px-4 rounded font-semibold text-sm transition-all ${activeTab === 'crypto'
-                                    ? 'bg-primary text-primary-foreground shadow-soft'
-                                    : 'bg-primary/50 text-primary-foreground hover:bg-primary'
-                                    }`}
+                                className="flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all"
+                                style={{
+                                    backgroundColor: activeTab === 'crypto' ? '#FACC15' : 'transparent',
+                                    color: activeTab === 'crypto' ? '#000000' : '#FFFFFF',
+                                    boxShadow: activeTab === 'crypto' ? '0 4px 12px rgba(250, 204, 21, 0.4)' : 'none',
+                                }}
                             >
                                 Crypto
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setActiveTab('stocks')}
-                                className={`flex-1 py-2 px-4 rounded font-semibold text-sm transition-all ${activeTab === 'stocks'
-                                    ? 'bg-primary text-primary-foreground shadow-soft'
-                                    : 'bg-primary/50 text-primary-foreground hover:bg-primary'
-                                    }`}
+                                className="flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all"
+                                style={{
+                                    backgroundColor: activeTab === 'stocks' ? '#FACC15' : 'transparent',
+                                    color: activeTab === 'stocks' ? '#000000' : '#FFFFFF',
+                                    boxShadow: activeTab === 'stocks' ? '0 4px 12px rgba(250, 204, 21, 0.4)' : 'none',
+                                }}
                             >
                                 Stocks
                             </button>
@@ -234,21 +256,22 @@ export default function MarketSelector() {
                     {/* Category Filter */}
                     {categories.length > 0 && (
                         <div className="p-4 border-b border-white/10">
-                            <div className="flex items-center gap-2 mb-2">
-                                <Filter className="w-3.5 h-3.5 text-white/60" />
-                                <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
-                                    Categories
+                            <div className="flex items-center gap-2 mb-3">
+                                <Filter className="w-4 h-4 text-brand" />
+                                <span className="text-xs font-bold text-white uppercase tracking-wider">
+                                    Filter by Category
                                 </span>
                             </div>
-                            <div className="flex flex-wrap gap-1.5">
+                            <div className="flex flex-wrap gap-2">
                                 <button
                                     type="button"
                                     onClick={() => setSelectedCategory(null)}
-                                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
-                                        selectedCategory === null
-                                            ? 'bg-brand text-black'
-                                            : 'bg-bg-elevated text-white/70 hover:bg-bg-hover'
-                                    }`}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                                    style={{
+                                        backgroundColor: selectedCategory === null ? '#FACC15' : '#1a1a1a',
+                                        color: selectedCategory === null ? '#000000' : '#FFFFFF',
+                                        border: selectedCategory === null ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
+                                    }}
                                 >
                                     All
                                 </button>
@@ -266,19 +289,17 @@ export default function MarketSelector() {
                                             key={category.id}
                                             type="button"
                                             onClick={() => setSelectedCategory(category.slug)}
-                                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all ${
-                                                selectedCategory === category.slug
-                                                    ? 'text-black'
-                                                    : 'bg-bg-elevated text-white/70 hover:bg-bg-hover'
-                                            }`}
+                                            className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-105"
                                             style={{
-                                                backgroundColor: selectedCategory === category.slug ? category.color || '#FFFF00' : undefined,
+                                                backgroundColor: selectedCategory === category.slug ? (category.color || '#FACC15') : '#1a1a1a',
+                                                color: selectedCategory === category.slug ? '#000000' : '#FFFFFF',
+                                                border: selectedCategory === category.slug ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
                                             }}
                                         >
                                             {category.icon && <span className="mr-1">{category.icon}</span>}
                                             {category.name}
                                             {category.asset_count !== undefined && category.asset_count > 0 && (
-                                                <span className="ml-1 opacity-60">({category.asset_count})</span>
+                                                <span className="ml-1 opacity-70 text-[10px]">({category.asset_count})</span>
                                             )}
                                         </button>
                                     ))}
@@ -288,34 +309,37 @@ export default function MarketSelector() {
 
                     <div className="p-4 border-b border-white/10">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-coffee-medium" />
+                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-brand" />
                             <input
                                 type="text"
                                 placeholder={t.markets.search}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="input pl-10 w-full rounded-lg"
+                                className="w-full pl-12 pr-10 py-3 rounded-xl font-semibold text-white placeholder-white/40"
                                 style={{
                                     backgroundColor: '#0a0a0a',
-                                    border: '1px solid rgba(255, 255, 0, 0.2)',
+                                    border: '2px solid rgba(255, 255, 0, 0.3)',
+                                    outline: 'none',
                                 }}
+                                onFocus={(e) => e.target.style.borderColor = 'rgba(255, 255, 0, 0.6)'}
+                                onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 0, 0.3)'}
                                 autoFocus
                             />
                             {searchQuery && (
                                 <button
                                     type="button"
                                     onClick={() => setSearchQuery('')}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-coffee-medium hover:text-white transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-brand transition-colors p-1"
                                 >
-                                    <X className="w-4 h-4" />
+                                    <X className="w-5 h-5" />
                                 </button>
                             )}
                         </div>
                     </div>
 
-                    <div className="max-h-[360px] overflow-y-auto p-4 space-y-2">
+                    <div className="market-list max-h-[360px] overflow-y-auto p-4 space-y-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(250, 204, 21, 0.5) rgba(0, 0, 0, 0.3)' }}>
                         {filteredMarkets.length === 0 ? (
-                            <div className="text-center text-sm text-white/60">No markets found</div>
+                            <div className="text-center py-8 text-sm font-semibold text-white">No markets found</div>
                         ) : (
                             filteredMarkets.map((market) => {
                                 const isSelected = market.symbol === selectedMarket;
@@ -326,42 +350,33 @@ export default function MarketSelector() {
                                         key={market.symbol}
                                         type="button"
                                         onClick={() => handleSelectMarket(market.symbol)}
-                                        className={`
-                                            w-full text-left p-3 transition-all rounded-lg
-                                            ${isSelected ? 'bg-primary/20 border border-primary' : 'border border-white/10'}
-                                        `}
+                                        className="w-full text-left p-3 transition-all rounded-xl hover:scale-[1.02]"
                                         style={{
                                             minWidth: 0,
-                                            backgroundColor: '#0a0a0a',
-                                            borderColor: isSelected ? undefined : 'rgba(255, 255, 255, 0.12)',
+                                            backgroundColor: isSelected ? 'rgba(250, 204, 21, 0.15)' : '#0a0a0a',
+                                            border: isSelected ? '2px solid #FACC15' : '2px solid rgba(255, 255, 255, 0.1)',
+                                            boxShadow: isSelected ? '0 4px 16px rgba(250, 204, 21, 0.3)' : 'none',
                                         }}
                                     >
                                         <div>
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex-1 flex items-center gap-2">
-                                                    <TokenLogo symbol={market.symbol} size={24} />
+                                                    <TokenLogo symbol={market.symbol} size={28} />
                                                     <div className="flex items-center gap-2">
-                                                        <div
-                                                            className="font-semibold text-sm px-2 py-0.5 rounded"
-                                                            style={{
-                                                                color: '#FFFFFF',
-                                                                background: 'rgba(0,0,0,0.6)',
-                                                                textShadow: '0 0 6px rgba(0,0,0,0.6)'
-                                                            }}
-                                                        >
+                                                        <div className="font-bold text-base text-white">
                                                             {market.name}
                                                         </div>
-                                                        <span className="text-[11px] px-2 py-0.5 rounded border border-white/15 bg-black/70 text-white font-semibold">
+                                                        <span className="text-xs px-2 py-0.5 rounded-md bg-white/5 text-white/60 font-semibold">
                                                             {market.symbol}
                                                         </span>
                                                         {market.onlyIsolated && (
-                                                            <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">
-                                                                Isolated
+                                                            <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-md font-bold">
+                                                                ISO
                                                             </span>
                                                         )}
                                                         {market.isStock && (
-                                                            <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-semibold">
-                                                                Stock
+                                                            <span className="text-[10px] bg-blue-500/30 text-blue-300 px-2 py-0.5 rounded-md font-bold">
+                                                                STOCK
                                                             </span>
                                                         )}
                                                     </div>
