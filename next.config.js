@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
       {
@@ -34,13 +31,8 @@ const nextConfig = {
     ];
   },
 
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /\.(test|spec)\.(ts|tsx|js|jsx)$/,
-      use: 'ignore-loader',
-    });
-    return config;
-  },
+  // Empty turbopack config to silence the warning
+  turbopack: {},
 };
 
 module.exports = nextConfig;
