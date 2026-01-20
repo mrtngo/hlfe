@@ -1784,7 +1784,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const actionPayload = {
                 type: 'order',
                 orders: [wireOrder],
-                grouping: 'normalTpsl'  // CRITICAL: Must be 'normalTpsl' for TP/SL orders
+                grouping: 'positionTpsl'  // For standalone TP/SL on existing positions
             };
 
             // CRITICAL: Trigger orders MUST use user wallet, NOT agent wallet

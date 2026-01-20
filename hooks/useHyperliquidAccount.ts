@@ -200,8 +200,8 @@ export function useHyperliquidAccount(
             setRetryAfter(null);
 
             // Parse trigger orders for TP/SL mapping
-            const triggerOrders = openOrdersResponse?.filter((o: any) =>
-                o.orderType?.trigger?.tpsl === 'tp' || o.orderType?.trigger?.tpsl === 'sl'
+            const triggerOrders = (openOrdersResponse as any[])?.filter((o: any) =>
+                o.isTrigger === true && (o.orderType?.includes('Take Profit') || o.orderType?.includes('Stop Loss'))
             ) || [];
             console.log('📊 Found trigger orders:', triggerOrders.length);
 
@@ -214,17 +214,17 @@ export function useHyperliquidAccount(
                 const positionCoin = pos.name || pos.symbol.replace('-USD', '');
                 const tpOrder = triggerOrders.find((o: any) => {
                     const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
-                    return orderCoin === positionCoin && o.orderType?.trigger?.tpsl === 'tp';
+                    return orderCoin === positionCoin && o.orderType?.includes('Take Profit');
                 });
                 const slOrder = triggerOrders.find((o: any) => {
                     const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
-                    return orderCoin === positionCoin && o.orderType?.trigger?.tpsl === 'sl';
+                    return orderCoin === positionCoin && o.orderType?.includes('Stop Loss');
                 });
 
                 return {
                     ...pos,
-                    takeProfitPrice: tpOrder ? parseFloat(tpOrder.orderType?.trigger?.triggerPx || '0') : undefined,
-                    stopLossPrice: slOrder ? parseFloat(slOrder.orderType?.trigger?.triggerPx || '0') : undefined,
+                    takeProfitPrice: tpOrder ? parseFloat(tpOrder.triggerPx || '0') : undefined,
+                    stopLossPrice: slOrder ? parseFloat(slOrder.triggerPx || '0') : undefined,
                 };
             });
 
