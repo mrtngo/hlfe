@@ -1658,16 +1658,53 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const baseCoin = symbol.split('-')[0];
-            const assetName = `${baseCoin}-PERP`;
+            let assetName: string;
+            let assetIndex: number;
+            let meta: any;
 
-            // Get asset metadata
-            const client = createHyperliquidClient();
-            const meta = await client.info.perpetuals.getMeta();
-            const assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+            // Check if this is a Trade.xyz (HIP-3) asset
+            const isTradeXyzAsset = market?.isStock === true;
 
-            if (assetIndex === -1) {
-                throw new Error(`Asset not found: ${assetName}`);
+            if (isTradeXyzAsset) {
+                // Fetch HIP-3 DEX meta from special endpoint
+                console.log('📊 Fetching Trade.xyz meta for trigger order...');
+                const dexMetaResponse = await fetch(`${API_URL}/info?dex=xyz`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'metaAndAssetCtxs' }),
+                });
+
+                if (!dexMetaResponse.ok) {
+                    throw new Error(`Failed to fetch Trade.xyz meta: ${dexMetaResponse.status}`);
+                }
+
+                const dexData = await dexMetaResponse.json();
+                meta = dexData[0];
+
+                // Trade.xyz assets have "xyz:" prefix
+                assetName = `xyz:${baseCoin}`;
+                console.log('Looking for Trade.xyz asset:', assetName);
+
+                assetIndex = meta.universe?.findIndex((u: any) => u.name === assetName) ?? -1;
+
+                if (assetIndex === -1) {
+                    throw new Error(`Trade.xyz asset not found: ${assetName}`);
+                }
+            } else {
+                // For core assets, use standard meta
+                const client = createHyperliquidClient();
+                meta = await client.info.perpetuals.getMeta();
+                assetName = `${baseCoin}-PERP`;
+
+                console.log('Looking for core asset:', assetName);
+                assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+
+                if (assetIndex === -1) {
+                    throw new Error(`Asset not found: ${assetName}`);
+                }
             }
+
+            console.log(`✅ Found asset at index ${assetIndex}: ${assetName} (isTradeXyz: ${isTradeXyzAsset})`);
 
             // Find current position to determine side
             const position = positions.find(p => p.symbol === symbol);
@@ -1706,7 +1743,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             };
 
             // Use orderToWire to properly format the order with correct trailing zero handling
-            const wireOrder = orderToWire(orderRequest, assetIndex);
+            // For HIP-3 DEX assets (Trade.xyz), use 110000 + index offset
+            const wireAssetIndex = isTradeXyzAsset ? 110000 + assetIndex : assetIndex;
+            const wireOrder = orderToWire(orderRequest, wireAssetIndex);
 
             console.log('📝 Trigger order request:', JSON.stringify(orderRequest, null, 2));
             console.log('📝 Wire order from SDK:', JSON.stringify(wireOrder, null, 2));
@@ -1774,7 +1813,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             console.log('📤 Sending trigger order to API...');
 
-            const response = await fetch(`${API_URL}/exchange`, {
+            // For Trade.xyz assets, include dex parameter as query string
+            const exchangeUrl = isTradeXyzAsset
+                ? `${API_URL}/exchange?dex=xyz`
+                : `${API_URL}/exchange`;
+
+            console.log('📤 Endpoint:', exchangeUrl, 'isTradeXyzAsset:', isTradeXyzAsset);
+
+            const response = await fetch(exchangeUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
