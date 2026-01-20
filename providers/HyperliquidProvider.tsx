@@ -1666,12 +1666,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const isTradeXyzAsset = market?.isStock === true;
 
             if (isTradeXyzAsset) {
-                // Fetch HIP-3 DEX meta from special endpoint
+                // Fetch HIP-3 DEX meta from special endpoint (same pattern as regular orders)
                 console.log('📊 Fetching Trade.xyz meta for trigger order...');
-                const dexMetaResponse = await fetch(`${API_URL}/info?dex=xyz`, {
+                const dexMetaResponse = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'metaAndAssetCtxs' }),
+                    body: JSON.stringify({
+                        type: 'metaAndAssetCtxs',
+                        dex: 'xyz'
+                    }),
                 });
 
                 if (!dexMetaResponse.ok) {
