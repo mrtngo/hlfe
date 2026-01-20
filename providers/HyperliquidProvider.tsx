@@ -1684,35 +1684,38 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const roundingMultiplier = Math.pow(10, market.szDecimals);
             const roundedSize = Math.floor(size * roundingMultiplier) / roundingMultiplier;
 
-            // Import SDK for floatToWire and signL1Action
+            // Import SDK for orderToWire and signL1Action
             const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
-            const { floatToWire, signL1Action } = hyperliquidSDK;
+            const { orderToWire, signL1Action, floatToWire } = hyperliquidSDK;
 
-            // Format values using SDK
-            const formattedPrice = floatToWire(triggerPrice);
-            const formattedSize = floatToWire(roundedSize);
-
-            // Construct trigger order wire
-            const orderWire = {
-                a: assetIndex,
-                b: isBuy,
-                p: formattedPrice,  // Trigger price
-                s: formattedSize,
-                r: true,  // reduceOnly = true (closes position)
-                t: {
+            // Build order request using the same pattern as regular orders
+            // This ensures proper formatting with orderToWire
+            const orderRequest = {
+                coin: assetName,
+                is_buy: isBuy,
+                sz: roundedSize,
+                limit_px: triggerPrice, // For trigger orders, this is the trigger price
+                order_type: {
                     trigger: {
-                        triggerPx: formattedPrice,
-                        isMarket: true,
-                        tpsl: triggerType  // 'tp' or 'sl'
+                        isMarket: true,          // Execute as market order when triggered
+                        triggerPx: triggerPrice, // Price at which to trigger
+                        tpsl: triggerType        // 'tp' or 'sl'
                     }
-                }
+                },
+                reduce_only: true  // TP/SL should always be reduce-only
             };
+
+            // Use orderToWire to properly format the order with correct trailing zero handling
+            const wireOrder = orderToWire(orderRequest, assetIndex);
+
+            console.log('📝 Trigger order request:', JSON.stringify(orderRequest, null, 2));
+            console.log('📝 Wire order from SDK:', JSON.stringify(wireOrder, null, 2));
 
             // Sign and send order
             const actionPayload = {
                 type: 'order',
-                orders: [orderWire],
-                grouping: 'normalTpsl'  // CRITICAL: Must be 'normalTpsl' for TP/SL orders, not 'na'
+                orders: [wireOrder],
+                grouping: 'normalTpsl'  // CRITICAL: Must be 'normalTpsl' for TP/SL orders
             };
 
             // CRITICAL: Trigger orders MUST use user wallet, NOT agent wallet
@@ -1742,7 +1745,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const lowercasedAddress = address.toLowerCase();
             const browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
 
-            console.log('📝 Trigger Order Wire:', JSON.stringify(orderWire, null, 2));
+            console.log('📝 Trigger Order Wire:', JSON.stringify(wireOrder, null, 2));
             console.log('📝 Action Payload:', JSON.stringify(actionPayload, null, 2));
             console.log('📝 Signing with USER address (NOT agent):', lowercasedAddress);
 
