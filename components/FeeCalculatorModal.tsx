@@ -258,7 +258,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                                 onError={(e) => {
                                                     e.currentTarget.style.display = 'none';
                                                     e.currentTarget.parentElement!.style.backgroundColor = comp.color;
-                                                    e.currentTarget.parentElement!.innerHTML = comp.name[0];
+                                                    e.currentTarget.parentElement!.textContent = comp.name[0];
                                                 }}
                                             />
                                         </div>

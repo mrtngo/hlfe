@@ -7,12 +7,36 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const RHINO_API_KEY = process.env.RHINO_API_KEY || '';
 
+// Validation helpers
+const isValidEthAddress = (addr: string): boolean =>
+  typeof addr === 'string' && /^0x[a-fA-F0-9]{40}$/.test(addr);
+
+const isValidAmount = (amt: string): boolean => {
+  if (typeof amt !== 'string') return false;
+  const num = parseFloat(amt);
+  return !isNaN(num) && num > 0 && isFinite(num);
+};
+
+const isValidChainOrToken = (val: string): boolean =>
+  typeof val === 'string' && val.length > 0 && val.length <= 50 && /^[a-zA-Z0-9_-]+$/.test(val);
+
+const sanitizeError = (error: unknown): string => {
+  // Never expose raw error messages - could leak internal details
+  if (error instanceof Error) {
+    // Only return safe, generic messages
+    if (error.message.includes('insufficient')) return 'Insufficient balance or liquidity';
+    if (error.message.includes('rate')) return 'Rate limit exceeded, please try again';
+    if (error.message.includes('timeout')) return 'Request timed out, please try again';
+  }
+  return 'Failed to get bridge quote';
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { fromChain, toChain, token, amount, depositor, recipient } = body;
 
-    // Validate inputs
+    // Validate required fields exist
     if (!fromChain || !toChain || !token || !amount || !depositor || !recipient) {
       return NextResponse.json(
         { error: 'Missing required parameters' },
@@ -20,9 +44,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate chain and token format
+    if (!isValidChainOrToken(fromChain) || !isValidChainOrToken(toChain) || !isValidChainOrToken(token)) {
+      return NextResponse.json(
+        { error: 'Invalid chain or token format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate Ethereum addresses
+    if (!isValidEthAddress(depositor) || !isValidEthAddress(recipient)) {
+      return NextResponse.json(
+        { error: 'Invalid wallet address format' },
+        { status: 400 }
+      );
+    }
+
+    // Validate amount is a positive number
+    if (!isValidAmount(amount)) {
+      return NextResponse.json(
+        { error: 'Invalid amount - must be a positive number' },
+        { status: 400 }
+      );
+    }
+
     if (!RHINO_API_KEY) {
       return NextResponse.json(
-        { error: 'Rhino API key not configured' },
+        { error: 'Bridge service not configured' },
         { status: 500 }
       );
     }
@@ -50,10 +98,10 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ quote: quoteResult.data });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Bridge quote error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to get bridge quote' },
+      { error: sanitizeError(error) },
       { status: 500 }
     );
   }

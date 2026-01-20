@@ -7,22 +7,35 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const RHINO_API_KEY = process.env.RHINO_API_KEY || '';
 
+// Quote ID validation - should be a reasonable string (UUID-like or alphanumeric)
+const isValidQuoteId = (id: string): boolean =>
+  typeof id === 'string' && id.length > 0 && id.length <= 100 && /^[a-zA-Z0-9_-]+$/.test(id);
+
+const sanitizeError = (error: unknown): string => {
+  if (error instanceof Error) {
+    if (error.message.includes('expired')) return 'Quote expired, please get a new quote';
+    if (error.message.includes('invalid')) return 'Invalid quote, please try again';
+    if (error.message.includes('rate')) return 'Rate limit exceeded, please try again';
+  }
+  return 'Failed to build bridge transaction';
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { quoteId } = body;
 
-    // Validate inputs
-    if (!quoteId) {
+    // Validate quote ID exists and has valid format
+    if (!quoteId || !isValidQuoteId(quoteId)) {
       return NextResponse.json(
-        { error: 'Missing quote ID' },
+        { error: 'Invalid or missing quote ID' },
         { status: 400 }
       );
     }
 
     if (!RHINO_API_KEY) {
       return NextResponse.json(
-        { error: 'Rhino API key not configured' },
+        { error: 'Bridge service not configured' },
         { status: 500 }
       );
     }
@@ -43,10 +56,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       commitment: commitResult.data,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Bridge build error:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to build bridge transaction' },
+      { error: sanitizeError(error) },
       { status: 500 }
     );
   }

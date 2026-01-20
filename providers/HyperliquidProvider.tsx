@@ -6,6 +6,7 @@ import { useMarketData, Market } from '@/lib/hyperliquid/market-data';
 import { createHyperliquidClient, API_URL, IS_TESTNET, BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import {
     getAgentWallet,
+    getAgentWalletSync,
     saveAgentWallet,
     generateAgentWallet,
     isAgentApproved,
@@ -334,7 +335,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         try {
             // Check if already approved
             if (isAgentApproved(address)) {
-                const agent = getAgentWallet();
+                const agent = await getAgentWallet(address);
                 if (agent) {
                     setAgentWalletEnabled(true);
                     return { success: true, message: 'Agent wallet already approved' };
@@ -342,15 +343,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             // Generate or get agent wallet
-            let agent = getAgentWallet();
+            let agent = await getAgentWallet(address);
             if (!agent) {
                 agent = generateAgentWallet();
-                saveAgentWallet(agent);
+                await saveAgentWallet(agent, address);
             } else {
                 // Ensure existing agent has a valid name (1-16 characters)
                 if (!agent.name || agent.name.length > 16 || agent.name.length === 0) {
                     agent.name = 'Rayo Agent';
-                    saveAgentWallet(agent);
+                    await saveAgentWallet(agent, address);
                 }
             }
 
@@ -413,9 +414,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     // Check and initialize agent wallet
     useEffect(() => {
         if (address) {
-            const agent = getAgentWallet();
-            const approved = isAgentApproved(address);
-            setAgentWalletEnabled(approved && !!agent);
+            const checkWallet = async () => {
+                const agent = await getAgentWallet(address);
+                const approved = isAgentApproved(address);
+                setAgentWalletEnabled(approved && !!agent);
+            };
+            checkWallet();
         }
     }, [address]);
 
@@ -833,8 +837,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                 // Get signing wallet (agent or user)
                 let signingWallet: any = null;
-                const agent = getAgentWallet();
-                const agentSigner = getAgentSigner();
+                const agent = await getAgentWallet(address);
+                const agentSigner = agent ? getAgentSigner(agent) : null;
                 const isApproved = isAgentApproved(address);
 
                 if (agentWalletEnabled && agent && agentSigner && isApproved) {
@@ -1101,8 +1105,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             let usingAgentWallet = false;
 
             // Check if agent wallet is available and approved
-            const agent = getAgentWallet();
-            const agentSigner = getAgentSigner();
+            const agent = await getAgentWallet(address);
+            const agentSigner = agent ? getAgentSigner(agent) : null;
             const isApproved = isAgentApproved(address);
 
             if (agentWalletEnabled && agent && agentSigner && isApproved) {

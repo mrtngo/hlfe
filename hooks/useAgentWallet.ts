@@ -10,6 +10,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useWallets } from '@privy-io/react-auth';
 import {
     getAgentWallet,
+    getAgentWalletSync,
     saveAgentWallet,
     generateAgentWallet,
     isAgentApproved,
@@ -49,9 +50,13 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
      */
     useEffect(() => {
         if (address) {
-            const agent = getAgentWallet();
-            const approved = isAgentApproved(address);
-            setAgentWalletEnabled(approved && !!agent);
+            // Use async check for encrypted wallets
+            const checkWallet = async () => {
+                const agent = await getAgentWallet(address);
+                const approved = isAgentApproved(address);
+                setAgentWalletEnabled(approved && !!agent);
+            };
+            checkWallet();
         } else {
             setAgentWalletEnabled(false);
         }
@@ -120,7 +125,7 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
         try {
             // Check if already approved
             if (isAgentApproved(address)) {
-                const agent = getAgentWallet();
+                const agent = await getAgentWallet(address);
                 if (agent) {
                     setAgentWalletEnabled(true);
                     return { success: true, message: 'Agent wallet already approved' };
@@ -128,15 +133,15 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
             }
 
             // Generate or get agent wallet
-            let agent = getAgentWallet();
+            let agent = await getAgentWallet(address);
             if (!agent) {
                 agent = generateAgentWallet();
-                saveAgentWallet(agent);
+                await saveAgentWallet(agent, address);
             } else {
                 // Ensure existing agent has a valid name (1-16 characters)
                 if (!agent.name || agent.name.length > 16 || agent.name.length === 0) {
                     agent.name = 'Rayo Agent';
-                    saveAgentWallet(agent);
+                    await saveAgentWallet(agent, address);
                 }
             }
 

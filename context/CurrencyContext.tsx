@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback, ReactNode } from 'react';
 
 type Currency = 'USD' | 'COP';
 
@@ -51,16 +51,20 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    const setCurrency = (c: Currency) => {
+    const setCurrency = useCallback((c: Currency) => {
         setCurrencyState(c);
         localStorage.setItem('hlfe_currency', c);
-    };
+    }, []);
 
-    const toggleCurrency = () => {
-        setCurrency(currency === 'USD' ? 'COP' : 'USD');
-    };
+    const toggleCurrency = useCallback(() => {
+        setCurrencyState(prev => {
+            const next = prev === 'USD' ? 'COP' : 'USD';
+            localStorage.setItem('hlfe_currency', next);
+            return next;
+        });
+    }, []);
 
-    const formatCurrency = (value: number, maximumFractionDigits: number = 2) => {
+    const formatCurrency = useCallback((value: number, maximumFractionDigits: number = 2) => {
         if (currency === 'COP') {
             const copValue = value * exchangeRate;
             // Use 'es-CO' for dots/commas but manually add COP prefix to avoid ambiguity
@@ -76,17 +80,19 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
             maximumFractionDigits,
             minimumFractionDigits: 2
         }).format(value);
-    };
+    }, [currency, exchangeRate]);
+
+    const contextValue = useMemo(() => ({
+        currency,
+        exchangeRate,
+        toggleCurrency,
+        setCurrency,
+        formatCurrency,
+        isLoadingRay
+    }), [currency, exchangeRate, toggleCurrency, setCurrency, formatCurrency, isLoadingRay]);
 
     return (
-        <CurrencyContext.Provider value={{
-            currency,
-            exchangeRate,
-            toggleCurrency,
-            setCurrency,
-            formatCurrency,
-            isLoadingRay
-        }}>
+        <CurrencyContext.Provider value={contextValue}>
             {children}
         </CurrencyContext.Provider>
     );

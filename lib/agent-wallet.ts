@@ -12,11 +12,86 @@ import { Hyperliquid } from './vendor/hyperliquid/index.js';
 
 const AGENT_WALLET_KEY = 'hyperliquid_agent_wallet';
 const AGENT_APPROVAL_KEY = 'hyperliquid_agent_approved';
+const ENCRYPTION_SALT = 'rayo_agent_wallet_v1';
 
 export interface AgentWallet {
     address: string;
-    privateKey: string; // Encrypted in production
+    privateKey: string; // Stored encrypted
     name: string;
+}
+
+interface EncryptedAgentWallet {
+    address: string;
+    encryptedPrivateKey: string; // base64 encoded encrypted data
+    iv: string; // base64 encoded initialization vector
+    name: string;
+}
+
+/**
+ * Derive an encryption key from the user's address using PBKDF2
+ * This ties the encryption to the user's wallet
+ */
+async function deriveKey(userAddress: string): Promise<CryptoKey> {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+        'raw',
+        encoder.encode(userAddress.toLowerCase()),
+        'PBKDF2',
+        false,
+        ['deriveKey']
+    );
+
+    return crypto.subtle.deriveKey(
+        {
+            name: 'PBKDF2',
+            salt: encoder.encode(ENCRYPTION_SALT),
+            iterations: 100000,
+            hash: 'SHA-256'
+        },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt']
+    );
+}
+
+/**
+ * Encrypt private key using AES-GCM
+ */
+async function encryptPrivateKey(privateKey: string, userAddress: string): Promise<{ encrypted: string; iv: string }> {
+    const key = await deriveKey(userAddress);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoder = new TextEncoder();
+
+    const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        encoder.encode(privateKey)
+    );
+
+    return {
+        encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+        iv: btoa(String.fromCharCode(...iv))
+    };
+}
+
+/**
+ * Decrypt private key using AES-GCM
+ */
+async function decryptPrivateKey(encryptedData: string, iv: string, userAddress: string): Promise<string> {
+    const key = await deriveKey(userAddress);
+    const decoder = new TextDecoder();
+
+    const encryptedBytes = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+    const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
+
+    const decrypted = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: ivBytes },
+        key,
+        encryptedBytes
+    );
+
+    return decoder.decode(decrypted);
 }
 
 /**
@@ -34,17 +109,49 @@ export function generateAgentWallet(): AgentWallet {
 }
 
 /**
- * Get or create agent wallet
+ * Get agent wallet (decrypts the stored private key)
+ * Requires user address to decrypt
  */
-export function getAgentWallet(): AgentWallet | null {
+export async function getAgentWallet(userAddress?: string): Promise<AgentWallet | null> {
     if (typeof window === 'undefined') return null;
-    
+
     try {
         const stored = localStorage.getItem(AGENT_WALLET_KEY);
-        if (stored) {
-            return JSON.parse(stored);
+        if (!stored) return null;
+
+        const parsed = JSON.parse(stored);
+
+        // Check if it's the new encrypted format
+        if (parsed.encryptedPrivateKey && parsed.iv) {
+            if (!userAddress) {
+                console.error('User address required to decrypt agent wallet');
+                return null;
+            }
+
+            const encryptedWallet = parsed as EncryptedAgentWallet;
+            const privateKey = await decryptPrivateKey(
+                encryptedWallet.encryptedPrivateKey,
+                encryptedWallet.iv,
+                userAddress
+            );
+
+            return {
+                address: encryptedWallet.address,
+                privateKey,
+                name: encryptedWallet.name,
+            };
         }
-        return null;
+
+        // Legacy unencrypted format - migrate it if userAddress is provided
+        if (parsed.privateKey && userAddress) {
+            console.log('Migrating legacy unencrypted agent wallet to encrypted format...');
+            const legacyWallet = parsed as AgentWallet;
+            await saveAgentWallet(legacyWallet, userAddress);
+            return legacyWallet;
+        }
+
+        // Legacy format without userAddress - return as-is (will be migrated on next save)
+        return parsed as AgentWallet;
     } catch (e) {
         console.error('Failed to get agent wallet:', e);
         return null;
@@ -52,14 +159,48 @@ export function getAgentWallet(): AgentWallet | null {
 }
 
 /**
- * Save agent wallet (in production, encrypt this!)
+ * Synchronous version for backward compatibility - returns null if encrypted
+ * Use getAgentWallet(userAddress) for encrypted wallets
  */
-export function saveAgentWallet(agent: AgentWallet): void {
-    if (typeof window === 'undefined') return;
-    
+export function getAgentWalletSync(): AgentWallet | null {
+    if (typeof window === 'undefined') return null;
+
     try {
-        // TODO: Encrypt private key in production!
-        localStorage.setItem(AGENT_WALLET_KEY, JSON.stringify(agent));
+        const stored = localStorage.getItem(AGENT_WALLET_KEY);
+        if (!stored) return null;
+
+        const parsed = JSON.parse(stored);
+
+        // If encrypted, can't return synchronously
+        if (parsed.encryptedPrivateKey) {
+            return null;
+        }
+
+        return parsed as AgentWallet;
+    } catch (e) {
+        console.error('Failed to get agent wallet sync:', e);
+        return null;
+    }
+}
+
+/**
+ * Save agent wallet with encryption
+ * Requires user address for encryption key derivation
+ */
+export async function saveAgentWallet(agent: AgentWallet, userAddress: string): Promise<void> {
+    if (typeof window === 'undefined') return;
+
+    try {
+        const { encrypted, iv } = await encryptPrivateKey(agent.privateKey, userAddress);
+
+        const encryptedWallet: EncryptedAgentWallet = {
+            address: agent.address,
+            encryptedPrivateKey: encrypted,
+            iv,
+            name: agent.name,
+        };
+
+        localStorage.setItem(AGENT_WALLET_KEY, JSON.stringify(encryptedWallet));
     } catch (e) {
         console.error('Failed to save agent wallet:', e);
     }
@@ -253,13 +394,14 @@ export async function approveAgentWallet(
 
 /**
  * Get agent wallet signer
+ * @param agent - Optional agent wallet (if already fetched). If not provided, uses sync version.
  */
-export function getAgentSigner(): ethers.Wallet | null {
-    const agent = getAgentWallet();
-    if (!agent) return null;
-    
+export function getAgentSigner(agent?: AgentWallet | null): ethers.Wallet | null {
+    const walletData = agent ?? getAgentWalletSync();
+    if (!walletData) return null;
+
     try {
-        return new ethers.Wallet(agent.privateKey);
+        return new ethers.Wallet(walletData.privateKey);
     } catch (e) {
         console.error('Failed to create agent signer:', e);
         return null;
