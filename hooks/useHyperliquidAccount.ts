@@ -151,11 +151,12 @@ export function useHyperliquidAccount(
             const positionCoin = pos.name || pos.symbol.replace('-USD', '');
             const tpOrder = activeTriggerOrders.find((o: any) => {
                 const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
-                return orderCoin === positionCoin && o.orderType?.includes('Take Profit');
+                return orderCoin === positionCoin && (o.orderType?.includes('Take Profit') || o.orderType?.includes('TP'));
             });
             const slOrder = activeTriggerOrders.find((o: any) => {
                 const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
-                return orderCoin === positionCoin && o.orderType?.includes('Stop Loss');
+                // Hyperliquid often returns Stop Loss as "Stop Market" or "Stop Limit"
+                return orderCoin === positionCoin && (o.orderType?.includes('Stop Loss') || o.orderType?.includes('Stop'));
             });
 
             return {
@@ -237,7 +238,12 @@ export function useHyperliquidAccount(
             // Combine all open orders and store trigger orders
             const allOpenOrders = [...(openOrdersResponse as any[]), ...(xyzOpenOrdersResponse as any[])];
             const activeTriggerOrders = allOpenOrders.filter((o: any) =>
-                o.isTrigger === true && (o.orderType?.includes('Take Profit') || o.orderType?.includes('Stop Loss'))
+                o.isTrigger === true && (
+                    o.orderType?.includes('Take Profit') ||
+                    o.orderType?.includes('Stop') ||
+                    o.orderType?.includes('TP') ||
+                    o.orderType?.includes('SL')
+                )
             ) || [];
 
             setTriggerOrders(activeTriggerOrders);
