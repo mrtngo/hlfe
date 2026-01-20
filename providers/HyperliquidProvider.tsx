@@ -1731,13 +1731,37 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
             const { orderToWire, signL1Action, floatToWire } = hyperliquidSDK;
 
+            // For trigger orders with isMarket=true, limit_px is the slippage-protected execution price
+            // NOT the trigger price itself. This is the worst price at which the order will execute.
+            // - For TP (selling on price UP): limit should be BELOW trigger to allow slippage
+            // - For SL (selling on price DOWN): limit should be BELOW trigger to ensure fill
+            // Using 5% slippage for safety on market trigger orders
+            const SLIPPAGE = 0.05;
+            let limitPrice: number;
+
+            if (triggerType === 'tp') {
+                // TP: We're closing position - use slippage in direction that ensures fill
+                // For long position closing (sell), allow price to slip down from trigger
+                // For short position closing (buy), allow price to slip up from trigger
+                limitPrice = isBuy
+                    ? triggerPrice * (1 + SLIPPAGE)  // Buying: allow higher price
+                    : triggerPrice * (1 - SLIPPAGE); // Selling: allow lower price
+            } else {
+                // SL: Same logic but SL typically needs more aggressive slippage
+                limitPrice = isBuy
+                    ? triggerPrice * (1 + SLIPPAGE)  // Buying: allow higher price
+                    : triggerPrice * (1 - SLIPPAGE); // Selling: allow lower price
+            }
+
+            console.log('📊 Trigger order prices:', { triggerPrice, limitPrice, slippage: SLIPPAGE, isBuy });
+
             // Build order request using the same pattern as regular orders
             // This ensures proper formatting with orderToWire
             const orderRequest = {
                 coin: assetName,
                 is_buy: isBuy,
                 sz: roundedSize,
-                limit_px: triggerPrice, // For trigger orders, this is the trigger price
+                limit_px: limitPrice, // Slippage-protected execution price
                 order_type: {
                     trigger: {
                         isMarket: true,          // Execute as market order when triggered
