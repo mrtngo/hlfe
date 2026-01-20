@@ -6,38 +6,72 @@
 @tailwind utilities;
 
 @layer utilities {
+
   /* Custom background utilities using design system tokens */
-  .bg-bg-primary { background-color: var(--color-bg-primary); }
-  .bg-bg-secondary { background-color: var(--color-bg-secondary); }
-  .bg-bg-tertiary { background-color: var(--color-bg-tertiary); }
-  .bg-bg-elevated { background-color: var(--color-bg-elevated); }
-  .bg-bg-hover { background-color: var(--color-bg-hover); }
+  .bg-bg-primary {
+    background-color: var(--color-bg-primary);
+  }
+
+  .bg-bg-secondary {
+    background-color: var(--color-bg-secondary);
+  }
+
+  .bg-bg-tertiary {
+    background-color: var(--color-bg-tertiary);
+  }
+
+  .bg-bg-elevated {
+    background-color: var(--color-bg-elevated);
+  }
+
+  .bg-bg-hover {
+    background-color: var(--color-bg-hover);
+  }
 
   /* Hover variants */
-  .hover\:bg-bg-primary:hover { background-color: var(--color-bg-primary); }
-  .hover\:bg-bg-secondary:hover { background-color: var(--color-bg-secondary); }
-  .hover\:bg-bg-tertiary:hover { background-color: var(--color-bg-tertiary); }
-  .hover\:bg-bg-elevated:hover { background-color: var(--color-bg-elevated); }
-  .hover\:bg-bg-hover:hover { background-color: var(--color-bg-hover); }
+  .hover\:bg-bg-primary:hover {
+    background-color: var(--color-bg-primary);
+  }
+
+  .hover\:bg-bg-secondary:hover {
+    background-color: var(--color-bg-secondary);
+  }
+
+  .hover\:bg-bg-tertiary:hover {
+    background-color: var(--color-bg-tertiary);
+  }
+
+  .hover\:bg-bg-elevated:hover {
+    background-color: var(--color-bg-elevated);
+  }
+
+  .hover\:bg-bg-hover:hover {
+    background-color: var(--color-bg-hover);
+  }
 }
 
 @layer base {
   :root {
     /* Tailwind HSL color format (required for Tailwind's color utilities) */
     /* These reference the design system tokens above */
-    --background: 0 0% 0%; /* var(--color-bg-primary) */
-    --foreground: 0 0% 100%; /* var(--color-text-primary) */
+    --background: 0 0% 0%;
+    /* var(--color-bg-primary) */
+    --foreground: 0 0% 100%;
+    /* var(--color-text-primary) */
 
     /* Surface colors */
-    --card: 0 0% 10%; /* var(--color-bg-elevated) */
+    --card: 0 0% 10%;
+    /* var(--color-bg-elevated) */
     --card-foreground: 0 0% 100%;
 
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
 
     /* Brand Yellow Primary - #FACC15 */
-    --primary: 43 96% 53%; /* var(--color-brand-primary) */
-    --primary-foreground: 0 0% 0%; /* var(--color-text-on-brand) */
+    --primary: 43 96% 53%;
+    /* var(--color-brand-primary) */
+    --primary-foreground: 0 0% 0%;
+    /* var(--color-text-on-brand) */
 
     /* Secondary - Dark surfaces */
     --secondary: 0 0% 10%;
@@ -49,12 +83,14 @@
     --accent: 0 0% 15%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%; /* var(--color-negative) */
+    --destructive: 0 84% 60%;
+    /* var(--color-negative) */
     --destructive-foreground: 0 0% 98%;
 
     --border: 0 0% 15%;
     --input: 0 0% 10%;
-    --ring: 43 96% 53%; /* var(--color-brand-primary) */
+    --ring: 43 96% 53%;
+    /* var(--color-brand-primary) */
 
     --radius: 1rem;
   }
@@ -79,14 +115,16 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  overflow-y: auto; /* Ensure vertical scrolling is enabled */
+  overflow-y: auto;
+  /* Ensure vertical scrolling is enabled */
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #000000;
   color: #FFFFFF;
 }
 
 html {
-  height: 100%; /* Allow html to expand */
+  height: 100%;
+  /* Allow html to expand */
 }
 
 body {
@@ -95,7 +133,8 @@ body {
   color: #FFFFFF;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  position: relative; /* Ensure proper positioning context */
+  position: relative;
+  /* Ensure proper positioning context */
 }
 
 /* Typography - Bold Sans-Serif */
@@ -111,12 +150,29 @@ h6 {
   color: #FFFFFF;
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.5rem; }
-h4 { font-size: 1.25rem; }
-h5 { font-size: 1.125rem; }
-h6 { font-size: 1rem; }
+h1 {
+  font-size: 2.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4 {
+  font-size: 1.25rem;
+}
+
+h5 {
+  font-size: 1.125rem;
+}
+
+h6 {
+  font-size: 1rem;
+}
 
 .mono {
   font-family: var(--font-jetbrains);
@@ -364,6 +420,7 @@ h6 { font-size: 1rem; }
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -376,9 +433,12 @@ h6 { font-size: 1rem; }
 
 /* Neon Glow Animation */
 @keyframes neonPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(255, 255, 0, 0.3), 0 0 40px rgba(255, 255, 0, 0.1);
   }
+
   50% {
     box-shadow: 0 0 30px rgba(255, 255, 0, 0.5), 0 0 60px rgba(255, 255, 0, 0.2);
   }
@@ -399,14 +459,26 @@ h6 { font-size: 1rem; }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Pulse Animation for Order Notification */
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 /* Text Gradient */
@@ -419,9 +491,17 @@ h6 { font-size: 1rem; }
 
 /* Mobile Optimizations */
 @media (max-width: 768px) {
-  h1 { font-size: 1.75rem; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.25rem; }
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
 
   .btn {
     padding: 0.875rem 1.5rem;
@@ -550,4 +630,84 @@ h6 { font-size: 1rem; }
 
 .driver-popover-close-btn:hover {
   color: var(--color-text-primary) !important;
+}
+
+/* Premium Design Utilities */
+.premium-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 10px 40px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.premium-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 50px -12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.glow-text-bullish {
+  color: #34C759;
+  text-shadow: 0 0 12px rgba(52, 199, 89, 0.4);
+}
+
+.glow-text-bearish {
+  color: #FF3B30;
+  text-shadow: 0 0 12px rgba(255, 59, 48, 0.4);
+}
+
+.btn-premium {
+  position: relative;
+  background: var(--color-brand-primary);
+  color: #000;
+  font-weight: 800;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 15px rgba(250, 204, 21, 0.3),
+    0 0 0 1px rgba(250, 204, 21, 0.1);
+}
+
+.btn-premium::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.btn-premium:hover {
+  transform: scale(1.02);
+  box-shadow:
+    0 8px 25px rgba(250, 204, 21, 0.5),
+    0 0 0 2px rgba(250, 204, 21, 0.2);
+}
+
+.btn-premium:hover::after {
+  opacity: 1;
+}
+
+.btn-premium:active {
+  transform: scale(0.98);
+}
+
+.mesh-gradient-header {
+  background-color: #000;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(250, 204, 21, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(200, 204, 21, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(250, 204, 21, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(100, 100, 255, 0.05) 0px, transparent 50%);
 }

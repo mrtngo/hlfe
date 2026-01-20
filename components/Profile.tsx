@@ -172,19 +172,24 @@ export default function Profile() {
     return (
         <div className="max-w-md mx-auto px-4 pb-8 space-y-4">
             {/* ===== HERO CARD ===== */}
-            <div className="bg-[#0D0D0D] border border-[#FFFF00]/30 rounded-3xl p-6">
-                {/* Avatar */}
-                <div className="w-20 h-20 mx-auto mb-4 rounded-full border-2 border-[#FFFF00] flex items-center justify-center bg-transparent">
-                    {userLoading ? (
-                        <Loader2 className="w-8 h-8 text-brand animate-spin" />
-                    ) : (
-                        <UserIcon className="w-10 h-10 text-brand" />
-                    )}
+            <div className="premium-card mesh-gradient-header rounded-[32px] p-8 border border-white/10 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-[100px] pointer-events-none" />
+
+                {/* Avatar with Glow */}
+                <div className="relative w-24 h-24 mx-auto mb-6">
+                    <div className="absolute inset-0 bg-brand/20 rounded-full blur-xl animate-pulse" />
+                    <div className="relative w-full h-full rounded-full border-2 border-brand/50 flex items-center justify-center bg-black/40 backdrop-blur-md shadow-2xl">
+                        {userLoading ? (
+                            <Loader2 className="w-10 h-10 text-brand animate-spin" />
+                        ) : (
+                            <UserIcon className="w-12 h-12 text-brand" />
+                        )}
+                    </div>
                 </div>
 
                 {/* Username */}
                 {isEditingUsername ? (
-                    <div className="space-y-3 mb-4">
+                    <div className="space-y-4 mb-6">
                         <input
                             type="text"
                             value={tempUsername}
@@ -193,83 +198,90 @@ export default function Profile() {
                                 setError(null);
                             }}
                             placeholder="username"
-                            className="w-full max-w-[200px] mx-auto block text-center text-xl font-bold bg-transparent border border-white/20 rounded-full px-3 py-2 text-white placeholder-coffee-medium focus:outline-none focus:border-[#FFFF00] lowercase"
+                            className="w-full max-w-[240px] mx-auto block text-center text-2xl font-black bg-black/40 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-brand lowercase transition-all"
                             maxLength={20}
                             autoFocus
                         />
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-3">
                             <button
                                 onClick={saveUsername}
                                 disabled={saving || tempUsername.length < 3}
-                                className="px-4 py-2 bg-brand text-black rounded-full text-sm font-bold disabled:opacity-50"
+                                className="px-6 py-2.5 bg-brand text-black rounded-full text-sm font-black disabled:opacity-50 active:scale-95 transition-all"
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.save}
                             </button>
                             <button
                                 onClick={() => { setIsEditingUsername(false); setError(null); }}
-                                className="px-4 py-2 bg-bg-elevated text-white rounded-full text-sm font-bold"
+                                className="px-6 py-2.5 bg-white/10 text-white rounded-full text-sm font-black active:scale-95 transition-all"
                             >
                                 {t.common.cancel}
                             </button>
                         </div>
                     </div>
                 ) : (
-                    <h1
-                        className="text-2xl font-bold text-white text-center mb-2 cursor-pointer hover:text-brand transition-colors"
-                        onClick={() => { setTempUsername(user?.username || ''); setIsEditingUsername(true); }}
-                    >
-                        @{displayName}
-                    </h1>
+                    <div className="mb-6">
+                        <h1
+                            className="text-3xl font-black text-white text-center cursor-pointer hover:text-brand transition-all flex items-center justify-center gap-2 group"
+                            onClick={() => { setTempUsername(user?.username || ''); setIsEditingUsername(true); }}
+                        >
+                            @{displayName}
+                            <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                                <RefreshCw className="w-3 h-3 text-brand" />
+                            </div>
+                        </h1>
+
+                        {address && (
+                            <div className="flex items-center justify-center gap-2 mt-2">
+                                <div className="px-3 py-1 bg-white/5 rounded-full border border-white/10 flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+                                    <span className="text-white/40 text-[10px] font-mono font-bold tracking-widest">{formatAddress(address)}</span>
+                                    <button onClick={copyAddress} className="text-white/40 hover:text-brand transition-colors">
+                                        {copied ? <Check className="w-3 h-3 text-brand" /> : <Copy className="w-3 h-3" />}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {error && (
-                    <div className="flex items-center justify-center gap-2 text-red-400 text-xs mb-2">
+                    <div className="flex items-center justify-center gap-2 text-red-400 text-xs mb-4 bg-red-400/10 py-2 rounded-xl border border-red-400/20">
                         <AlertCircle className="w-3 h-3" /> {error}
                     </div>
                 )}
                 {success && (
-                    <div className="flex items-center justify-center gap-2 text-brand text-xs mb-2">
+                    <div className="flex items-center justify-center gap-2 text-brand text-xs mb-4 bg-brand/10 py-2 rounded-xl border border-brand/20">
                         <Check className="w-3 h-3" /> {success}
                     </div>
                 )}
 
-                {/* Wallet Address */}
-                {address && (
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <div className="w-4 h-4 rounded bg-brand/20 flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-sm bg-brand" />
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
+                        <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
+                            {language === 'es' ? 'Capital' : 'Equity'}
                         </div>
-                        <span className="text-coffee-medium text-sm font-mono">{formatAddress(address)}</span>
-                        <button onClick={copyAddress} className="text-coffee-medium hover:text-brand transition-colors">
-                            {copied ? <Check className="w-4 h-4 text-brand" /> : <Copy className="w-4 h-4" />}
-                        </button>
-                    </div>
-                )}
-
-                {/* Stats Row 1 - Equity & Margin */}
-                <div className="flex justify-center gap-12 mb-3">
-                    <div className="text-center">
-                        <div className="text-coffee-medium text-xs mb-1">{language === 'es' ? 'Capital' : 'Equity'}</div>
-                        <div className="text-xl font-bold text-white font-mono">
+                        <div className="text-xl font-black text-white font-mono">
                             ${account.equity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
-                    <div className="text-center">
-                        <div className="text-coffee-medium text-xs mb-1">{language === 'es' ? 'Margen Disponible' : 'Available Margin'}</div>
-                        <div className="text-xl font-bold text-white font-mono">
+                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
+                        <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
+                            {language === 'es' ? 'Libre' : 'Available'}
+                        </div>
+                        <div className="text-xl font-black text-white font-mono">
                             ${account.availableMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
                 </div>
 
-                {/* Stats Row 2 - Total Volume */}
-                <div className="flex justify-center gap-12 pt-3 border-t border-white/10">
+                <div className="grid grid-cols-2 gap-4 mb-8">
                     <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-coffee-medium text-xs mb-1">
+                        <div className="flex items-center justify-center gap-1 text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
                             <TrendingUp className="w-3 h-3" />
-                            {language === 'es' ? 'Volumen Total' : 'Total Volume'}
+                            {language === 'es' ? 'Volumen' : 'Volume'}
                         </div>
-                        <div className="text-lg font-bold text-white font-mono">
+                        <div className="text-lg font-black text-white font-mono">
                             ${totalVolume >= 1000000
                                 ? (totalVolume / 1000000).toFixed(2) + 'M'
                                 : totalVolume >= 1000
@@ -279,26 +291,26 @@ export default function Profile() {
                         </div>
                     </div>
                     <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-coffee-medium text-xs mb-1">
-                            <DollarSign className="w-3 h-3" />
-                            {language === 'es' ? 'Recompensas Referidos' : 'Referral Rewards'}
+                        <div className="flex items-center justify-center gap-1 text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
+                            <Gift className="w-3 h-3" />
+                            {language === 'es' ? 'Premios' : 'Rewards'}
                         </div>
-                        <div className="text-lg font-bold text-brand font-mono">
+                        <div className="text-lg font-black text-brand font-mono">
                             ${referralRewards.toFixed(2)}
                         </div>
                     </div>
                 </div>
 
-                {/* Transfer Button */}
-                <div className="mt-6 pt-4 border-t border-white/10">
-                    <button
-                        onClick={() => setShowTransferModal(true)}
-                        className="w-full py-3 bg-[#FFFF00] text-black font-bold rounded-xl transition-all hover:bg-[#FDE047] flex items-center justify-center gap-2"
-                    >
-                        <ArrowLeftRight className="w-5 h-5" />
-                        {language === 'es' ? 'Transferir entre Spot y Perp' : 'Transfer Spot ↔ Perp'}
-                    </button>
-                </div>
+                {/* Transfer Button - Premium */}
+                <button
+                    onClick={() => setShowTransferModal(true)}
+                    className="btn-premium w-full py-4 flex items-center justify-center gap-2"
+                >
+                    <ArrowLeftRight className="w-5 h-5" />
+                    <span className="uppercase tracking-[0.1em] text-xs font-black">
+                        {language === 'es' ? 'Transferir Fondos' : 'Transfer Funds'}
+                    </span>
+                </button>
             </div>
 
             {/* Transfer Modal */}
@@ -308,187 +320,154 @@ export default function Profile() {
             />
 
             {/* ===== INVITE FRIENDS ===== */}
-            <div className="bg-[#0D0D0D] border border-white/10 rounded-3xl p-5">
-                <div className="flex items-center gap-2 mb-4">
-                    <Gift className="w-5 h-5 text-brand" />
-                    <h2 className="text-base font-bold text-white">{profile.inviteFriends || 'Invitar Amigos'}</h2>
+            <div className="premium-card rounded-[24px] p-6 border border-white/5">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center">
+                            <Gift className="w-5 h-5 text-brand" />
+                        </div>
+                        <h2 className="text-lg font-black text-white tracking-tight">{profile.inviteFriends || 'Invitar Amigos'}</h2>
+                    </div>
+                    <div className="bg-brand/20 text-brand px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-brand/30">
+                        10% Back
+                    </div>
                 </div>
 
-                {/* Referral Link Box */}
-                <div className="bg-[#1A1A1A] border border-[#FFFF00]/30 rounded-xl p-3 flex items-center gap-2 mb-3">
-                    <code className="flex-1 text-xs text-brand font-mono truncate">
+                <div className="bg-black/40 border border-white/10 rounded-2xl p-4 flex items-center gap-3 mb-6 group hover:border-brand/40 transition-all">
+                    <code className="flex-1 text-xs text-brand font-mono font-bold truncate">
                         {referralLink || 'Loading...'}
                     </code>
                     <button
                         onClick={copyReferralLink}
-                        className="p-2 border border-[#FFFF00] rounded-lg text-brand hover:bg-brand hover:text-black transition-all"
+                        className="p-3 bg-brand/10 border border-brand/30 rounded-xl text-brand hover:bg-brand hover:text-black transition-all active:scale-95"
                     >
-                        {referralCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     </button>
                 </div>
 
-                <p className="text-xs text-coffee-medium text-center mb-4">
-                    {profile.shareAndEarn || 'Comparte tu enlace y gana'} <span className="text-brand font-bold">10%</span> {profile.ofFees || 'de sus comisiones de trading.'}
-                </p>
-
-                {/* Stats */}
-                <div className="flex justify-center gap-16">
-                    <div className="text-center">
-                        <div className="text-coffee-medium text-xs mb-1">{profile.referrals || 'Referidos'}</div>
-                        <div className="text-lg font-bold text-white">{loadingReferrals ? '...' : referredUsers.length}</div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center bg-white/5 py-4 rounded-2xl border border-white/5">
+                        <div className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">{profile.referrals || 'Referidos'}</div>
+                        <div className="text-2xl font-black text-white">{loadingReferrals ? '...' : referredUsers.length}</div>
                     </div>
-                    <div className="text-center">
-                        <div className="text-coffee-medium text-xs mb-1">{profile.earned || 'Ganado'}</div>
-                        <div className="text-lg font-bold text-brand font-mono">${loadingReferrals ? '...' : totalEarnings.toFixed(2)}</div>
+                    <div className="text-center bg-white/5 py-4 rounded-2xl border border-white/5">
+                        <div className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">{profile.earned || 'Ganado'}</div>
+                        <div className="text-2xl font-black text-brand font-mono">${loadingReferrals ? '...' : totalEarnings.toFixed(2)}</div>
                     </div>
                 </div>
             </div>
 
             {/* ===== SETTINGS ===== */}
-            <div className="bg-[#0D0D0D] border border-white/10 rounded-3xl p-5">
-                <div className="flex items-center gap-2 mb-4">
-                    <div className="text-brand">⚙️</div>
-                    <h2 className="text-base font-bold text-white">{language === 'es' ? 'Ajustes' : 'Settings'}</h2>
+            <div className="premium-card rounded-[24px] p-6 border border-white/5 space-y-8">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                        <span className="text-xl">⚙️</span>
+                    </div>
+                    <h2 className="text-lg font-black text-white tracking-tight">{language === 'es' ? 'Configuración' : 'Settings'}</h2>
                 </div>
 
-                <div className="space-y-4">
-                    {/* Language */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Globe className="w-5 h-5 text-coffee-medium" />
-                            <span className="text-white text-sm">Language</span>
+                <div className="space-y-6">
+                    {/* Language Toggle */}
+                    <div className="flex items-center justify-between p-1 bg-black/40 rounded-2xl border border-white/5">
+                        <div className="flex items-center gap-4 ml-3">
+                            <Globe className="w-5 h-5 text-white/40" />
+                            <span className="text-white/80 text-xs font-black uppercase tracking-wider">Language</span>
                         </div>
-                        <div className="flex border border-white/20 rounded-lg overflow-hidden">
+                        <div className="flex gap-1">
                             <button
                                 onClick={() => setLanguage('en')}
-                                className={`px-3 py-1.5 text-xs font-semibold transition-all ${language === 'en' ? 'bg-brand text-black' : 'text-coffee-medium hover:text-white'}`}
+                                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'en' ? 'bg-brand text-black shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
                             >
-                                EN
+                                ENGLISH
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
-                                className={`px-3 py-1.5 text-xs font-semibold transition-all ${language === 'es' ? 'bg-brand text-black' : 'text-coffee-medium hover:text-white'}`}
+                                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'es' ? 'bg-brand text-black shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
                             >
-                                ES
+                                ESPAÑOL
                             </button>
                         </div>
                     </div>
 
-                    {/* Agent Wallet - Toggle */}
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                            <Zap className="w-5 h-5 text-coffee-medium flex-shrink-0" />
-                            <span className="text-white text-sm">{profile.agentWallet || 'Billetera Agente'}</span>
+                    {/* Agent Wallet Toggle */}
+                    <div className="flex items-center justify-between px-4 py-2 bg-black/40 rounded-2xl border border-white/5">
+                        <div className="flex items-center gap-4">
+                            <Zap className="w-5 h-5 text-brand" />
+                            <div>
+                                <div className="text-white text-xs font-black uppercase tracking-wider">{profile.agentWallet || 'Billetera Agente'}</div>
+                                <div className="text-[10px] text-white/40 font-bold">1-Tap Trading</div>
+                            </div>
                         </div>
                         <button
                             onClick={agentWalletEnabled ? handleDisableAgentWallet : handleSetupAgentWallet}
                             disabled={settingUpAgent}
-                            style={{ width: '48px', height: '28px', minWidth: '48px' }}
-                            className={`rounded-full transition-all relative flex-shrink-0 cursor-pointer ${agentWalletEnabled ? 'bg-brand border-2 border-[#FFFF00]' : 'bg-bg-hover border-2 border-white/30'}`}
+                            className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 ${agentWalletEnabled ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
                         >
-                            {settingUpAgent ? (
-                                <Loader2 className="w-4 h-4 animate-spin absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-black pointer-events-none" />
-                            ) : (
-                                <div
-                                    style={{ width: '20px', height: '20px' }}
-                                    className={`rounded-full bg-white shadow-md absolute top-[2px] transition-all pointer-events-none ${agentWalletEnabled ? 'right-[2px]' : 'left-[2px]'}`}
-                                />
+                            <div
+                                className={`w-5 h-5 rounded-full shadow-xl absolute top-1 transition-all duration-300 ${agentWalletEnabled ? 'right-1 bg-black' : 'left-1 bg-white/40'}`}
+                            />
+                            {settingUpAgent && (
+                                <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-black" />
                             )}
                         </button>
                     </div>
-                    {agentSetupError && (
-                        <div className="text-xs text-red-400 ml-8">{agentSetupError}</div>
-                    )}
 
-                    {/* Builder Fee - Checkmark */}
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                            <Shield className="w-5 h-5 text-brand" />
-                            <span className="text-white text-sm font-medium">{profile.builderFee || 'Comisión Builder'}</span>
+                    {/* Action Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Builder Fee */}
+                        <div className="flex flex-col gap-3">
+                            {builderFeeApproved ? (
+                                <div className="flex items-center justify-center gap-2 py-3.5 bg-brand/10 border border-brand/30 rounded-2xl text-brand font-black text-[10px] uppercase tracking-widest">
+                                    <Check className="w-4 h-4" /> Approved
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleApproveBuilderFee}
+                                    disabled={approvingFee}
+                                    className="btn-premium py-3.5 text-[10px] uppercase tracking-widest font-black"
+                                >
+                                    {approvingFee ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Approve Fee'}
+                                </button>
+                            )}
                         </div>
-                        {builderFeeApproved ? (
-                            <div className="flex items-center gap-2 px-4 py-2 bg-brand/10 border border-[#FFFF00] rounded-xl">
-                                <Check className="w-5 h-5 text-brand" />
-                                <span className="text-brand text-sm font-bold">Active</span>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={handleApproveBuilderFee}
-                                disabled={approvingFee}
-                                className="px-5 py-2.5 bg-brand text-black rounded-full text-sm font-bold hover:bg-[#FFD700] transition-all disabled:opacity-50 shadow-lg"
-                                style={{ boxShadow: '0 4px 12px rgba(255, 255, 0, 0.3)' }}
-                            >
-                                {approvingFee ? <Loader2 className="w-5 h-5 animate-spin" /> : (profile.approve || 'Aprobar')}
-                            </button>
-                        )}
-                    </div>
-                    {feeError && (
-                        <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg p-2 mt-2">{feeError}</div>
-                    )}
 
-                    {/* Stock Trading (DEX Abstraction) - Required for Trade.xyz stocks */}
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                            <Zap className="w-5 h-5 text-[#4169E1]" />
-                            <span className="text-white text-sm font-medium">{profile.stockTrading || 'Stock Trading'}</span>
-                        </div>
-                        {dexAbstractionEnabled ? (
-                            <div className="flex items-center gap-2 px-4 py-2 bg-[#4169E1]/10 border border-[#4169E1] rounded-xl">
-                                <Check className="w-5 h-5 text-[#4169E1]" />
-                                <span className="text-[#4169E1] text-sm font-bold">Active</span>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={async () => {
-                                    const result = await enableDexAbstraction();
-                                    if (!result.success) {
-                                        setError(result.message);
-                                    } else {
-                                        setSuccess(result.message);
-                                        setTimeout(() => setSuccess(null), 3000);
-                                    }
-                                }}
-                                disabled={dexAbstractionLoading}
-                                className="px-5 py-2.5 bg-[#4169E1] text-white rounded-full text-sm font-bold hover:bg-[#5179F1] transition-all disabled:opacity-50 shadow-lg"
-                                style={{ boxShadow: '0 4px 12px rgba(65, 105, 225, 0.3)' }}
-                            >
-                                {dexAbstractionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (profile.enable || 'Enable')}
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Export Wallet */}
-                    {privyUser?.wallet?.connectorType === 'embedded' && (
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <Share2 className="w-5 h-5 text-purple-400" />
-                                <span className="text-white text-sm font-medium">{profile.exportWallet || 'Export Wallet'}</span>
-                            </div>
-                            <button
-                                onClick={exportWallet}
-                                className="px-5 py-2.5 bg-purple-600 text-white rounded-full text-sm font-bold hover:bg-purple-500 transition-all shadow-lg"
-                                style={{ boxShadow: '0 4px 12px rgba(147, 51, 234, 0.3)' }}
-                            >
-                                Export
-                            </button>
-                        </div>
-                    )}
-
-                    {/* Sync Trades */}
-                    <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                            <RefreshCw className="w-5 h-5 text-cyan-400" />
-                            <span className="text-white text-sm font-medium">{profile.syncTrades || 'Sync Trades'}</span>
-                        </div>
+                        {/* Sync Trades */}
                         <button
                             onClick={handleSyncTrades}
                             disabled={syncing}
-                            className="px-5 py-2.5 bg-cyan-600 text-white rounded-full text-sm font-bold hover:bg-cyan-500 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg"
-                            style={{ boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)' }}
+                            className="bg-white/5 border border-white/10 hover:bg-white/10 py-3.5 rounded-2xl text-white/80 font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                         >
-                            {syncing && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {syncResult || (language === 'es' ? 'Sincronizar' : 'Sync')}
+                            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                            {syncResult || 'Sync'}
                         </button>
+                    </div>
+
+                    {/* Stock & Export Row */}
+                    <div className="grid grid-cols-2 gap-4">
+                        {/* Stock Trading */}
+                        <button
+                            onClick={async () => {
+                                const result = await enableDexAbstraction();
+                                if (!result.success) setError(result.message);
+                                else { setSuccess(result.message); setTimeout(() => setSuccess(null), 3000); }
+                            }}
+                            disabled={dexAbstractionLoading}
+                            className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border ${dexAbstractionEnabled ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/10 text-white/60'}`}
+                        >
+                            {dexAbstractionEnabled ? <Check className="w-4 h-4" /> : <Zap className="w-4 h-4 text-blue-400" />}
+                            Stocks
+                        </button>
+
+                        {/* Export Wallet */}
+                        {privyUser?.wallet?.connectorType === 'embedded' && (
+                            <button
+                                onClick={exportWallet}
+                                className="bg-purple-500/10 border border-purple-500/30 text-purple-400 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-500/20 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Share2 className="w-4 h-4" />
+                                Export
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -496,7 +475,7 @@ export default function Profile() {
             {/* ===== DISCONNECT BUTTON ===== */}
             <button
                 onClick={logout}
-                className="w-full py-4 bg-brand text-black font-bold rounded-2xl hover:bg-brand-hover transition-all text-base"
+                className="w-full py-5 bg-white/5 hover:bg-red-500/10 hover:text-red-500 border border-white/10 hover:border-red-500/30 transition-all text-white/40 font-black uppercase tracking-[0.2em] text-xs rounded-[24px]"
             >
                 {t.wallet.disconnect || 'Desconectar'}
             </button>
