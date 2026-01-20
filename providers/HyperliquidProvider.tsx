@@ -1843,7 +1843,37 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const result = await response.json();
             console.log('📥 Trigger order API result:', JSON.stringify(result, null, 2));
 
+            // Check for success - Hyperliquid returns status: 'ok' and response.type: 'order'
+            // But actual order status is in response.data.statuses array
             if (result.status === 'ok') {
+                const statuses = result.response?.data?.statuses;
+
+                // Check if there's an error in the statuses
+                if (statuses && Array.isArray(statuses)) {
+                    const orderStatus = statuses[0];
+
+                    // If it's a string, it's likely an error message
+                    if (typeof orderStatus === 'string' && orderStatus.toLowerCase().includes('error')) {
+                        console.error('❌ Order status error:', orderStatus);
+                        throw new Error(orderStatus);
+                    }
+
+                    // If it contains 'error' field, it's an error
+                    if (orderStatus?.error) {
+                        console.error('❌ Order error:', orderStatus.error);
+                        throw new Error(orderStatus.error);
+                    }
+
+                    // Check for resting status (success)
+                    if (orderStatus?.resting) {
+                        console.log('✅ Trigger order placed successfully! Order ID:', orderStatus.resting.oid);
+                    } else if (orderStatus?.filled) {
+                        console.log('✅ Trigger order filled immediately!');
+                    } else {
+                        console.log('📝 Order status:', JSON.stringify(orderStatus));
+                    }
+                }
+
                 console.log('✅ Trigger order placed successfully!');
                 // Refresh orders to show the new trigger order
                 setTimeout(() => refreshAccountData(), 500);
