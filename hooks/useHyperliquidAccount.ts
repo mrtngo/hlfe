@@ -136,10 +136,35 @@ export function useHyperliquidAccount(
         positions: []
     });
     const [orders, setOrders] = useState<Order[]>([]);
+    const [triggerOrders, setTriggerOrders] = useState<any[]>([]);
+    const triggerOrdersRef = useRef<any[]>([]);
     const [spotBalances, setSpotBalances] = useState<SpotBalance[]>([]);
     const [retryAfter, setRetryAfter] = useState<number | null>(null);
     const initialFetchDone = useRef(false);
     const fetchingAccount = useRef(false);
+
+    /**
+     * Helper to match trigger orders to positions
+     */
+    const matchTriggerOrders = useCallback((positions: Position[], activeTriggerOrders: any[]) => {
+        return positions.map(pos => {
+            const positionCoin = pos.name || pos.symbol.replace('-USD', '');
+            const tpOrder = activeTriggerOrders.find((o: any) => {
+                const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
+                return orderCoin === positionCoin && o.orderType?.includes('Take Profit');
+            });
+            const slOrder = activeTriggerOrders.find((o: any) => {
+                const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
+                return orderCoin === positionCoin && o.orderType?.includes('Stop Loss');
+            });
+
+            return {
+                ...pos,
+                takeProfitPrice: tpOrder ? parseFloat(tpOrder.triggerPx || '0') : undefined,
+                stopLossPrice: slOrder ? parseFloat(slOrder.triggerPx || '0') : undefined,
+            };
+        });
+    }, []);
 
     /**
      * Fetch initial account data via HTTP
@@ -165,7 +190,7 @@ export function useHyperliquidAccount(
             await client.connect();
 
             // Fetch main, DEX (xyz), Spot states, and open orders in parallel for speed & aggregation
-            const [userState, dexStateData, spotStateResponse, openOrdersResponse] = await Promise.all([
+            const [userState, dexStateData, spotStateResponse, openOrdersResponse, xyzOpenOrdersResponse] = await Promise.all([
                 client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -192,6 +217,16 @@ export function useHyperliquidAccount(
                         type: 'frontendOpenOrders',
                         user: normalizedAddress,
                     }),
+                }).then(res => res.ok ? res.json() : []).catch(() => []),
+                // Fetch Trade.xyz (HIP-3) open orders
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'frontendOpenOrders',
+                        user: normalizedAddress,
+                        dex: 'xyz'
+                    }),
                 }).then(res => res.ok ? res.json() : []).catch(() => [])
             ]);
 
@@ -199,34 +234,22 @@ export function useHyperliquidAccount(
             setRateLimited(false);
             setRetryAfter(null);
 
-            // Parse trigger orders for TP/SL mapping
-            const triggerOrders = (openOrdersResponse as any[])?.filter((o: any) =>
+            // Combine all open orders and store trigger orders
+            const allOpenOrders = [...(openOrdersResponse as any[]), ...(xyzOpenOrdersResponse as any[])];
+            const activeTriggerOrders = allOpenOrders.filter((o: any) =>
                 o.isTrigger === true && (o.orderType?.includes('Take Profit') || o.orderType?.includes('Stop Loss'))
             ) || [];
-            console.log('📊 Found trigger orders:', triggerOrders.length);
+
+            setTriggerOrders(activeTriggerOrders);
+            triggerOrdersRef.current = activeTriggerOrders;
+            console.log('📊 Found trigger orders (all):', activeTriggerOrders.length);
 
             const mainMargin = userState?.marginSummary || {};
             let perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
             const perpExchangePnl = perpPositions.reduce((sum, p) => sum + (p.exchangePnl || 0), 0) || parseFloat((userState as any)?.crossMarginSummary?.totalUnrealizedPnl || '0');
 
             // Match trigger orders to positions
-            perpPositions = perpPositions.map(pos => {
-                const positionCoin = pos.name || pos.symbol.replace('-USD', '');
-                const tpOrder = triggerOrders.find((o: any) => {
-                    const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
-                    return orderCoin === positionCoin && o.orderType?.includes('Take Profit');
-                });
-                const slOrder = triggerOrders.find((o: any) => {
-                    const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
-                    return orderCoin === positionCoin && o.orderType?.includes('Stop Loss');
-                });
-
-                return {
-                    ...pos,
-                    takeProfitPrice: tpOrder ? parseFloat(tpOrder.triggerPx || '0') : undefined,
-                    stopLossPrice: slOrder ? parseFloat(slOrder.triggerPx || '0') : undefined,
-                };
-            });
+            perpPositions = matchTriggerOrders(perpPositions, activeTriggerOrders);
 
             setPerpState({
                 account: {
@@ -242,12 +265,15 @@ export function useHyperliquidAccount(
 
             if (dexStateData) {
                 const dexMargin = dexStateData.marginSummary || {};
-                const dexPositions = dexStateData.assetPositions?.map((p: any) => {
+                let dexPositions = dexStateData.assetPositions?.map((p: any) => {
                     const parsed = parsePosition(p, markets);
                     if (parsed) parsed.isStock = true;
                     return parsed;
                 }).filter(Boolean) as Position[] || [];
                 const dexExchangePnl = dexPositions.reduce((sum, p) => sum + (p.exchangePnl || 0), 0);
+
+                // Match trigger orders to DEX positions
+                dexPositions = matchTriggerOrders(dexPositions, activeTriggerOrders);
 
                 setDexState({
                     account: {
@@ -397,11 +423,15 @@ export function useHyperliquidAccount(
                 if (data.marginSummary) {
                     const accountValue = parseFloat(data.marginSummary.accountValue || '0');
                     const totalMarginUsed = parseFloat(data.marginSummary.totalMarginUsed || '0');
-                    const parsedPositions = data.assetPositions?.map((p: any) => {
+                    let parsedPositions = data.assetPositions?.map((p: any) => {
                         const parsed = parsePosition(p, markets);
                         if (parsed && isDex) parsed.isStock = true;
                         return parsed;
                     }).filter(Boolean) as Position[] || [];
+
+                    // Match trigger orders for real-time updates
+                    parsedPositions = matchTriggerOrders(parsedPositions, triggerOrdersRef.current);
+
                     const totalExchangePnl = parsedPositions.reduce((sum, p) => sum + (p.exchangePnl || 0), 0);
 
                     const newState = {
@@ -426,7 +456,11 @@ export function useHyperliquidAccount(
             },
             onPositionUpdate: (assetPositions: any[]) => {
                 if (Array.isArray(assetPositions)) {
-                    const parsedPositions = assetPositions.map(p => parsePosition(p, markets)).filter(Boolean) as Position[];
+                    let parsedPositions = assetPositions.map(p => parsePosition(p, markets)).filter(Boolean) as Position[];
+
+                    // Match trigger orders for real-time updates
+                    parsedPositions = matchTriggerOrders(parsedPositions, triggerOrdersRef.current);
+
                     const isDex = parsedPositions.some(p => p.isStock);
 
                     if (isDex) {
