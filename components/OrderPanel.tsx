@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
@@ -87,6 +87,15 @@ export default function OrderPanel() {
         : 0;
 
     const apiSide = orderSide === 'long' ? 'buy' : 'sell';
+
+    // Memoized leverage handlers to prevent re-renders
+    const decreaseLeverage = useCallback((amount: number) => {
+        setLeverage(prev => Math.max(1, prev - amount));
+    }, []);
+
+    const increaseLeverage = useCallback((amount: number) => {
+        setLeverage(prev => Math.min(maxLeverage, prev + amount));
+    }, [maxLeverage]);
 
     // Set margin mode for HIP-3 markets
     useEffect(() => {
@@ -298,6 +307,22 @@ export default function OrderPanel() {
                                     border: none;
                                     box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 2px 6px rgba(0,0,0,0.3);
                                 }
+                                .leverage-btn {
+                                    background-color: #4A4A4C;
+                                    color: white;
+                                }
+                                .leverage-btn:hover:not(:disabled) {
+                                    filter: brightness(1.1);
+                                }
+                                .leverage-btn:active:not(:disabled) {
+                                    background-color: #FFFF00;
+                                    color: #000;
+                                }
+                                .leverage-btn-disabled {
+                                    background-color: #2C2C2E;
+                                    color: rgba(255,255,255,0.3);
+                                    cursor: not-allowed;
+                                }
                             `}</style>
                         </div>
 
@@ -310,24 +335,14 @@ export default function OrderPanel() {
                             <div className="flex gap-3">
                                 {/* Decrease leverage buttons */}
                                 {[5, 2, 1].map((dec) => {
-                                    const newLev = leverage - dec;
-                                    const isDisabled = newLev < 1;
+                                    const isDisabled = leverage - dec < 1;
                                     return (
                                         <button
                                             key={`lev-sub-${dec}`}
-                                            onClick={() => setLeverage(Math.max(1, newLev))}
+                                            onClick={() => decreaseLeverage(dec)}
                                             disabled={isDisabled}
-                                            className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center ${isDisabled ? 'cursor-not-allowed' : 'hover:brightness-110'}`}
-                                            style={{
-                                                backgroundColor: isDisabled ? '#2C2C2E' : '#4A4A4C',
-                                                color: isDisabled ? 'rgba(255,255,255,0.3)' : 'white',
-                                                minHeight: '56px'
-                                            }}
-                                            onMouseDown={(e) => { if (!isDisabled) { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; } }}
-                                            onMouseUp={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
-                                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
-                                            onTouchStart={(e) => { if (!isDisabled) { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; } }}
-                                            onTouchEnd={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
+                                            className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center leverage-btn ${isDisabled ? 'leverage-btn-disabled' : ''}`}
+                                            style={{ minHeight: '56px' }}
                                         >
                                             −{dec}x
                                         </button>
@@ -336,24 +351,14 @@ export default function OrderPanel() {
 
                                 {/* Increase leverage buttons */}
                                 {[1, 2, 5].map((inc) => {
-                                    const newLev = leverage + inc;
-                                    const isDisabled = newLev > maxLeverage;
+                                    const isDisabled = leverage + inc > maxLeverage;
                                     return (
                                         <button
                                             key={`lev-add-${inc}`}
-                                            onClick={() => setLeverage(Math.min(maxLeverage, newLev))}
+                                            onClick={() => increaseLeverage(inc)}
                                             disabled={isDisabled}
-                                            className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center ${isDisabled ? 'cursor-not-allowed' : 'hover:brightness-110'}`}
-                                            style={{
-                                                backgroundColor: isDisabled ? '#2C2C2E' : '#4A4A4C',
-                                                color: isDisabled ? 'rgba(255,255,255,0.3)' : 'white',
-                                                minHeight: '56px'
-                                            }}
-                                            onMouseDown={(e) => { if (!isDisabled) { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; } }}
-                                            onMouseUp={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
-                                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
-                                            onTouchStart={(e) => { if (!isDisabled) { e.currentTarget.style.backgroundColor = '#FFFF00'; e.currentTarget.style.color = '#000'; } }}
-                                            onTouchEnd={(e) => { e.currentTarget.style.backgroundColor = isDisabled ? '#2C2C2E' : '#4A4A4C'; e.currentTarget.style.color = isDisabled ? 'rgba(255,255,255,0.3)' : 'white'; }}
+                                            className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center leverage-btn ${isDisabled ? 'leverage-btn-disabled' : ''}`}
+                                            style={{ minHeight: '56px' }}
                                         >
                                             +{inc}x
                                         </button>

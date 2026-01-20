@@ -167,9 +167,9 @@ export default function OrderBook({
             {/* Asks (reversed to show lowest at bottom, near spread) */}
             <div className="flex-1 overflow-hidden">
                 <div className="flex flex-col-reverse">
-                    {asks.map((level, i) => (
+                    {asks.map((level) => (
                         <div
-                            key={`ask-${i}`}
+                            key={`ask-${level.price}`}
                             className="relative grid grid-cols-3 px-3 py-1 cursor-pointer hover:bg-bg-secondary transition-colors"
                             onClick={() => handlePriceClick(level.price)}
                         >
@@ -207,9 +207,9 @@ export default function OrderBook({
 
             {/* Bids */}
             <div className="flex-1 overflow-hidden">
-                {bids.map((level, i) => (
+                {bids.map((level) => (
                     <div
-                        key={`bid-${i}`}
+                        key={`bid-${level.price}`}
                         className="relative grid grid-cols-3 px-3 py-1 cursor-pointer hover:bg-bg-secondary transition-colors"
                         onClick={() => handlePriceClick(level.price)}
                     >

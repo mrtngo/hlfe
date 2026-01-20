@@ -6,6 +6,13 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 
 const REFERRAL_STORAGE_KEY = 'rayo_referral_code';
 
+// Validate referral code format: alphanumeric, underscore, hyphen, 3-20 chars
+const isValidReferralCode = (code: string): boolean =>
+    typeof code === 'string' &&
+    code.length >= 3 &&
+    code.length <= 20 &&
+    /^[a-zA-Z0-9_-]+$/.test(code);
+
 interface UserContextType {
     user: User | null;
     loading: boolean;
@@ -25,15 +32,27 @@ function getAndStoreReferralCode(): string | null {
     const urlParams = new URLSearchParams(window.location.search);
     const refCode = urlParams.get('ref');
 
-    if (refCode) {
+    if (refCode && isValidReferralCode(refCode)) {
         // Store in localStorage for later use (after wallet connect)
         localStorage.setItem(REFERRAL_STORAGE_KEY, refCode);
         console.log('📎 Stored referral code:', refCode);
         return refCode;
+    } else if (refCode) {
+        console.warn('⚠️ Invalid referral code format:', refCode);
     }
 
-    // Return stored referral code if exists
-    return localStorage.getItem(REFERRAL_STORAGE_KEY);
+    // Return stored referral code if exists and valid
+    const storedCode = localStorage.getItem(REFERRAL_STORAGE_KEY);
+    if (storedCode && isValidReferralCode(storedCode)) {
+        return storedCode;
+    }
+
+    // Clear invalid stored code
+    if (storedCode) {
+        localStorage.removeItem(REFERRAL_STORAGE_KEY);
+    }
+
+    return null;
 }
 
 export function UserProvider({ children }: { children: ReactNode }) {
