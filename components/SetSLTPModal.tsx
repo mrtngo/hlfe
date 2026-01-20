@@ -112,16 +112,18 @@ export default function SetSLTPModal({ isOpen, onClose, position }: SetSLTPModal
 
     if (!isOpen || !mounted) return null;
 
+    // Calculate profit/loss percentage WITH leverage applied
+    // ROI on margin = price change % * leverage
     const profitPct = takeProfitPrice ?
         (position.side === 'long'
-            ? ((parseFloat(takeProfitPrice) - currentPrice) / currentPrice * 100)
-            : ((currentPrice - parseFloat(takeProfitPrice)) / currentPrice * 100)
+            ? ((parseFloat(takeProfitPrice) - currentPrice) / currentPrice * 100 * position.leverage)
+            : ((currentPrice - parseFloat(takeProfitPrice)) / currentPrice * 100 * position.leverage)
         ) : 0;
 
     const lossPct = stopLossPrice ?
         (position.side === 'long'
-            ? ((currentPrice - parseFloat(stopLossPrice)) / currentPrice * 100)
-            : ((parseFloat(stopLossPrice) - currentPrice) / currentPrice * 100)
+            ? ((currentPrice - parseFloat(stopLossPrice)) / currentPrice * 100 * position.leverage)
+            : ((parseFloat(stopLossPrice) - currentPrice) / currentPrice * 100 * position.leverage)
         ) : 0;
 
     const modalContent = (

@@ -38,6 +38,9 @@ export interface Position {
     unrealizedPnl: number;
     unrealizedPnlPercent: number;
     isStock?: boolean; // True for Trade.xyz stocks
+    exchangePnl?: number; // Raw P&L from exchange
+    takeProfitPrice?: number; // TP trigger price (if set)
+    stopLossPrice?: number; // SL trigger price (if set)
 }
 
 export interface Order {

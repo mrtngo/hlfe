@@ -31,6 +31,10 @@ export interface Position {
     unrealizedPnlPercent: number;
     /** Whether this is a stock/equity position (Trade.xyz) */
     isStock?: boolean;
+    /** Take profit trigger price (if set) */
+    takeProfitPrice?: number;
+    /** Stop loss trigger price (if set) */
+    stopLossPrice?: number;
 }
 
 /**

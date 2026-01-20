@@ -301,6 +301,23 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             <span className="text-coffee-medium">Liq</span>
                                             <span className="font-mono text-bearish">{formatCurrency(position.liquidationPrice)}</span>
                                         </div>
+                                        {/* TP/SL Display */}
+                                        {(position.takeProfitPrice || position.stopLossPrice) && (
+                                            <>
+                                                {position.takeProfitPrice && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-bullish">TP 🎯</span>
+                                                        <span className="font-mono text-bullish">{formatCurrency(position.takeProfitPrice)}</span>
+                                                    </div>
+                                                )}
+                                                {position.stopLossPrice && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-bearish">SL 🛑</span>
+                                                        <span className="font-mono text-bearish">{formatCurrency(position.stopLossPrice)}</span>
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
                                     {/* Share Button */}
                                     <button

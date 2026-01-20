@@ -164,8 +164,8 @@ export function useHyperliquidAccount(
             const client = createHyperliquidClient();
             await client.connect();
 
-            // Fetch main, DEX (xyz), and Spot states in parallel for speed & aggregation
-            const [userState, dexStateData, spotStateResponse] = await Promise.all([
+            // Fetch main, DEX (xyz), Spot states, and open orders in parallel for speed & aggregation
+            const [userState, dexStateData, spotStateResponse, openOrdersResponse] = await Promise.all([
                 client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -183,16 +183,50 @@ export function useHyperliquidAccount(
                         type: 'spotClearinghouseState',
                         user: normalizedAddress,
                     }),
-                }).catch(() => null)
+                }).catch(() => null),
+                // Fetch open orders including trigger orders (TP/SL)
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'frontendOpenOrders',
+                        user: normalizedAddress,
+                    }),
+                }).then(res => res.ok ? res.json() : []).catch(() => [])
             ]);
 
             // Success - reset rate limiting
             setRateLimited(false);
             setRetryAfter(null);
 
+            // Parse trigger orders for TP/SL mapping
+            const triggerOrders = openOrdersResponse?.filter((o: any) =>
+                o.orderType?.trigger?.tpsl === 'tp' || o.orderType?.trigger?.tpsl === 'sl'
+            ) || [];
+            console.log('📊 Found trigger orders:', triggerOrders.length);
+
             const mainMargin = userState?.marginSummary || {};
-            const perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
+            let perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
             const perpExchangePnl = perpPositions.reduce((sum, p) => sum + (p.exchangePnl || 0), 0) || parseFloat((userState as any)?.crossMarginSummary?.totalUnrealizedPnl || '0');
+
+            // Match trigger orders to positions
+            perpPositions = perpPositions.map(pos => {
+                const positionCoin = pos.name || pos.symbol.replace('-USD', '');
+                const tpOrder = triggerOrders.find((o: any) => {
+                    const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
+                    return orderCoin === positionCoin && o.orderType?.trigger?.tpsl === 'tp';
+                });
+                const slOrder = triggerOrders.find((o: any) => {
+                    const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
+                    return orderCoin === positionCoin && o.orderType?.trigger?.tpsl === 'sl';
+                });
+
+                return {
+                    ...pos,
+                    takeProfitPrice: tpOrder ? parseFloat(tpOrder.orderType?.trigger?.triggerPx || '0') : undefined,
+                    stopLossPrice: slOrder ? parseFloat(slOrder.orderType?.trigger?.triggerPx || '0') : undefined,
+                };
+            });
 
             setPerpState({
                 account: {
