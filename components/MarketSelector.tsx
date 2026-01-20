@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Search, ChevronDown, TrendingUp, TrendingDown, X, Filter } from 'lucide-react';
@@ -31,7 +31,8 @@ export default function MarketSelector() {
     const currentMarket = markets.find(m => m.symbol === selectedMarket) || markets[0];
     const isPositive = (currentMarket?.change24h ?? 0) >= 0;
 
-    const filteredMarkets = markets.filter((market) => {
+    // Memoize filtered markets to prevent recalculation on every render
+    const filteredMarkets = useMemo(() => markets.filter((market) => {
         // Tab filtering (crypto vs stocks)
         if (activeTab === 'stocks') {
             const isStockMarket = market.isStock === true;
@@ -57,7 +58,6 @@ export default function MarketSelector() {
             // Simple category matching based on asset names and types
             // This is a fallback until assets are fully synced with the database
             const name = market.name.toLowerCase();
-            const symbol = market.symbol.toLowerCase();
 
             switch (selectedCategory) {
                 case 'layer-1':
@@ -90,7 +90,7 @@ export default function MarketSelector() {
         }
 
         return true;
-    });
+    }), [markets, activeTab, searchQuery, selectedCategory, categories]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

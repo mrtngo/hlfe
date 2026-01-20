@@ -92,7 +92,10 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
     // Default watchlist tokens if empty - using centralized constant
     const watchlistToShow = watchlist.length > 0 ? watchlist : DEFAULT_WATCHLIST;
-    const watchlistMarkets = markets.filter(m => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol));
+    const watchlistMarkets = useMemo(() =>
+        markets.filter(m => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol)),
+        [markets, watchlistToShow]
+    );
     const portfolioValue = account.equity || account.balance;
 
     // Format username from address or use saved username

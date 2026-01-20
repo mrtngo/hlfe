@@ -13,6 +13,43 @@ const isValidReferralCode = (code: string): boolean =>
     code.length <= 20 &&
     /^[a-zA-Z0-9_-]+$/.test(code);
 
+// Sanitize display name: strip HTML tags, limit length, trim whitespace
+const sanitizeDisplayName = (name: string): string => {
+    if (typeof name !== 'string') return '';
+    // Remove HTML tags, trim, and limit to 50 chars
+    return name
+        .replace(/<[^>]*>/g, '') // Strip HTML tags
+        .replace(/[<>"'&]/g, '') // Remove potentially dangerous chars
+        .trim()
+        .slice(0, 50);
+};
+
+// Validate avatar URL: must be HTTPS from allowed domains
+const isValidAvatarUrl = (url: string): boolean => {
+    if (typeof url !== 'string' || !url) return true; // Empty is OK
+    try {
+        const parsed = new URL(url);
+        // Only allow HTTPS
+        if (parsed.protocol !== 'https:') return false;
+        // Whitelist of allowed avatar domains
+        const allowedDomains = [
+            'avatars.githubusercontent.com',
+            'lh3.googleusercontent.com',
+            'pbs.twimg.com',
+            'abs.twimg.com',
+            'unavatar.io',
+            'api.dicebear.com',
+            'cdn.discordapp.com',
+            'i.imgur.com',
+            'ipfs.io',
+            'cloudflare-ipfs.com',
+        ];
+        return allowedDomains.some(domain => parsed.hostname === domain || parsed.hostname.endsWith('.' + domain));
+    } catch {
+        return false;
+    }
+};
+
 interface UserContextType {
     user: User | null;
     loading: boolean;
@@ -86,30 +123,31 @@ export function UserProvider({ children }: { children: ReactNode }) {
                     ? localStorage.getItem(REFERRAL_STORAGE_KEY)
                     : null;
 
-                let referrerId: string | undefined;
+                let referrer: User | null = null;
 
-                if (referralCode) {
+                if (referralCode && isValidReferralCode(referralCode)) {
                     // Look up referrer by code
-                    const referrer = await db.users.getByReferralCode(referralCode);
+                    referrer = await db.users.getByReferralCode(referralCode);
                     if (referrer) {
-                        referrerId = referrer.id;
                         console.log('🔗 Found referrer:', referrer.username || referrer.wallet_address);
-
-                        // Create referral record after user is created
-                        setTimeout(async () => {
-                            const newUser = await db.users.getByWallet(address);
-                            if (newUser && referrer) {
-                                await db.referrals.create(referrer.id, newUser.id, referralCode);
-                                console.log('✅ Created referral link');
-                                // Clear stored referral code
-                                localStorage.removeItem(REFERRAL_STORAGE_KEY);
-                            }
-                        }, 1000);
                     }
                 }
 
                 // Create user with referral info
-                userData = await db.users.create(address, undefined, referrerId);
+                userData = await db.users.create(address, undefined, referrer?.id);
+
+                // Create referral record immediately after user creation (no race condition)
+                if (userData && referrer && referralCode) {
+                    try {
+                        await db.referrals.create(referrer.id, userData.id, referralCode);
+                        console.log('✅ Created referral link');
+                        // Clear stored referral code only after successful creation
+                        localStorage.removeItem(REFERRAL_STORAGE_KEY);
+                    } catch (refErr) {
+                        console.error('Failed to create referral link:', refErr);
+                        // Don't fail user creation if referral fails
+                    }
+                }
             }
 
             setUser(userData);
@@ -158,14 +196,32 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     }, [address]);
 
-    // Update profile
+    // Update profile with sanitization
     const updateProfile = useCallback(async (updates: { display_name?: string; avatar_url?: string }): Promise<{ success: boolean; message: string }> => {
         if (!address) {
             return { success: false, message: 'Wallet not connected' };
         }
 
+        // Sanitize and validate inputs
+        const sanitizedUpdates: { display_name?: string; avatar_url?: string } = {};
+
+        if (updates.display_name !== undefined) {
+            const sanitized = sanitizeDisplayName(updates.display_name);
+            if (sanitized.length === 0 && updates.display_name.length > 0) {
+                return { success: false, message: 'Display name contains invalid characters' };
+            }
+            sanitizedUpdates.display_name = sanitized;
+        }
+
+        if (updates.avatar_url !== undefined) {
+            if (updates.avatar_url && !isValidAvatarUrl(updates.avatar_url)) {
+                return { success: false, message: 'Avatar URL must be HTTPS from an allowed domain' };
+            }
+            sanitizedUpdates.avatar_url = updates.avatar_url;
+        }
+
         try {
-            const updatedUser = await db.users.update(address, updates);
+            const updatedUser = await db.users.update(address, sanitizedUpdates);
             if (updatedUser) {
                 setUser(updatedUser);
                 return { success: true, message: 'Profile updated!' };
