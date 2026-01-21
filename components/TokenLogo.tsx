@@ -237,15 +237,24 @@ const FOREX_COMMODITY_LOGOS: Record<string, string> = {
     'AUD': 'https://flagcdn.com/w80/au.png',
     'CAD': 'https://flagcdn.com/w80/ca.png',
     'NZD': 'https://flagcdn.com/w80/nz.png',
-    // Commodities - using high quality icons
+    // Commodities - Metals (multiple symbol variations)
     'XAU': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
     'GOLD': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
+    'GC': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
+    'GCZ': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
     'XAG': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
     'SILVER': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
+    'SI': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
+    'SIZ': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
     'COPPER': 'https://s3-symbol-logo.tradingview.com/metal/copper--big.svg',
     'HG': 'https://s3-symbol-logo.tradingview.com/metal/copper--big.svg',
+    // Commodities - Energy
     'CL': 'https://s3-symbol-logo.tradingview.com/crude-oil--big.svg',
     'OIL': 'https://s3-symbol-logo.tradingview.com/crude-oil--big.svg',
+    'WTI': 'https://s3-symbol-logo.tradingview.com/crude-oil--big.svg',
+    'BRENT': 'https://s3-symbol-logo.tradingview.com/brent-crude-oil--big.svg',
+    'NG': 'https://s3-symbol-logo.tradingview.com/natural-gas--big.svg',
+    'NATGAS': 'https://s3-symbol-logo.tradingview.com/natural-gas--big.svg',
 };
 
 // Stock symbol to Twitter handle mapping for unavatar.io
