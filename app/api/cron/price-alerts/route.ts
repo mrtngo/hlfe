@@ -178,19 +178,20 @@ export async function GET(request: NextRequest) {
                 continue;
             }
 
-            const priceDiff = currentPrice - lastPrice;
-            // Check if a level was crossed (multiple of threshold)
-            const currentLevel = Math.floor(currentPrice / config.threshold);
-            const lastLevel = Math.floor(lastPrice / config.threshold);
+            const priceDist = Math.abs(currentPrice - lastPrice);
 
-            console.log(`[PriceAlerts] ${symbol}: ${currentPrice} (${currentLevel}) vs ${lastPrice} (${lastLevel})`);
+            console.log(`[PriceAlerts] ${symbol}: ${currentPrice} vs last alerted ${lastPrice} (dist: ${priceDist.toFixed(2)}, threshold: ${config.threshold})`);
 
-            if (currentLevel !== lastLevel) {
-                const crossedLevel = (priceDiff > 0 ? currentLevel : lastLevel) * config.threshold;
-                const direction = priceDiff > 0 ? '📈' : '📉';
+            // Only trigger if we moved at least one full threshold distance from the last alert
+            if (priceDist >= config.threshold) {
+                const direction = currentPrice > lastPrice ? 1 : -1;
+                const numThresholdsCrossed = Math.floor(priceDist / config.threshold);
+                const crossedLevel = lastPrice + (direction * numThresholdsCrossed * config.threshold);
 
-                const title = `${direction} ${config.displayName} ${formatPrice(crossedLevel, symbol)} Crossed!`;
-                const body = `${config.displayName} is now ${formatPrice(currentPrice, symbol)}. Next level: ${formatPrice(crossedLevel + (priceDiff > 0 ? config.threshold : -config.threshold), symbol)}`;
+                const directionIcon = direction > 0 ? '📈' : '📉';
+
+                const title = `${directionIcon} ${config.displayName} ${formatPrice(crossedLevel, symbol)} Crossed!`;
+                const body = `${config.displayName} is now ${formatPrice(currentPrice, symbol)}. Next level: ${formatPrice(crossedLevel + (direction > 0 ? config.threshold : -config.threshold), symbol)}`;
 
                 console.log(`[PriceAlerts] Sending alert: ${title}`);
 
@@ -199,10 +200,11 @@ export async function GET(request: NextRequest) {
                     url: `/trade?symbol=${symbol}-USD`,
                 });
 
-                // Update last alerted price
-                await updateLastAlertPrice(symbol, currentPrice);
+                // Update state to the STABLE threshold level we just crossed
+                // This ensures we stay "locked" to the grid and prevent oscillations
+                await updateLastAlertPrice(symbol, crossedLevel);
 
-                alerts.push(`${symbol}: ${sent} notifications sent`);
+                alerts.push(`${symbol}: ${sent} notifications sent for level ${crossedLevel}`);
             }
         }
 
