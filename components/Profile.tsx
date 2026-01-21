@@ -7,8 +7,9 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign, ArrowLeftRight } from 'lucide-react';
+import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign, ArrowLeftRight, Bell, BellOff, Smartphone, CheckCircle2 } from 'lucide-react';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import TransferModal from './TransferModal';
 
 export default function Profile() {
@@ -16,6 +17,7 @@ export default function Profile() {
     const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet, syncTrades, dexAbstractionEnabled, dexAbstractionLoading, enableDexAbstraction, fills } = useHyperliquid();
     const { logout, exportWallet, user: privyUser } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
+    const pushNotifications = usePushNotifications();
 
     const profile = (t as any).profile || {};
 
@@ -387,6 +389,72 @@ export default function Profile() {
                                 ESPAÑOL
                             </button>
                         </div>
+                    </div>
+
+                    {/* Notifications Toggle */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between px-4 py-2 bg-black/40 rounded-2xl border border-white/5">
+                            <div className="flex items-center gap-4">
+                                <Bell className="w-5 h-5 text-brand" />
+                                <div>
+                                    <div className="text-white text-xs font-black uppercase tracking-wider">{t.settings.notifications}</div>
+                                    <div className="text-[10px] text-white/40 font-bold">{pushNotifications.isSubscribed ? 'Alerts Enabled' : 'Get Trade Alerts'}</div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe()}
+                                disabled={pushNotifications.isLoading || !pushNotifications.isSupported}
+                                className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 ${pushNotifications.isSubscribed ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
+                            >
+                                <div
+                                    className={`w-5 h-5 rounded-full shadow-xl absolute top-1 transition-all duration-300 ${pushNotifications.isSubscribed ? 'right-1 bg-black' : 'left-1 bg-white/40'}`}
+                                />
+                                {pushNotifications.isLoading && (
+                                    <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-black" />
+                                )}
+                            </button>
+                        </div>
+
+                        {/* iOS PWA Warning */}
+                        {pushNotifications.isIOS && !pushNotifications.isPWA && (
+                            <div className="flex items-start gap-3 p-4 bg-brand/10 border border-brand/20 rounded-2xl text-xs text-brand">
+                                <Smartphone className="w-4 h-4 shrink-0" />
+                                <div>
+                                    <span className="font-black uppercase tracking-wider block mb-1">Add to Home Screen</span>
+                                    <span className="text-white/60 font-medium">
+                                        On iOS, tap the Share button and "Add to Home Screen" to enable notifications.
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Permission Denied / Errors */}
+                        {(pushNotifications.permission === 'denied' || pushNotifications.error) && (
+                            <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-xs text-red-400">
+                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                <div>
+                                    <span className="font-black uppercase tracking-wider block mb-1">
+                                        {pushNotifications.permission === 'denied' ? 'Notifications Blocked' : 'Notification Error'}
+                                    </span>
+                                    <span className="text-white/60 font-medium">
+                                        {pushNotifications.permission === 'denied'
+                                            ? 'Please enable notifications in your browser/device settings.'
+                                            : pushNotifications.error}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Test Notification Button */}
+                        {pushNotifications.isSubscribed && (
+                            <button
+                                onClick={() => pushNotifications.sendTestNotification()}
+                                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 flex items-center justify-center gap-2"
+                            >
+                                <Bell className="w-3 h-3" />
+                                Send Test Notification
+                            </button>
+                        )}
                     </div>
 
                     {/* Agent Wallet Toggle */}
