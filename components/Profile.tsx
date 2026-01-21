@@ -423,7 +423,7 @@ export default function Profile() {
                                     )}
                                 </button>
                             ) : !pushNotifications.isLoading && (
-                                <AlertCircle className="w-5 h-5 text-white/20" title="Not supported on this browser" />
+                                <AlertCircle className="w-5 h-5 text-white/20" />
                             )}
                         </div>
 
