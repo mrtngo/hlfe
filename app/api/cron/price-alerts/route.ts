@@ -1,0 +1,210 @@
+/**
+ * Price Alerts Cron API Route
+ * Runs on Vercel cron to check prices and send push notifications to all subscribers
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import webPush from 'web-push';
+import { supabase } from '@/lib/supabase/client';
+
+// VAPID configuration
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_EMAIL = process.env.VAPID_EMAIL || 'mailto:admin@rayo.trade';
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    webPush.setVapidDetails(VAPID_EMAIL, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+}
+
+// Price alert thresholds
+const ALERT_THRESHOLDS: Record<string, { threshold: number; displayName: string }> = {
+    'BTC': { threshold: 200, displayName: 'Bitcoin' },
+    'ETH': { threshold: 50, displayName: 'Ethereum' },
+    'GC': { threshold: 50, displayName: 'Gold' },
+};
+
+// Fetch current prices from Hyperliquid
+async function fetchPrices(): Promise<Record<string, number>> {
+    try {
+        const response = await fetch('https://api.hyperliquid.xyz/info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'allMids' }),
+        });
+
+        const data = await response.json();
+
+        return {
+            'BTC': parseFloat(data['BTC'] || '0'),
+            'ETH': parseFloat(data['ETH'] || '0'),
+            'GC': parseFloat(data['@4'] || data['GC'] || '0'), // Gold might be listed as @4
+        };
+    } catch (err) {
+        console.error('[PriceAlerts] Failed to fetch prices:', err);
+        return {};
+    }
+}
+
+// Get last alerted prices from Supabase
+async function getLastAlertPrices(): Promise<Record<string, number>> {
+    const { data, error } = await supabase
+        .from('price_alert_state')
+        .select('symbol, last_alert_price');
+
+    if (error) {
+        console.error('[PriceAlerts] Failed to get last prices:', error);
+        return {};
+    }
+
+    const prices: Record<string, number> = {};
+    data?.forEach(row => {
+        prices[row.symbol] = Number(row.last_alert_price);
+    });
+    return prices;
+}
+
+// Update last alerted price
+async function updateLastAlertPrice(symbol: string, price: number): Promise<void> {
+    const { error } = await supabase
+        .from('price_alert_state')
+        .upsert({
+            symbol,
+            last_alert_price: price,
+            last_alert_at: new Date().toISOString(),
+        });
+
+    if (error) {
+        console.error('[PriceAlerts] Failed to update price:', error);
+    }
+}
+
+// Get all push subscriptions
+async function getAllSubscriptions(): Promise<any[]> {
+    const { data, error } = await supabase
+        .from('push_subscriptions')
+        .select('endpoint, p256dh, auth');
+
+    if (error) {
+        console.error('[PriceAlerts] Failed to get subscriptions:', error);
+        return [];
+    }
+
+    return data || [];
+}
+
+// Send push notification to all subscribers
+async function sendPushToAll(title: string, body: string, data?: Record<string, any>): Promise<number> {
+    const subscriptions = await getAllSubscriptions();
+    let sent = 0;
+
+    for (const sub of subscriptions) {
+        try {
+            const pushSubscription = {
+                endpoint: sub.endpoint,
+                keys: {
+                    p256dh: sub.p256dh,
+                    auth: sub.auth,
+                },
+            };
+
+            await webPush.sendNotification(
+                pushSubscription,
+                JSON.stringify({
+                    title,
+                    body,
+                    icon: '/icons/icon-192x192.png',
+                    badge: '/icons/icon-96x96.png',
+                    data: data || {},
+                })
+            );
+            sent++;
+        } catch (err: any) {
+            // Remove invalid subscriptions
+            if (err.statusCode === 410 || err.statusCode === 404) {
+                await supabase
+                    .from('push_subscriptions')
+                    .delete()
+                    .eq('endpoint', sub.endpoint);
+            }
+            console.error('[PriceAlerts] Push failed:', err.message);
+        }
+    }
+
+    return sent;
+}
+
+// Format price for display
+function formatPrice(price: number, symbol: string): string {
+    if (symbol === 'BTC') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    if (symbol === 'ETH') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    if (symbol === 'GC') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    return `$${price.toFixed(2)}`;
+}
+
+export async function GET(request: NextRequest) {
+    // Verify cron secret (optional but recommended)
+    const authHeader = request.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+        console.log('[PriceAlerts] Unauthorized cron request');
+        // Still allow for testing, just log it
+    }
+
+    console.log('[PriceAlerts] Cron job started');
+
+    try {
+        // Fetch current and last prices
+        const currentPrices = await fetchPrices();
+        const lastPrices = await getLastAlertPrices();
+
+        const alerts: string[] = [];
+
+        // Check each tracked asset
+        for (const [symbol, config] of Object.entries(ALERT_THRESHOLDS)) {
+            const currentPrice = currentPrices[symbol];
+            const lastPrice = lastPrices[symbol];
+
+            if (!currentPrice || !lastPrice) {
+                console.log(`[PriceAlerts] Missing price for ${symbol}: current=${currentPrice}, last=${lastPrice}`);
+                continue;
+            }
+
+            const priceDiff = currentPrice - lastPrice;
+            const absDiff = Math.abs(priceDiff);
+
+            console.log(`[PriceAlerts] ${symbol}: current=${currentPrice}, last=${lastPrice}, diff=${priceDiff.toFixed(2)}, threshold=${config.threshold}`);
+
+            // Check if threshold crossed
+            if (absDiff >= config.threshold) {
+                const direction = priceDiff > 0 ? '📈' : '📉';
+                const change = priceDiff > 0 ? `+$${absDiff.toFixed(0)}` : `-$${absDiff.toFixed(0)}`;
+
+                const title = `${direction} ${config.displayName} ${change}`;
+                const body = `${config.displayName} is now ${formatPrice(currentPrice, symbol)}`;
+
+                console.log(`[PriceAlerts] Sending alert: ${title}`);
+
+                const sent = await sendPushToAll(title, body, {
+                    symbol: `${symbol}-USD`,
+                    url: `/trade?symbol=${symbol}-USD`,
+                });
+
+                // Update last alerted price
+                await updateLastAlertPrice(symbol, currentPrice);
+
+                alerts.push(`${symbol}: ${sent} notifications sent`);
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            timestamp: new Date().toISOString(),
+            prices: currentPrices,
+            alerts: alerts.length > 0 ? alerts : 'No alerts triggered',
+        });
+    } catch (err) {
+        console.error('[PriceAlerts] Cron error:', err);
+        return NextResponse.json({ error: 'Cron failed' }, { status: 500 });
+    }
+}
