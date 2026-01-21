@@ -77,7 +77,22 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
     // Get current position for this symbol (for entry line)
     const currentPosition = useMemo(() => {
         if (!positions || !marketSymbol) return null;
-        return positions.find(p => p.symbol === marketSymbol);
+
+        const cleanM = marketSymbol.split('-')[0].split('/')[0].toUpperCase();
+
+        const matched = positions.find(p => {
+            const cleanP = p.symbol.split('-')[0].split('/')[0].toUpperCase();
+            return cleanP === cleanM;
+        });
+
+        if (matched) {
+            console.log(`[TradingChart Debug] Matched position for ${marketSymbol}:`, {
+                symbol: matched.symbol,
+                tp: matched.takeProfitPrice,
+                sl: matched.stopLossPrice
+            });
+        }
+        return matched;
     }, [positions, marketSymbol]);
 
     // Format data for recharts - simple line chart with OHLC
@@ -238,12 +253,12 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                     strokeDasharray="8 4"
                                     label={{
                                         value: `◆ Entry $${currentPosition.entryPrice.toFixed(2)}`,
-                                        position: 'insideBottomRight',
+                                        position: 'insideTopLeft',
                                         fill: CHART_POSITIVE,
-                                        fontSize: 12,
+                                        fontSize: 10,
                                         fontWeight: 'bold',
                                         style: {
-                                            textShadow: '0 0 4px #000, 0 0 8px #000, 2px 2px 4px #000',
+                                            textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
                                             paintOrder: 'stroke fill'
                                         }
                                     }}
@@ -261,10 +276,52 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                         value: `◆ Liq $${currentPosition.liquidationPrice.toFixed(2)}`,
                                         position: 'insideBottomLeft',
                                         fill: CHART_NEGATIVE,
-                                        fontSize: 12,
+                                        fontSize: 10,
                                         fontWeight: 'bold',
                                         style: {
-                                            textShadow: '0 0 4px #000, 0 0 8px #000, 2px 2px 4px #000',
+                                            textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                                            paintOrder: 'stroke fill'
+                                        }
+                                    }}
+                                />
+                            )}
+
+                            {/* Take Profit price line - CYAN */}
+                            {currentPosition && currentPosition.takeProfitPrice && currentPosition.takeProfitPrice > 0 && (
+                                <ReferenceLine
+                                    y={currentPosition.takeProfitPrice}
+                                    stroke="#22D3EE"
+                                    strokeWidth={2}
+                                    strokeDasharray="4 4"
+                                    label={{
+                                        value: `◆ TP $${currentPosition.takeProfitPrice.toFixed(2)}`,
+                                        position: 'insideTopRight',
+                                        fill: '#22D3EE',
+                                        fontSize: 10,
+                                        fontWeight: 'bold',
+                                        style: {
+                                            textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                                            paintOrder: 'stroke fill'
+                                        }
+                                    }}
+                                />
+                            )}
+
+                            {/* Stop Loss price line - ORANGE */}
+                            {currentPosition && currentPosition.stopLossPrice && currentPosition.stopLossPrice > 0 && (
+                                <ReferenceLine
+                                    y={currentPosition.stopLossPrice}
+                                    stroke="#F97316"
+                                    strokeWidth={2}
+                                    strokeDasharray="4 4"
+                                    label={{
+                                        value: `◆ SL $${currentPosition.stopLossPrice.toFixed(2)}`,
+                                        position: 'insideBottomRight',
+                                        fill: '#F97316',
+                                        fontSize: 10,
+                                        fontWeight: 'bold',
+                                        style: {
+                                            textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
                                             paintOrder: 'stroke fill'
                                         }
                                     }}
