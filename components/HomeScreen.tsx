@@ -607,7 +607,6 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             <div
                 className="rounded-3xl p-6"
                 style={{
-                    marginBottom: '48px',
                     background: 'linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%)',
                     border: '2px solid rgba(99, 102, 241, 0.3)',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
@@ -798,8 +797,9 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Categories Section */}
             <div
-                className="rounded-3xl p-6 mt-12"
+                className="rounded-3xl p-6"
                 style={{
+                    marginTop: '80px',
                     background: 'linear-gradient(135deg, rgba(25, 15, 25, 0.95) 0%, rgba(20, 10, 20, 0.98) 100%)',
                     border: '2px solid rgba(168, 85, 247, 0.3)',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
@@ -817,30 +817,35 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 </div>
 
                 {/* Category Tabs */}
-                <div className="flex items-center gap-3 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide mb-6">
+                <div className="flex items-center gap-4 overflow-x-auto pb-6 -mx-6 px-6 scrollbar-hide mb-6" style={{ scrollSnapType: 'x mandatory' }}>
                     {CATEGORIES.filter(cat => cat.id !== 'watchlist').map((category) => (
                         <button
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
-                            className={`flex items-center gap-2.5 px-5 py-3.5 rounded-2xl font-bold text-base whitespace-nowrap transition-all shrink-0 ${selectedCategory === category.id
+                            className={`flex flex-col items-center justify-center gap-2 rounded-3xl font-bold whitespace-nowrap transition-all shrink-0 active:scale-95 ${selectedCategory === category.id
                                 ? 'text-black'
-                                : 'text-white/70 hover:text-white'
+                                : 'text-white/80 hover:text-white'
                                 }`}
-                            style={selectedCategory === category.id
-                                ? {
-                                    background: 'linear-gradient(135deg, #FACC15 0%, #F59E0B 100%)',
-                                    boxShadow: '0 6px 20px rgba(250, 204, 21, 0.4), 0 0 30px rgba(250, 204, 21, 0.2)',
-                                    border: '2px solid rgba(255, 255, 255, 0.2)'
-                                }
-                                : {
-                                    background: 'linear-gradient(135deg, rgba(30, 30, 35, 0.95) 0%, rgba(20, 20, 25, 0.98) 100%)',
-                                    border: '2px solid rgba(255, 255, 255, 0.1)',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
-                                }
-                            }
+                            style={{
+                                scrollSnapAlign: 'start',
+                                width: '100px',
+                                height: '100px',
+                                ...(selectedCategory === category.id
+                                    ? {
+                                        background: 'linear-gradient(135deg, #FACC15 0%, #F59E0B 100%)',
+                                        boxShadow: '0 8px 24px rgba(250, 204, 21, 0.5), 0 0 40px rgba(250, 204, 21, 0.25)',
+                                        border: '3px solid rgba(255, 255, 255, 0.3)'
+                                    }
+                                    : {
+                                        background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.98) 0%, rgba(25, 25, 30, 0.98) 100%)',
+                                        border: '2px solid rgba(255, 255, 255, 0.15)',
+                                        boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                                    }
+                                )
+                            }}
                         >
-                            <span className="text-xl">{category.emoji}</span>
-                            <span>{category.label}</span>
+                            <span className="text-3xl">{category.emoji}</span>
+                            <span className="text-sm">{category.label}</span>
                         </button>
                     ))}
                 </div>

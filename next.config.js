@@ -26,6 +26,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'raw.githubusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: 's3-symbol-logo.tradingview.com',
+      },
     ],
   },
 

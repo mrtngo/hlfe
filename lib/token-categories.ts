@@ -138,7 +138,6 @@ export const TOKEN_CATEGORIES: Record<string, TokenCategory[]> = {
     'PYPL': ['stocks'],
 
     // Indices
-    'SPX': ['indices'],
     'NDX': ['indices'],
     'DJI': ['indices'],
     'XYZ100': ['indices'],

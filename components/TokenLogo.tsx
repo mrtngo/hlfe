@@ -229,7 +229,7 @@ const SYMBOL_TO_COINGECKO_ID: Record<string, string> = {
 
 // Forex and Commodity logos (using flags and commodity images)
 const FOREX_COMMODITY_LOGOS: Record<string, string> = {
-    // Forex - using flag emojis rendered as images via unavatar
+    // Forex - using flag images
     'EUR': 'https://flagcdn.com/w80/eu.png',
     'JPY': 'https://flagcdn.com/w80/jp.png',
     'GBP': 'https://flagcdn.com/w80/gb.png',
@@ -237,15 +237,15 @@ const FOREX_COMMODITY_LOGOS: Record<string, string> = {
     'AUD': 'https://flagcdn.com/w80/au.png',
     'CAD': 'https://flagcdn.com/w80/ca.png',
     'NZD': 'https://flagcdn.com/w80/nz.png',
-    // Commodities
-    'XAU': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xau.png',
-    'GOLD': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xau.png',
-    'XAG': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xag.png',
-    'SILVER': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xag.png',
-    'COPPER': 'https://cdn-icons-png.flaticon.com/128/5615/5615741.png',
-    'HG': 'https://cdn-icons-png.flaticon.com/128/5615/5615741.png',
-    'CL': 'https://cdn-icons-png.flaticon.com/128/2933/2933883.png',
-    'OIL': 'https://cdn-icons-png.flaticon.com/128/2933/2933883.png',
+    // Commodities - using high quality icons
+    'XAU': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
+    'GOLD': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
+    'XAG': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
+    'SILVER': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
+    'COPPER': 'https://s3-symbol-logo.tradingview.com/metal/copper--big.svg',
+    'HG': 'https://s3-symbol-logo.tradingview.com/metal/copper--big.svg',
+    'CL': 'https://s3-symbol-logo.tradingview.com/crude-oil--big.svg',
+    'OIL': 'https://s3-symbol-logo.tradingview.com/crude-oil--big.svg',
 };
 
 // Stock symbol to Twitter handle mapping for unavatar.io
