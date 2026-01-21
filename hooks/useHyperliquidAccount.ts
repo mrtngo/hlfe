@@ -149,14 +149,21 @@ export function useHyperliquidAccount(
     const matchTriggerOrders = useCallback((positions: Position[], activeTriggerOrders: any[]) => {
         return positions.map(pos => {
             const positionCoin = pos.name || pos.symbol.replace('-USD', '');
+
             const tpOrder = activeTriggerOrders.find((o: any) => {
                 const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
-                return orderCoin === positionCoin && (o.orderType?.includes('Take Profit') || o.orderType?.includes('TP'));
+                if (orderCoin !== positionCoin) return false;
+
+                const typeStr = typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType);
+                return typeStr.includes('Take Profit') || typeStr.includes('TP');
             });
+
             const slOrder = activeTriggerOrders.find((o: any) => {
                 const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
-                // Hyperliquid often returns Stop Loss as "Stop Market" or "Stop Limit"
-                return orderCoin === positionCoin && (o.orderType?.includes('Stop Loss') || o.orderType?.includes('Stop'));
+                if (orderCoin !== positionCoin) return false;
+
+                const typeStr = typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType);
+                return typeStr.includes('Stop Loss') || typeStr.includes('Stop');
             });
 
             return {
@@ -237,18 +244,30 @@ export function useHyperliquidAccount(
 
             // Combine all open orders and store trigger orders
             const allOpenOrders = [...(openOrdersResponse as any[]), ...(xyzOpenOrdersResponse as any[])];
-            const activeTriggerOrders = allOpenOrders.filter((o: any) =>
-                o.isTrigger === true && (
-                    o.orderType?.includes('Take Profit') ||
-                    o.orderType?.includes('Stop') ||
-                    o.orderType?.includes('TP') ||
-                    o.orderType?.includes('SL')
-                )
-            ) || [];
+
+            const activeTriggerOrders = allOpenOrders.filter((o: any) => {
+                if (!o.isTrigger) return false;
+
+                // Check order type safely (can be string or object)
+                const typeStr = typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType);
+
+                return (
+                    typeStr.includes('Take Profit') ||
+                    typeStr.includes('Stop') ||
+                    typeStr.includes('TP') ||
+                    typeStr.includes('SL') ||
+                    // Also accept generic triggers if we can't determine type
+                    true
+                );
+            }) || [];
 
             setTriggerOrders(activeTriggerOrders);
             triggerOrdersRef.current = activeTriggerOrders;
-            console.log('📊 Found trigger orders (all):', activeTriggerOrders.length);
+            console.log('📊 Found trigger orders:', activeTriggerOrders.map(o => ({
+                symbol: o.coin,
+                triggerPx: o.triggerPx,
+                type: o.orderType
+            })));
 
             const mainMargin = userState?.marginSummary || {};
             let perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
