@@ -392,94 +392,72 @@ export default function Profile() {
                     </div>
 
                     {/* Notifications Toggle */}
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between px-4 py-3 bg-black/40 rounded-2xl border border-white/5">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                                    <Bell className={`w-5 h-5 ${pushNotifications.isSubscribed ? 'text-brand' : 'text-white/40'}`} />
-                                </div>
+                    <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
+                        {/* Main row with toggle */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Bell className="w-5 h-5 text-white/40" />
                                 <div>
-                                    <div className="text-white text-xs font-black uppercase tracking-wider">{t.settings.notifications}</div>
-                                    <div className="text-[10px] text-white/40 font-bold">
-                                        {pushNotifications.isLoading ? 'Checking...' :
-                                            pushNotifications.isSubscribed ? 'Alerts Enabled' :
-                                                !pushNotifications.isSupported ? 'Not Available' : 'Get Trade Alerts'}
+                                    <div className="text-white text-xs font-bold uppercase">{t.settings.notifications}</div>
+                                    <div className="text-[10px] text-white/40">
+                                        {pushNotifications.isLoading ? 'Loading...' : pushNotifications.isSubscribed ? 'Enabled' : 'Disabled'}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Always show the toggle button */}
+                            {/* Toggle Switch */}
                             <button
                                 onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe()}
-                                disabled={pushNotifications.isLoading || !pushNotifications.isSupported}
-                                className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 shadow-inner ${pushNotifications.isSubscribed ? 'bg-brand border-2 border-brand/50' :
-                                        !pushNotifications.isSupported ? 'bg-white/5 border-2 border-white/10 opacity-50' :
-                                            'bg-white/10 border-2 border-white/20'
-                                    }`}
+                                disabled={pushNotifications.isLoading}
+                                style={{
+                                    width: '60px',
+                                    height: '32px',
+                                    borderRadius: '16px',
+                                    backgroundColor: pushNotifications.isSubscribed ? '#22c55e' : '#4b5563',
+                                    border: '2px solid',
+                                    borderColor: pushNotifications.isSubscribed ? '#16a34a' : '#374151',
+                                    position: 'relative',
+                                    cursor: pushNotifications.isLoading ? 'wait' : 'pointer',
+                                    opacity: pushNotifications.isLoading ? 0.5 : 1
+                                }}
                             >
                                 <div
-                                    className={`w-5 h-5 rounded-full shadow-xl absolute top-0.5 transition-all duration-300 ${pushNotifications.isSubscribed ? 'right-1' : 'left-1'}`}
-                                    style={{ backgroundColor: pushNotifications.isSubscribed ? '#000' : '#fff' }}
+                                    style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '12px',
+                                        backgroundColor: 'white',
+                                        position: 'absolute',
+                                        top: '2px',
+                                        left: pushNotifications.isSubscribed ? '32px' : '2px',
+                                        transition: 'left 0.2s ease',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                    }}
                                 />
-                                {pushNotifications.isLoading && (
-                                    <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-brand" />
-                                )}
                             </button>
                         </div>
 
-                        {/* Browser Not Supported Warning */}
-                        {!pushNotifications.isSupported && !pushNotifications.isLoading && (
-                            <div className="flex items-start gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl text-xs text-white/40">
-                                <AlertCircle className="w-4 h-4 shrink-0" />
-                                <div>
-                                    <span className="font-black uppercase tracking-wider block mb-1">Incompatible Browser</span>
-                                    <span className="font-medium">
-                                        Push notifications are not supported by your current browser. Please use Chrome, Safari, or Edge for the best experience.
-                                    </span>
-                                </div>
+                        {/* Error Display */}
+                        {pushNotifications.error && (
+                            <div className="text-[10px] text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                                ⚠️ {pushNotifications.error}
                             </div>
                         )}
 
-                        {/* iOS PWA Warning */}
-                        {pushNotifications.isIOS && !pushNotifications.isPWA && (
-                            <div className="flex items-start gap-3 p-4 bg-brand/10 border border-brand/20 rounded-2xl text-xs text-brand">
-                                <Smartphone className="w-4 h-4 shrink-0" />
-                                <div>
-                                    <span className="font-black uppercase tracking-wider block mb-1">Add to Home Screen</span>
-                                    <span className="text-white/60 font-medium">
-                                        On iOS, tap the Share button and "Add to Home Screen" to enable notifications.
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Permission Denied / Errors */}
-                        {(pushNotifications.permission === 'denied' || pushNotifications.error) && (
-                            <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-xs text-red-400">
-                                <AlertCircle className="w-4 h-4 shrink-0" />
-                                <div>
-                                    <span className="font-black uppercase tracking-wider block mb-1">
-                                        {pushNotifications.permission === 'denied' ? 'Notifications Blocked' : 'Notification Error'}
-                                    </span>
-                                    <span className="text-white/60 font-medium">
-                                        {pushNotifications.permission === 'denied'
-                                            ? 'Please enable notifications in your browser/device settings.'
-                                            : pushNotifications.error}
-                                    </span>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Test Notification Button */}
+                        {/* Test Notification Button (only when subscribed) */}
                         {pushNotifications.isSubscribed && (
                             <button
                                 onClick={() => pushNotifications.sendTestNotification()}
-                                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5 flex items-center justify-center gap-2"
+                                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white/70 rounded-lg text-[10px] font-bold uppercase transition-all"
                             >
-                                <Bell className="w-3 h-3" />
-                                Send Test Notification
+                                🔔 Send Test Notification
                             </button>
                         )}
+
+                        {/* Debug Info */}
+                        <div className="text-[9px] text-white/30 font-mono p-2 bg-black/30 rounded">
+                            supported:{String(pushNotifications.isSupported)} | subscribed:{String(pushNotifications.isSubscribed)} | perm:{pushNotifications.permission} | iOS:{String(pushNotifications.isIOS)} | PWA:{String(pushNotifications.isPWA)}
+                        </div>
                     </div>
 
                     {/* Agent Wallet Toggle */}

@@ -47,11 +47,14 @@ function checkIsIOS(): boolean {
 function checkPushSupport(): boolean {
   if (typeof window === 'undefined') return false;
 
-  return (
-    'serviceWorker' in navigator &&
-    'PushManager' in window &&
-    'Notification' in window
-  );
+  const hasServiceWorker = 'serviceWorker' in navigator;
+  const hasPushManager = 'PushManager' in window;
+  const hasNotification = 'Notification' in window;
+
+  // Log for debugging
+  console.log('[Push] Support check:', { hasServiceWorker, hasPushManager, hasNotification });
+
+  return hasServiceWorker && hasPushManager && hasNotification;
 }
 
 // Convert VAPID key from base64 to Uint8Array
@@ -88,6 +91,9 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const isSupported = checkPushSupport();
       const isIOS = checkIsIOS();
       const isPWA = checkIsPWA();
+
+      // Log for debugging on iOS
+      console.log('[Push] Init:', { isSupported, isIOS, isPWA, userAgent: navigator.userAgent });
 
       let permission: NotificationPermission = 'default';
       let subscription: PushSubscription | null = null;
