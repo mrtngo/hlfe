@@ -4,6 +4,7 @@ import React from 'react';
 import { Share2, Target, XSquare, TrendingUp, TrendingDown } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useHyperliquidContext } from '@/providers/HyperliquidProvider';
 import TokenLogo from './TokenLogo';
 import { Position } from '@/types/hyperliquid';
 
@@ -28,6 +29,8 @@ export default function PositionCard({
     const isLong = position.side === 'long';
     const isPositive = position.unrealizedPnl >= 0;
     const pnlColor = isPositive ? 'text-bullish glow-text-bullish' : 'text-bearish glow-text-bearish';
+
+    const { cancelOrder } = useHyperliquidContext();
 
     return (
         <div
@@ -103,15 +106,45 @@ export default function PositionCard({
             {(position.takeProfitPrice || position.stopLossPrice) && (
                 <div className="flex gap-2 mb-4 relative z-10">
                     {position.takeProfitPrice && (
-                        <div className="flex-1 flex items-center justify-between bg-bullish/10 border border-bullish/20 px-3 py-2 rounded-xl">
-                            <span className="text-[10px] font-bold text-bullish">TP 🎯</span>
-                            <span className="font-mono text-xs text-bullish font-bold">{formatCurrency(position.takeProfitPrice)}</span>
+                        <div className="flex-1 flex items-center justify-between bg-bullish/10 border border-bullish/20 px-3 py-2 rounded-xl group/tp">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-bullish">TP 🎯</span>
+                                <span className="font-mono text-xs text-white font-bold">{formatCurrency(position.takeProfitPrice)}</span>
+                            </div>
+                            {position.takeProfitOrderId && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (window.confirm('Cancel Take Profit?')) {
+                                            cancelOrder(position.symbol, position.takeProfitOrderId!);
+                                        }
+                                    }}
+                                    className="p-1 hover:bg-bullish/20 rounded-md transition-colors"
+                                >
+                                    <XSquare className="w-4 h-4 text-bullish/50 hover:text-bullish" />
+                                </button>
+                            )}
                         </div>
                     )}
                     {position.stopLossPrice && (
-                        <div className="flex-1 flex items-center justify-between bg-bearish/10 border border-bearish/20 px-3 py-2 rounded-xl">
-                            <span className="text-[10px] font-bold text-bearish">SL 🛑</span>
-                            <span className="font-mono text-xs text-bearish font-bold">{formatCurrency(position.stopLossPrice)}</span>
+                        <div className="flex-1 flex items-center justify-between bg-bearish/10 border border-bearish/20 px-3 py-2 rounded-xl group/sl">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-bearish">SL 🛑</span>
+                                <span className="font-mono text-xs text-white font-bold">{formatCurrency(position.stopLossPrice)}</span>
+                            </div>
+                            {position.stopLossOrderId && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (window.confirm('Cancel Stop Loss?')) {
+                                            cancelOrder(position.symbol, position.stopLossOrderId!);
+                                        }
+                                    }}
+                                    className="p-1 hover:bg-bearish/20 rounded-md transition-colors"
+                                >
+                                    <XSquare className="w-4 h-4 text-bearish/50 hover:text-bearish" />
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>

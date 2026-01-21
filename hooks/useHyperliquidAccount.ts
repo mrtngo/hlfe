@@ -177,6 +177,8 @@ export function useHyperliquidAccount(
                 ...pos,
                 takeProfitPrice: tpOrder ? parseFloat(tpOrder.triggerPx || '0') : undefined,
                 stopLossPrice: slOrder ? parseFloat(slOrder.triggerPx || '0') : undefined,
+                takeProfitOrderId: tpOrder ? tpOrder.oid?.toString() : undefined,
+                stopLossOrderId: slOrder ? slOrder.oid?.toString() : undefined,
             };
         });
     }, []);

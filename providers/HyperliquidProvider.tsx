@@ -121,7 +121,7 @@ interface HyperliquidContextType {
         triggerPrice: number,
         size: number
     ) => Promise<any>;
-    cancelOrder: (orderId: string) => Promise<void>;
+    cancelOrder: (symbol: string, orderId: string) => Promise<void>;
     closePosition: (symbol: string) => Promise<void>;
 
     // Account & Positions
@@ -1926,17 +1926,128 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     }, [isConnected, address, markets, positions, t, agentWalletEnabled, wallets, refreshAccountData]);
 
     // Cancel order
-    const cancelOrder = useCallback(async (orderId: string) => {
+    const cancelOrder = useCallback(async (symbol: string, orderId: string) => {
         if (!isConnected || !address) {
             throw new Error(t.errors.walletNotConnected);
         }
+
         setLoading(true);
         try {
-            throw new Error('Order cancellation requires wallet signing.');
+            console.log(`🗑️ Cancelling order ${orderId} for ${symbol}`);
+
+            // 1. Get asset index
+            const market = markets.find(m => m.symbol === symbol);
+            if (!market) {
+                throw new Error(`Market not found: ${symbol}`);
+            }
+
+            const baseCoin = symbol.split('-')[0].split('/')[0];
+            const isTradeXyzAsset = market?.isStock === true;
+            const isSpot = symbol.includes('/');
+
+            let assetIndex = -1;
+
+            if (isSpot) {
+                // Fetch spot metadata to find asset index
+                const spotMetaResponse = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'spotMetaAndAssetCtxs' })
+                });
+                if (spotMetaResponse.ok) {
+                    const [spotMeta] = await spotMetaResponse.json();
+                    const pairIndex = spotMeta.universe.findIndex((p: any) => p.name === symbol);
+                    if (pairIndex !== -1) assetIndex = 10000 + pairIndex;
+                }
+            } else if (isTradeXyzAsset) {
+                const dexMetaResponse = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'metaAndAssetCtxs', dex: 'xyz' }),
+                });
+                if (dexMetaResponse.ok) {
+                    const [meta] = await dexMetaResponse.json();
+                    const assetName = `xyz:${baseCoin}`;
+                    const idx = meta.universe?.findIndex((u: any) => u.name === assetName) ?? -1;
+                    if (idx !== -1) assetIndex = 110000 + idx;
+                }
+            } else {
+                const client = createHyperliquidClient();
+                const meta = await client.info.perpetuals.getMeta();
+                const assetName = `${baseCoin}-PERP`;
+                assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+            }
+
+            if (assetIndex === -1) {
+                throw new Error(`Could not find asset index for ${symbol}`);
+            }
+
+            // 2. Construct action
+            const action = {
+                type: 'cancel',
+                cancels: [
+                    {
+                        a: assetIndex,
+                        o: parseInt(orderId)
+                    }
+                ]
+            };
+
+            // 3. Sign and send
+            const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
+            const { signL1Action } = hyperliquidSDK;
+
+            let browserWallet: any = null;
+            const nonce = Date.now();
+
+            const agent = await getAgentWallet(address);
+            if (agentWalletEnabled && agent && isAgentApproved(address)) {
+                const agentSigner = getAgentSigner(agent);
+                if (agentSigner) {
+                    browserWallet = {
+                        address: agent.address,
+                        getAddress: async () => agent.address.toLowerCase(),
+                        signTypedData: async (domain: any, types: any, value: any) => {
+                            const { EIP712Domain, ...restTypes } = types;
+                            return await agentSigner.signTypedData(domain, restTypes, value);
+                        },
+                    };
+                }
+            }
+
+            if (!browserWallet) {
+                const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+                const signingProvider = embeddedWallet ? await embeddedWallet.getEthereumProvider() : (window as any).ethereum;
+                if (!signingProvider) throw new Error('No wallet available');
+                const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+                browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
+            }
+
+            const signature = await signL1Action(browserWallet, action, null, nonce, !IS_TESTNET);
+
+            const response = await fetch(`${API_URL}/exchange${isTradeXyzAsset ? '?dex=xyz' : ''}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, nonce, signature, vaultAddress: null }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Cancel request failed: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            if (result.status === 'err') throw new Error(result.response);
+
+            console.log('✅ Order cancelled successfully');
+            await refreshAccountData();
+
+        } catch (error: any) {
+            console.error('Failed to cancel order:', error);
+            throw error;
         } finally {
             setLoading(false);
         }
-    }, [isConnected, address, t]);
+    }, [isConnected, address, markets, t, agentWalletEnabled, wallets, refreshAccountData]);
 
     // Close position
     const closePosition = useCallback(async (symbol: string) => {

@@ -35,6 +35,10 @@ export interface Position {
     takeProfitPrice?: number;
     /** Stop loss trigger price (if set) */
     stopLossPrice?: number;
+    /** Take profit order ID */
+    takeProfitOrderId?: string;
+    /** Stop loss order ID */
+    stopLossOrderId?: string;
 }
 
 /**
