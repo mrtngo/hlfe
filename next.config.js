@@ -18,6 +18,22 @@ const nextConfig = {
   },
 
   async headers() {
+    // Content Security Policy for production
+    // Note: 'unsafe-inline' and 'unsafe-eval' needed for Next.js and wallet connectors
+    const cspDirectives = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://auth.privy.io https://*.privy.io",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https: http:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://api.hyperliquid.xyz wss://api.hyperliquid.xyz https://api.hyperliquid-testnet.xyz wss://api.hyperliquid-testnet.xyz https://api.rhino.fi https://*.supabase.co https://auth.privy.io https://*.privy.io https://www.datos.gov.co https://*.coingecko.com https://unavatar.io",
+      "frame-src 'self' https://auth.privy.io https://*.privy.io",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+    ];
+
     return [
       {
         source: '/:path*',
@@ -45,6 +61,10 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: cspDirectives.join('; '),
           },
         ],
       },

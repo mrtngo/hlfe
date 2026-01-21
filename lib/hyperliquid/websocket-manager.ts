@@ -7,7 +7,7 @@ const isDev = process.env.NODE_ENV === 'development';
 const log = {
     info: (...args: any[]) => isDev && console.log(...args),
     warn: (...args: any[]) => isDev && console.warn(...args),
-    error: (...args: any[]) => console.error(...args), // Always log errors
+    error: (...args: any[]) => isDev && console.error(...args),
 };
 
 export interface WebSocketCallbacks {
@@ -18,6 +18,7 @@ export interface WebSocketCallbacks {
     onUserEvent?: (event: any) => void;
     onCandleUpdate?: (coin: string, interval: string, candle: any) => void;
     onAssetCtxUpdate?: (coin: string, ctx: any) => void;
+    onConnect?: () => void;
     onError?: (error: Error) => void;
 }
 
@@ -61,6 +62,7 @@ class HyperliquidWebSocketManager {
                 this.reconnectAttempts = 0;
                 this.startHeartbeat();
                 this.resubscribeAll();
+                this.callbacks.onConnect?.();
             };
 
             this.ws.onmessage = (event) => {

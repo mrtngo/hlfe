@@ -3,12 +3,12 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { publicClient, WS_URL, API_URL } from './client';
 
-// Conditional logging
+// Conditional logging - only log in development to avoid exposing details in production
 const isDev = process.env.NODE_ENV === 'development';
 const log = {
     info: (...args: any[]) => isDev && console.log(...args),
     warn: (...args: any[]) => isDev && console.warn(...args),
-    error: (...args: any[]) => console.error(...args),
+    error: (...args: any[]) => isDev && console.error(...args),
 };
 
 // Known Trade.xyz (Hyperunit) stock tickers

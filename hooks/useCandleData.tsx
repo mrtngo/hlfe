@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { IS_TESTNET, API_URL } from '@/lib/hyperliquid/client';
 
-// Conditional logging
+// Conditional logging - only in development
 const isDev = process.env.NODE_ENV === 'development';
 const log = {
     info: (...args: any[]) => isDev && console.log(...args),
     warn: (...args: any[]) => isDev && console.warn(...args),
-    error: (...args: any[]) => console.error(...args),
+    error: (...args: any[]) => isDev && console.error(...args),
 };
 
 export interface CandleData {
@@ -195,51 +195,35 @@ export function useCandleData(
             }
         };
 
-        // Set up WebSocket subscription
-        wsManager.connect({ onCandleUpdate: handleCandleUpdate });
-        
         // Track if we successfully subscribed
         let subscribed = false;
-        let subscriptionTimeout: NodeJS.Timeout | null = null;
-        let checkConnectionInterval: NodeJS.Timeout | null = null;
-        
-        const subscribeDelay = setTimeout(() => {
-            if (wsManager.isConnected()) {
+
+        // Subscribe when connected (event-based, no polling)
+        const handleConnect = () => {
+            if (!subscribed) {
                 wsManager.subscribeToCandles(assetName, interval);
                 subscribed = true;
-            } else {
-                // Wait for connection
-                checkConnectionInterval = setInterval(() => {
-                    if (wsManager.isConnected()) {
-                        if (checkConnectionInterval) {
-                            clearInterval(checkConnectionInterval);
-                            checkConnectionInterval = null;
-                        }
-                        wsManager.subscribeToCandles(assetName, interval);
-                        subscribed = true;
-                    }
-                }, 100);
-                
-                // Cleanup interval after 5 seconds
-                subscriptionTimeout = setTimeout(() => {
-                    if (checkConnectionInterval) {
-                        clearInterval(checkConnectionInterval);
-                        checkConnectionInterval = null;
-                    }
-                }, 5000);
+            }
+        };
+
+        // Set up WebSocket subscription with connect callback
+        wsManager.connect({
+            onCandleUpdate: handleCandleUpdate,
+            onConnect: handleConnect
+        });
+
+        // If already connected, subscribe immediately
+        const subscribeDelay = setTimeout(() => {
+            if (wsManager.isConnected() && !subscribed) {
+                wsManager.subscribeToCandles(assetName, interval);
+                subscribed = true;
             }
         }, 200);
 
         return () => {
             clearTimeout(loadingTimeout);
-            if (subscriptionTimeout) {
-                clearTimeout(subscriptionTimeout);
-            }
-            if (checkConnectionInterval) {
-                clearInterval(checkConnectionInterval);
-            }
             clearTimeout(subscribeDelay);
-            
+
             // Only unsubscribe if we actually subscribed
             if (subscribed) {
                 setTimeout(() => {
