@@ -20,7 +20,7 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 const ALERT_THRESHOLDS: Record<string, { threshold: number; displayName: string }> = {
     'BTC': { threshold: 200, displayName: 'Bitcoin' },
     'ETH': { threshold: 50, displayName: 'Ethereum' },
-    'GC': { threshold: 50, displayName: 'Gold' },
+    'PAXG': { threshold: 50, displayName: 'Gold' },
 };
 
 // Fetch current prices from Hyperliquid
@@ -37,7 +37,7 @@ async function fetchPrices(): Promise<Record<string, number>> {
         return {
             'BTC': parseFloat(data['BTC'] || '0'),
             'ETH': parseFloat(data['ETH'] || '0'),
-            'GC': parseFloat(data['@4'] || data['GC'] || '0'), // Gold might be listed as @4
+            'PAXG': parseFloat(data['PAXG'] || '0'),
         };
     } catch (err) {
         console.error('[PriceAlerts] Failed to fetch prices:', err);
@@ -137,7 +137,7 @@ async function sendPushToAll(title: string, body: string, data?: Record<string, 
 function formatPrice(price: number, symbol: string): string {
     if (symbol === 'BTC') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
     if (symbol === 'ETH') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-    if (symbol === 'GC') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    if (symbol === 'PAXG') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
     return `$${price.toFixed(2)}`;
 }
 

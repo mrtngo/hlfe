@@ -453,11 +453,6 @@ export default function Profile() {
                                 🔔 Send Test Notification
                             </button>
                         )}
-
-                        {/* Debug Info */}
-                        <div className="text-[9px] text-white/30 font-mono p-2 bg-black/30 rounded">
-                            supported:{String(pushNotifications.isSupported)} | subscribed:{String(pushNotifications.isSubscribed)} | perm:{pushNotifications.permission} | iOS:{String(pushNotifications.isIOS)} | PWA:{String(pushNotifications.isPWA)}
-                        </div>
                     </div>
 
                     {/* Agent Wallet Toggle */}
