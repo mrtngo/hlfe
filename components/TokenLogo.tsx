@@ -227,34 +227,34 @@ const SYMBOL_TO_COINGECKO_ID: Record<string, string> = {
     'FORM': 'form',
 };
 
-// Forex and Commodity logos (using flags and commodity images)
+// Forex and Commodity logos
+// Using reliable CDNs with PNG formats for better compatibility
 const FOREX_COMMODITY_LOGOS: Record<string, string> = {
-    // Forex - using flag images
-    'EUR': 'https://flagcdn.com/w80/eu.png',
-    'JPY': 'https://flagcdn.com/w80/jp.png',
-    'GBP': 'https://flagcdn.com/w80/gb.png',
-    'CHF': 'https://flagcdn.com/w80/ch.png',
-    'AUD': 'https://flagcdn.com/w80/au.png',
-    'CAD': 'https://flagcdn.com/w80/ca.png',
-    'NZD': 'https://flagcdn.com/w80/nz.png',
-    // Commodities - Metals (multiple symbol variations)
-    'XAU': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
-    'GOLD': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
-    'GC': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
-    'GCZ': 'https://s3-symbol-logo.tradingview.com/metal/gold--big.svg',
-    'XAG': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
-    'SILVER': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
-    'SI': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
-    'SIZ': 'https://s3-symbol-logo.tradingview.com/metal/silver--big.svg',
-    'COPPER': 'https://s3-symbol-logo.tradingview.com/metal/copper--big.svg',
-    'HG': 'https://s3-symbol-logo.tradingview.com/metal/copper--big.svg',
-    // Commodities - Energy
-    'CL': 'https://s3-symbol-logo.tradingview.com/crude-oil--big.svg',
-    'OIL': 'https://s3-symbol-logo.tradingview.com/crude-oil--big.svg',
-    'WTI': 'https://s3-symbol-logo.tradingview.com/crude-oil--big.svg',
-    'BRENT': 'https://s3-symbol-logo.tradingview.com/brent-crude-oil--big.svg',
-    'NG': 'https://s3-symbol-logo.tradingview.com/natural-gas--big.svg',
-    'NATGAS': 'https://s3-symbol-logo.tradingview.com/natural-gas--big.svg',
+    // Forex - using Wise (TransferWise) flag CDN - very reliable
+    'EUR': 'https://wise.com/public-resources/assets/flags/rectangle/eur.png',
+    'JPY': 'https://wise.com/public-resources/assets/flags/rectangle/jpy.png',
+    'GBP': 'https://wise.com/public-resources/assets/flags/rectangle/gbp.png',
+    'CHF': 'https://wise.com/public-resources/assets/flags/rectangle/chf.png',
+    'AUD': 'https://wise.com/public-resources/assets/flags/rectangle/aud.png',
+    'CAD': 'https://wise.com/public-resources/assets/flags/rectangle/cad.png',
+    'NZD': 'https://wise.com/public-resources/assets/flags/rectangle/nzd.png',
+    // Commodities - Using CoinGecko for gold/silver (they have XAU/XAG)
+    'XAU': 'https://assets.coingecko.com/coins/images/32028/standard/tgold_logo.png',
+    'GOLD': 'https://assets.coingecko.com/coins/images/32028/standard/tgold_logo.png',
+    'GC': 'https://assets.coingecko.com/coins/images/32028/standard/tgold_logo.png',
+    'XAG': 'https://assets.coingecko.com/coins/images/29136/standard/logo200_%281%29.png',
+    'SILVER': 'https://assets.coingecko.com/coins/images/29136/standard/logo200_%281%29.png',
+    'SI': 'https://assets.coingecko.com/coins/images/29136/standard/logo200_%281%29.png',
+    // Copper - using a simple colored circle fallback (handled in component)
+    'COPPER': '',
+    'HG': '',
+    // Oil - using cryptocurrency-icons which has oil
+    'CL': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/oil.png',
+    'OIL': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/oil.png',
+    'WTI': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/oil.png',
+    'BRENT': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/oil.png',
+    'NG': '',
+    'NATGAS': '',
 };
 
 // Stock symbol to Twitter handle mapping for unavatar.io
@@ -477,11 +477,43 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
     // If cached, use that. Otherwise use current index from list.
     const currentUrl = useCached ? cachedUrl : logoUrls[errorIndex];
 
-    // If we've exhausted all URLs, show letter fallback
+    // If we've exhausted all URLs, show custom fallback
     if (!currentUrl || (!useCached && errorIndex >= logoUrls.length)) {
+        // Custom fallbacks for specific commodities with nice colors
+        const COMMODITY_COLORS: Record<string, { bg: string; icon: string }> = {
+            'GOLD': { bg: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)', icon: '🥇' },
+            'XAU': { bg: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)', icon: '🥇' },
+            'GC': { bg: 'linear-gradient(135deg, #FFD700 0%, #B8860B 100%)', icon: '🥇' },
+            'SILVER': { bg: 'linear-gradient(135deg, #C0C0C0 0%, #808080 100%)', icon: '🥈' },
+            'XAG': { bg: 'linear-gradient(135deg, #C0C0C0 0%, #808080 100%)', icon: '🥈' },
+            'SI': { bg: 'linear-gradient(135deg, #C0C0C0 0%, #808080 100%)', icon: '🥈' },
+            'COPPER': { bg: 'linear-gradient(135deg, #B87333 0%, #8B4513 100%)', icon: '🔶' },
+            'HG': { bg: 'linear-gradient(135deg, #B87333 0%, #8B4513 100%)', icon: '🔶' },
+            'OIL': { bg: 'linear-gradient(135deg, #1C1C1C 0%, #4A4A4A 100%)', icon: '🛢️' },
+            'CL': { bg: 'linear-gradient(135deg, #1C1C1C 0%, #4A4A4A 100%)', icon: '🛢️' },
+            'WTI': { bg: 'linear-gradient(135deg, #1C1C1C 0%, #4A4A4A 100%)', icon: '🛢️' },
+            'BRENT': { bg: 'linear-gradient(135deg, #1C1C1C 0%, #4A4A4A 100%)', icon: '🛢️' },
+            'NG': { bg: 'linear-gradient(135deg, #4169E1 0%, #1E3A8A 100%)', icon: '🔥' },
+            'NATGAS': { bg: 'linear-gradient(135deg, #4169E1 0%, #1E3A8A 100%)', icon: '🔥' },
+            'EUR': { bg: 'linear-gradient(135deg, #003399 0%, #001a4d 100%)', icon: '€' },
+            'JPY': { bg: 'linear-gradient(135deg, #BC002D 0%, #8B0000 100%)', icon: '¥' },
+            'GBP': { bg: 'linear-gradient(135deg, #012169 0%, #00008B 100%)', icon: '£' },
+            'CHF': { bg: 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)', icon: '₣' },
+            'AUD': { bg: 'linear-gradient(135deg, #00008B 0%, #000066 100%)', icon: 'A$' },
+            'CAD': { bg: 'linear-gradient(135deg, #FF0000 0%, #CC0000 100%)', icon: 'C$' },
+            'NZD': { bg: 'linear-gradient(135deg, #00247D 0%, #001a4d 100%)', icon: 'N$' },
+        };
+
+        const commodityStyle = COMMODITY_COLORS[baseSymbol];
+
         // Determine background color based on asset type
         let bgGradient = 'linear-gradient(135deg, #FFD60A 0%, #FF9500 100%)'; // Yellow/orange for crypto
-        if (isStock) {
+        let displayText = baseSymbol.charAt(0);
+
+        if (commodityStyle) {
+            bgGradient = commodityStyle.bg;
+            displayText = commodityStyle.icon;
+        } else if (isStock) {
             bgGradient = 'linear-gradient(135deg, #1E3A5F 0%, #2D5A87 100%)'; // Blue for stocks
         } else if (isForexCommodity) {
             bgGradient = 'linear-gradient(135deg, #4A5568 0%, #2D3748 100%)'; // Gray for forex/commodities
@@ -493,11 +525,12 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
                 style={{
                     width: size,
                     height: size,
-                    background: bgGradient
+                    background: bgGradient,
+                    border: commodityStyle ? '2px solid rgba(255,255,255,0.2)' : 'none',
                 }}
             >
-                <span className="text-white font-bold" style={{ fontSize: size / 2.5 }}>
-                    {baseSymbol.charAt(0)}
+                <span className="text-white font-bold" style={{ fontSize: commodityStyle ? size / 2 : size / 2.5 }}>
+                    {displayText}
                 </span>
             </div>
         );
