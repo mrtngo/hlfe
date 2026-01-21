@@ -401,30 +401,30 @@ export default function Profile() {
                                 <div>
                                     <div className="text-white text-xs font-black uppercase tracking-wider">{t.settings.notifications}</div>
                                     <div className="text-[10px] text-white/40 font-bold">
-                                        {pushNotifications.isLoading ? 'Checking Support...' :
-                                            !pushNotifications.isSupported ? 'Not Supported' :
-                                                pushNotifications.isSubscribed ? 'Alerts Enabled' : 'Get Trade Alerts'}
+                                        {pushNotifications.isLoading ? 'Checking...' :
+                                            pushNotifications.isSubscribed ? 'Alerts Enabled' :
+                                                !pushNotifications.isSupported ? 'Not Available' : 'Get Trade Alerts'}
                                     </div>
                                 </div>
                             </div>
 
-                            {pushNotifications.isSupported ? (
-                                <button
-                                    onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe()}
-                                    disabled={pushNotifications.isLoading}
-                                    className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 shadow-inner ${pushNotifications.isSubscribed ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
-                                >
-                                    <div
-                                        className={`w-5 h-5 rounded-full shadow-xl absolute top-0.5 transition-all duration-300 ${pushNotifications.isSubscribed ? 'right-1 bg-blackScale-100' : 'left-1 bg-white/60'}`}
-                                        style={{ backgroundColor: pushNotifications.isSubscribed ? '#000' : '#fff' }}
-                                    />
-                                    {pushNotifications.isLoading && (
-                                        <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-black" />
-                                    )}
-                                </button>
-                            ) : !pushNotifications.isLoading && (
-                                <AlertCircle className="w-5 h-5 text-white/20" />
-                            )}
+                            {/* Always show the toggle button */}
+                            <button
+                                onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe()}
+                                disabled={pushNotifications.isLoading || !pushNotifications.isSupported}
+                                className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 shadow-inner ${pushNotifications.isSubscribed ? 'bg-brand border-2 border-brand/50' :
+                                        !pushNotifications.isSupported ? 'bg-white/5 border-2 border-white/10 opacity-50' :
+                                            'bg-white/10 border-2 border-white/20'
+                                    }`}
+                            >
+                                <div
+                                    className={`w-5 h-5 rounded-full shadow-xl absolute top-0.5 transition-all duration-300 ${pushNotifications.isSubscribed ? 'right-1' : 'left-1'}`}
+                                    style={{ backgroundColor: pushNotifications.isSubscribed ? '#000' : '#fff' }}
+                                />
+                                {pushNotifications.isLoading && (
+                                    <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-brand" />
+                                )}
+                            </button>
                         </div>
 
                         {/* Browser Not Supported Warning */}
