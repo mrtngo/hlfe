@@ -9,253 +9,34 @@ interface TokenLogoProps {
     className?: string;
 }
 
-// Map symbol to CoinGecko ID for jsDelivr CDN fallback
-const SYMBOL_TO_COINGECKO_ID: Record<string, string> = {
-    'BTC': 'bitcoin',
-    'ETH': 'ethereum',
-    'SOL': 'solana',
-    'BNB': 'binancecoin',
-    'AVAX': 'avalanche-2',
-    'MATIC': 'matic-network',
-    'ATOM': 'cosmos',
-    'DOT': 'polkadot',
-    'LINK': 'chainlink',
-    'UNI': 'uniswap',
-    'DOGE': 'dogecoin',
-    'SHIB': 'shiba-inu',
-    'APT': 'aptos',
-    'ARB': 'arbitrum',
-    'OP': 'optimism',
-    'XRP': 'ripple',
-    'ADA': 'cardano',
-    'TRX': 'tron',
-    'NEAR': 'near',
-    'LTC': 'litecoin',
-    'HYPE': 'hyperliquid',
-    'SUI': 'sui',
-    'INJ': 'injective-protocol',
-    'SEI': 'sei-network',
-    'FTM': 'fantom',
-    'AAVE': 'aave',
-    'MKR': 'maker',
-    'CRV': 'curve-dao-token',
-    'LDO': 'lido-dao',
-    'GMX': 'gmx',
-    'SNX': 'synthetix-network-token',
-    'PEPE': 'pepe',
-    'WIF': 'dogwifcoin',
-    'BONK': 'bonk',
-    'MEME': 'memecoin-2',
-    'JTO': 'jito-governance-token',
-    'PYTH': 'pyth-network',
-    'TIA': 'celestia',
-    'FET': 'fetch-ai',
-    'RENDER': 'render-token',
-    'JUP': 'jupiter-exchange-solana',
-    'W': 'wormhole',
-    'ENA': 'ethena',
-    'PENDLE': 'pendle',
-    'STRK': 'starknet',
-    'XLM': 'stellar',
-    'ALGO': 'algorand',
-    'VET': 'vechain',
-    'SAND': 'the-sandbox',
-    'MANA': 'decentraland',
-    'AXS': 'axie-infinity',
-    'GALA': 'gala',
-    'IMX': 'immutable-x',
-    'APE': 'apecoin',
-    'CFX': 'conflux-token',
-    'RUNE': 'thorchain',
-    'ENS': 'ethereum-name-service',
-    'BLUR': 'blur',
-    'WLD': 'worldcoin-wld',
-    'ONDO': 'ondo-finance',
-    'ORDI': 'ordinals',
-    'STX': 'blockstack',
-    'EGLD': 'elrond-erd-2',
-    'FIL': 'filecoin',
-    'ICP': 'internet-computer',
-    'HBAR': 'hedera-hashgraph',
-    'KAS': 'kaspa',
-    'TON': 'the-open-network',
-    'TAO': 'bittensor',
-    // Additional tokens
-    'FLOKI': 'floki',
-    'MEW': 'cat-in-a-dogs-world',
-    'POPCAT': 'popcat',
-    'NEIRO': 'neiro-on-eth',
-    'PNUT': 'peanut-the-squirrel',
-    'ACT': 'act-i-the-ai-prophecy',
-    'GOAT': 'goatseus-maximus',
-    'MOODENG': 'moo-deng',
-    'BRETT': 'based-brett',
-    'MOG': 'mog-coin',
-    'SPX': 'spx6900',
-    'FARTCOIN': 'fartcoin',
-    'AI16Z': 'ai16z',
-    'VIRTUAL': 'virtual-protocol',
-    'AIXBT': 'aixbt',
-    'ZEREBRO': 'zerebro',
-    'GRIFFAIN': 'griffain',
-    'TRUMP': 'official-trump',
-    'MELANIA': 'official-melania-meme',
-    'VINE': 'vine-coin',
-    'ANIME': 'anime-token',
-    '1000PEPE': 'pepe',
-    '1000SHIB': 'shiba-inu',
-    '1000BONK': 'bonk',
-    '1000FLOKI': 'floki',
-    'kPEPE': 'pepe',
-    'kSHIB': 'shiba-inu',
-    'kBONK': 'bonk',
-    'kFLOKI': 'floki',
-    'EOS': 'eos',
-    'XMR': 'monero',
-    'DASH': 'dash',
-    'ZEC': 'zcash',
-    'BCH': 'bitcoin-cash',
-    'ETC': 'ethereum-classic',
-    'THETA': 'theta-token',
-    'XTZ': 'tezos',
-    'NEO': 'neo',
-    'IOTA': 'iota',
-    'ZIL': 'zilliqa',
-    'ENJ': 'enjincoin',
-    'CHZ': 'chiliz',
-    'BAT': 'basic-attention-token',
-    'COMP': 'compound-governance-token',
-    'YFI': 'yearn-finance',
-    'SUSHI': 'sushi',
-    '1INCH': '1inch',
-    'CAKE': 'pancakeswap-token',
-    'KAVA': 'kava',
-    'CELO': 'celo',
-    'FLOW': 'flow',
-    'ROSE': 'oasis-network',
-    'ONE': 'harmony',
-    'ANKR': 'ankr',
-    'OCEAN': 'ocean-protocol',
-    'GRT': 'the-graph',
-    'AUDIO': 'audius',
-    'LRC': 'loopring',
-    'MASK': 'mask-network',
-    'SKL': 'skale',
-    'STORJ': 'storj',
-    'API3': 'api3',
-    'BAND': 'band-protocol',
-    'RLC': 'iexec-rlc',
-    'NKN': 'nkn',
-    'CTSI': 'cartesi',
-    'COTI': 'coti',
-    'CELR': 'celer-network',
-    'LINA': 'linear-finance',
-    'ALICE': 'my-neighbor-alice',
-    'SLP': 'smooth-love-potion',
-    'C98': 'coin98',
-    'DENT': 'dent',
-    'HOT': 'holotoken',
-    'MTL': 'metal',
-    'OGN': 'origin-protocol',
-    'RSR': 'reserve-rights-token',
-    'SXP': 'solar',
-    'TRU': 'truefi',
-    'REEF': 'reef',
-    'DYDX': 'dydx',
-    'RAY': 'raydium',
-    'ORCA': 'orca',
-    'MSOL': 'marinade-staked-sol',
-    'HNT': 'helium',
-    'MOBILE': 'helium-mobile',
-    'IOT': 'helium-iot',
-    'RNDR': 'render-token',
-    'AR': 'arweave',
-    'BEAM': 'beam-2',
-    'PRIME': 'echelon-prime',
-    'MAVIA': 'heroes-of-mavia',
-    'PIXEL': 'pixels',
-    'PORTAL': 'portal-2',
-    'XAI': 'xai-blockchain',
-    'ALT': 'altlayer',
-    'MANTA': 'manta-network',
-    'DYM': 'dymension',
-    'AEVO': 'aevo-exchange',
-    'WEN': 'wen-4',
-    'BOME': 'book-of-meme',
-    'SLERF': 'slerf',
-    'ETHFI': 'ether-fi',
-    'OMNI': 'omni-network',
-    'REZ': 'renzo',
-    'BB': 'bouncebit',
-    'NOT': 'notcoin',
-    'ZK': 'zksync',
-    'ZRO': 'layerzero',
-    'LISTA': 'lista-dao',
-    'IO': 'io-net',
-    'BLAST': 'blast',
-    'DOGS': 'dogs-2',
-    'EIGEN': 'eigenlayer',
-    'HMSTR': 'hamster-kombat',
-    'CATI': 'catizen',
-    'DRIFT': 'drift-protocol',
-    'GRASS': 'grass',
-    'DBR': 'de-brug',
-    'SCR': 'scroll',
-    'COW': 'cow-protocol',
-    'MOVE': 'movement',
-    'ME': 'magic-eden',
-    'PENGU': 'pudgy-penguins',
-    'USUAL': 'usual',
-    'BIO': 'bio-protocol',
-    'SONIC': 'sonic-3',
-    'PLUME': 'plume-network',
-    'AVAAI': 'holoworld-ai',
-    'COOKIE': 'cookie',
-    'SWARMS': 'swarms',
-    'BUZZ': 'buzzkill',
-    'MAX': 'max-2',
-    'JELLYJELLY': 'jelly-ai',
-    'KAITO': 'kaito',
-    'IP': 'infinitepay',
-    'BERA': 'berachain',
-    'TST': 'bnb-chain-test',
-    'LAYER': 'unilayer',
-    'NIL': 'nil',
-    'RED': 'red',
-    'HFUN': 'hfun',
-    'PARTI': 'particle',
-    'FORM': 'form',
-};
-
-// Forex and Commodity logos
-// Using app.trade.xyz as primary source
+// Forex and Commodity logos - using local files
 const FOREX_COMMODITY_LOGOS: Record<string, string> = {
-    // Forex - using app.trade.xyz
-    'EUR': 'https://app.trade.xyz/markets/eur.svg',
-    'JPY': 'https://app.trade.xyz/markets/jpy.svg',
-    'GBP': 'https://app.trade.xyz/markets/gbp.svg',
-    'CHF': 'https://app.trade.xyz/markets/chf.svg',
-    'AUD': 'https://app.trade.xyz/markets/aud.svg',
-    'CAD': 'https://app.trade.xyz/markets/cad.svg',
-    'NZD': 'https://app.trade.xyz/markets/nzd.svg',
-    // Commodities - using app.trade.xyz
-    'XAU': 'https://app.trade.xyz/markets/gold.svg',
-    'GOLD': 'https://app.trade.xyz/markets/gold.svg',
-    'GC': 'https://app.trade.xyz/markets/gold.svg',
-    'XAG': 'https://app.trade.xyz/markets/silver.svg',
-    'SILVER': 'https://app.trade.xyz/markets/silver.svg',
-    'SI': 'https://app.trade.xyz/markets/silver.svg',
-    'COPPER': 'https://app.trade.xyz/markets/copper.svg',
-    'HG': 'https://app.trade.xyz/markets/copper.svg',
-    'CL': 'https://app.trade.xyz/markets/oil.svg',
-    'OIL': 'https://app.trade.xyz/markets/oil.svg',
-    'WTI': 'https://app.trade.xyz/markets/wti.svg',
-    'BRENT': 'https://app.trade.xyz/markets/brent.svg',
-    'NG': 'https://app.trade.xyz/markets/ng.svg',
-    'NATGAS': 'https://app.trade.xyz/markets/natgas.svg',
+    // Forex
+    'EUR': '/logos/eur.svg',
+    'JPY': '/logos/jpy.svg',
+    'GBP': 'https://wise.com/public-resources/assets/flags/rectangle/gbp.png',
+    'CHF': 'https://wise.com/public-resources/assets/flags/rectangle/chf.png',
+    'AUD': 'https://wise.com/public-resources/assets/flags/rectangle/aud.png',
+    'CAD': 'https://wise.com/public-resources/assets/flags/rectangle/cad.png',
+    'NZD': 'https://wise.com/public-resources/assets/flags/rectangle/nzd.png',
+    // Commodities
+    'XAU': '/logos/gold.svg',
+    'GOLD': '/logos/gold.svg',
+    'GC': '/logos/gold.svg',
+    'XAG': '/logos/silver.svg',
+    'SILVER': '/logos/silver.svg',
+    'SI': '/logos/silver.svg',
+    'COPPER': '/logos/copper.svg',
+    'HG': '/logos/copper.svg',
+    'CL': '', // fallback to emoji
+    'OIL': '', // fallback to emoji
+    'WTI': '', // fallback to emoji
+    'BRENT': '', // fallback to emoji
+    'NG': '/logos/natgas.svg',
+    'NATGAS': '/logos/natgas.svg',
 };
 
-// Stock symbol to Twitter handle mapping for unavatar.io
+// Stock symbol to Twitter handle mapping for unavatar.io fallback
 const STOCK_TO_TWITTER: Record<string, string> = {
     // Tech Giants
     'AAPL': 'apple',
@@ -365,41 +146,18 @@ const STOCK_TO_TWITTER: Record<string, string> = {
     'PYPL': 'paypal',
 };
 
-// Primary logo sources (CoinGecko CDN) - known working URLs
-const TOKEN_LOGOS: Record<string, string> = {
-    'BTC': 'https://assets.coingecko.com/coins/images/1/large/bitcoin.png',
-    'ETH': 'https://assets.coingecko.com/coins/images/279/large/ethereum.png',
-    'SOL': 'https://assets.coingecko.com/coins/images/4128/large/solana.png',
-    'BNB': 'https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png',
-    'AVAX': 'https://assets.coingecko.com/coins/images/12559/large/Avalanche_Circle_RedWhite_Trans.png',
-    'MATIC': 'https://assets.coingecko.com/coins/images/4713/large/matic-token-icon.png',
-    'ATOM': 'https://assets.coingecko.com/coins/images/1481/large/cosmos_hub.png',
-    'DOT': 'https://assets.coingecko.com/coins/images/12171/large/polkadot.png',
-    'LINK': 'https://assets.coingecko.com/coins/images/877/large/chainlink-new-logo.png',
-    'UNI': 'https://assets.coingecko.com/coins/images/12504/large/uni.jpg',
-    'DOGE': 'https://assets.coingecko.com/coins/images/5/large/dogecoin.png',
-    'SHIB': 'https://assets.coingecko.com/coins/images/11939/large/shiba.png',
-    'APT': 'https://assets.coingecko.com/coins/images/26455/large/aptos_round.png',
-    'ARB': 'https://assets.coingecko.com/coins/images/16547/large/photo_2023-03-29_21.47.00.jpeg',
-    'OP': 'https://assets.coingecko.com/coins/images/25244/large/Optimism.png',
-};
-
-// Get jsDelivr CDN URL for a symbol
-function getJsDelivrUrl(symbol: string): string | null {
-    const coingeckoId = SYMBOL_TO_COINGECKO_ID[symbol];
-    if (!coingeckoId) return null;
-    return `https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${coingeckoId}/standard.png`;
-}
-
-// Get logo URLs for stocks - try trade.xyz first, then unavatar.io
+// Get logo URLs for stocks - try local first, then trade.xyz, then unavatar.io
 function getStockLogoUrls(symbol: string): string[] {
     const lowerSymbol = symbol.toLowerCase();
     const urls: string[] = [];
 
-    // 1. app.trade.xyz - primary source
+    // 1. Local logos (lowercase for stocks)
+    urls.push(`/logos/${lowerSymbol}.svg`);
+
+    // 2. app.trade.xyz - fallback
     urls.push(`https://app.trade.xyz/markets/${lowerSymbol}.svg`);
 
-    // 2. unavatar.io via Twitter handle as fallback
+    // 3. unavatar.io via Twitter handle as fallback
     const twitterHandle = STOCK_TO_TWITTER[symbol];
     if (twitterHandle) {
         urls.push(`https://unavatar.io/x/${twitterHandle}`);
@@ -423,31 +181,21 @@ function getForexCommodityUrl(symbol: string): string | null {
     return FOREX_COMMODITY_LOGOS[symbol] || null;
 }
 
-// Dynamic logo sources that accept ticker symbols
+// Dynamic logo sources for crypto
 function getCryptoLogoUrls(symbol: string): string[] {
     const lowerSymbol = symbol.toLowerCase();
-    const coingeckoId = SYMBOL_TO_COINGECKO_ID[symbol];
+    const upperSymbol = symbol.toUpperCase();
 
     const urls: string[] = [];
 
-    // 1. app.trade.xyz - primary source (comprehensive coverage)
-    urls.push(`https://app.trade.xyz/markets/${lowerSymbol}.svg`);
+    // 1. Local logos (uppercase for crypto)
+    urls.push(`/logos/${upperSymbol}.svg`);
 
-    // 2. cryptocurrency-icons GitHub CDN (very comprehensive)
+    // 2. Hyperliquid CDN - fallback (uppercase ticker)
+    urls.push(`https://app.hyperliquid.xyz/coins/${upperSymbol}.svg`);
+
+    // 3. cryptocurrency-icons GitHub CDN (fallback)
     urls.push(`https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${lowerSymbol}.png`);
-
-    // 3. If we have a CoinGecko ID mapping, use jsDelivr CDN
-    if (coingeckoId) {
-        urls.push(`https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${coingeckoId}/standard.png`);
-    }
-
-    // 4. Try CoinGecko CDN with the symbol as ID (works for many coins)
-    urls.push(`https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${lowerSymbol}/standard.png`);
-
-    // 5. Direct CoinGecko assets with known URLs
-    if (TOKEN_LOGOS[symbol]) {
-        urls.push(TOKEN_LOGOS[symbol]);
-    }
 
     return urls;
 }
