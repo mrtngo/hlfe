@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     description: 'Fast, simple, and secure on-chain trading. Trade futures with lightning speed.',
     keywords: 'trading, crypto, futures, leverage, bitcoin, ethereum, on-chain, defi',
     authors: [{ name: 'Rayo' }],
+    manifest: '/manifest.json',
     openGraph: {
         title: 'Rayo - Trade at the Speed of Light',
         description: 'Fast, simple, and secure on-chain trading',
@@ -26,6 +27,18 @@ export const metadata: Metadata = {
         title: 'Rayo',
         statusBarStyle: 'black-translucent',
     },
+    icons: {
+        icon: [
+            { url: '/icons/icon-32x32.png', sizes: '32x32', type: 'image/png' },
+            { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+        ],
+        apple: [
+            { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+        ],
+    },
+    other: {
+        'mobile-web-app-capable': 'yes',
+    },
 };
 
 export const viewport = {
@@ -34,6 +47,7 @@ export const viewport = {
     maximumScale: 1,
     userScalable: false,
     viewportFit: 'cover',
+    themeColor: '#000000',
 };
 
 export default function RootLayout({

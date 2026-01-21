@@ -5,13 +5,14 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { clearAgentWallet } from '@/lib/agent-wallet';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
-import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, RotateCcw, DollarSign } from 'lucide-react';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, RotateCcw, DollarSign, Bell, BellOff, Smartphone } from 'lucide-react';
 
 export default function Settings() {
     const { t, language, setLanguage } = useLanguage();
     const { address, agentWalletEnabled, setupAgentWallet, builderFeeApproved, builderFeeLoading, approveBuilderFee } = useHyperliquid();
+    const pushNotifications = usePushNotifications();
     const [connectWallet, setConnectWallet] = useState(false);
-    const [notifications, setNotifications] = useState(true);
     const [settingUpAgent, setSettingUpAgent] = useState(false);
     const [agentSetupError, setAgentSetupError] = useState<string | null>(null);
     const [agentSetupSuccess, setAgentSetupSuccess] = useState(false);
@@ -162,18 +163,91 @@ export default function Settings() {
                     </div>
                 </div>
 
-                {/* Notifications */}
+                {/* Push Notifications */}
                 <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
-                    <div className="flex items-center justify-between">
-                        <span className="font-semibold text-white">{t.settings.notifications}</span>
-                        <button
-                            onClick={() => setNotifications(!notifications)}
-                            className={`relative w-12 h-6 rounded-full transition-colors ${notifications ? 'bg-primary' : 'bg-bg-tertiary border border-white/10'
-                                }`}
-                        >
-                            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${notifications ? 'translate-x-6' : 'translate-x-0'
-                                }`} />
-                        </button>
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Bell className="w-5 h-5 text-white" />
+                                <div>
+                                    <span className="font-semibold text-white block">{t.settings.notifications}</span>
+                                    <span className="text-xs text-coffee-medium">
+                                        Get alerts for orders, positions & prices
+                                    </span>
+                                </div>
+                            </div>
+                            {pushNotifications.isSubscribed ? (
+                                <button
+                                    onClick={() => pushNotifications.unsubscribe()}
+                                    disabled={pushNotifications.isLoading}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-bullish/20 text-bullish rounded-full text-sm font-semibold"
+                                >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    On
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={() => pushNotifications.subscribe()}
+                                    disabled={pushNotifications.isLoading || !pushNotifications.isSupported}
+                                    className="px-4 py-2 bg-brand text-black rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
+                                >
+                                    {pushNotifications.isLoading ? 'Enabling...' : 'Enable'}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* iOS PWA Warning */}
+                        {pushNotifications.isIOS && !pushNotifications.isPWA && (
+                            <div className="flex items-start gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg text-sm text-primary">
+                                <Smartphone className="w-4 h-4 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="font-semibold block">Add to Home Screen</span>
+                                    <span className="text-xs text-coffee-medium">
+                                        On iOS, tap the Share button and "Add to Home Screen" to enable notifications
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Permission Denied */}
+                        {pushNotifications.permission === 'denied' && (
+                            <div className="flex items-start gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
+                                <BellOff className="w-4 h-4 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="font-semibold block">Notifications Blocked</span>
+                                    <span className="text-xs">
+                                        Enable notifications in your browser/device settings
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Not Supported */}
+                        {!pushNotifications.isSupported && !pushNotifications.isLoading && (
+                            <div className="flex items-start gap-2 p-3 bg-bg-tertiary border border-white/10 rounded-lg text-sm text-coffee-medium">
+                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <span>Push notifications are not supported on this browser</span>
+                            </div>
+                        )}
+
+                        {/* Error */}
+                        {pushNotifications.error && (
+                            <div className="flex items-start gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
+                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <span>{pushNotifications.error}</span>
+                            </div>
+                        )}
+
+                        {/* Test Notification Button (only when subscribed) */}
+                        {pushNotifications.isSubscribed && (
+                            <button
+                                onClick={() => pushNotifications.sendTestNotification()}
+                                className="flex items-center gap-2 px-3 py-2 bg-bg-tertiary text-coffee-medium rounded-lg text-xs hover:bg-bg-hover transition-colors"
+                            >
+                                <Bell className="w-3 h-3" />
+                                Send test notification
+                            </button>
+                        )}
                     </div>
                 </div>
 

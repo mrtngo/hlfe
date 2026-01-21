@@ -1,0 +1,379 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+
+// VAPID public key - you'll need to generate this and set up a backend
+// Generate with: npx web-push generate-vapid-keys
+const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+
+export interface PushNotificationState {
+  isSupported: boolean;
+  isSubscribed: boolean;
+  permission: NotificationPermission | 'default';
+  subscription: PushSubscription | null;
+  isLoading: boolean;
+  error: string | null;
+  isIOS: boolean;
+  isPWA: boolean;
+}
+
+export interface UsePushNotificationsReturn extends PushNotificationState {
+  requestPermission: () => Promise<boolean>;
+  subscribe: () => Promise<PushSubscription | null>;
+  unsubscribe: () => Promise<boolean>;
+  sendTestNotification: () => void;
+}
+
+// Check if running as PWA (standalone mode)
+function checkIsPWA(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes('android-app://')
+  );
+}
+
+// Check if iOS
+function checkIsIOS(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  return /iphone|ipad|ipod/.test(userAgent);
+}
+
+// Check if push notifications are supported
+function checkPushSupport(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  return (
+    'serviceWorker' in navigator &&
+    'PushManager' in window &&
+    'Notification' in window
+  );
+}
+
+// Convert VAPID key from base64 to Uint8Array
+function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray.buffer as ArrayBuffer;
+}
+
+export function usePushNotifications(): UsePushNotificationsReturn {
+  const [state, setState] = useState<PushNotificationState>({
+    isSupported: false,
+    isSubscribed: false,
+    permission: 'default',
+    subscription: null,
+    isLoading: true,
+    error: null,
+    isIOS: false,
+    isPWA: false,
+  });
+
+  // Initialize on mount
+  useEffect(() => {
+    const init = async () => {
+      const isSupported = checkPushSupport();
+      const isIOS = checkIsIOS();
+      const isPWA = checkIsPWA();
+
+      let permission: NotificationPermission = 'default';
+      let subscription: PushSubscription | null = null;
+      let isSubscribed = false;
+
+      if (isSupported && 'Notification' in window) {
+        permission = Notification.permission;
+      }
+
+      // Check existing subscription
+      if (isSupported && 'serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          subscription = await registration.pushManager.getSubscription();
+          isSubscribed = !!subscription;
+        } catch (err) {
+          console.error('[Push] Error checking subscription:', err);
+        }
+      }
+
+      setState({
+        isSupported,
+        isSubscribed,
+        permission,
+        subscription,
+        isLoading: false,
+        error: null,
+        isIOS,
+        isPWA,
+      });
+    };
+
+    init();
+  }, []);
+
+  // Register service worker
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
+
+    const registerSW = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+        });
+        console.log('[Push] Service worker registered:', registration.scope);
+
+        // Check for updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('[Push] New service worker available');
+              }
+            });
+          }
+        });
+      } catch (err) {
+        console.error('[Push] Service worker registration failed:', err);
+        setState(prev => ({ ...prev, error: 'Failed to register service worker' }));
+      }
+    };
+
+    registerSW();
+  }, []);
+
+  // Request notification permission
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    if (!state.isSupported) {
+      setState(prev => ({ ...prev, error: 'Push notifications not supported' }));
+      return false;
+    }
+
+    // iOS specific check
+    if (state.isIOS && !state.isPWA) {
+      setState(prev => ({
+        ...prev,
+        error: 'On iOS, please add this app to your Home Screen first to enable notifications'
+      }));
+      return false;
+    }
+
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      const permission = await Notification.requestPermission();
+
+      setState(prev => ({
+        ...prev,
+        permission,
+        isLoading: false,
+        error: permission === 'denied' ? 'Notification permission denied' : null,
+      }));
+
+      return permission === 'granted';
+    } catch (err) {
+      console.error('[Push] Permission request failed:', err);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Failed to request notification permission'
+      }));
+      return false;
+    }
+  }, [state.isSupported, state.isIOS, state.isPWA]);
+
+  // Subscribe to push notifications
+  const subscribe = useCallback(async (): Promise<PushSubscription | null> => {
+    if (!state.isSupported) {
+      setState(prev => ({ ...prev, error: 'Push notifications not supported' }));
+      return null;
+    }
+
+    if (state.permission !== 'granted') {
+      const granted = await requestPermission();
+      if (!granted) return null;
+    }
+
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      const registration = await navigator.serviceWorker.ready;
+
+      // Check if already subscribed
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        // Create new subscription
+        const options: PushSubscriptionOptionsInit = {
+          userVisibleOnly: true,
+          applicationServerKey: VAPID_PUBLIC_KEY
+            ? urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            : undefined,
+        };
+
+        subscription = await registration.pushManager.subscribe(options);
+        console.log('[Push] New subscription created:', subscription.endpoint);
+
+        // Send subscription to your backend
+        await sendSubscriptionToBackend(subscription);
+      }
+
+      setState(prev => ({
+        ...prev,
+        subscription,
+        isSubscribed: true,
+        isLoading: false
+      }));
+
+      return subscription;
+    } catch (err) {
+      console.error('[Push] Subscription failed:', err);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Failed to subscribe to push notifications'
+      }));
+      return null;
+    }
+  }, [state.isSupported, state.permission, requestPermission]);
+
+  // Unsubscribe from push notifications
+  const unsubscribe = useCallback(async (): Promise<boolean> => {
+    if (!state.subscription) return true;
+
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+
+      await state.subscription.unsubscribe();
+
+      // Notify backend about unsubscription
+      await removeSubscriptionFromBackend(state.subscription);
+
+      setState(prev => ({
+        ...prev,
+        subscription: null,
+        isSubscribed: false,
+        isLoading: false
+      }));
+
+      return true;
+    } catch (err) {
+      console.error('[Push] Unsubscription failed:', err);
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: 'Failed to unsubscribe from push notifications'
+      }));
+      return false;
+    }
+  }, [state.subscription]);
+
+  // Send a test notification (for debugging)
+  const sendTestNotification = useCallback(() => {
+    if (state.permission !== 'granted') {
+      console.log('[Push] Cannot send test notification - permission not granted');
+      return;
+    }
+
+    // Use the service worker to show the notification
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.showNotification('Rayo Test', {
+        body: 'Push notifications are working!',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-96x96.png',
+        tag: 'test-notification',
+      } as NotificationOptions);
+    });
+  }, [state.permission]);
+
+  return {
+    ...state,
+    requestPermission,
+    subscribe,
+    unsubscribe,
+    sendTestNotification,
+  };
+}
+
+// Helper function to send subscription to backend
+async function sendSubscriptionToBackend(subscription: PushSubscription): Promise<void> {
+  try {
+    const response = await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        subscription: subscription.toJSON(),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save subscription');
+    }
+
+    console.log('[Push] Subscription saved to backend');
+  } catch (err) {
+    console.error('[Push] Failed to send subscription to backend:', err);
+    // Don't throw - subscription still works locally
+  }
+}
+
+// Helper function to remove subscription from backend
+async function removeSubscriptionFromBackend(subscription: PushSubscription): Promise<void> {
+  try {
+    const response = await fetch('/api/push/unsubscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        endpoint: subscription.endpoint,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to remove subscription');
+    }
+
+    console.log('[Push] Subscription removed from backend');
+  } catch (err) {
+    console.error('[Push] Failed to remove subscription from backend:', err);
+  }
+}
+
+// Export utility to show local notification from anywhere in the app
+export async function showLocalNotification(
+  title: string,
+  options?: NotificationOptions
+): Promise<void> {
+  if (!('serviceWorker' in navigator) || !('Notification' in window)) {
+    console.warn('[Push] Notifications not supported');
+    return;
+  }
+
+  if (Notification.permission !== 'granted') {
+    console.warn('[Push] Notification permission not granted');
+    return;
+  }
+
+  const registration = await navigator.serviceWorker.ready;
+
+  await registration.showNotification(title, {
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-96x96.png',
+    ...options,
+  } as NotificationOptions);
+}

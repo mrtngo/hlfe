@@ -92,6 +92,29 @@ export interface Category {
     asset_count?: number;
 }
 
+export interface PushSubscription {
+    id: string;
+    user_id: string | null;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    user_agent: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PriceAlert {
+    id: string;
+    user_id: string;
+    symbol: string;
+    target_price: number;
+    direction: 'above' | 'below';
+    is_active: boolean;
+    is_triggered: boolean;
+    triggered_at: string | null;
+    created_at: string;
+}
+
 export interface Asset {
     id: string;
     symbol: string;
@@ -583,6 +606,175 @@ export const db = {
                 return [];
             }
             return (data || []).map(item => item.category as any).filter(Boolean);
+        },
+    },
+
+    // Push subscriptions operations
+    pushSubscriptions: {
+        async save(
+            endpoint: string,
+            keys: { p256dh: string; auth: string },
+            userId?: string,
+            userAgent?: string
+        ): Promise<PushSubscription | null> {
+            const { data, error } = await supabase
+                .from('push_subscriptions')
+                .upsert({
+                    endpoint,
+                    p256dh: keys.p256dh,
+                    auth: keys.auth,
+                    user_id: userId || null,
+                    user_agent: userAgent || null,
+                    updated_at: new Date().toISOString(),
+                }, {
+                    onConflict: 'endpoint',
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error saving push subscription:', error);
+                return null;
+            }
+            return data;
+        },
+
+        async remove(endpoint: string): Promise<boolean> {
+            const { error } = await supabase
+                .from('push_subscriptions')
+                .delete()
+                .eq('endpoint', endpoint);
+
+            if (error) {
+                console.error('Error removing push subscription:', error);
+                return false;
+            }
+            return true;
+        },
+
+        async getByUser(userId: string): Promise<PushSubscription[]> {
+            const { data, error } = await supabase
+                .from('push_subscriptions')
+                .select('*')
+                .eq('user_id', userId);
+
+            if (error) {
+                console.error('Error fetching user subscriptions:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getAll(): Promise<PushSubscription[]> {
+            const { data, error } = await supabase
+                .from('push_subscriptions')
+                .select('*');
+
+            if (error) {
+                console.error('Error fetching all subscriptions:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async linkToUser(endpoint: string, userId: string): Promise<boolean> {
+            const { error } = await supabase
+                .from('push_subscriptions')
+                .update({ user_id: userId, updated_at: new Date().toISOString() })
+                .eq('endpoint', endpoint);
+
+            if (error) {
+                console.error('Error linking subscription to user:', error);
+                return false;
+            }
+            return true;
+        },
+    },
+
+    // Price alerts operations
+    priceAlerts: {
+        async create(
+            userId: string,
+            symbol: string,
+            targetPrice: number,
+            direction: 'above' | 'below'
+        ): Promise<PriceAlert | null> {
+            const { data, error } = await supabase
+                .from('price_alerts')
+                .insert({
+                    user_id: userId,
+                    symbol,
+                    target_price: targetPrice,
+                    direction,
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error creating price alert:', error);
+                return null;
+            }
+            return data;
+        },
+
+        async getByUser(userId: string): Promise<PriceAlert[]> {
+            const { data, error } = await supabase
+                .from('price_alerts')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('is_active', true)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching price alerts:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getActiveBySymbol(symbol: string): Promise<PriceAlert[]> {
+            const { data, error } = await supabase
+                .from('price_alerts')
+                .select('*')
+                .eq('symbol', symbol)
+                .eq('is_active', true)
+                .eq('is_triggered', false);
+
+            if (error) {
+                console.error('Error fetching alerts for symbol:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async markTriggered(alertId: string): Promise<boolean> {
+            const { error } = await supabase
+                .from('price_alerts')
+                .update({
+                    is_triggered: true,
+                    is_active: false,
+                    triggered_at: new Date().toISOString(),
+                })
+                .eq('id', alertId);
+
+            if (error) {
+                console.error('Error marking alert as triggered:', error);
+                return false;
+            }
+            return true;
+        },
+
+        async delete(alertId: string): Promise<boolean> {
+            const { error } = await supabase
+                .from('price_alerts')
+                .delete()
+                .eq('id', alertId);
+
+            if (error) {
+                console.error('Error deleting price alert:', error);
+                return false;
+            }
+            return true;
         },
     },
 };
