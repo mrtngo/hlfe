@@ -18,7 +18,9 @@ import {
     BarChart2,
     List,
     Clock,
-    ArrowLeftRight
+    ArrowLeftRight,
+    Search,
+    X
 } from 'lucide-react';
 import TokenLogo from '@/components/TokenLogo';
 import { API_URL } from '@/lib/hyperliquid/client';
@@ -27,8 +29,8 @@ import { API_URL } from '@/lib/hyperliquid/client';
 const CandlestickChart = dynamic(() => import('@/components/CandlestickChart'), {
     ssr: false,
     loading: () => (
-        <div className="flex items-center justify-center h-[200px] bg-[#0a0a0a]">
-            <Loader2 className="w-6 h-6 text-[#FFFF00] animate-spin" />
+        <div className="flex items-center justify-center h-full bg-black">
+            <div className="w-8 h-8 border-2 border-[#FFFF00] border-t-transparent rounded-full animate-spin" />
         </div>
     ),
 });
@@ -64,6 +66,9 @@ interface SpotBalance {
     total: string;
 }
 
+// Content tabs
+type ContentTab = 'chart' | 'orderbook' | 'trades';
+// Bottom tabs
 type BottomTab = 'balances' | 'orders' | 'history';
 
 export default function SpotTradingPage() {
@@ -79,7 +84,10 @@ export default function SpotTradingPage() {
     const [selectedAsset, setSelectedAsset] = useState(SPOT_ASSETS[0]); // Default BTC
     const [selectedPair, setSelectedPair] = useState<SpotPair | null>(null);
     const [balances, setBalances] = useState<SpotBalance[]>([]);
+    const [contentTab, setContentTab] = useState<ContentTab>('chart');
     const [bottomTab, setBottomTab] = useState<BottomTab>('balances');
+    const [showMarketSelector, setShowMarketSelector] = useState(false);
+    const [marketSearch, setMarketSearch] = useState('');
 
     // Trading
     const [isBuy, setIsBuy] = useState(true);
@@ -324,7 +332,7 @@ export default function SpotTradingPage() {
         <div className="min-h-screen bg-black text-[#FFFF00] flex flex-col">
             {/* Header - Compact Exchange Style */}
             <header className="flex items-center justify-between px-3 py-2 bg-black border-b border-[#FFFF00]/20">
-                {/* Back + Asset Selector */}
+                {/* Back + Market Selector */}
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => router.back()}
@@ -332,24 +340,17 @@ export default function SpotTradingPage() {
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="flex items-center gap-2">
-                        {SPOT_ASSETS.map(asset => (
-                            <button
-                                key={asset.symbol}
-                                onClick={() => setSelectedAsset(asset)}
-                                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all ${selectedAsset.symbol === asset.symbol
-                                        ? 'bg-[#FFFF00]/20 border border-[#FFFF00]/50'
-                                        : 'border border-transparent hover:bg-white/5'
-                                    }`}
-                            >
-                                <TokenLogo symbol={asset.symbol} size={20} />
-                                <span className={`text-xs font-bold ${selectedAsset.symbol === asset.symbol ? 'text-[#FFFF00]' : 'text-white/60'
-                                    }`}>
-                                    {asset.symbol}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
+                    <button
+                        onClick={() => setShowMarketSelector(true)}
+                        className="flex items-center gap-1.5"
+                    >
+                        <TokenLogo symbol={selectedAsset.symbol} size={24} />
+                        <span className="font-bold text-[#FFFF00]">{selectedAsset.symbol}</span>
+                        <span className="text-xs px-1.5 py-0.5 bg-[#FFFF00]/20 text-[#FFFF00] rounded font-medium">
+                            SPOT
+                        </span>
+                        <ChevronDown className="w-4 h-4 text-[#FFFF00]/60" />
+                    </button>
                 </div>
 
                 {/* Price + Change */}
@@ -363,10 +364,59 @@ export default function SpotTradingPage() {
                 </div>
             </header>
 
+            {/* Content Tabs: Chart | Order Book | Trades */}
+            <div className="flex border-b border-[#FFFF00]/20 bg-black">
+                <button
+                    onClick={() => setContentTab('chart')}
+                    className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${contentTab === 'chart'
+                        ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                        : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
+                        }`}
+                >
+                    Chart
+                </button>
+                <button
+                    onClick={() => setContentTab('orderbook')}
+                    className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${contentTab === 'orderbook'
+                        ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                        : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
+                        }`}
+                >
+                    Order Book
+                </button>
+                <button
+                    onClick={() => setContentTab('trades')}
+                    className={`flex-1 py-2.5 text-xs font-medium transition-colors bg-black ${contentTab === 'trades'
+                        ? 'text-[#FFFF00] border-b-2 border-[#FFFF00]'
+                        : 'text-[#FFFF00]/50 hover:text-[#FFFF00]'
+                        }`}
+                >
+                    Trades
+                </button>
+            </div>
+
             {/* Main Scrollable Content */}
             <div className="flex-1 overflow-auto" style={{ paddingBottom: '60px' }}>
-                {/* Buy/Sell Toggle */}
-                <div className="p-3 border-b border-[#FFFF00]/20">
+                {/* Chart/OrderBook/Trades Section */}
+                {contentTab === 'chart' && (
+                    <div className="h-[250px]">
+                        <CandlestickChart symbol={selectedAsset.symbol} height={250} />
+                    </div>
+                )}
+                {contentTab === 'orderbook' && (
+                    <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
+                        Order book coming soon
+                    </div>
+                )}
+                {contentTab === 'trades' && (
+                    <div className="h-[300px] flex items-center justify-center text-white/40 text-sm">
+                        Recent trades coming soon
+                    </div>
+                )}
+
+                {/* Order Form */}
+                <div className="border-t border-[#FFFF00]/20 p-4 space-y-4">
+                    {/* Buy/Sell Toggle */}
                     <div className="flex gap-2 p-1 bg-[#0D0D0D] rounded-xl">
                         <button
                             onClick={() => setIsBuy(true)}
@@ -389,19 +439,6 @@ export default function SpotTradingPage() {
                             Sell
                         </button>
                     </div>
-                </div>
-
-                {/* Price Chart */}
-                <div className="px-3 pb-3">
-                    <CandlestickChart
-                        symbol={selectedAsset.symbol}
-                        height={200}
-                        showVolume={false}
-                    />
-                </div>
-
-                {/* Order Panel */}
-                <div className="p-4 space-y-4">
                     {/* Balances */}
                     <div className="grid grid-cols-2 gap-3">
                         <div className="p-3 bg-[#1A1A1A] border border-white/10 rounded-xl">
@@ -664,6 +701,101 @@ export default function SpotTradingPage() {
                     </button>
                 </div>
             </nav>
+
+            {/* Market Selector Modal */}
+            {showMarketSelector && (
+                <div
+                    className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50"
+                    onClick={() => { setShowMarketSelector(false); setMarketSearch(''); }}
+                >
+                    <div
+                        className="h-full flex flex-col"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-white">Select Asset</h3>
+                            <button onClick={() => { setShowMarketSelector(false); setMarketSearch(''); }}>
+                                <X className="w-5 h-5 text-white/60" />
+                            </button>
+                        </div>
+
+                        {/* Search */}
+                        <div className="px-4 py-3 border-b border-white/10">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                                <input
+                                    type="text"
+                                    placeholder="Search..."
+                                    value={marketSearch}
+                                    onChange={e => setMarketSearch(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2.5 bg-[#1a1a1a] text-white text-sm rounded-lg border border-white/10 outline-none focus:border-[#FFFF00]/50"
+                                    autoFocus
+                                />
+                            </div>
+                        </div>
+
+                        {/* Column Headers */}
+                        <div className="grid grid-cols-12 gap-2 px-4 py-2 text-[10px] font-medium text-white/40 border-b border-white/5">
+                            <div className="col-span-5">Asset</div>
+                            <div className="col-span-3 text-right">Price</div>
+                            <div className="col-span-4 text-right">24h %</div>
+                        </div>
+
+                        {/* Asset List */}
+                        <div className="flex-1 overflow-auto">
+                            {pairs
+                                .filter(p => {
+                                    if (!marketSearch) return true;
+                                    const query = marketSearch.toLowerCase();
+                                    return p.baseName?.toLowerCase().includes(query) || p.name.toLowerCase().includes(query);
+                                })
+                                .slice(0, 50)
+                                .map(p => {
+                                    const isSelected = p.baseName === selectedAsset.symbol;
+                                    const pIsPositive = (p.change24h || 0) >= 0;
+                                    const spotAsset = SPOT_ASSETS.find(a => a.symbol === p.baseName);
+
+                                    return (
+                                        <button
+                                            key={p.name}
+                                            onClick={() => {
+                                                if (spotAsset) {
+                                                    setSelectedAsset(spotAsset);
+                                                } else {
+                                                    // Handle non-predefined assets
+                                                    setSelectedAsset({
+                                                        symbol: p.baseName || p.name,
+                                                        name: p.baseName || p.name,
+                                                        pair: `${p.baseName}/USDC`
+                                                    });
+                                                }
+                                                setSelectedPair(p);
+                                                setShowMarketSelector(false);
+                                                setMarketSearch('');
+                                            }}
+                                            className={`w-full grid grid-cols-12 gap-2 px-4 py-3 hover:bg-white/5 ${isSelected ? 'bg-[#FFFF00]/10' : ''}`}
+                                        >
+                                            <div className="col-span-5 flex items-center gap-2">
+                                                <TokenLogo symbol={p.baseName || p.name} size={24} />
+                                                <div className="text-left">
+                                                    <div className="text-sm font-medium text-white">{p.baseName || p.name}</div>
+                                                    <div className="text-[10px] text-white/40">SPOT</div>
+                                                </div>
+                                            </div>
+                                            <div className="col-span-3 text-right text-sm font-mono text-white">
+                                                ${p.price ? formatPrice(p.price) : '---'}
+                                            </div>
+                                            <div className={`col-span-4 text-right text-sm font-mono ${pIsPositive ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
+                                                {pIsPositive ? '+' : ''}{(p.change24h || 0).toFixed(2)}%
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

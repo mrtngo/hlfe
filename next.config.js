@@ -34,6 +34,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'wise.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'app.trade.xyz',
+      },
     ],
   },
 

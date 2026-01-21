@@ -228,33 +228,31 @@ const SYMBOL_TO_COINGECKO_ID: Record<string, string> = {
 };
 
 // Forex and Commodity logos
-// Using reliable CDNs with PNG formats for better compatibility
+// Using app.trade.xyz as primary source
 const FOREX_COMMODITY_LOGOS: Record<string, string> = {
-    // Forex - using Wise (TransferWise) flag CDN - very reliable
-    'EUR': 'https://wise.com/public-resources/assets/flags/rectangle/eur.png',
-    'JPY': 'https://wise.com/public-resources/assets/flags/rectangle/jpy.png',
-    'GBP': 'https://wise.com/public-resources/assets/flags/rectangle/gbp.png',
-    'CHF': 'https://wise.com/public-resources/assets/flags/rectangle/chf.png',
-    'AUD': 'https://wise.com/public-resources/assets/flags/rectangle/aud.png',
-    'CAD': 'https://wise.com/public-resources/assets/flags/rectangle/cad.png',
-    'NZD': 'https://wise.com/public-resources/assets/flags/rectangle/nzd.png',
-    // Commodities - Using CoinGecko for gold/silver (they have XAU/XAG)
-    'XAU': 'https://assets.coingecko.com/coins/images/32028/standard/tgold_logo.png',
-    'GOLD': 'https://assets.coingecko.com/coins/images/32028/standard/tgold_logo.png',
-    'GC': 'https://assets.coingecko.com/coins/images/32028/standard/tgold_logo.png',
-    'XAG': 'https://assets.coingecko.com/coins/images/29136/standard/logo200_%281%29.png',
-    'SILVER': 'https://assets.coingecko.com/coins/images/29136/standard/logo200_%281%29.png',
-    'SI': 'https://assets.coingecko.com/coins/images/29136/standard/logo200_%281%29.png',
-    // Copper - using a simple colored circle fallback (handled in component)
-    'COPPER': '',
-    'HG': '',
-    // Oil - using cryptocurrency-icons which has oil
-    'CL': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/oil.png',
-    'OIL': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/oil.png',
-    'WTI': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/oil.png',
-    'BRENT': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/oil.png',
-    'NG': '',
-    'NATGAS': '',
+    // Forex - using app.trade.xyz
+    'EUR': 'https://app.trade.xyz/markets/eur.svg',
+    'JPY': 'https://app.trade.xyz/markets/jpy.svg',
+    'GBP': 'https://app.trade.xyz/markets/gbp.svg',
+    'CHF': 'https://app.trade.xyz/markets/chf.svg',
+    'AUD': 'https://app.trade.xyz/markets/aud.svg',
+    'CAD': 'https://app.trade.xyz/markets/cad.svg',
+    'NZD': 'https://app.trade.xyz/markets/nzd.svg',
+    // Commodities - using app.trade.xyz
+    'XAU': 'https://app.trade.xyz/markets/gold.svg',
+    'GOLD': 'https://app.trade.xyz/markets/gold.svg',
+    'GC': 'https://app.trade.xyz/markets/gold.svg',
+    'XAG': 'https://app.trade.xyz/markets/silver.svg',
+    'SILVER': 'https://app.trade.xyz/markets/silver.svg',
+    'SI': 'https://app.trade.xyz/markets/silver.svg',
+    'COPPER': 'https://app.trade.xyz/markets/copper.svg',
+    'HG': 'https://app.trade.xyz/markets/copper.svg',
+    'CL': 'https://app.trade.xyz/markets/oil.svg',
+    'OIL': 'https://app.trade.xyz/markets/oil.svg',
+    'WTI': 'https://app.trade.xyz/markets/wti.svg',
+    'BRENT': 'https://app.trade.xyz/markets/brent.svg',
+    'NG': 'https://app.trade.xyz/markets/ng.svg',
+    'NATGAS': 'https://app.trade.xyz/markets/natgas.svg',
 };
 
 // Stock symbol to Twitter handle mapping for unavatar.io
@@ -393,11 +391,21 @@ function getJsDelivrUrl(symbol: string): string | null {
     return `https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${coingeckoId}/standard.png`;
 }
 
-// Get unavatar.io URL for stocks using Twitter handle
-function getUnavatarUrl(symbol: string): string | null {
+// Get logo URLs for stocks - try trade.xyz first, then unavatar.io
+function getStockLogoUrls(symbol: string): string[] {
+    const lowerSymbol = symbol.toLowerCase();
+    const urls: string[] = [];
+
+    // 1. app.trade.xyz - primary source
+    urls.push(`https://app.trade.xyz/markets/${lowerSymbol}.svg`);
+
+    // 2. unavatar.io via Twitter handle as fallback
     const twitterHandle = STOCK_TO_TWITTER[symbol];
-    if (!twitterHandle) return null;
-    return `https://unavatar.io/x/${twitterHandle}`;
+    if (twitterHandle) {
+        urls.push(`https://unavatar.io/x/${twitterHandle}`);
+    }
+
+    return urls;
 }
 
 // Check if symbol is a stock
@@ -422,18 +430,21 @@ function getCryptoLogoUrls(symbol: string): string[] {
 
     const urls: string[] = [];
 
-    // 1. cryptocurrency-icons GitHub CDN (very comprehensive)
+    // 1. app.trade.xyz - primary source (comprehensive coverage)
+    urls.push(`https://app.trade.xyz/markets/${lowerSymbol}.svg`);
+
+    // 2. cryptocurrency-icons GitHub CDN (very comprehensive)
     urls.push(`https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${lowerSymbol}.png`);
 
-    // 2. If we have a CoinGecko ID mapping, use jsDelivr CDN
+    // 3. If we have a CoinGecko ID mapping, use jsDelivr CDN
     if (coingeckoId) {
         urls.push(`https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${coingeckoId}/standard.png`);
     }
 
-    // 3. Try CoinGecko CDN with the symbol as ID (works for many coins)
+    // 4. Try CoinGecko CDN with the symbol as ID (works for many coins)
     urls.push(`https://cdn.jsdelivr.net/gh/simplr-sh/coin-logos/images/${lowerSymbol}/standard.png`);
 
-    // 4. Direct CoinGecko assets with known URLs
+    // 5. Direct CoinGecko assets with known URLs
     if (TOKEN_LOGOS[symbol]) {
         urls.push(TOKEN_LOGOS[symbol]);
     }
@@ -465,9 +476,8 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
         const url = getForexCommodityUrl(baseSymbol);
         if (url) logoUrls.push(url);
     } else if (isStock) {
-        // For stocks, use unavatar.io (Twitter profile images)
-        const url = getUnavatarUrl(baseSymbol);
-        if (url) logoUrls.push(url);
+        // For stocks, try trade.xyz first then unavatar.io
+        logoUrls = getStockLogoUrls(baseSymbol);
     } else {
         // For crypto, get multiple fallback URLs
         logoUrls = getCryptoLogoUrls(baseSymbol);
