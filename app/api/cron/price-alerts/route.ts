@@ -20,24 +20,32 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 const ALERT_THRESHOLDS: Record<string, { threshold: number; displayName: string }> = {
     'BTC': { threshold: 200, displayName: 'Bitcoin' },
     'ETH': { threshold: 50, displayName: 'Ethereum' },
-    'PAXG': { threshold: 50, displayName: 'Gold' },
+    'GOLD': { threshold: 50, displayName: 'Gold' },
 };
 
-// Fetch current prices from Hyperliquid
+// Fetch current prices from Hyperliquid (main) and HIP-3 (Trade.xyz)
 async function fetchPrices(): Promise<Record<string, number>> {
     try {
-        const response = await fetch('https://api.hyperliquid.xyz/info', {
+        // Fetch main Hyperliquid prices
+        const mainResponse = await fetch('https://api.hyperliquid.xyz/info', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'allMids' }),
         });
+        const mainData = await mainResponse.json();
 
-        const data = await response.json();
+        // Fetch HIP-3 (Trade.xyz) prices for GOLD
+        const hip3Response = await fetch('https://api.hyperliquid.xyz/info', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'allMids', dex: 'xyz' }),
+        });
+        const hip3Data = await hip3Response.json();
 
         return {
-            'BTC': parseFloat(data['BTC'] || '0'),
-            'ETH': parseFloat(data['ETH'] || '0'),
-            'PAXG': parseFloat(data['PAXG'] || '0'),
+            'BTC': parseFloat(mainData['BTC'] || '0'),
+            'ETH': parseFloat(mainData['ETH'] || '0'),
+            'GOLD': parseFloat(hip3Data['xyz:GOLD'] || '0'),
         };
     } catch (err) {
         console.error('[PriceAlerts] Failed to fetch prices:', err);
@@ -137,7 +145,7 @@ async function sendPushToAll(title: string, body: string, data?: Record<string, 
 function formatPrice(price: number, symbol: string): string {
     if (symbol === 'BTC') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
     if (symbol === 'ETH') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-    if (symbol === 'PAXG') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    if (symbol === 'GOLD') return `$${price.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
     return `$${price.toFixed(2)}`;
 }
 

@@ -211,6 +211,30 @@ export default function CandlestickChart({
                     title: 'Liq',
                 });
             }
+
+            // Take Profit price line
+            if (currentPosition.takeProfitPrice && currentPosition.takeProfitPrice > 0) {
+                candleSeriesRef.current.createPriceLine({
+                    price: currentPosition.takeProfitPrice,
+                    color: '#22D3EE', // Cyan for TP
+                    lineWidth: 2,
+                    lineStyle: 0, // Solid
+                    axisLabelVisible: true,
+                    title: 'TP',
+                });
+            }
+
+            // Stop Loss price line
+            if (currentPosition.stopLossPrice && currentPosition.stopLossPrice > 0) {
+                candleSeriesRef.current.createPriceLine({
+                    price: currentPosition.stopLossPrice,
+                    color: '#F97316', // Orange for SL
+                    lineWidth: 2,
+                    lineStyle: 0, // Solid
+                    axisLabelVisible: true,
+                    title: 'SL',
+                });
+            }
         }
 
         // Fit content
