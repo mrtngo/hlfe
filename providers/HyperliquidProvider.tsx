@@ -42,6 +42,8 @@ export interface Position {
     exchangePnl?: number; // Raw P&L from exchange
     takeProfitPrice?: number; // TP trigger price (if set)
     stopLossPrice?: number; // SL trigger price (if set)
+    takeProfitOrderId?: string; // TP order ID (if set)
+    stopLossOrderId?: string; // SL order ID (if set)
 }
 
 export interface Order {
@@ -1936,46 +1938,47 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             console.log(`🗑️ Cancelling order ${orderId} for ${symbol}`);
 
             // 1. Get asset index
-            const market = markets.find(m => m.symbol === symbol);
-            if (!market) {
-                throw new Error(`Market not found: ${symbol}`);
-            }
-
-            const baseCoin = symbol.split('-')[0].split('/')[0];
-            const isTradeXyzAsset = market?.isStock === true;
             const isSpot = symbol.includes('/');
+            const market = markets.find(m => m.symbol === symbol);
+            const isTradeXyzAsset = market?.isStock === true;
+            const baseCoin = symbol.split('-')[0].split('/')[0];
 
             let assetIndex = -1;
 
             if (isSpot) {
-                // Fetch spot metadata to find asset index
-                const spotMetaResponse = await fetch(`${API_URL}/info`, {
+                const response = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ type: 'spotMetaAndAssetCtxs' })
                 });
-                if (spotMetaResponse.ok) {
-                    const [spotMeta] = await spotMetaResponse.json();
+                if (response.ok) {
+                    const [spotMeta] = await response.json();
                     const pairIndex = spotMeta.universe.findIndex((p: any) => p.name === symbol);
                     if (pairIndex !== -1) assetIndex = 10000 + pairIndex;
                 }
             } else if (isTradeXyzAsset) {
-                const dexMetaResponse = await fetch(`${API_URL}/info`, {
+                const response = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'metaAndAssetCtxs', dex: 'xyz' }),
+                    body: JSON.stringify({ type: 'metaAndAssetCtxs', dex: 'xyz' })
                 });
-                if (dexMetaResponse.ok) {
-                    const [meta] = await dexMetaResponse.json();
+                if (response.ok) {
+                    const [meta] = await response.json();
                     const assetName = `xyz:${baseCoin}`;
                     const idx = meta.universe?.findIndex((u: any) => u.name === assetName) ?? -1;
                     if (idx !== -1) assetIndex = 110000 + idx;
                 }
             } else {
-                const client = createHyperliquidClient();
-                const meta = await client.info.perpetuals.getMeta();
-                const assetName = `${baseCoin}-PERP`;
-                assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+                const response = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'meta' })
+                });
+                if (response.ok) {
+                    const meta = await response.json();
+                    const assetName = (baseCoin === 'HYPE' ? 'HYPE' : `${baseCoin}-PERP`);
+                    assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+                }
             }
 
             if (assetIndex === -1) {
@@ -1993,52 +1996,68 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 ]
             };
 
-            // 3. Sign and send
+            const nonce = Date.now();
             const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
             const { signL1Action } = hyperliquidSDK;
 
-            let browserWallet: any = null;
-            const nonce = Date.now();
-
+            // Get signing wallet (agent or user)
+            let signingWallet: any = null;
             const agent = await getAgentWallet(address);
-            if (agentWalletEnabled && agent && isAgentApproved(address)) {
-                const agentSigner = getAgentSigner(agent);
-                if (agentSigner) {
-                    browserWallet = {
-                        address: agent.address,
-                        getAddress: async () => agent.address.toLowerCase(),
-                        signTypedData: async (domain: any, types: any, value: any) => {
-                            const { EIP712Domain, ...restTypes } = types;
-                            return await agentSigner.signTypedData(domain, restTypes, value);
-                        },
-                    };
+            const agentSigner = agent ? getAgentSigner(agent) : null;
+            const isApproved = isAgentApproved(address);
+
+            if (agentWalletEnabled && agent && agentSigner && isApproved) {
+                console.log('🤖 Signing cancellation with Agent Wallet');
+                signingWallet = {
+                    address: agent.address,
+                    getAddress: async () => agent.address.toLowerCase(),
+                    signTypedData: async (domain: any, types: any, value: any) => {
+                        const { EIP712Domain, ...restTypes } = types;
+                        return await agentSigner.signTypedData(domain, restTypes, value);
+                    },
+                };
+            } else {
+                console.log('👤 Signing cancellation with User Wallet');
+                const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+                let signingProvider = null;
+
+                if (embeddedWallet) {
+                    signingProvider = await embeddedWallet.getEthereumProvider();
+                } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                    signingProvider = (window as any).ethereum;
+                }
+
+                if (signingProvider) {
+                    const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
+                    signingWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
                 }
             }
 
-            if (!browserWallet) {
-                const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
-                const signingProvider = embeddedWallet ? await embeddedWallet.getEthereumProvider() : (window as any).ethereum;
-                if (!signingProvider) throw new Error('No wallet available');
-                const { BrowserWallet } = await import('@/lib/hyperliquid/browser-wallet');
-                browserWallet = new BrowserWallet(address.toLowerCase(), signingProvider);
+            if (!signingWallet) {
+                throw new Error('No signing wallet available');
             }
 
-            const signature = await signL1Action(browserWallet, action, null, nonce, !IS_TESTNET);
+            const signature = await signL1Action(signingWallet, action, null, nonce, !IS_TESTNET);
 
+            // 3. Send to exchange
             const response = await fetch(`${API_URL}/exchange${isTradeXyzAsset ? '?dex=xyz' : ''}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action, nonce, signature, vaultAddress: null }),
+                body: JSON.stringify({ action, nonce, signature, vaultAddress: null })
             });
 
             if (!response.ok) {
-                throw new Error(`Cancel request failed: ${response.statusText}`);
+                const errorText = await response.text();
+                throw new Error(`Failed to cancel order: ${errorText}`);
             }
 
             const result = await response.json();
-            if (result.status === 'err') throw new Error(result.response);
+            console.log('✅ Cancellation result:', result);
 
-            console.log('✅ Order cancelled successfully');
+            if (result.status === 'err') {
+                throw new Error(result.response || 'Failed to cancel order');
+            }
+
             await refreshAccountData();
 
         } catch (error: any) {

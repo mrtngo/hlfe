@@ -15,11 +15,12 @@ export interface PushNotificationState {
   error: string | null;
   isIOS: boolean;
   isPWA: boolean;
+  isSecureContext: boolean;
 }
 
 export interface UsePushNotificationsReturn extends PushNotificationState {
   requestPermission: () => Promise<boolean>;
-  subscribe: () => Promise<PushSubscription | null>;
+  subscribe: (userId?: string) => Promise<PushSubscription | null>;
   unsubscribe: () => Promise<boolean>;
   sendTestNotification: () => void;
 }
@@ -83,6 +84,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     error: null,
     isIOS: false,
     isPWA: false,
+    isSecureContext: true,
   });
 
   // Initialize on mount
@@ -91,9 +93,10 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const isSupported = checkPushSupport();
       const isIOS = checkIsIOS();
       const isPWA = checkIsPWA();
+      const isSecure = typeof window !== 'undefined' && window.isSecureContext;
 
       // Log for debugging on iOS
-      console.log('[Push] Init:', { isSupported, isIOS, isPWA, userAgent: navigator.userAgent });
+      console.log('[Push] Init:', { isSupported, isIOS, isPWA, isSecure, userAgent: navigator.userAgent });
 
       let permission: NotificationPermission = 'default';
       let subscription: PushSubscription | null = null;
@@ -123,6 +126,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         error: null,
         isIOS,
         isPWA,
+        isSecureContext: isSecure,
       });
     };
 
@@ -201,9 +205,14 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   }, [state.isSupported, state.isIOS, state.isPWA]);
 
   // Subscribe to push notifications
-  const subscribe = useCallback(async (): Promise<PushSubscription | null> => {
+  const subscribe = useCallback(async (userId?: string): Promise<PushSubscription | null> => {
     if (!state.isSupported) {
       setState(prev => ({ ...prev, error: 'Push notifications not supported' }));
+      return null;
+    }
+
+    if (!window.isSecureContext) {
+      setState(prev => ({ ...prev, error: 'Push notifications require a secure context (HTTPS or localhost)' }));
       return null;
     }
 
@@ -233,7 +242,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         console.log('[Push] New subscription created:', subscription.endpoint);
 
         // Send subscription to your backend
-        await sendSubscriptionToBackend(subscription);
+        await sendSubscriptionToBackend(subscription, userId);
       }
 
       setState(prev => ({
@@ -314,7 +323,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 }
 
 // Helper function to send subscription to backend
-async function sendSubscriptionToBackend(subscription: PushSubscription): Promise<void> {
+async function sendSubscriptionToBackend(subscription: PushSubscription, userId?: string): Promise<void> {
   try {
     const response = await fetch('/api/push/subscribe', {
       method: 'POST',
@@ -323,6 +332,7 @@ async function sendSubscriptionToBackend(subscription: PushSubscription): Promis
       },
       body: JSON.stringify({
         subscription: subscription.toJSON(),
+        userId: userId,
       }),
     });
 

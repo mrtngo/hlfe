@@ -26,11 +26,10 @@ export default function PositionCard({
     showActions = true
 }: PositionCardProps) {
     const { formatCurrency } = useCurrency();
+    const { cancelOrder } = useHyperliquidContext();
     const isLong = position.side === 'long';
     const isPositive = position.unrealizedPnl >= 0;
     const pnlColor = isPositive ? 'text-bullish glow-text-bullish' : 'text-bearish glow-text-bearish';
-
-    const { cancelOrder } = useHyperliquidContext();
 
     return (
         <div
@@ -109,7 +108,7 @@ export default function PositionCard({
                         <div className="flex-1 flex items-center justify-between bg-bullish/10 border border-bullish/20 px-3 py-2 rounded-xl group/tp">
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-bold text-bullish">TP 🎯</span>
-                                <span className="font-mono text-xs text-white font-bold">{formatCurrency(position.takeProfitPrice)}</span>
+                                <span className="font-mono text-xs text-bullish font-bold">{formatCurrency(position.takeProfitPrice)}</span>
                             </div>
                             {position.takeProfitOrderId && (
                                 <button
@@ -130,7 +129,7 @@ export default function PositionCard({
                         <div className="flex-1 flex items-center justify-between bg-bearish/10 border border-bearish/20 px-3 py-2 rounded-xl group/sl">
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-bold text-bearish">SL 🛑</span>
-                                <span className="font-mono text-xs text-white font-bold">{formatCurrency(position.stopLossPrice)}</span>
+                                <span className="font-mono text-xs text-bearish font-bold">{formatCurrency(position.stopLossPrice)}</span>
                             </div>
                             {position.stopLossOrderId && (
                                 <button

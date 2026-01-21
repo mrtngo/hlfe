@@ -6,11 +6,13 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { clearAgentWallet } from '@/lib/agent-wallet';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useUser } from '@/hooks/useUser';
 import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, RotateCcw, DollarSign, Bell, BellOff, Smartphone } from 'lucide-react';
 
 export default function Settings() {
     const { t, language, setLanguage } = useLanguage();
     const { address, agentWalletEnabled, setupAgentWallet, builderFeeApproved, builderFeeLoading, approveBuilderFee } = useHyperliquid();
+    const { user } = useUser();
     const pushNotifications = usePushNotifications();
     const [connectWallet, setConnectWallet] = useState(false);
     const [settingUpAgent, setSettingUpAgent] = useState(false);
@@ -180,21 +182,33 @@ export default function Settings() {
                                 <button
                                     onClick={() => pushNotifications.unsubscribe()}
                                     disabled={pushNotifications.isLoading}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-bullish/20 text-bullish rounded-full text-sm font-semibold"
+                                    className="px-4 py-2 bg-bullish/20 text-bullish rounded-full text-sm font-semibold hover:bg-bullish/30 transition-colors"
                                 >
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    On
+                                    {pushNotifications.isLoading ? 'Disabling...' : 'Disable'}
                                 </button>
                             ) : (
                                 <button
-                                    onClick={() => pushNotifications.subscribe()}
-                                    disabled={pushNotifications.isLoading || !pushNotifications.isSupported}
+                                    onClick={() => pushNotifications.subscribe(user?.id || address || undefined)}
+                                    disabled={pushNotifications.isLoading || !pushNotifications.isSupported || !pushNotifications.isSecureContext}
                                     className="px-4 py-2 bg-brand text-black rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                 >
                                     {pushNotifications.isLoading ? 'Enabling...' : 'Enable'}
                                 </button>
                             )}
                         </div>
+
+                        {/* Insecure Context Warning */}
+                        {!pushNotifications.isSecureContext && (
+                            <div className="flex items-start gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
+                                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="font-semibold block">Insecure Context</span>
+                                    <span className="text-xs">
+                                        Push notifications require HTTPS. If testing locally, use localhost or a secure tunnel (ngrok).
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         {/* iOS PWA Warning */}
                         {pushNotifications.isIOS && !pushNotifications.isPWA && (

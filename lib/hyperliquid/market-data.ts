@@ -49,6 +49,7 @@ export interface Market {
     openInterest: number;
     szDecimals: number;
     maxLeverage: number;
+    assetIndex: number;
     onlyIsolated: boolean;
     isStock?: boolean; // True if this is a Trade.xyz equity market
 }
@@ -192,6 +193,7 @@ export function useMarketData(): MarketData {
                         openInterest,
                         szDecimals,
                         maxLeverage,
+                        assetIndex: i,
                         onlyIsolated: isFromDex ? true : onlyIsolated, // Trade.xyz markets are always isolated
                         isStock,
                     });
@@ -253,6 +255,7 @@ export function useMarketData(): MarketData {
                             openInterest: 0,
                             szDecimals: 0,
                             maxLeverage: 20,
+                            assetIndex: 0,
                             onlyIsolated: false,
                             isStock: false,
                         },
@@ -268,6 +271,7 @@ export function useMarketData(): MarketData {
                             openInterest: 0,
                             szDecimals: 0,
                             maxLeverage: 20,
+                            assetIndex: 1,
                             onlyIsolated: false,
                             isStock: false,
                         },

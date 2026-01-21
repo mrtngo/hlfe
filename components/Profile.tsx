@@ -407,8 +407,8 @@ export default function Profile() {
 
                             {/* Toggle Switch */}
                             <button
-                                onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe()}
-                                disabled={pushNotifications.isLoading}
+                                onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe(user?.id || address || undefined)}
+                                disabled={pushNotifications.isLoading || !pushNotifications.isSecureContext}
                                 style={{
                                     width: '60px',
                                     height: '32px',
@@ -418,7 +418,7 @@ export default function Profile() {
                                     borderColor: pushNotifications.isSubscribed ? '#16a34a' : '#374151',
                                     position: 'relative',
                                     cursor: pushNotifications.isLoading ? 'wait' : 'pointer',
-                                    opacity: pushNotifications.isLoading ? 0.5 : 1
+                                    opacity: (pushNotifications.isLoading || !pushNotifications.isSecureContext) ? 0.5 : 1
                                 }}
                             >
                                 <div
@@ -436,6 +436,13 @@ export default function Profile() {
                                 />
                             </button>
                         </div>
+
+                        {/* Insecure Context Warning */}
+                        {!pushNotifications.isSecureContext && (
+                            <div className="text-[10px] text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                                ⚠️ Insecure Context: Push notifications require HTTPS.
+                            </div>
+                        )}
 
                         {/* Error Display */}
                         {pushNotifications.error && (
