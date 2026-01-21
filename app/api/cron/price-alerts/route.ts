@@ -18,8 +18,8 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
 
 // Price alert thresholds
 const ALERT_THRESHOLDS: Record<string, { threshold: number; displayName: string }> = {
-    'BTC': { threshold: 200, displayName: 'Bitcoin' },
-    'ETH': { threshold: 50, displayName: 'Ethereum' },
+    'BTC': { threshold: 500, displayName: 'Bitcoin' },
+    'ETH': { threshold: 100, displayName: 'Ethereum' },
     'GOLD': { threshold: 50, displayName: 'Gold' },
 };
 
@@ -179,17 +179,18 @@ export async function GET(request: NextRequest) {
             }
 
             const priceDiff = currentPrice - lastPrice;
-            const absDiff = Math.abs(priceDiff);
+            // Check if a level was crossed (multiple of threshold)
+            const currentLevel = Math.floor(currentPrice / config.threshold);
+            const lastLevel = Math.floor(lastPrice / config.threshold);
 
-            console.log(`[PriceAlerts] ${symbol}: current=${currentPrice}, last=${lastPrice}, diff=${priceDiff.toFixed(2)}, threshold=${config.threshold}`);
+            console.log(`[PriceAlerts] ${symbol}: ${currentPrice} (${currentLevel}) vs ${lastPrice} (${lastLevel})`);
 
-            // Check if threshold crossed
-            if (absDiff >= config.threshold) {
+            if (currentLevel !== lastLevel) {
+                const crossedLevel = (priceDiff > 0 ? currentLevel : lastLevel) * config.threshold;
                 const direction = priceDiff > 0 ? '📈' : '📉';
-                const change = priceDiff > 0 ? `+$${absDiff.toFixed(0)}` : `-$${absDiff.toFixed(0)}`;
 
-                const title = `${direction} ${config.displayName} ${change}`;
-                const body = `${config.displayName} is now ${formatPrice(currentPrice, symbol)}`;
+                const title = `${direction} ${config.displayName} ${formatPrice(crossedLevel, symbol)} Crossed!`;
+                const body = `${config.displayName} is now ${formatPrice(currentPrice, symbol)}. Next level: ${formatPrice(crossedLevel + (priceDiff > 0 ? config.threshold : -config.threshold), symbol)}`;
 
                 console.log(`[PriceAlerts] Sending alert: ${title}`);
 

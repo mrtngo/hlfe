@@ -59,7 +59,23 @@ export default function CandlestickChart({
     const isStock = market?.isStock === true;
 
     // Get current position for entry/liq lines
-    const currentPosition = positions?.find(p => p.symbol === marketSymbol);
+    const currentPosition = positions?.find(p => {
+        const cleanP = p.symbol.split('-')[0].split('/')[0];
+        const cleanM = (symbol || selectedMarket || '').split('-')[0].split('/')[0];
+        return cleanP === cleanM;
+    });
+
+    // DEBUG: Log position data for TP/SL lines
+    useEffect(() => {
+        if (currentPosition) {
+            console.log(`[Chart Debug] ${marketSymbol} Position:`, {
+                side: currentPosition.side,
+                entry: currentPosition.entryPrice,
+                tp: currentPosition.takeProfitPrice,
+                sl: currentPosition.stopLossPrice
+            });
+        }
+    }, [currentPosition, marketSymbol]);
 
     // Fetch candle data
     const { candles, loading, error } = useCandleData(marketSymbol, timeframe, isStock, 100);
@@ -227,6 +243,7 @@ export default function CandlestickChart({
 
             // Take Profit price line
             if (currentPosition.takeProfitPrice && currentPosition.takeProfitPrice > 0) {
+                console.log(`[Chart] Drawing TP line at ${currentPosition.takeProfitPrice}`);
                 const tpLine = candleSeriesRef.current.createPriceLine({
                     price: currentPosition.takeProfitPrice,
                     color: '#22D3EE', // Cyan for TP
@@ -240,6 +257,7 @@ export default function CandlestickChart({
 
             // Stop Loss price line
             if (currentPosition.stopLossPrice && currentPosition.stopLossPrice > 0) {
+                console.log(`[Chart] Drawing SL line at ${currentPosition.stopLossPrice}`);
                 const slLine = candleSeriesRef.current.createPriceLine({
                     price: currentPosition.stopLossPrice,
                     color: '#F97316', // Orange for SL

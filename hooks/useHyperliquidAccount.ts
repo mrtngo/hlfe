@@ -154,17 +154,24 @@ export function useHyperliquidAccount(
                 const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
                 if (orderCoin !== positionCoin) return false;
 
-                const typeStr = typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType);
-                return typeStr.includes('Take Profit') || typeStr.includes('TP');
+                const typeStr = (typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType)).toLowerCase();
+                return typeStr.includes('take profit') || typeStr.includes('tp');
             });
 
             const slOrder = activeTriggerOrders.find((o: any) => {
                 const orderCoin = (o.coin || '').replace('-PERP', '').replace('xyz:', '');
                 if (orderCoin !== positionCoin) return false;
 
-                const typeStr = typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType);
-                return typeStr.includes('Stop Loss') || typeStr.includes('Stop');
+                const typeStr = (typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType)).toLowerCase();
+                return typeStr.includes('stop loss') || typeStr.includes('stop') || typeStr.includes('sl');
             });
+
+            if (tpOrder || slOrder) {
+                console.log(`[Matching] Matched trigger orders for ${pos.symbol}:`, {
+                    tp: tpOrder ? tpOrder.triggerPx : 'none',
+                    sl: slOrder ? slOrder.triggerPx : 'none'
+                });
+            }
 
             return {
                 ...pos,
@@ -263,11 +270,14 @@ export function useHyperliquidAccount(
 
             setTriggerOrders(activeTriggerOrders);
             triggerOrdersRef.current = activeTriggerOrders;
-            console.log('📊 Found trigger orders:', activeTriggerOrders.map(o => ({
-                symbol: o.coin,
-                triggerPx: o.triggerPx,
-                type: o.orderType
-            })));
+            console.log(`📊 [Init] Found ${activeTriggerOrders.length} trigger orders for ${normalizedAddress}`);
+            if (activeTriggerOrders.length > 0) {
+                console.log('📊 Active Triggers:', activeTriggerOrders.map(o => ({
+                    coin: o.coin,
+                    px: o.triggerPx,
+                    type: typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType)
+                })));
+            }
 
             const mainMargin = userState?.marginSummary || {};
             let perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
@@ -536,6 +546,14 @@ export function useHyperliquidAccount(
             },
             onOrderUpdate: (ordersData: any) => {
                 if (Array.isArray(ordersData)) {
+                    // Update trigger orders ref for position matching
+                    const activeTriggers = ordersData.filter((o: any) => o.isTrigger);
+                    if (activeTriggers.length !== triggerOrdersRef.current.length) {
+                        console.log(`📊 [WS] Trigger orders updated: ${activeTriggers.length} active`);
+                        triggerOrdersRef.current = activeTriggers;
+                        setTriggerOrders(activeTriggers);
+                    }
+
                     const openOrders: Order[] = ordersData
                         .filter((o: any) => {
                             const status = o.status || (o.filledSz && parseFloat(o.filledSz) >= parseFloat(o.sz) ? 'filled' : 'open');
