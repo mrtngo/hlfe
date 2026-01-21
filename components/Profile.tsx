@@ -393,27 +393,52 @@ export default function Profile() {
 
                     {/* Notifications Toggle */}
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between px-4 py-2 bg-black/40 rounded-2xl border border-white/5">
+                        <div className="flex items-center justify-between px-4 py-3 bg-black/40 rounded-2xl border border-white/5">
                             <div className="flex items-center gap-4">
-                                <Bell className="w-5 h-5 text-brand" />
+                                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
+                                    <Bell className={`w-5 h-5 ${pushNotifications.isSubscribed ? 'text-brand' : 'text-white/40'}`} />
+                                </div>
                                 <div>
                                     <div className="text-white text-xs font-black uppercase tracking-wider">{t.settings.notifications}</div>
-                                    <div className="text-[10px] text-white/40 font-bold">{pushNotifications.isSubscribed ? 'Alerts Enabled' : 'Get Trade Alerts'}</div>
+                                    <div className="text-[10px] text-white/40 font-bold">
+                                        {pushNotifications.isLoading ? 'Checking Support...' :
+                                            !pushNotifications.isSupported ? 'Not Supported' :
+                                                pushNotifications.isSubscribed ? 'Alerts Enabled' : 'Get Trade Alerts'}
+                                    </div>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe()}
-                                disabled={pushNotifications.isLoading || !pushNotifications.isSupported}
-                                className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 ${pushNotifications.isSubscribed ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
-                            >
-                                <div
-                                    className={`w-5 h-5 rounded-full shadow-xl absolute top-1 transition-all duration-300 ${pushNotifications.isSubscribed ? 'right-1 bg-black' : 'left-1 bg-white/40'}`}
-                                />
-                                {pushNotifications.isLoading && (
-                                    <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-black" />
-                                )}
-                            </button>
+
+                            {pushNotifications.isSupported ? (
+                                <button
+                                    onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe()}
+                                    disabled={pushNotifications.isLoading}
+                                    className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 shadow-inner ${pushNotifications.isSubscribed ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
+                                >
+                                    <div
+                                        className={`w-5 h-5 rounded-full shadow-xl absolute top-0.5 transition-all duration-300 ${pushNotifications.isSubscribed ? 'right-1 bg-blackScale-100' : 'left-1 bg-white/60'}`}
+                                        style={{ backgroundColor: pushNotifications.isSubscribed ? '#000' : '#fff' }}
+                                    />
+                                    {pushNotifications.isLoading && (
+                                        <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-black" />
+                                    )}
+                                </button>
+                            ) : !pushNotifications.isLoading && (
+                                <AlertCircle className="w-5 h-5 text-white/20" title="Not supported on this browser" />
+                            )}
                         </div>
+
+                        {/* Browser Not Supported Warning */}
+                        {!pushNotifications.isSupported && !pushNotifications.isLoading && (
+                            <div className="flex items-start gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl text-xs text-white/40">
+                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                <div>
+                                    <span className="font-black uppercase tracking-wider block mb-1">Incompatible Browser</span>
+                                    <span className="font-medium">
+                                        Push notifications are not supported by your current browser. Please use Chrome, Safari, or Edge for the best experience.
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         {/* iOS PWA Warning */}
                         {pushNotifications.isIOS && !pushNotifications.isPWA && (
