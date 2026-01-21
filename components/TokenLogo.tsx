@@ -227,6 +227,27 @@ const SYMBOL_TO_COINGECKO_ID: Record<string, string> = {
     'FORM': 'form',
 };
 
+// Forex and Commodity logos (using flags and commodity images)
+const FOREX_COMMODITY_LOGOS: Record<string, string> = {
+    // Forex - using flag emojis rendered as images via unavatar
+    'EUR': 'https://flagcdn.com/w80/eu.png',
+    'JPY': 'https://flagcdn.com/w80/jp.png',
+    'GBP': 'https://flagcdn.com/w80/gb.png',
+    'CHF': 'https://flagcdn.com/w80/ch.png',
+    'AUD': 'https://flagcdn.com/w80/au.png',
+    'CAD': 'https://flagcdn.com/w80/ca.png',
+    'NZD': 'https://flagcdn.com/w80/nz.png',
+    // Commodities
+    'XAU': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xau.png',
+    'GOLD': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xau.png',
+    'XAG': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xag.png',
+    'SILVER': 'https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xag.png',
+    'COPPER': 'https://cdn-icons-png.flaticon.com/128/5615/5615741.png',
+    'HG': 'https://cdn-icons-png.flaticon.com/128/5615/5615741.png',
+    'CL': 'https://cdn-icons-png.flaticon.com/128/2933/2933883.png',
+    'OIL': 'https://cdn-icons-png.flaticon.com/128/2933/2933883.png',
+};
+
 // Stock symbol to Twitter handle mapping for unavatar.io
 const STOCK_TO_TWITTER: Record<string, string> = {
     // Tech Giants
@@ -375,6 +396,16 @@ function isStockSymbol(symbol: string): boolean {
     return symbol in STOCK_TO_TWITTER;
 }
 
+// Check if symbol is forex or commodity
+function isForexOrCommodity(symbol: string): boolean {
+    return symbol in FOREX_COMMODITY_LOGOS;
+}
+
+// Get forex/commodity logo URL
+function getForexCommodityUrl(symbol: string): string | null {
+    return FOREX_COMMODITY_LOGOS[symbol] || null;
+}
+
 // Dynamic logo sources that accept ticker symbols
 function getCryptoLogoUrls(symbol: string): string[] {
     const lowerSymbol = symbol.toLowerCase();
@@ -413,13 +444,18 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
     const [useCached, setUseCached] = useState(!!cachedUrl);
     const [errorIndex, setErrorIndex] = useState(0);
 
-    // Check if this is a stock
+    // Check asset type
     const isStock = isStockSymbol(baseSymbol);
+    const isForexCommodity = isForexOrCommodity(baseSymbol);
 
     // Get logo URLs based on asset type
     let logoUrls: string[] = [];
 
-    if (isStock) {
+    if (isForexCommodity) {
+        // For forex/commodities, use dedicated URLs
+        const url = getForexCommodityUrl(baseSymbol);
+        if (url) logoUrls.push(url);
+    } else if (isStock) {
         // For stocks, use unavatar.io (Twitter profile images)
         const url = getUnavatarUrl(baseSymbol);
         if (url) logoUrls.push(url);
@@ -434,15 +470,21 @@ export default function TokenLogo({ symbol, size = 32, className = '' }: TokenLo
 
     // If we've exhausted all URLs, show letter fallback
     if (!currentUrl || (!useCached && errorIndex >= logoUrls.length)) {
+        // Determine background color based on asset type
+        let bgGradient = 'linear-gradient(135deg, #FFD60A 0%, #FF9500 100%)'; // Yellow/orange for crypto
+        if (isStock) {
+            bgGradient = 'linear-gradient(135deg, #1E3A5F 0%, #2D5A87 100%)'; // Blue for stocks
+        } else if (isForexCommodity) {
+            bgGradient = 'linear-gradient(135deg, #4A5568 0%, #2D3748 100%)'; // Gray for forex/commodities
+        }
+
         return (
             <div
                 className={`rounded-full flex items-center justify-center flex-shrink-0 ${className}`}
                 style={{
                     width: size,
                     height: size,
-                    background: isStock
-                        ? 'linear-gradient(135deg, #1E3A5F 0%, #2D5A87 100%)' // Blue for stocks
-                        : 'linear-gradient(135deg, #FFD60A 0%, #FF9500 100%)' // Yellow/orange for crypto
+                    background: bgGradient
                 }}
             >
                 <span className="text-white font-bold" style={{ fontSize: size / 2.5 }}>

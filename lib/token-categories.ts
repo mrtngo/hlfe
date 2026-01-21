@@ -123,7 +123,7 @@ export const TOKEN_CATEGORIES: Record<string, TokenCategory[]> = {
     'PYTH': ['defi'],
     'JUP': ['defi'],
 
-    // Stocks (examples - these would be from Trade.xyz)
+    // Stocks (Trade.xyz equities)
     'TSLA': ['stocks'],
     'AAPL': ['stocks'],
     'NVDA': ['stocks'],
@@ -134,6 +134,8 @@ export const TOKEN_CATEGORIES: Record<string, TokenCategory[]> = {
     'NFLX': ['stocks'],
     'AMD': ['stocks'],
     'COIN': ['stocks'],
+    'HOOD': ['stocks'],
+    'PYPL': ['stocks'],
 
     // Indices
     'SPX': ['indices'],
@@ -143,20 +145,17 @@ export const TOKEN_CATEGORIES: Record<string, TokenCategory[]> = {
 
     // Forex
     'EUR': ['forex'],
-    'GBP': ['forex'],
     'JPY': ['forex'],
-    'CHF': ['forex'],
-    'AUD': ['forex'],
-    'CAD': ['forex'],
-    'NZD': ['forex'],
 
     // Commodities
-    'XAU': ['commodities'], // Gold
-    'XAG': ['commodities'], // Silver
-    'CL': ['commodities'],  // Crude Oil
-    'NG': ['commodities'],  // Natural Gas
-    'GC': ['commodities'],  // Gold futures
-    'SI': ['commodities'],  // Silver futures
+    'GOLD': ['commodities'],
+    'XAU': ['commodities'],
+    'SILVER': ['commodities'],
+    'XAG': ['commodities'],
+    'COPPER': ['commodities'],
+    'HG': ['commodities'],   // Copper futures symbol
+    'CL': ['commodities'],   // Crude Oil
+    'OIL': ['commodities'],
 };
 
 // Helper function to get categories for a token

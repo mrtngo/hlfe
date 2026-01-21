@@ -607,6 +607,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             <div
                 className="rounded-3xl p-6"
                 style={{
+                    marginBottom: '48px',
                     background: 'linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%)',
                     border: '2px solid rgba(99, 102, 241, 0.3)',
                     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
@@ -816,18 +817,29 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 </div>
 
                 {/* Category Tabs */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide mb-6">
+                <div className="flex items-center gap-3 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-hide mb-6">
                     {CATEGORIES.filter(cat => cat.id !== 'watchlist').map((category) => (
                         <button
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all shrink-0 ${selectedCategory === category.id
-                                ? 'bg-brand text-black shadow-lg'
-                                : 'bg-bg-secondary text-white/60 hover:bg-bg-elevated hover:text-white border border-white/10'
+                            className={`flex items-center gap-2.5 px-5 py-3.5 rounded-2xl font-bold text-base whitespace-nowrap transition-all shrink-0 ${selectedCategory === category.id
+                                ? 'text-black'
+                                : 'text-white/70 hover:text-white'
                                 }`}
-                            style={selectedCategory === category.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
+                            style={selectedCategory === category.id
+                                ? {
+                                    background: 'linear-gradient(135deg, #FACC15 0%, #F59E0B 100%)',
+                                    boxShadow: '0 6px 20px rgba(250, 204, 21, 0.4), 0 0 30px rgba(250, 204, 21, 0.2)',
+                                    border: '2px solid rgba(255, 255, 255, 0.2)'
+                                }
+                                : {
+                                    background: 'linear-gradient(135deg, rgba(30, 30, 35, 0.95) 0%, rgba(20, 20, 25, 0.98) 100%)',
+                                    border: '2px solid rgba(255, 255, 255, 0.1)',
+                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                                }
+                            }
                         >
-                            <span className="text-base">{category.emoji}</span>
+                            <span className="text-xl">{category.emoji}</span>
                             <span>{category.label}</span>
                         </button>
                     ))}
