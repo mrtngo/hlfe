@@ -7,6 +7,7 @@ import { TrendingUp, Share2, Target } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from './OrderNotification';
 import ShareModal from './ShareModal';
 import SetSLTPModal from './SetSLTPModal';
+import PositionCard from './PositionCard';
 import { Position } from '@/types/hyperliquid';
 
 export default function PositionsPanel() {
@@ -74,103 +75,18 @@ export default function PositionsPanel() {
                     <h3 className="text-sm font-semibold text-white">{t.positions.title}</h3>
                 </div>
 
-                <div className="flex-1 overflow-y-auto">
-                    <div className="divide-y divide-white/10">
-                        {positions.map((position) => {
-                            const isPositive = position.unrealizedPnl >= 0;
-                            const market = markets.find((m) => m.symbol === position.symbol);
-                            const markPrice = market?.price ?? position.markPrice;
-
-                            return (
-                                <div
-                                    key={position.symbol}
-                                    className="p-4 hover:bg-bg-hover transition-colors"
-                                >
-                                    {/* Clickable area for position info - navigates to that market */}
-                                    <div
-                                        className="cursor-pointer"
-                                        onClick={() => setSelectedMarket(position.symbol)}
-                                    >
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div>
-                                                <div className="font-semibold text-sm text-white">
-                                                    {position.symbol.replace(/-(USD|PERP)$/i, '')}
-                                                </div>
-                                                <div className="text-xs text-coffee-medium">
-                                                    {position.side === 'long' ? 'Long' : 'Short'} • {position.leverage}x
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className={`font-mono font-semibold text-sm ${isPositive ? 'text-positive' : 'text-negative'}`}>
-                                                    {formatCurrency(position.unrealizedPnl)}
-                                                </div>
-                                                <div className={`text-xs font-semibold ${isPositive ? 'text-positive' : 'text-negative'}`}>
-                                                    {isPositive ? '+' : ''}{formatPercent(position.unrealizedPnlPercent)}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3 text-xs mb-3">
-                                            <div>
-                                                <div className="text-coffee-medium mb-1">Size</div>
-                                                <div className="font-mono font-semibold text-white">
-                                                    {position.size.toFixed(4)}
-                                                    <span className="text-coffee-medium ml-1">
-                                                        ({formatCurrency(position.size * markPrice)})
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div className="text-coffee-medium mb-1">Entry</div>
-                                                <div className="font-mono font-semibold text-white">{formatCurrency(position.entryPrice)}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-coffee-medium mb-1">Mark</div>
-                                                <div className="font-mono font-semibold text-white">{formatCurrency(markPrice)}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-coffee-medium mb-1">Liq. Price</div>
-                                                <div className="font-mono font-semibold text-bearish">{formatCurrency(position.liquidationPrice)}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action buttons */}
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSlTpPosition(position);
-                                            }}
-                                            className="py-3 px-4 bg-gradient-to-r from-bullish to-bearish hover:from-bullish/90 hover:to-bearish/90 text-white rounded-full text-sm font-bold transition-all flex items-center gap-2 shadow-lg"
-                                            style={{ boxShadow: '0 4px 16px rgba(34, 197, 94, 0.3)' }}
-                                        >
-                                            <Target className="w-4 h-4" />
-                                            SL/TP
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSharePosition(position);
-                                            }}
-                                            className="py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 text-white rounded-full text-sm font-bold transition-all flex items-center gap-2"
-                                        >
-                                            <Share2 className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleClosePosition(position.symbol);
-                                            }}
-                                            disabled={loading}
-                                            className="flex-1 py-3 px-4 bg-brand hover:bg-brand-hover text-black rounded-full text-sm font-bold transition-all active:scale-[0.98] shadow-glow-brand disabled:opacity-50"
-                                        >
-                                            {t.positions.close}
-                                        </button>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                <div className="flex-1 overflow-y-auto p-4">
+                    <div className="space-y-6">
+                        {positions.map((position) => (
+                            <PositionCard
+                                key={position.symbol}
+                                position={position}
+                                onShare={setSharePosition}
+                                onClose={handleClosePosition}
+                                onSetSlTp={setSlTpPosition}
+                                onClick={() => setSelectedMarket(position.symbol)}
+                            />
+                        ))}
                     </div>
                 </div>
             </div>

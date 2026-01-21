@@ -356,7 +356,7 @@ export function useHyperliquidAccount(
             await client.connect();
 
             // Fetch states in parallel
-            const [userState, dexStateData, spotStateResponse] = await Promise.all([
+            const [userState, dexStateData, spotStateResponse, openOrdersResponse, xyzOpenOrdersResponse] = await Promise.all([
                 client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -374,11 +374,45 @@ export function useHyperliquidAccount(
                         type: 'spotClearinghouseState',
                         user: normalizedAddress,
                     }),
-                }).catch(() => null)
+                }).catch(() => null),
+                // Fetch open orders including trigger orders (TP/SL)
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'frontendOpenOrders',
+                        user: normalizedAddress,
+                    }),
+                }).then(res => res.ok ? res.json() : []).catch(() => []),
+                // Fetch Trade.xyz (HIP-3) open orders
+                fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'frontendOpenOrders',
+                        user: normalizedAddress,
+                        dex: 'xyz'
+                    }),
+                }).then(res => res.ok ? res.json() : []).catch(() => [])
             ]);
 
+            // Combine all open orders and store trigger orders
+            const allOpenOrders = [...(openOrdersResponse as any[]), ...(xyzOpenOrdersResponse as any[])];
+            const activeTriggerOrders = allOpenOrders.filter((o: any) => {
+                if (!o.isTrigger) return false;
+                const typeStr = typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType);
+                return typeStr.includes('Take Profit') || typeStr.includes('Stop') || typeStr.includes('TP') || typeStr.includes('SL') || true;
+            }) || [];
+
+            setTriggerOrders(activeTriggerOrders);
+            triggerOrdersRef.current = activeTriggerOrders;
+
             const mainMargin = userState?.marginSummary || {};
-            const perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
+            let perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
+
+            // Match trigger orders to positions
+            perpPositions = matchTriggerOrders(perpPositions, activeTriggerOrders);
+
             const perpExchangePnl = perpPositions.reduce((sum, p) => sum + (p.exchangePnl || 0), 0) || parseFloat((userState as any)?.crossMarginSummary?.totalUnrealizedPnl || '0');
 
             setPerpState({
@@ -395,11 +429,15 @@ export function useHyperliquidAccount(
 
             if (dexStateData) {
                 const dexMarginData = dexStateData.marginSummary || {};
-                const dexPositions = dexStateData.assetPositions?.map((p: any) => {
+                let dexPositions = dexStateData.assetPositions?.map((p: any) => {
                     const parsed = parsePosition(p, markets);
                     if (parsed) parsed.isStock = true;
                     return parsed;
                 }).filter(Boolean) as Position[] || [];
+
+                // Match trigger orders to DEX positions
+                dexPositions = matchTriggerOrders(dexPositions, activeTriggerOrders);
+
                 const dexExchangePnl = dexPositions.reduce((sum, p) => sum + (p.exchangePnl || 0), 0);
 
                 setDexState({

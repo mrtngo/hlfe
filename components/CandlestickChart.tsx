@@ -51,6 +51,7 @@ export default function CandlestickChart({
 
     const [timeframe, setTimeframe] = useState<Timeframe>('1h');
     const [isReady, setIsReady] = useState(false);
+    const priceLinesRef = useRef<any[]>([]);
 
     const { selectedMarket, getMarket, positions } = useHyperliquid();
     const marketSymbol = symbol || selectedMarket;
@@ -190,8 +191,18 @@ export default function CandlestickChart({
 
         // Add position lines
         if (currentPosition && candleSeriesRef.current) {
+            // Clear existing lines first
+            priceLinesRef.current.forEach(line => {
+                try {
+                    candleSeriesRef.current?.removePriceLine(line);
+                } catch (e) {
+                    console.error('Error removing price line:', e);
+                }
+            });
+            priceLinesRef.current = [];
+
             // Entry price line
-            candleSeriesRef.current.createPriceLine({
+            const entryLine = candleSeriesRef.current.createPriceLine({
                 price: currentPosition.entryPrice,
                 color: BULLISH,
                 lineWidth: 2,
@@ -199,10 +210,11 @@ export default function CandlestickChart({
                 axisLabelVisible: true,
                 title: 'Entry',
             });
+            priceLinesRef.current.push(entryLine);
 
             // Liquidation price line
             if (currentPosition.liquidationPrice > 0) {
-                candleSeriesRef.current.createPriceLine({
+                const liqLine = candleSeriesRef.current.createPriceLine({
                     price: currentPosition.liquidationPrice,
                     color: BEARISH,
                     lineWidth: 2,
@@ -210,11 +222,12 @@ export default function CandlestickChart({
                     axisLabelVisible: true,
                     title: 'Liq',
                 });
+                priceLinesRef.current.push(liqLine);
             }
 
             // Take Profit price line
             if (currentPosition.takeProfitPrice && currentPosition.takeProfitPrice > 0) {
-                candleSeriesRef.current.createPriceLine({
+                const tpLine = candleSeriesRef.current.createPriceLine({
                     price: currentPosition.takeProfitPrice,
                     color: '#22D3EE', // Cyan for TP
                     lineWidth: 2,
@@ -222,11 +235,12 @@ export default function CandlestickChart({
                     axisLabelVisible: true,
                     title: 'TP',
                 });
+                priceLinesRef.current.push(tpLine);
             }
 
             // Stop Loss price line
             if (currentPosition.stopLossPrice && currentPosition.stopLossPrice > 0) {
-                candleSeriesRef.current.createPriceLine({
+                const slLine = candleSeriesRef.current.createPriceLine({
                     price: currentPosition.stopLossPrice,
                     color: '#F97316', // Orange for SL
                     lineWidth: 2,
@@ -234,7 +248,16 @@ export default function CandlestickChart({
                     axisLabelVisible: true,
                     title: 'SL',
                 });
+                priceLinesRef.current.push(slLine);
             }
+        } else if (candleSeriesRef.current) {
+            // No position but might have old lines, clear them
+            priceLinesRef.current.forEach(line => {
+                try {
+                    candleSeriesRef.current?.removePriceLine(line);
+                } catch (e) { }
+            });
+            priceLinesRef.current = [];
         }
 
         // Fit content

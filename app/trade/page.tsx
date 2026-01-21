@@ -7,7 +7,9 @@ import { useLanguage } from '@/hooks/useLanguage';
 import dynamic from 'next/dynamic';
 import OrderBook from '@/components/OrderBook';
 import AdvancedOrderPanel from '@/components/AdvancedOrderPanel';
-import PositionDisplay from '@/components/PositionDisplay';
+import PositionCard from '@/components/PositionCard';
+import SetSLTPModal from '@/components/SetSLTPModal';
+import ShareModal from '@/components/ShareModal';
 import { ArrowLeft, ChevronDown, TrendingUp, TrendingDown, Search, X, ArrowUpDown, ChevronUp, BarChart2, List, Clock } from 'lucide-react';
 import TokenLogo from '@/components/TokenLogo';
 
@@ -37,7 +39,8 @@ function TradePageContent() {
         getMarket,
         markets,
         positions,
-        account
+        account,
+        closePosition
     } = useHyperliquid();
 
     // Get symbol from URL or use selected market
@@ -47,6 +50,8 @@ function TradePageContent() {
     const [contentTab, setContentTab] = useState<ContentTab>('chart');
     const [bottomTab, setBottomTab] = useState<BottomTab>('positions');
     const [orderPrice, setOrderPrice] = useState<number | null>(null);
+    const [slTpPosition, setSlTpPosition] = useState<any>(null);
+    const [sharePosition, setSharePosition] = useState<any>(null);
 
     // Market selector state
     const [marketTab, setMarketTab] = useState<'crypto' | 'stocks'>('crypto');
@@ -209,37 +214,28 @@ function TradePageContent() {
                 <div className="p-3 bg-black min-h-[100px]">
                     {bottomTab === 'positions' && (
                         positions && positions.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-4">
                                 {positions.map((pos) => (
-                                    <div
+                                    <PositionCard
                                         key={pos.symbol}
-                                        className={`p-3 rounded-lg border cursor-pointer ${pos.symbol === symbol ? 'border-[#FFFF00]/50 bg-[#FFFF00]/5' : 'border-[#FFFF00]/20 bg-black'}`}
+                                        position={pos}
+                                        onShare={setSharePosition}
+                                        onSetSlTp={setSlTpPosition}
+                                        onClose={async (s) => {
+                                            if (confirm(t.positions.closePosition)) {
+                                                try {
+                                                    await closePosition(s);
+                                                } catch (e) {
+                                                    console.error('Failed to close position:', e);
+                                                }
+                                            }
+                                        }}
                                         onClick={() => {
                                             setSymbol(pos.symbol);
                                             setSelectedMarket(pos.symbol);
                                             router.replace(`/trade?symbol=${pos.symbol}`);
                                         }}
-                                    >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <TokenLogo symbol={pos.symbol} size={20} />
-                                                <span className="text-sm font-medium text-[#FFFF00]">
-                                                    {pos.symbol.replace('-USD', '').replace('-PERP', '')}
-                                                </span>
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${pos.side === 'long' ? 'bg-[#34C759]/20 text-[#34C759]' : 'bg-[#FF3B30]/20 text-[#FF3B30]'}`}>
-                                                    {pos.side === 'long' ? 'LONG' : 'SHORT'} {pos.leverage}x
-                                                </span>
-                                            </div>
-                                            <span className={`text-sm font-mono ${pos.unrealizedPnl >= 0 ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
-                                                {pos.unrealizedPnl >= 0 ? '+' : ''}${pos.unrealizedPnl.toFixed(2)}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between text-[10px] text-[#FFFF00]/50">
-                                            <span>Size: {Math.abs(pos.size).toFixed(4)}</span>
-                                            <span>Entry: ${pos.entryPrice.toFixed(2)}</span>
-                                            <span>Mark: ${pos.markPrice.toFixed(2)}</span>
-                                        </div>
-                                    </div>
+                                    />
                                 ))}
                             </div>
                         ) : (
@@ -471,6 +467,22 @@ function TradePageContent() {
                     </div>
                 );
             })()}
+
+            {/* Modals for shared PositionCard */}
+            {slTpPosition && (
+                <SetSLTPModal
+                    isOpen={!!slTpPosition}
+                    onClose={() => setSlTpPosition(null)}
+                    position={slTpPosition}
+                />
+            )}
+            {sharePosition && (
+                <ShareModal
+                    isOpen={!!sharePosition}
+                    onClose={() => setSharePosition(null)}
+                    position={sharePosition}
+                />
+            )}
         </div>
     );
 }
