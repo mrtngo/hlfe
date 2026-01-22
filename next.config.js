@@ -50,7 +50,7 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https: http:",
       "font-src 'self' data:",
-      "connect-src 'self' https://api.hyperliquid.xyz wss://api.hyperliquid.xyz https://api.hyperliquid-testnet.xyz wss://api.hyperliquid-testnet.xyz https://app.hyperliquid.xyz https://app.trade.xyz https://api.rhino.fi https://*.supabase.co https://auth.privy.io https://*.privy.io https://www.datos.gov.co https://unavatar.io https://wise.com https://raw.githubusercontent.com",
+      "connect-src 'self' https://api.hyperliquid.xyz wss://api.hyperliquid.xyz https://api.hyperliquid-testnet.xyz wss://api.hyperliquid-testnet.xyz https://app.hyperliquid.xyz https://app.trade.xyz https://api.rhino.fi https://*.supabase.co https://auth.privy.io https://*.privy.io https://*.privy.systems wss://*.privy.systems https://www.datos.gov.co https://unavatar.io https://wise.com https://raw.githubusercontent.com",
       "frame-src 'self' https://auth.privy.io https://*.privy.io",
       "frame-ancestors 'none'",
       "form-action 'self'",
