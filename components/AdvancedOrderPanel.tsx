@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { AlertCircle, Check, ChevronDown } from 'lucide-react';
+import { AlertCircle, Check, ChevronDown, Zap, X } from 'lucide-react';
 
 // Order types
 type OrderType = 'market' | 'limit';
@@ -21,6 +21,9 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
         account,
         positions,
         connected,
+        dexAbstractionEnabled,
+        dexAbstractionLoading,
+        enableDexAbstraction,
     } = useHyperliquid();
 
     const marketSymbol = symbol || selectedMarket;
@@ -47,6 +50,10 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showLeverageDropdown, setShowLeverageDropdown] = useState(false);
+    const [showStockApprovalModal, setShowStockApprovalModal] = useState(false);
+
+    // Check if this is a stock/XYZ asset
+    const isStockAsset = market?.isStock === true || market?.onlyIsolated === true;
 
     // Available balance
     const availableMargin = account?.availableMargin || 0;
@@ -102,6 +109,12 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             return;
         }
 
+        // Check if trying to trade a stock without DEX abstraction enabled
+        if (isStockAsset && !dexAbstractionEnabled) {
+            setShowStockApprovalModal(true);
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -123,7 +136,19 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
         } finally {
             setLoading(false);
         }
-    }, [marketSymbol, size, price, orderType, side, leverage, maxLeverage, reduceOnly, connected, placeOrder]);
+    }, [marketSymbol, size, price, orderType, side, leverage, maxLeverage, reduceOnly, connected, placeOrder, isStockAsset, dexAbstractionEnabled]);
+
+    // Handle enabling stock trading
+    const handleEnableStocks = async () => {
+        const result = await enableDexAbstraction();
+        setShowStockApprovalModal(false);
+        if (result.success) {
+            // Show success message, user can now click to place order
+            setError(null);
+        } else {
+            setError(result.message);
+        }
+    };
 
     const formatPrice = (p: number) => {
         if (p >= 1000) return p.toFixed(2);
@@ -409,6 +434,56 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     `${side === 'buy' ? 'Buy / Long' : 'Sell / Short'} ${coin}`
                 )}
             </button>
+
+            {/* Stock Approval Modal */}
+            {showStockApprovalModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[#111111] border border-[#FFFF00]/30 rounded-2xl p-6 max-w-sm w-full">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <Zap className="w-5 h-5 text-blue-400" />
+                                <h3 className="text-lg font-bold text-white">Enable Stock Trading</h3>
+                            </div>
+                            <button
+                                onClick={() => setShowStockApprovalModal(false)}
+                                className="text-white/50 hover:text-white"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <p className="text-white/70 text-sm mb-6">
+                            To trade <span className="text-[#FFFF00] font-bold">{coin}</span> and other XYZ stocks, you need to enable stock trading on your account. This is a one-time approval.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowStockApprovalModal(false)}
+                                className="flex-1 py-3 rounded-xl font-bold text-sm bg-white/10 text-white/70 hover:bg-white/20 transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleEnableStocks}
+                                disabled={dexAbstractionLoading}
+                                className="flex-1 py-3 rounded-xl font-bold text-sm bg-blue-500 text-white hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {dexAbstractionLoading ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Enabling...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Zap className="w-4 h-4" />
+                                        Enable Stocks
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
