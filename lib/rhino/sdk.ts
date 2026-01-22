@@ -61,17 +61,20 @@ export async function getBridgeQuote(params: {
 /**
  * Execute bridge transaction using Privy embedded wallet
  */
-export async function executeBridge(params: {
+/**
+ * Get bridge transaction data (for use with Privy's gas sponsorship)
+ * Returns the raw tx params without executing - caller handles sending
+ */
+export async function getBridgeTransaction(params: {
   fromChainKey: SupportedChainKey;
   toChainKey: SupportedChainKey;
   token: string;
   amount: string;
   walletAddress: Address;
-  ethereumProvider: any; // Privy's Ethereum provider
-}) {
-  const { fromChainKey, toChainKey, token, amount, walletAddress, ethereumProvider } = params;
+}): Promise<{ to: string; data: string; value: string }> {
+  const { fromChainKey, toChainKey, token, amount, walletAddress } = params;
 
-  // Step 1: Get quote with depositor and recipient addresses
+  // Step 1: Get quote
   const quote = await getBridgeQuote({
     fromChainKey,
     toChainKey,
@@ -96,7 +99,36 @@ export async function executeBridge(params: {
 
   const { commitment } = await response.json();
 
-  // Step 3: Execute the transaction using Privy wallet
+  // Return raw tx data for Privy to send with sponsorship
+  return {
+    to: commitment.to,
+    data: commitment.data,
+    value: commitment.value || '0',
+  };
+}
+
+/**
+ * Execute bridge transaction using viem (without gas sponsorship)
+ * @deprecated Use getBridgeTransaction + Privy's sendTransaction for gas sponsorship
+ */
+export async function executeBridge(params: {
+  fromChainKey: SupportedChainKey;
+  toChainKey: SupportedChainKey;
+  token: string;
+  amount: string;
+  walletAddress: Address;
+  ethereumProvider: any;
+}) {
+  const { fromChainKey, toChainKey, token, amount, walletAddress, ethereumProvider } = params;
+
+  const txData = await getBridgeTransaction({
+    fromChainKey,
+    toChainKey,
+    token,
+    amount,
+    walletAddress,
+  });
+
   const chain = SUPPORTED_CHAINS[fromChainKey];
   const walletClient = createWalletClient({
     account: walletAddress,
@@ -104,16 +136,14 @@ export async function executeBridge(params: {
     transport: custom(ethereumProvider),
   });
 
-  // Send the transaction to the bridge contract
   const hash = await walletClient.sendTransaction({
-    to: commitment.to as Address,
-    data: commitment.data as `0x${string}`,
-    value: BigInt(commitment.value || '0'),
+    to: txData.to as Address,
+    data: txData.data as `0x${string}`,
+    value: BigInt(txData.value || '0'),
   });
 
   return {
     hash,
-    quote,
     fromChain: CHAIN_NAME_MAP[fromChainKey],
     toChain: CHAIN_NAME_MAP[toChainKey],
   };

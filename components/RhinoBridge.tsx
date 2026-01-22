@@ -12,7 +12,7 @@ import {
     ExternalLink
 } from 'lucide-react';
 import {
-    executeBridge,
+    getBridgeTransaction,
     type SupportedChainKey,
     SUPPORTED_CHAINS
 } from '@/lib/rhino/sdk';
@@ -52,26 +52,35 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
         setError('');
 
         try {
-            // Get Ethereum provider from Privy wallet
-            const provider = await activeWallet.getEthereumProvider();
-
             // Switch to the source chain if needed
             const sourceChainId = SUPPORTED_CHAINS[fromChain].id;
             await activeWallet.switchChain(sourceChainId);
 
             setStep('bridging');
 
-            // Execute the bridge using Rhino SDK
-            const result = await executeBridge({
+            // Get bridge transaction data from the SDK (quote + commit)
+            const bridgeTx = await getBridgeTransaction({
                 fromChainKey: fromChain,
-                toChainKey: 'arbitrum', // Always bridge to Arbitrum
+                toChainKey: 'arbitrum',
                 token: 'USDC',
                 amount: parseUnits(amount, 6).toString(),
                 walletAddress: activeWallet.address as Address,
-                ethereumProvider: provider,
             });
 
-            setTxHash(result.hash);
+            // Use Privy's sendTransaction for gas sponsorship!
+            // This goes through Privy's paymaster instead of raw viem
+            const provider = await activeWallet.getEthereumProvider();
+            const txHash = await provider.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from: activeWallet.address,
+                    to: bridgeTx.to,
+                    data: bridgeTx.data,
+                    value: bridgeTx.value ? `0x${BigInt(bridgeTx.value).toString(16)}` : '0x0',
+                }],
+            });
+
+            setTxHash(txHash as string);
             setStep('success');
 
             // Call completion callback after a delay
