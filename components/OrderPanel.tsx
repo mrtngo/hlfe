@@ -20,6 +20,8 @@ export default function OrderPanel() {
 
     const [mode, setMode] = useState<OrderMode>('basic');
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
+    const [basicOrderType, setBasicOrderType] = useState<'market' | 'limit'>('market');
+    const [basicLimitPrice, setBasicLimitPrice] = useState<string>('');
 
     // Basic mode state (margin amount - position size = margin * leverage)
     const [marginAmount, setMarginAmount] = useState<string>('');
@@ -172,8 +174,12 @@ export default function OrderPanel() {
 
         setLoading(true);
         try {
-            const orderType = mode === 'basic' ? 'market' : 'limit';
-            const price = mode === 'advanced' ? parseFloat(limitPrice) : undefined;
+            // In basic mode, use basicOrderType; in advanced mode, always limit
+            const orderType = mode === 'basic' ? basicOrderType : 'limit';
+            // For limit orders, use the appropriate limit price based on mode
+            const price = orderType === 'limit'
+                ? (mode === 'basic' ? parseFloat(basicLimitPrice) : parseFloat(limitPrice))
+                : undefined;
 
             const orderResult = await placeOrder(
                 selectedMarket,
@@ -275,6 +281,58 @@ export default function OrderPanel() {
                                 <span className="tracking-wide">{t.order.sell}</span>
                             </button>
                         </div>
+
+                        {/* Order Type Toggle - Market/Limit */}
+                        <div className="grid grid-cols-2 gap-0 px-2">
+                            <button
+                                onClick={() => setBasicOrderType('market')}
+                                className={`py-2.5 rounded-l-xl text-sm font-semibold transition-all ${basicOrderType === 'market'
+                                    ? 'bg-white/10 text-white border border-white/20'
+                                    : 'bg-black/20 text-white/50 border border-white/5 hover:text-white/70'
+                                    }`}
+                            >
+                                Market
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setBasicOrderType('limit');
+                                    // Pre-fill with current price if empty
+                                    if (!basicLimitPrice && currentPrice > 0) {
+                                        setBasicLimitPrice(currentPrice.toFixed(2));
+                                    }
+                                }}
+                                className={`py-2.5 rounded-r-xl text-sm font-semibold transition-all ${basicOrderType === 'limit'
+                                    ? 'bg-white/10 text-white border border-white/20'
+                                    : 'bg-black/20 text-white/50 border border-white/5 hover:text-white/70'
+                                    }`}
+                            >
+                                Limit
+                            </button>
+                        </div>
+
+                        {/* Limit Price Input - Only show for limit orders */}
+                        {basicOrderType === 'limit' && (
+                            <div className="px-2">
+                                <div className="flex justify-between text-xs mb-2">
+                                    <span className="text-white/50">{t.order.limitPrice}</span>
+                                    <button
+                                        onClick={() => setBasicLimitPrice(currentPrice.toFixed(6))}
+                                        className="text-yellow-500 hover:underline font-semibold"
+                                    >
+                                        {t.order.current}: {formatCurrency(currentPrice)}
+                                    </button>
+                                </div>
+                                <input
+                                    type="number"
+                                    value={basicLimitPrice}
+                                    onChange={(e) => setBasicLimitPrice(e.target.value)}
+                                    placeholder={currentPrice.toFixed(2)}
+                                    step="0.01"
+                                    min="0"
+                                    className="w-full py-3 px-4 bg-bg-tertiary border border-white/10 rounded-xl text-white text-lg font-mono focus:border-yellow-500/50 outline-none"
+                                />
+                            </div>
+                        )}
 
                         {/* Margin Input */}
                         <div>
@@ -419,7 +477,7 @@ export default function OrderPanel() {
                                 {/* Fee Breakdown */}
                                 <div className="space-y-1 pt-2 border-t border-white/5">
                                     <div className="flex justify-between text-xs">
-                                        <span className="text-coffee-medium/70">Exchange Fee (0.035%)</span>
+                                        <span className="text-coffee-medium/70">Exchange Fee (0.045%)</span>
                                         <span className="text-coffee-medium">{formatCurrency(exchangeFee)}</span>
                                     </div>
                                     {BUILDER_CONFIG.enabled && (

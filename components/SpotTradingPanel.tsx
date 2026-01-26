@@ -126,6 +126,8 @@ export default function SpotTradingPanel() {
     // Trading
     const [isBuy, setIsBuy] = useState(true);
     const [amount, setAmount] = useState('');
+    const [orderType, setOrderType] = useState<'market' | 'limit'>('market');
+    const [limitPrice, setLimitPrice] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -326,10 +328,26 @@ export default function SpotTradingPanel() {
 
             const assetIndex = 10000 + selectedPair.index;
             const midPx = selectedPair.price || 0;
-            const slippageBps = 100;
-            const orderPrice = isBuy
-                ? (midPx * (1 + slippageBps / 10000)).toFixed(6)
-                : (midPx * (1 - slippageBps / 10000)).toFixed(6);
+
+            // For market orders, use slippage; for limit orders, use user-specified price
+            let orderPrice: string;
+            let tif: string;
+
+            if (orderType === 'limit') {
+                const userLimitPrice = parseFloat(limitPrice);
+                if (!userLimitPrice || userLimitPrice <= 0) {
+                    throw new Error('Please enter a valid limit price');
+                }
+                orderPrice = userLimitPrice.toFixed(6);
+                tif = 'Gtc'; // Good-til-cancel for limit orders
+            } else {
+                // Market order with slippage
+                const slippageBps = 100; // 1% slippage
+                orderPrice = isBuy
+                    ? (midPx * (1 + slippageBps / 10000)).toFixed(6)
+                    : (midPx * (1 - slippageBps / 10000)).toFixed(6);
+                tif = 'Ioc'; // Immediate-or-cancel for market orders
+            }
 
             const orderAction = {
                 type: 'order',
@@ -339,7 +357,7 @@ export default function SpotTradingPanel() {
                     p: orderPrice,
                     s: amount,
                     r: false,
-                    t: { limit: { tif: 'Ioc' } },
+                    t: { limit: { tif } },
                 }],
                 grouping: 'na',
             };
@@ -754,6 +772,64 @@ export default function SpotTradingPanel() {
                     </button>
                 </div>
 
+                {/* Order Type Toggle - Market/Limit */}
+                <div className="grid grid-cols-2 gap-0 mb-4">
+                    <button
+                        onClick={() => setOrderType('market')}
+                        className={`py-2.5 rounded-l-xl text-sm font-semibold transition-all ${orderType === 'market'
+                            ? 'bg-white/10 text-white border border-white/20'
+                            : 'bg-black/20 text-white/50 border border-white/5 hover:text-white/70'
+                            }`}
+                    >
+                        Market
+                    </button>
+                    <button
+                        onClick={() => {
+                            setOrderType('limit');
+                            // Pre-fill with current price if empty
+                            if (!limitPrice && currentPrice > 0) {
+                                setLimitPrice(currentPrice.toFixed(2));
+                            }
+                        }}
+                        className={`py-2.5 rounded-r-xl text-sm font-semibold transition-all ${orderType === 'limit'
+                            ? 'bg-white/10 text-white border border-white/20'
+                            : 'bg-black/20 text-white/50 border border-white/5 hover:text-white/70'
+                            }`}
+                    >
+                        Limit
+                    </button>
+                </div>
+
+                {/* Limit Price Input - Only show for limit orders */}
+                {orderType === 'limit' && (
+                    <div className="mb-4">
+                        <div className="flex justify-between text-xs mb-2">
+                            <span className="text-white/50">Limit Price</span>
+                            <button
+                                onClick={() => setLimitPrice(currentPrice.toFixed(6))}
+                                className="text-yellow-500 hover:underline font-semibold"
+                            >
+                                Use Current: {formatSmartPrice(currentPrice)}
+                            </button>
+                        </div>
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={limitPrice}
+                                onChange={(e) => setLimitPrice(e.target.value)}
+                                placeholder={currentPrice.toFixed(2)}
+                                step="any"
+                                min="0"
+                                className="w-full py-3 px-4 pr-16 bg-black/30 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-yellow-500/50 outline-none"
+                                style={{ fontSize: '16px' }}
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 text-sm font-semibold">
+                                USD
+                            </span>
+                        </div>
+                    </div>
+                )}
+
                 {/* Balances */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="p-3 bg-black/30 border border-white/5 rounded-xl">
@@ -815,12 +891,24 @@ export default function SpotTradingPanel() {
                 {amountNum > 0 && currentPrice > 0 && (
                     <div className="p-3 bg-black/30 border border-white/10 rounded-xl mb-4 text-sm">
                         <div className="flex justify-between mb-1">
-                            <span className="text-white/50">Price</span>
-                            <span className="text-white font-mono">{formatSmartPrice(currentPrice)}</span>
+                            <span className="text-white/50">Order Type</span>
+                            <span className="text-white font-semibold">{orderType === 'limit' ? 'Limit' : 'Market'}</span>
+                        </div>
+                        <div className="flex justify-between mb-1">
+                            <span className="text-white/50">{orderType === 'limit' ? 'Limit Price' : 'Est. Price'}</span>
+                            <span className="text-white font-mono">
+                                {orderType === 'limit' && limitPrice
+                                    ? formatSmartPrice(parseFloat(limitPrice))
+                                    : formatSmartPrice(currentPrice)}
+                            </span>
                         </div>
                         <div className="flex justify-between pt-1 border-t border-white/5">
                             <span className="text-white/50">{isBuy ? 'Total' : 'Receive'}</span>
-                            <span className="text-yellow-500 font-mono font-bold">{formatSmartPrice(totalValue)}</span>
+                            <span className="text-yellow-500 font-mono font-bold">
+                                {formatSmartPrice(orderType === 'limit' && limitPrice
+                                    ? amountNum * parseFloat(limitPrice)
+                                    : totalValue)}
+                            </span>
                         </div>
                     </div>
                 )}
