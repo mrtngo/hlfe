@@ -55,8 +55,8 @@ const sanitizeError = (error: unknown): string => {
 export async function POST(request: NextRequest) {
   // Rate limiting
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ||
-             request.headers.get('x-real-ip') ||
-             'unknown';
+    request.headers.get('x-real-ip') ||
+    'unknown';
 
   if (isRateLimited(ip)) {
     return NextResponse.json(
@@ -93,12 +93,20 @@ export async function POST(request: NextRequest) {
     // Commit the quote to get transaction data
     const commitResult = await rhino.api.bridge.commitQuote(quoteId);
 
+    // Debug: Log the full response structure
+    console.log('Rhino commitQuote response:', JSON.stringify(commitResult, null, 2));
+
     if (commitResult.error) {
       throw new Error(JSON.stringify(commitResult.error));
     }
 
+    // The SDK response might have different structure
+    // Try to extract transaction data from various possible locations
+    const txData = commitResult.data || commitResult;
+    console.log('Transaction data structure:', JSON.stringify(txData, null, 2));
+
     return NextResponse.json({
-      commitment: commitResult.data,
+      commitment: txData,
     });
   } catch (error: unknown) {
     console.error('Bridge build error:', error);

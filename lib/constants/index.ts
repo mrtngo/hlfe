@@ -18,6 +18,7 @@ export {
     ORDER_TYPES,
     POSITION_SIDES,
     ORDER_SIDES,
+    DOCS_URL,
 } from './trading';
 
 export {

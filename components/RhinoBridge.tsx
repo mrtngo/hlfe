@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useWallets } from '@privy-io/react-auth';
+import { useState } from 'react';
+import { useWallets, useSendTransaction } from '@privy-io/react-auth';
 import {
     AlertCircle,
     RefreshCw,
@@ -11,13 +11,9 @@ import {
     Loader2,
     ExternalLink
 } from 'lucide-react';
-import {
-    getBridgeTransaction,
-    type SupportedChainKey,
-    SUPPORTED_CHAINS
-} from '@/lib/rhino/sdk';
-import { formatUnits, parseUnits, type Address } from 'viem';
+import { parseUnits, type Address } from 'viem';
 import { tokens } from '@/lib/design-tokens';
+import { arbitrum, mainnet, polygon, base, optimism } from 'viem/chains';
 
 interface RhinoBridgeProps {
     onComplete?: () => void;
@@ -25,12 +21,33 @@ interface RhinoBridgeProps {
 
 type BridgeStep = 'input' | 'confirming' | 'bridging' | 'success' | 'error';
 
+// Supported chains for bridging
+const SUPPORTED_CHAINS = {
+    ethereum: mainnet,
+    polygon: polygon,
+    base: base,
+    optimism: optimism,
+    arbitrum: arbitrum,
+};
+
+type SupportedChainKey = keyof typeof SUPPORTED_CHAINS;
+
+// Chain name mapping for Rhino API
+const CHAIN_NAME_MAP: Record<SupportedChainKey, string> = {
+    ethereum: 'ETHEREUM',
+    polygon: 'MATIC_POS',
+    base: 'BASE',
+    optimism: 'OPTIMISM',
+    arbitrum: 'ARBITRUM',
+};
+
 export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
     const { wallets } = useWallets();
+    const { sendTransaction } = useSendTransaction();
     const activeWallet = wallets?.[0];
 
     // Form state
-    const [fromChain, setFromChain] = useState<SupportedChainKey>('ethereum');
+    const [fromChain, setFromChain] = useState<SupportedChainKey>('base');
     const [amount, setAmount] = useState('');
     const [step, setStep] = useState<BridgeStep>('input');
     const [error, setError] = useState('');
@@ -58,29 +75,73 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
 
             setStep('bridging');
 
-            // Get bridge transaction data from the SDK (quote + commit)
-            const bridgeTx = await getBridgeTransaction({
-                fromChainKey: fromChain,
-                toChainKey: 'arbitrum',
-                token: 'USDC',
-                amount: parseUnits(amount, 6).toString(),
-                walletAddress: activeWallet.address as Address,
+            // Call our API endpoint that uses the Rhino SDK's bridge() method with chain adapter
+            const response = await fetch('/api/bridge/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fromChain: CHAIN_NAME_MAP[fromChain],
+                    toChain: 'ARBITRUM',
+                    token: 'USDC',
+                    amount: parseUnits(amount, 6).toString(),
+                    depositor: activeWallet.address,
+                    recipient: activeWallet.address,
+                }),
             });
 
-            // Use Privy's sendTransaction for gas sponsorship!
-            // This goes through Privy's paymaster instead of raw viem
-            const provider = await activeWallet.getEthereumProvider();
-            const txHash = await provider.request({
-                method: 'eth_sendTransaction',
-                params: [{
-                    from: activeWallet.address,
-                    to: bridgeTx.to,
-                    data: bridgeTx.data,
-                    value: bridgeTx.value ? `0x${BigInt(bridgeTx.value).toString(16)}` : '0x0',
-                }],
-            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to prepare bridge');
+            }
 
-            setTxHash(txHash as string);
+            const bridgeData = await response.json();
+            console.log('Bridge data from API:', bridgeData);
+
+            // Step 1: Approve the bridge contract to spend tokens (if needed)
+            if (bridgeData.approval) {
+                console.log('Sending approval transaction...');
+                try {
+                    const approvalResult = await sendTransaction(
+                        {
+                            to: bridgeData.approval.to as `0x${string}`,
+                            data: bridgeData.approval.data as `0x${string}`,
+                            value: BigInt(0),
+                            chainId: sourceChainId,
+                        },
+                        {
+                            sponsor: true,
+                        }
+                    );
+                    console.log('Approval tx hash:', approvalResult.hash);
+
+                    // Wait a bit for the approval to be mined
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                } catch (approvalError: any) {
+                    // If approval fails with "already approved" or similar, continue
+                    console.log('Approval may already exist:', approvalError.message);
+                }
+            }
+
+            // Step 2: Execute the bridge deposit
+            if (bridgeData.transaction) {
+                console.log('Sending deposit transaction...');
+                const result = await sendTransaction(
+                    {
+                        to: bridgeData.transaction.to as `0x${string}`,
+                        data: bridgeData.transaction.data as `0x${string}`,
+                        value: bridgeData.transaction.value ? BigInt(bridgeData.transaction.value) : BigInt(0),
+                        chainId: sourceChainId,
+                    },
+                    {
+                        sponsor: true,
+                    }
+                );
+
+                setTxHash(result.hash || '');
+            } else {
+                setTxHash(bridgeData.depositTxHash || '');
+            }
+
             setStep('success');
 
             // Call completion callback after a delay
@@ -139,7 +200,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
 
                 {txHash && (
                     <a
-                        href={`https://etherscan.io/tx/${txHash}`}
+                        href={`https://arbiscan.io/tx/${txHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{

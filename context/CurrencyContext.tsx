@@ -64,7 +64,22 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         });
     }, []);
 
-    const formatCurrency = useCallback((value: number, maximumFractionDigits: number = 2) => {
+    const formatCurrency = useCallback((value: number, maximumFractionDigits?: number) => {
+        // Auto-detect appropriate decimals for small prices if not explicitly specified
+        let decimals = maximumFractionDigits;
+        if (decimals === undefined) {
+            const absValue = Math.abs(value);
+            if (absValue > 0 && absValue < 0.0001) {
+                decimals = 8; // Very small prices (e.g., $0.00001234)
+            } else if (absValue > 0 && absValue < 0.01) {
+                decimals = 6; // Small prices (e.g., $0.001234)
+            } else if (absValue > 0 && absValue < 1) {
+                decimals = 4; // Sub-dollar prices (e.g., $0.1234)
+            } else {
+                decimals = 2; // Normal prices
+            }
+        }
+
         if (currency === 'COP') {
             const copValue = value * exchangeRate;
             // Use 'es-CO' for dots/commas but manually add COP prefix to avoid ambiguity
@@ -77,8 +92,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
-            maximumFractionDigits,
-            minimumFractionDigits: 2
+            maximumFractionDigits: decimals,
+            minimumFractionDigits: Math.min(2, decimals)
         }).format(value);
     }, [currency, exchangeRate]);
 

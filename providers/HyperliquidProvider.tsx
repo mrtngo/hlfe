@@ -173,7 +173,24 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [isConnected, setIsConnected] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const [selectedMarket, setSelectedMarket] = useState<string>('BTC-USD');
+    // Load cached market from localStorage on mount, fallback to BTC-USD
+    const getInitialMarket = () => {
+        if (typeof window !== 'undefined') {
+            const cached = localStorage.getItem('hlfe_last_market');
+            if (cached) return cached;
+        }
+        return 'BTC-USD';
+    };
+
+    const [selectedMarket, setSelectedMarketState] = useState<string>(getInitialMarket);
+
+    // Wrapper to persist market selection to localStorage
+    const setSelectedMarket = useCallback((symbol: string) => {
+        setSelectedMarketState(symbol);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('hlfe_last_market', symbol);
+        }
+    }, []);
 
     // Use real market data - This is now the ONLY place calling useMarketData
     const { markets: realMarkets, loading: marketsLoading, refreshMarketData } = useMarketData();

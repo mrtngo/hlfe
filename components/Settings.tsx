@@ -7,7 +7,8 @@ import { clearAgentWallet } from '@/lib/agent-wallet';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useUser } from '@/hooks/useUser';
-import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, RotateCcw, DollarSign, Bell, BellOff, Smartphone } from 'lucide-react';
+import { DOCS_URL } from '@/lib/constants';
+import { Wallet, Shield, HelpCircle, Zap, CheckCircle2, AlertCircle, Copy, Check, Globe, RotateCcw, DollarSign, Bell, BellOff, Smartphone, Book, ExternalLink } from 'lucide-react';
 
 export default function Settings() {
     const { t, language, setLanguage } = useLanguage();
@@ -420,6 +421,20 @@ export default function Settings() {
                         </div>
                     </div>
                 </div>
+
+                {/* Documentation */}
+                <a
+                    href={DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-bg-secondary border border-white/10 rounded-xl p-4 flex items-center justify-between hover:bg-bg-hover transition-colors group"
+                >
+                    <div className="flex items-center gap-3">
+                        <Book className="w-5 h-5 text-primary" />
+                        <span className="font-semibold text-white">Documentation</span>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors" />
+                </a>
 
                 {/* Powered by Hyperliquid */}
                 <div className="pt-8 pb-4 flex justify-center">

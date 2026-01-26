@@ -7,7 +7,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign, ArrowLeftRight } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign, ArrowLeftRight, Book } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import FeeCalculatorModal from '@/components/FeeCalculatorModal';
@@ -17,7 +17,7 @@ import ShareModal from '@/components/ShareModal';
 import PositionCard from '@/components/PositionCard';
 import type { Market } from '@/hooks/useHyperliquid';
 import type { Position } from '@/types/hyperliquid';
-import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
+import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST, DOCS_URL } from '@/lib/constants';
 import { CATEGORIES, getTokenCategories, isInCategory, type TokenCategory } from '@/lib/token-categories';
 
 const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
@@ -191,6 +191,19 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             {currency}
                         </button>
                     </h1>
+
+                    <div className="flex justify-center mb-8">
+                        <a
+                            href={DOCS_URL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold hover:bg-primary/20 transition-all pointer-events-auto"
+                        >
+                            <Book className="w-3.5 h-3.5" />
+                            Documentation
+                            <ArrowUpRight className="w-3 h-3" />
+                        </a>
+                    </div>
 
                     {/* Portfolio Value and 30-day Movement */}
                     <div className="space-y-6">

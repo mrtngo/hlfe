@@ -30,6 +30,7 @@ export default function OrderPanel() {
 
     // Shared state
     const [leverage, setLeverage] = useState<number>(1);
+    const [leverageModified, setLeverageModified] = useState(false); // Track if user has touched leverage
     const [marginMode, setMarginMode] = useState<MarginMode>('isolated');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string>('');
@@ -67,6 +68,17 @@ export default function OrderPanel() {
     const fee = exchangeFee + builderFee;
     const totalRequired = requiredMargin + fee;
 
+    // Calculate max margin accounting for fees (for slider max)
+    // When user slides to max, they should still have enough for fees
+    // Fee is proportional to notional = margin * leverage, so: fee = margin * leverage * feeRate
+    // totalRequired = margin + margin * leverage * feeRate = margin * (1 + leverage * feeRate)
+    // availableMargin = margin * (1 + leverage * feeRate)
+    // margin = availableMargin / (1 + leverage * feeRate)
+    const feeRate = 0.00035 + (BUILDER_CONFIG.enabled ? BUILDER_CONFIG.fee / 100000 : 0);
+    const maxMarginAfterFees = account.availableMargin > 0
+        ? account.availableMargin / (1 + leverage * feeRate)
+        : 0;
+
     // Hyperliquid liquidation formula accounting for maintenance margin
     // Maintenance margin = 50% of initial margin at max leverage
     // Maintenance leverage = maxLeverage * 2
@@ -88,14 +100,34 @@ export default function OrderPanel() {
 
     const apiSide = orderSide === 'long' ? 'buy' : 'sell';
 
-    // Memoized leverage handlers to prevent re-renders
-    const decreaseLeverage = useCallback((amount: number) => {
-        setLeverage(prev => Math.max(1, prev - amount));
-    }, []);
+    // Reset leverage modified state when market changes
+    useEffect(() => {
+        setLeverageModified(false);
+        setLeverage(1);
+    }, [selectedMarket]);
 
-    const increaseLeverage = useCallback((amount: number) => {
-        setLeverage(prev => Math.min(maxLeverage, prev + amount));
-    }, [maxLeverage]);
+    // Leverage handlers: first press sets to button value, subsequent presses add/subtract
+    const handleLeverageDecrease = useCallback((buttonValue: number) => {
+        if (!leverageModified) {
+            // First press: set leverage to button value directly
+            setLeverage(Math.max(1, buttonValue));
+            setLeverageModified(true);
+        } else {
+            // Subsequent presses: subtract
+            setLeverage(prev => Math.max(1, prev - buttonValue));
+        }
+    }, [leverageModified]);
+
+    const handleLeverageIncrease = useCallback((buttonValue: number) => {
+        if (!leverageModified) {
+            // First press: set leverage to button value directly
+            setLeverage(Math.min(maxLeverage, buttonValue));
+            setLeverageModified(true);
+        } else {
+            // Subsequent presses: add
+            setLeverage(prev => Math.min(maxLeverage, prev + buttonValue));
+        }
+    }, [leverageModified, maxLeverage]);
 
     // Set margin mode for HIP-3 markets
     useEffect(() => {
@@ -269,21 +301,21 @@ export default function OrderPanel() {
                                 max={account.availableMargin}
                             />
 
-                            {/* Slider */}
+                            {/* Slider - uses maxMarginAfterFees so user can always place order at max */}
                             <input
                                 type="range"
                                 min="0"
-                                max={account.availableMargin > 0 ? account.availableMargin : 100}
+                                max={maxMarginAfterFees > 0 ? maxMarginAfterFees : 100}
                                 step="0.01"
                                 value={marginValue}
                                 onChange={(e) => {
-                                    const val = Math.min(parseFloat(e.target.value), account.availableMargin);
+                                    const val = Math.min(parseFloat(e.target.value), maxMarginAfterFees);
                                     setMarginAmount(val.toString());
                                 }}
                                 className="w-full h-[4px] rounded-full appearance-none cursor-pointer"
                                 style={{
-                                    background: account.availableMargin > 0
-                                        ? `linear-gradient(to right, #FFFF00 0%, #FFFF00 ${(marginValue / account.availableMargin) * 100}%, #3A3A3C ${(marginValue / account.availableMargin) * 100}%, #3A3A3C 100%)`
+                                    background: maxMarginAfterFees > 0
+                                        ? `linear-gradient(to right, #FFFF00 0%, #FFFF00 ${(marginValue / maxMarginAfterFees) * 100}%, #3A3A3C ${(marginValue / maxMarginAfterFees) * 100}%, #3A3A3C 100%)`
                                         : '#3A3A3C',
                                 }}
                             />
@@ -339,7 +371,7 @@ export default function OrderPanel() {
                                     return (
                                         <button
                                             key={`lev-sub-${dec}`}
-                                            onClick={() => decreaseLeverage(dec)}
+                                            onClick={() => handleLeverageDecrease(dec)}
                                             disabled={isDisabled}
                                             className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center leverage-btn ${isDisabled ? 'leverage-btn-disabled' : ''}`}
                                             style={{ minHeight: '56px' }}
@@ -355,7 +387,7 @@ export default function OrderPanel() {
                                     return (
                                         <button
                                             key={`lev-add-${inc}`}
-                                            onClick={() => increaseLeverage(inc)}
+                                            onClick={() => handleLeverageIncrease(inc)}
                                             disabled={isDisabled}
                                             className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center leverage-btn ${isDisabled ? 'leverage-btn-disabled' : ''}`}
                                             style={{ minHeight: '56px' }}

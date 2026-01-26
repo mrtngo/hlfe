@@ -53,12 +53,18 @@ const isValidChainOrToken = (val: string): boolean =>
   typeof val === 'string' && val.length > 0 && val.length <= 50 && /^[a-zA-Z0-9_-]+$/.test(val);
 
 const sanitizeError = (error: unknown): string => {
-  // Never expose raw error messages - could leak internal details
   if (error instanceof Error) {
-    // Only return safe, generic messages
+    console.error('Bridge error details:', error.message);
     if (error.message.includes('insufficient')) return 'Insufficient balance or liquidity';
     if (error.message.includes('rate')) return 'Rate limit exceeded, please try again';
     if (error.message.includes('timeout')) return 'Request timed out, please try again';
+    if (error.message.includes('API key') || error.message.includes('apiKey') || error.message.includes('401')) {
+      return 'Bridge service not configured - missing API key';
+    }
+    // In development, show more details
+    if (process.env.NODE_ENV === 'development') {
+      return `Bridge error: ${error.message}`;
+    }
   }
   return 'Failed to get bridge quote';
 };
@@ -113,8 +119,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (!RHINO_API_KEY) {
+      console.error('RHINO_API_KEY is not set in environment variables');
       return NextResponse.json(
-        { error: 'Bridge service not configured' },
+        { error: 'Bridge service not configured - add RHINO_API_KEY to .env.local' },
         { status: 500 }
       );
     }

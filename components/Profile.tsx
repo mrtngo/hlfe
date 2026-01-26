@@ -7,8 +7,9 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign, ArrowLeftRight, Bell, BellOff, Smartphone, CheckCircle2 } from 'lucide-react';
+import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign, ArrowLeftRight, Bell, BellOff, Smartphone, CheckCircle2, Book, ExternalLink } from 'lucide-react';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import { DOCS_URL } from '@/lib/constants';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import TransferModal from './TransferModal';
 
@@ -514,7 +515,6 @@ export default function Profile() {
                             {syncResult || 'Sync'}
                         </button>
                     </div>
-
                     {/* Stock & Export Row */}
                     <div className="grid grid-cols-2 gap-4">
                         {/* Stock Trading */}
@@ -543,6 +543,18 @@ export default function Profile() {
                         )}
                     </div>
                 </div>
+
+                {/* Documentation Link */}
+                <a
+                    href={DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-4 bg-brand/10 hover:bg-brand/20 border border-brand/30 rounded-2xl text-brand font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                >
+                    <Book className="w-4 h-4" />
+                    Documentation
+                    <ExternalLink className="w-3 h-3 opacity-50" />
+                </a>
             </div>
 
             {/* ===== DISCONNECT BUTTON ===== */}

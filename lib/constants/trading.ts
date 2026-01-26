@@ -59,3 +59,7 @@ export const ORDER_SIDES = {
     BUY: 'buy',
     SELL: 'sell',
 } as const;
+/**
+ * Documentation URL
+ */
+export const DOCS_URL = 'https://docs.rayo.trade';
