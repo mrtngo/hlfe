@@ -60,8 +60,8 @@ export default function OrderPanel() {
     const requiredMargin = mode === 'basic' ? marginValue : notionalValue / leverage;
 
     // Fee breakdown for transparency
-    // Exchange fee: ~0.035% for taker orders (market orders)
-    const exchangeFee = notionalValue * 0.00035;
+    // Exchange fee: 0.045% for taker orders (market orders)
+    const exchangeFee = notionalValue * 0.00045;
     // Builder fee: 0.03% (30 tenths of basis points)
     const builderFee = BUILDER_CONFIG.enabled ? notionalValue * (BUILDER_CONFIG.fee / 100000) : 0;
     // Total fee
@@ -74,28 +74,25 @@ export default function OrderPanel() {
     // totalRequired = margin + margin * leverage * feeRate = margin * (1 + leverage * feeRate)
     // availableMargin = margin * (1 + leverage * feeRate)
     // margin = availableMargin / (1 + leverage * feeRate)
-    const feeRate = 0.00035 + (BUILDER_CONFIG.enabled ? BUILDER_CONFIG.fee / 100000 : 0);
+    const feeRate = 0.00045 + (BUILDER_CONFIG.enabled ? BUILDER_CONFIG.fee / 100000 : 0);
     const maxMarginAfterFees = account.availableMargin > 0
         ? account.availableMargin / (1 + leverage * feeRate)
         : 0;
 
-    // Hyperliquid liquidation formula accounting for maintenance margin
-    // Maintenance margin = 50% of initial margin at max leverage
-    // Maintenance leverage = maxLeverage * 2
-    // l = 1 / maintenance_leverage
-    const maintenanceLeverage = maxLeverage * 2;
-    const l = 1 / maintenanceLeverage;
-
-    // For isolated margin:
-    // liq_price = entry_price - side * margin / position_size / (1 - l * side)
-    // where side = 1 for long, -1 for short
+    // Hyperliquid liquidation formula
+    // Maintenance margin = ~50% of initial margin (varies by asset but 50% is a good approximation)
+    // Position is liquidated when equity drops below maintenance margin
+    // For isolated margin position:
+    // Long: liq_price = entry_price * (1 - (1 - MMR) / leverage)
+    // Short: liq_price = entry_price * (1 + (1 - MMR) / leverage)
+    // where MMR = maintenance margin ratio (0.5 = 50% of initial margin)
+    const maintenanceMarginRatio = 0.5; // 50% of initial margin
     const positionSizeInTokens = currentPrice > 0 ? notionalValue / currentPrice : 0;
-    const margin = requiredMargin;
 
     const liquidationPrice = positionSizeInTokens > 0
         ? (orderSide === 'long'
-            ? currentPrice - (margin / positionSizeInTokens) / (1 - l)  // Long: side = 1
-            : currentPrice + (margin / positionSizeInTokens) / (1 + l)) // Short: side = -1
+            ? currentPrice * (1 - (1 - maintenanceMarginRatio) / leverage)  // Long
+            : currentPrice * (1 + (1 - maintenanceMarginRatio) / leverage)) // Short
         : 0;
 
     const apiSide = orderSide === 'long' ? 'buy' : 'sell';

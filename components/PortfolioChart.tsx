@@ -65,9 +65,9 @@ function PortfolioChart() {
 
         // Sort fills chronologically (oldest first)
         const sortedFills = [...fills].sort((a: any, b: any) => a.time - b.time);
-        
+
         // Filter fills within timeframe (or use all if 'All' selected)
-        const relevantFills = cutoffTime > 0 
+        const relevantFills = cutoffTime > 0
             ? sortedFills.filter((f: any) => f.time >= cutoffTime)
             : sortedFills;
 
@@ -84,13 +84,13 @@ function PortfolioChart() {
         // Initial deposit = current equity - total realized PnL
         // This is the original capital before any trading
         const initialDeposit = Math.max(0, currentEquity - totalRealizedPnl);
-        
+
         // Portfolio value at start of timeframe = initial deposit + PnL accumulated before cutoff
         const startingValue = initialDeposit + pnlBeforeCutoff;
 
         // Build portfolio value over time
         const dataPoints: PortfolioDataPoint[] = [];
-        
+
         // Add starting point at cutoff time (or first fill time if All)
         const startTime = cutoffTime > 0 ? cutoffTime : (relevantFills[0]?.time || now - 30 * 24 * 60 * 60 * 1000);
         dataPoints.push({
@@ -101,12 +101,12 @@ function PortfolioChart() {
 
         // Group fills by day for cleaner visualization
         const dailyData: { [key: string]: { pnl: number; timestamp: number } } = {};
-        
+
         relevantFills.forEach((fill: any) => {
             const date = new Date(fill.time);
             const dayKey = date.toISOString().split('T')[0];
             const pnl = parseFloat(fill.closedPnl || '0');
-            
+
             if (!dailyData[dayKey]) {
                 dailyData[dayKey] = { pnl: 0, timestamp: fill.time };
             }
@@ -122,7 +122,7 @@ function PortfolioChart() {
         Object.keys(dailyData).sort().forEach(dayKey => {
             runningValue += dailyData[dayKey].pnl;
             const portfolioValue = Math.max(0, runningValue);
-            
+
             dataPoints.push({
                 time: new Date(dayKey).getTime() + 12 * 60 * 60 * 1000, // Midday for cleaner display
                 value: portfolioValue,
@@ -154,9 +154,9 @@ function PortfolioChart() {
 
     // Prepare chart data
     const chartData = portfolioData.map(point => ({
-        time: new Date(point.time).toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric' 
+        time: new Date(point.time).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
         }),
         timestamp: point.timestamp,
         value: point.value,
@@ -180,12 +180,12 @@ function PortfolioChart() {
         if (active && payload && payload.length) {
             const data = payload[0].payload;
             const date = new Date(data.timestamp * 1000);
-            const dateStr = date.toLocaleDateString('en-US', { 
-                day: 'numeric', 
-                month: 'short', 
-                year: 'numeric' 
+            const dateStr = date.toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
             });
-            
+
             return (
                 <div className="bg-bg-tertiary px-4 py-2 rounded-xl shadow-lg border border-white/10">
                     <p className="text-xs text-coffee-medium mb-1">{dateStr}</p>
@@ -217,9 +217,9 @@ function PortfolioChart() {
                     </div>
                 )}
                 {!userDataLoading && chartData.length > 0 && (
-                    <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart 
-                            data={chartData} 
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                        <ComposedChart
+                            data={chartData}
                             margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
                         >
                             <defs>
@@ -229,7 +229,7 @@ function PortfolioChart() {
                                 </linearGradient>
                             </defs>
                             <YAxis hide domain={[yDomainMin, yDomainMax]} />
-                            <Tooltip 
+                            <Tooltip
                                 content={<CustomTooltip />}
                                 cursor={{ stroke: RAYO_YELLOW, strokeWidth: 1, strokeDasharray: '5 5' }}
                             />
@@ -239,10 +239,10 @@ function PortfolioChart() {
                                 fill="url(#portfolioFillRayo)"
                                 stroke="none"
                             />
-                            <Line 
-                                type="monotone" 
-                                dataKey="value" 
-                                stroke={RAYO_YELLOW} 
+                            <Line
+                                type="monotone"
+                                dataKey="value"
+                                stroke={RAYO_YELLOW}
                                 strokeWidth={2}
                                 dot={false}
                                 activeDot={{ r: 5, fill: RAYO_YELLOW, stroke: RAYO_YELLOW, strokeWidth: 2 }}
@@ -261,8 +261,8 @@ function PortfolioChart() {
                             key={option}
                             onClick={() => handleTimeframeChange(option)}
                             className="flex flex-col items-center px-4 py-2 transition-all border-none outline-none"
-                            style={{ 
-                                color: '#FFFF00', 
+                            style={{
+                                color: '#FFFF00',
                                 background: 'transparent',
                                 opacity: isSelected ? 1 : 0.5
                             }}

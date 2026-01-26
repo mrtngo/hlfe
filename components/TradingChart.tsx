@@ -67,10 +67,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                 fillCoin === marketSymbol.toUpperCase() ||
                 fillCoin.includes(symbolBase);
         });
-        // Debug: log fills info
-        if (fills.length > 0) {
-            console.log('[TradingChart] Fills:', fills.length, 'Symbol:', symbolBase, 'Matched:', filtered.length);
-        }
+
         return filtered.slice(0, 20); // Limit to last 20 trades for performance
     }, [fills, marketSymbol]);
 
@@ -85,13 +82,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
             return cleanP === cleanM;
         });
 
-        if (matched) {
-            console.log(`[TradingChart Debug] Matched position for ${marketSymbol}:`, {
-                symbol: matched.symbol,
-                tp: matched.takeProfitPrice,
-                sl: matched.stopLossPrice
-            });
-        }
+
         return matched;
     }, [positions, marketSymbol]);
 
@@ -208,7 +199,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                     </div>
                 )}
                 {!loading && !error && chartData.length > 0 && (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                         <ComposedChart
                             data={chartData}
                             margin={{ top: 10, right: 0, left: 0, bottom: 10 }}

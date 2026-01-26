@@ -525,6 +525,10 @@ export const db = {
             const { data, error } = await supabase.rpc('get_categories_with_counts');
 
             if (error) {
+                // PGRST202 = function not found - silently return empty (will fallback to getAll)
+                if (error.code === 'PGRST202') {
+                    return [];
+                }
                 console.error('Error fetching categories with counts:', error);
                 return [];
             }

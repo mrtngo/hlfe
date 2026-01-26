@@ -22,7 +22,11 @@ export default function MarketSelector() {
     // Fetch categories on mount
     useEffect(() => {
         const fetchCategories = async () => {
-            const cats = await db.categories.getAllWithCounts();
+            // Try getAllWithCounts first, fallback to getAll if RPC doesn't exist
+            let cats = await db.categories.getAllWithCounts();
+            if (cats.length === 0) {
+                cats = await db.categories.getAll();
+            }
             setCategories(cats);
         };
         fetchCategories();
@@ -410,8 +414,8 @@ export default function MarketSelector() {
                                                         {market.volume24h >= 1_000_000_000
                                                             ? `$${(market.volume24h / 1_000_000_000).toFixed(1)}B`
                                                             : market.volume24h >= 1_000_000
-                                                            ? `$${(market.volume24h / 1_000_000).toFixed(1)}M`
-                                                            : `$${(market.volume24h / 1_000).toFixed(0)}K`
+                                                                ? `$${(market.volume24h / 1_000_000).toFixed(1)}M`
+                                                                : `$${(market.volume24h / 1_000).toFixed(0)}K`
                                                         }
                                                     </span>
                                                 </div>
@@ -423,8 +427,8 @@ export default function MarketSelector() {
                                                             return oi >= 1_000_000_000
                                                                 ? `$${(oi / 1_000_000_000).toFixed(1)}B`
                                                                 : oi >= 1_000_000
-                                                                ? `$${(oi / 1_000_000).toFixed(1)}M`
-                                                                : `$${(oi / 1_000).toFixed(0)}K`;
+                                                                    ? `$${(oi / 1_000_000).toFixed(1)}M`
+                                                                    : `$${(oi / 1_000).toFixed(0)}K`;
                                                         })()}
                                                     </span>
                                                 </div>
