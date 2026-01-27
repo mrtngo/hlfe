@@ -7,7 +7,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign, ArrowLeftRight, Book } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign, ArrowLeftRight, Book, Clock } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import FeeCalculatorModal from '@/components/FeeCalculatorModal';
@@ -15,6 +15,7 @@ import PortfolioChart from '@/components/PortfolioChart';
 import DepositModal from '@/components/DepositModal';
 import ShareModal from '@/components/ShareModal';
 import PositionCard from '@/components/PositionCard';
+import OpenOrdersCard from '@/components/OpenOrdersCard';
 import type { Market } from '@/hooks/useHyperliquid';
 import type { Position } from '@/types/hyperliquid';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST, DOCS_URL } from '@/lib/constants';
@@ -31,7 +32,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const router = useRouter();
     const { t } = useLanguage();
     const { currency, toggleCurrency, formatCurrency } = useCurrency();
-    const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl } = useHyperliquid();
+    const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl, openOrders } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
     const { user } = useUser();
     const [watchlist, setWatchlist] = useState<string[]>([]);
@@ -270,6 +271,38 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                     setSelectedMarket(position.symbol);
                                     onTokenClick?.(position.symbol);
                                 }}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Open Orders */}
+            {openOrders && openOrders.length > 0 && (
+                <div
+                    className="rounded-3xl p-6"
+                    style={{
+                        marginBottom: '32px',
+                        background: 'linear-gradient(135deg, rgba(25, 15, 35, 0.95) 0%, rgba(20, 10, 30, 0.98) 100%)',
+                        border: '2px solid rgba(168, 85, 247, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                    }}
+                >
+                    {/* Section Header */}
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>
+                            <Clock className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">Open Orders</h2>
+                            <p className="text-xs text-white/50">{openOrders.length} pending order{openOrders.length !== 1 ? 's' : ''}</p>
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        {openOrders.map((order, idx) => (
+                            <OpenOrdersCard
+                                key={order.oid || idx}
+                                order={order}
                             />
                         ))}
                     </div>

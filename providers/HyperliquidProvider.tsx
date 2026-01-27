@@ -130,6 +130,7 @@ interface HyperliquidContextType {
     account: AccountState;
     positions: Position[];
     orders: Order[];
+    openOrders: any[]; // Active limit orders
     spotBalances: any[];
 
     // User Data (cached)
@@ -201,6 +202,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         account,
         positions,
         orders,
+        openOrders,
         spotBalances,
         loading: accountLoading,
         lastUpdated,
@@ -2141,6 +2143,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         account,
         positions,
         orders,
+        openOrders,
         spotBalances,
         // Cached user data
         fills,

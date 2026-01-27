@@ -23,6 +23,7 @@ interface AccountHookState {
     account: AccountState;
     positions: Position[];
     orders: Order[];
+    openOrders: any[]; // Active limit orders (non-trigger)
     spotBalances: SpotBalance[];
     loading: boolean;
     rateLimited: boolean;
@@ -136,6 +137,7 @@ export function useHyperliquidAccount(
         positions: []
     });
     const [orders, setOrders] = useState<Order[]>([]);
+    const [openOrders, setOpenOrders] = useState<any[]>([]); // Active limit orders
     const [triggerOrders, setTriggerOrders] = useState<any[]>([]);
     const triggerOrdersRef = useRef<any[]>([]);
     const [spotBalances, setSpotBalances] = useState<SpotBalance[]>([]);
@@ -281,6 +283,11 @@ export function useHyperliquidAccount(
                 })));
             }
 
+            // Store active limit orders (non-trigger)
+            const activeLimitOrders = allOpenOrders.filter((o: any) => !o.isTrigger) || [];
+            setOpenOrders(activeLimitOrders);
+            console.log(`📊 [Init] Found ${activeLimitOrders.length} limit orders for ${normalizedAddress}`);
+
             const mainMargin = userState?.marginSummary || {};
             let perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
             const perpExchangePnl = perpPositions.reduce((sum, p) => sum + (p.exchangePnl || 0), 0) || parseFloat((userState as any)?.crossMarginSummary?.totalUnrealizedPnl || '0');
@@ -418,6 +425,10 @@ export function useHyperliquidAccount(
 
             setTriggerOrders(activeTriggerOrders);
             triggerOrdersRef.current = activeTriggerOrders;
+
+            // Store active limit orders (non-trigger) on refresh too
+            const activeLimitOrders = allOpenOrders.filter((o: any) => !o.isTrigger) || [];
+            setOpenOrders(activeLimitOrders);
 
             const mainMargin = userState?.marginSummary || {};
             let perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
@@ -684,6 +695,7 @@ export function useHyperliquidAccount(
         account: mergedAccount,
         positions: mergedPositions,
         orders,
+        openOrders,
         spotBalances,
         loading,
         rateLimited,

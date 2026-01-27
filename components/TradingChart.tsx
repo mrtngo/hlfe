@@ -13,6 +13,7 @@ import { colors } from '@/rayo-design-system/styles/tokens';
 const CHART_BRAND = colors.brand.primary;      // #FACC15 - Brand yellow
 const CHART_POSITIVE = colors.positive;        // #22C55E - Green for entries
 const CHART_NEGATIVE = colors.negative;        // #EF4444 - Red for liquidations
+const CHART_LIMIT_ORDER = '#A855F7';           // Purple for limit orders
 
 interface TradingChartProps {
     symbol?: string;
@@ -21,7 +22,7 @@ interface TradingChartProps {
 export default function TradingChart({ symbol }: TradingChartProps = {}) {
     const router = useRouter();
     const { t } = useLanguage();
-    const { selectedMarket, getMarket, fills, positions } = useHyperliquid();
+    const { selectedMarket, getMarket, fills, positions, openOrders } = useHyperliquid();
     const [timeframe, setTimeframe] = useState<Timeframe>('1h');
 
     // Get the market to check if it's a stock
@@ -85,6 +86,16 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
 
         return matched;
     }, [positions, marketSymbol]);
+
+    // Get open orders for this symbol (limit orders)
+    const symbolOpenOrders = useMemo(() => {
+        if (!openOrders || openOrders.length === 0 || !marketSymbol) return [];
+        const symbolBase = marketSymbol.replace('-USD', '').replace('-PERP', '').toUpperCase();
+        return openOrders.filter(order => {
+            const orderCoin = (order.coin || '').replace('-PERP', '').replace('xyz:', '').toUpperCase();
+            return orderCoin === symbolBase;
+        }).slice(0, 5); // Limit to 5 orders for chart readability
+    }, [openOrders, marketSymbol]);
 
     // Format data for recharts - simple line chart with OHLC
     const chartData = candles.map(candle => ({
@@ -154,6 +165,10 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                 <span className="text-negative">◆ Liq</span>
                             )}
                         </div>
+                    )}
+                    {/* Limit orders legend */}
+                    {symbolOpenOrders.length > 0 && (
+                        <span className="text-xs" style={{ color: '#A855F7' }}>⬥ Orders ({symbolOpenOrders.length})</span>
                     )}
                     {/* Expand to Advanced Trading */}
                     <button
@@ -318,6 +333,33 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                     }}
                                 />
                             )}
+
+                            {/* Limit Orders - PURPLE */}
+                            {symbolOpenOrders.map((order, idx) => {
+                                const orderPrice = parseFloat(order.limitPx || order.px || '0');
+                                if (orderPrice <= 0) return null;
+                                const isBuy = order.side === 'B' || order.side === 'buy' || order.isBuy === true;
+                                return (
+                                    <ReferenceLine
+                                        key={`limit-${order.oid || idx}`}
+                                        y={orderPrice}
+                                        stroke={CHART_LIMIT_ORDER}
+                                        strokeWidth={1.5}
+                                        strokeDasharray="6 3"
+                                        label={{
+                                            value: `⬥ ${isBuy ? 'Buy' : 'Sell'} $${orderPrice.toFixed(2)}`,
+                                            position: isBuy ? 'insideBottomLeft' : 'insideTopLeft',
+                                            fill: CHART_LIMIT_ORDER,
+                                            fontSize: 9,
+                                            fontWeight: 'bold',
+                                            style: {
+                                                textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                                                paintOrder: 'stroke fill'
+                                            }
+                                        }}
+                                    />
+                                );
+                            })}
 
                             {/* Trade fill markers removed - were breaking chart layout */}
                         </ComposedChart>
