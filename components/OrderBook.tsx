@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { useLanguage } from '@/hooks/useLanguage';
 
 // Colors
 const BULLISH = '#00C853';
@@ -27,6 +28,7 @@ export default function OrderBook({
     levels = 5,
     onPriceClick
 }: OrderBookProps) {
+    const { formatCurrency } = useLanguage();
     const { selectedMarket, getMarket } = useHyperliquid();
     const [bids, setBids] = useState<OrderBookLevel[]>([]);
     const [asks, setAsks] = useState<OrderBookLevel[]>([]);
@@ -123,11 +125,9 @@ export default function OrderBook({
         return Math.max(maxBid, maxAsk);
     }, [bids, asks]);
 
-    // Format price based on value
+    // Use the global formatCurrency for consistent 1-digit asset precision
     const formatPrice = (price: number) => {
-        if (price >= 1000) return price.toFixed(2);
-        if (price >= 1) return price.toFixed(4);
-        return price.toFixed(6);
+        return formatCurrency(price).replace('$', '').trim();
     };
 
     // Format size

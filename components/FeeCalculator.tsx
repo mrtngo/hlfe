@@ -194,7 +194,7 @@ export default function FeeCalculator() {
                             <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
-                                    width: `${item.cost === 0 ? 0 : Math.max(5, (item.cost / calculation[calculation.length - 1].cost) * 100)}%`,
+                                    width: `${item.cost === 0 || calculation.length === 0 ? 0 : Math.max(5, (item.cost / calculation[calculation.length - 1].cost) * 100)}%`,
                                     backgroundColor: item.color
                                 }}
                             />
