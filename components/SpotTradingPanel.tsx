@@ -660,7 +660,7 @@ export default function SpotTradingPanel() {
                             key={tf.value}
                             onClick={() => setTimeframe(tf.value)}
                             className={`px-2 py-1 rounded text-xs font-semibold transition-all ${timeframe === tf.value
-                                ? 'bg-yellow-500 text-white'
+                                ? 'bg-yellow-500 text-black'
                                 : 'bg-white/5 text-white/60 hover:bg-white/10'
                                 }`}
                         >
@@ -753,7 +753,7 @@ export default function SpotTradingPanel() {
                     <button
                         onClick={() => setIsBuy(true)}
                         className={`py-3 rounded-l-xl font-bold transition-all flex items-center justify-center gap-2 ${isBuy
-                            ? 'bg-yellow-500 text-white'
+                            ? 'bg-yellow-500 text-black'
                             : 'bg-black/30 text-red-500 border border-white/10'
                             }`}
                     >
@@ -937,7 +937,7 @@ export default function SpotTradingPanel() {
                     onClick={handleOrder}
                     disabled={loading || !isValidAmount || !connected || !selectedPair}
                     className={`w-full py-4 rounded-full font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isBuy
-                        ? 'bg-yellow-500 hover:brightness-110 text-white'
+                        ? 'bg-yellow-500 hover:brightness-110 text-black'
                         : 'bg-black border border-red-500/50 text-red-500 hover:bg-red-500/10'
                         } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >

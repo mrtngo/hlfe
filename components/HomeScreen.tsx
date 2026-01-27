@@ -233,7 +233,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             <div style={{ marginBottom: '32px' }}>
                 <button
                     onClick={() => setShowDepositModal(true)}
-                    className="w-full py-4 bg-brand mb-8 text-white font-bold rounded-2xl hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                    className="w-full py-4 bg-brand mb-8 text-black font-bold rounded-2xl hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                 >
                     <CreditCard className="w-5 h-5" />
                     Deposit
@@ -500,7 +500,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         className="w-14 h-14 rounded-full bg-brand flex items-center justify-center"
                         style={{ boxShadow: '0 0 20px rgba(255, 255, 0, 0.5)' }}
                     >
-                        <DollarSign className="w-7 h-7 text-white" strokeWidth={2.5} />
+                        <DollarSign className="w-7 h-7 text-black" strokeWidth={2.5} />
                     </div>
                     <div className="text-left">
                         <h3 className="font-bold text-white text-lg mb-1" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}>
@@ -512,7 +512,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     </div>
                 </div>
                 <div className="bg-brand p-3 rounded-xl shadow-lg">
-                    <ArrowUpRight className="w-6 h-6 text-white" strokeWidth={2.5} />
+                    <ArrowUpRight className="w-6 h-6 text-black" strokeWidth={2.5} />
                 </div>
             </button>
 
@@ -777,7 +777,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
                             className={`flex flex-col items-center justify-center gap-2 rounded-3xl font-bold whitespace-nowrap transition-all shrink-0 active:scale-95 ${selectedCategory === category.id
-                                ? 'text-white'
+                                ? 'text-black'
                                 : 'text-white/80 hover:text-white'
                                 }`}
                             style={{

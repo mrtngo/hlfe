@@ -164,7 +164,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     <button
                         onClick={() => setOrderType('limit')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-l-md border transition-colors ${orderType === 'limit'
-                            ? 'bg-brand border-[#FFFF00] text-white'
+                            ? 'bg-brand border-[#FFFF00] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
@@ -173,7 +173,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     <button
                         onClick={() => setOrderType('market')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-r-md border-t border-r border-b transition-colors ${orderType === 'market'
-                            ? 'bg-brand border-[#FFFF00] text-white'
+                            ? 'bg-brand border-[#FFFF00] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
@@ -185,7 +185,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                 <div className="relative">
                     <button
                         onClick={() => setShowLeverageDropdown(!showLeverageDropdown)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-brand border border-[#FFFF00] rounded text-white"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-brand border border-[#FFFF00] rounded text-black"
                     >
                         {Math.min(leverage, maxLeverage)}x
                         <ChevronDown className="w-3 h-3" />
@@ -213,7 +213,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             </div>
                             <button
                                 onClick={() => setShowLeverageDropdown(false)}
-                                className="w-full mt-3 py-1.5 text-xs bg-brand text-white font-bold rounded"
+                                className="w-full mt-3 py-1.5 text-xs bg-brand text-black font-bold rounded"
                             >
                                 Confirm
                             </button>
@@ -268,7 +268,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             />
                             <button
                                 onClick={() => market?.price && setPrice(formatPrice(market.price))}
-                                className="text-[10px] text-white bg-brand font-medium border border-[#FFFF00] px-1.5 py-0.5 rounded"
+                                className="text-[10px] text-black bg-brand font-medium border border-[#FFFF00] px-1.5 py-0.5 rounded"
                             >
                                 Mid
                             </button>
@@ -341,7 +341,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${reduceOnly ? 'bg-brand border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
                             }`}
                     >
-                        {reduceOnly && <Check className="w-3 h-3 text-white" />}
+                        {reduceOnly && <Check className="w-3 h-3 text-black" />}
                     </div>
                     <span className="text-xs text-brand/70">Reduce Only</span>
                 </label>
@@ -352,7 +352,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${enableTpSl ? 'bg-brand border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
                             }`}
                     >
-                        {enableTpSl && <Check className="w-3 h-3 text-white" />}
+                        {enableTpSl && <Check className="w-3 h-3 text-black" />}
                     </div>
                     <span className="text-xs text-brand/70">Take Profit / Stop Loss</span>
                 </label>

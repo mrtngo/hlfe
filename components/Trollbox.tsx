@@ -341,7 +341,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                             boxShadow: '0 4px 20px rgba(255, 255, 0, 0.5)',
                         }}
                     >
-                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
                     </button>
@@ -406,7 +406,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                             <button
                                 type="submit"
                                 disabled={!newMessage.trim() || isSending}
-                                className="p-3.5 rounded-full text-white disabled:opacity-40 disabled:grayscale transition-all hover:scale-110 active:scale-95 flex items-center justify-center shrink-0 shadow-lg"
+                                className="p-3.5 rounded-full text-black disabled:opacity-40 disabled:grayscale transition-all hover:scale-110 active:scale-95 flex items-center justify-center shrink-0 shadow-lg"
                                 style={{
                                     background: !newMessage.trim() || isSending
                                         ? 'rgba(100, 100, 100, 0.5)'

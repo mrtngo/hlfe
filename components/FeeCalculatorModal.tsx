@@ -171,7 +171,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                     key={val}
                                     onClick={() => setAmount(val.toString())}
                                     className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${numericAmount === val
-                                        ? 'bg-brand text-white'
+                                        ? 'bg-brand text-black'
                                         : 'bg-bg-elevated text-white hover:bg-bg-hover border border-white/20'
                                         }`}
                                     style={numericAmount === val ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.4)' } : {}}
@@ -207,7 +207,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`py-3 rounded-full text-sm font-bold flex flex-col items-center gap-1.5 transition-all ${activeTab === tab.id
-                                    ? 'bg-brand text-white shadow-lg'
+                                    ? 'bg-brand text-black shadow-lg'
                                     : 'bg-bg-elevated text-white hover:bg-bg-hover border border-white/20'
                                     }`}
                                 style={activeTab === tab.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
@@ -222,7 +222,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     <div className="space-y-3">
                         {/* Rayo Card */}
                         <div
-                            className="bg-brand rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group text-white"
+                            className="bg-brand rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group text-black"
                         >
                             <div className="absolute inset-0 bg-bg-hover translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12" />
                             <div className="flex items-center gap-3 relative z-10">
@@ -230,13 +230,13 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                     R
                                 </div>
                                 <div>
-                                    <h3 className="text-white font-black text-base">RAYO</h3>
-                                    <p className="text-white/70 text-[10px] font-bold">Tarifa Taker 0.075%</p>
+                                    <h3 className="text-black font-black text-base">RAYO</h3>
+                                    <p className="text-black/70 text-[10px] font-bold">Tarifa Taker 0.075%</p>
                                 </div>
                             </div>
                             <div className="text-right relative z-10">
-                                <div className="text-xl font-black text-white font-mono">{formatCurrency(calculation.rayo)}</div>
-                                <div className="text-white/70 text-[9px] font-bold uppercase">Costo Total</div>
+                                <div className="text-xl font-black text-black font-mono">{formatCurrency(calculation.rayo)}</div>
+                                <div className="text-black/70 text-[9px] font-bold uppercase">Costo Total</div>
                             </div>
                         </div>
 

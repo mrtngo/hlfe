@@ -137,50 +137,13 @@ select:-webkit-autofill {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* NUCLEAR: Force ALL text to be white by default */
-* {
-  color: inherit;
-}
-
+/* CSS Overrides for visibility on dark backgrounds */
 html,
 body {
-  color: #FFFFFF !important;
+  color: #FFFFFF;
 }
 
-/* Ensure all common text elements default to white */
-p,
-span,
-div,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-label,
-a,
-button,
-li,
-td,
-th,
-strong,
-em,
-b,
-i,
-small,
-input,
-textarea,
-select,
-option {
-  color: #FFFFFF !important;
-}
-
-/* Force button text to be white unless explicitly set */
-button {
-  color: #FFFFFF !important;
-}
-
-/* OVERRIDE Tailwind text-black and related classes */
+/* OVERRIDE Tailwind text-black and related classes - these should stay white for readability */
 .text-black,
 .text-black\/70,
 .text-gray-900,
@@ -205,7 +168,7 @@ select {
   background-color: rgba(30, 30, 30, 0.9) !important;
 }
 
-/* Fix for any element that might inherit black */
+/* Fix for any element that might explicitly inherit or use black in components */
 [class*="dropdown"],
 [class*="Dropdown"],
 [class*="select"],
@@ -213,18 +176,11 @@ select {
 [class*="menu"],
 [class*="Menu"],
 [class*="option"],
-[class*="Option"],
-[class*="category"],
-[class*="Category"] {
+[class*="Option"] {
   color: #FFFFFF !important;
 }
 
-/* Special fix for the active category tab which was hardcoded black */
-button.bg-brand,
-button[class*="bg-brand"] {
-  color: #FFFFFF !important;
-}
-
+/* Ensure buttons on dark backgrounds have white text if they were previously black */
 button.text-black,
 .bg-brand.text-black {
   color: #FFFFFF !important;
