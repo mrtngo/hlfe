@@ -137,6 +137,72 @@ select:-webkit-autofill {
   transition: background-color 5000s ease-in-out 0s;
 }
 
+/* NUCLEAR: Force ALL text to be white by default */
+* {
+  color: inherit;
+}
+
+html,
+body {
+  color: #FFFFFF;
+}
+
+/* Ensure all common text elements default to white */
+p,
+span,
+div,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+a,
+button,
+li,
+td,
+th,
+strong,
+em,
+b,
+i,
+small {
+  color: inherit;
+}
+
+/* Force button text to be white unless explicitly set */
+button {
+  color: #FFFFFF;
+}
+
+/* Dropdown/select specific fixes */
+select option {
+  color: #FFFFFF !important;
+  background-color: #1a1a1a !important;
+}
+
+/* iOS/Safari select fixes */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  color: #FFFFFF !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Fix for any element that might inherit black */
+[class*="dropdown"],
+[class*="Dropdown"],
+[class*="select"],
+[class*="Select"],
+[class*="menu"],
+[class*="Menu"],
+[class*="option"],
+[class*="Option"] {
+  color: #FFFFFF !important;
+}
+
 html,
 body {
   max-width: 100vw;

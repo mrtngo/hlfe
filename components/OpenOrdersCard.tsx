@@ -26,7 +26,10 @@ export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps)
     const { formatCurrency } = useCurrency();
     const { cancelOrder, refreshAccountData } = useHyperliquid();
 
-    const coin = (order.coin || '').replace('-PERP', '').replace('xyz:', '');
+    // Use raw coin for display
+    const displayCoin = (order.coin || '').replace('-PERP', '').replace('xyz:', '');
+    // Keep the original coin for API calls
+    const rawCoin = order.coin || '';
     const isBuy = order.side === 'B' || order.side === 'buy' || order.isBuy === true;
     const price = parseFloat(order.limitPx || order.px || '0');
     const size = parseFloat(order.sz || '0');
@@ -34,10 +37,15 @@ export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps)
 
     const handleCancel = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!order.oid) return;
+        if (!order.oid) {
+            console.log('No order ID found');
+            return;
+        }
 
         try {
-            await cancelOrder(coin, order.oid.toString());
+            console.log(`🗑️ Cancelling order ${order.oid} for ${rawCoin}`);
+            // Pass the raw coin name (e.g., "BTC" or "xyz:AAPL") 
+            await cancelOrder(rawCoin, order.oid.toString());
             // Refresh to update the orders list
             setTimeout(() => refreshAccountData(), 500);
         } catch (error) {
@@ -61,11 +69,11 @@ export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps)
             <div className="flex items-center justify-between relative z-10">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-bg-secondary flex items-center justify-center border border-white/10">
-                        <TokenLogo symbol={coin} size={28} />
+                        <TokenLogo symbol={displayCoin} size={28} />
                     </div>
                     <div>
                         <div className="flex items-center gap-2 mb-0.5">
-                            <span className="font-bold text-lg text-white">{coin}</span>
+                            <span className="font-bold text-lg text-white">{displayCoin}</span>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${isBuy ? 'bg-bullish/20 text-bullish border-bullish/30' : 'bg-bearish/20 text-bearish border-bearish/30'}`}>
                                 {isBuy ? 'BUY' : 'SELL'}
                             </span>
@@ -83,7 +91,7 @@ export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps)
                             {formatCurrency(price)}
                         </div>
                         <div className="text-xs text-coffee-medium font-mono">
-                            {size.toFixed(4)} {coin}
+                            {size.toFixed(4)} {displayCoin}
                         </div>
                     </div>
 
