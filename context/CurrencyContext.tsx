@@ -75,6 +75,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
                 decimals = 6; // Small prices (e.g., $0.001234)
             } else if (absValue > 0 && absValue < 1) {
                 decimals = 4; // Sub-dollar prices (e.g., $0.1234)
+            } else if (absValue >= 1 && absValue < 10) {
+                decimals = 3; // 1-digit assets (e.g., EUR $1.082)
             } else {
                 decimals = 2; // Normal prices
             }

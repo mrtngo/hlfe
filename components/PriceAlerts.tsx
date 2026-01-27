@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Bell, BellPlus, Trash2, TrendingUp, TrendingDown, X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 import { db, PriceAlert } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
 import TokenLogo from './TokenLogo';
@@ -15,6 +16,7 @@ interface PriceAlertsProps {
 
 export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = false }: PriceAlertsProps) {
     const { user } = useUser();
+    const { formatCurrency, formatNumber } = useLanguage();
     const [alerts, setAlerts] = useState<PriceAlert[]>([]);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
@@ -59,7 +61,7 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
             const defaultTarget = direction === 'above'
                 ? currentPrice * 1.05
                 : currentPrice * 0.95;
-            setTargetPrice(defaultTarget.toFixed(2));
+            setTargetPrice(formatNumber(defaultTarget));
         }
     }, [currentPrice, direction, targetPrice]);
 
@@ -70,7 +72,7 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
             const newTarget = newDirection === 'above'
                 ? currentPrice * 1.05
                 : currentPrice * 0.95;
-            setTargetPrice(newTarget.toFixed(2));
+            setTargetPrice(formatNumber(newTarget));
         }
     };
 
@@ -90,11 +92,11 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
         // Validate direction makes sense
         if (currentPrice) {
             if (direction === 'above' && price <= currentPrice) {
-                setError(`Target price must be above current price ($${currentPrice.toLocaleString()})`);
+                setError(`Target price must be above current price (${formatCurrency(currentPrice)})`);
                 return;
             }
             if (direction === 'below' && price >= currentPrice) {
-                setError(`Target price must be below current price ($${currentPrice.toLocaleString()})`);
+                setError(`Target price must be below current price (${formatCurrency(currentPrice)})`);
                 return;
             }
         }
@@ -168,7 +170,7 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
                                 <span className="font-bold text-white">{selectedSymbol.replace('-USD', '')}</span>
                                 {currentPrice && (
                                     <p className="text-xs text-white/50">
-                                        Current: ${currentPrice.toLocaleString()}
+                                        Current: {formatCurrency(currentPrice)}
                                     </p>
                                 )}
                             </div>
@@ -179,22 +181,20 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
                     <div className="flex gap-2">
                         <button
                             onClick={() => handleDirectionChange('above')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all ${
-                                direction === 'above'
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all ${direction === 'above'
                                     ? 'bg-bullish text-white'
                                     : 'bg-bg-tertiary text-white/60 hover:bg-bg-hover'
-                            }`}
+                                }`}
                         >
                             <TrendingUp className="w-4 h-4" />
                             Price Above
                         </button>
                         <button
                             onClick={() => handleDirectionChange('below')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all ${
-                                direction === 'below'
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all ${direction === 'below'
                                     ? 'bg-bearish text-white'
                                     : 'bg-bg-tertiary text-white/60 hover:bg-bg-hover'
-                            }`}
+                                }`}
                         >
                             <TrendingDown className="w-4 h-4" />
                             Price Below
@@ -274,16 +274,15 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-semibold text-white">{alert.symbol}</span>
-                                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                                alert.direction === 'above'
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${alert.direction === 'above'
                                                     ? 'bg-bullish/20 text-bullish'
                                                     : 'bg-bearish/20 text-bearish'
-                                            }`}>
+                                                }`}>
                                                 {alert.direction === 'above' ? '↑ Above' : '↓ Below'}
                                             </span>
                                         </div>
                                         <p className="text-sm font-mono text-white/70">
-                                            ${Number(alert.target_price).toLocaleString()}
+                                            {formatCurrency(Number(alert.target_price))}
                                         </p>
                                     </div>
                                 </div>

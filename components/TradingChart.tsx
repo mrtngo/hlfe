@@ -21,7 +21,7 @@ interface TradingChartProps {
 
 export default function TradingChart({ symbol }: TradingChartProps = {}) {
     const router = useRouter();
-    const { t } = useLanguage();
+    const { t, formatCurrency } = useLanguage();
     const { selectedMarket, getMarket, fills, positions, openOrders } = useHyperliquid();
     const [timeframe, setTimeframe] = useState<Timeframe>('1h');
 
@@ -140,7 +140,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
             return (
                 <div className="bg-bg-tertiary px-4 py-2 rounded-xl shadow-lg border border-white/10">
                     <p className="text-xs text-coffee-medium mb-1">{dateStr} at {timeStr}</p>
-                    <p className="text-lg font-bold text-white">${data.price.toFixed(2)}</p>
+                    <p className="text-lg font-bold text-white">{formatCurrency(data.price)}</p>
                 </div>
             );
         }
@@ -258,7 +258,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                     strokeWidth={2}
                                     strokeDasharray="8 4"
                                     label={{
-                                        value: `◆ Entry $${currentPosition.entryPrice.toFixed(2)}`,
+                                        value: `◆ Entry ${formatCurrency(currentPosition.entryPrice)}`,
                                         position: 'insideTopLeft',
                                         fill: CHART_POSITIVE,
                                         fontSize: 10,
@@ -279,7 +279,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                     strokeWidth={2}
                                     strokeDasharray="4 2"
                                     label={{
-                                        value: `◆ Liq $${currentPosition.liquidationPrice.toFixed(2)}`,
+                                        value: `◆ Liq ${formatCurrency(currentPosition.liquidationPrice)}`,
                                         position: 'insideBottomLeft',
                                         fill: CHART_NEGATIVE,
                                         fontSize: 10,
@@ -300,7 +300,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                     strokeWidth={2}
                                     strokeDasharray="4 4"
                                     label={{
-                                        value: `◆ TP $${currentPosition.takeProfitPrice.toFixed(2)}`,
+                                        value: `◆ TP ${formatCurrency(currentPosition.takeProfitPrice)}`,
                                         position: 'insideTopRight',
                                         fill: '#22D3EE',
                                         fontSize: 10,
@@ -321,7 +321,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                     strokeWidth={2}
                                     strokeDasharray="4 4"
                                     label={{
-                                        value: `◆ SL $${currentPosition.stopLossPrice.toFixed(2)}`,
+                                        value: `◆ SL ${formatCurrency(currentPosition.stopLossPrice)}`,
                                         position: 'insideBottomRight',
                                         fill: '#F97316',
                                         fontSize: 10,
@@ -347,7 +347,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                         strokeWidth={1.5}
                                         strokeDasharray="6 3"
                                         label={{
-                                            value: `⬥ ${isBuy ? 'Buy' : 'Sell'} $${orderPrice.toFixed(2)}`,
+                                            value: `⬥ ${isBuy ? 'Buy' : 'Sell'} ${formatCurrency(orderPrice)}`,
                                             position: isBuy ? 'insideBottomLeft' : 'insideTopLeft',
                                             fill: CHART_LIMIT_ORDER,
                                             fontSize: 9,

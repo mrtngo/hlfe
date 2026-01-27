@@ -179,7 +179,7 @@ export default function SpotTradingPanel() {
             const data = payload[0].payload;
             return (
                 <div className="bg-black/90 px-3 py-2 rounded-xl border border-white/10">
-                    <p className="text-sm font-bold text-white">${data.price.toFixed(2)}</p>
+                    <p className="text-sm font-bold text-white">{formatCurrency(data.price)}</p>
                 </div>
             );
         }

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
 import { X, ArrowLeftRight, Loader2, AlertCircle } from 'lucide-react';
+import { useCurrency } from '@/context/CurrencyContext';
 import { API_URL } from '@/lib/hyperliquid/client';
 
 interface TransferModalProps {
@@ -15,6 +16,7 @@ interface TransferModalProps {
 export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
     const { wallets } = useWallets();
     const { address, account } = useHyperliquid();
+    const { formatCurrency } = useCurrency();
     const activeWallet = wallets?.[0];
 
     const [amount, setAmount] = useState('');
@@ -276,7 +278,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                                 Spot Balance
                             </div>
                             <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
-                                ${spotBalance.toFixed(2)}
+                                {formatCurrency(spotBalance)}
                             </div>
                         </div>
                         <div style={{
@@ -289,7 +291,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                                 Perp Balance
                             </div>
                             <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
-                                ${availableBalance.toFixed(2)}
+                                {formatCurrency(availableBalance)}
                             </div>
                         </div>
                     </div>
@@ -300,9 +302,9 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                             <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Amount:</span>
                             <span
                                 style={{ color: 'white', cursor: 'pointer', textDecoration: 'underline' }}
-                                onClick={() => setAmount(sourceBalance.toFixed(2))}
+                                onClick={() => setAmount(toPerp ? spotBalance.toString() : availableBalance.toString())}
                             >
-                                Max: ${sourceBalance.toFixed(2)}
+                                Max: {formatCurrency(sourceBalance)}
                             </span>
                         </div>
                         <div style={{ position: 'relative' }}>

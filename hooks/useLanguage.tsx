@@ -52,9 +52,27 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return parts.join(t.formatters.decimal);
   };
 
-  const formatCurrency = (value: number, decimals: number = 2): string => {
+  const formatCurrency = (value: number, decimals?: number): string => {
     const t = translations[language];
-    const formatted = formatNumber(Math.abs(value), decimals);
+
+    // Auto-detect appropriate decimals for small prices if not explicitly specified
+    let targetDecimals = decimals;
+    if (targetDecimals === undefined) {
+      const absValue = Math.abs(value);
+      if (absValue > 0 && absValue < 0.0001) {
+        targetDecimals = 8;
+      } else if (absValue > 0 && absValue < 0.01) {
+        targetDecimals = 6;
+      } else if (absValue > 0 && absValue < 1) {
+        targetDecimals = 4;
+      } else if (absValue >= 1 && absValue < 10) {
+        targetDecimals = 3; // 1-digit assets (e.g., EUR $1.082)
+      } else {
+        targetDecimals = 2;
+      }
+    }
+
+    const formatted = formatNumber(Math.abs(value), targetDecimals);
     const sign = value < 0 ? '-' : '';
     return `${sign}${t.formatters.currency}${formatted}`;
   };
