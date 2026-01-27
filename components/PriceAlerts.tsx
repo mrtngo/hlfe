@@ -39,9 +39,9 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
             const userAlerts = await db.priceAlerts.getByUser(user.id);
             // Filter by symbol if provided
             if (symbol) {
-                setAlerts(userAlerts.filter(a => a.symbol === symbol || a.symbol === symbol.replace('-USD', '')));
+                setAlerts((userAlerts || []).filter(a => a.symbol === symbol || a.symbol === symbol.replace('-USD', '')));
             } else {
-                setAlerts(userAlerts);
+                setAlerts(userAlerts || []);
             }
         } catch (err) {
             console.error('Error fetching alerts:', err);
@@ -182,8 +182,8 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
                         <button
                             onClick={() => handleDirectionChange('above')}
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all ${direction === 'above'
-                                    ? 'bg-bullish text-white'
-                                    : 'bg-bg-tertiary text-white/60 hover:bg-bg-hover'
+                                ? 'bg-bullish text-white'
+                                : 'bg-bg-tertiary text-white/60 hover:bg-bg-hover'
                                 }`}
                         >
                             <TrendingUp className="w-4 h-4" />
@@ -192,8 +192,8 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
                         <button
                             onClick={() => handleDirectionChange('below')}
                             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold transition-all ${direction === 'below'
-                                    ? 'bg-bearish text-white'
-                                    : 'bg-bg-tertiary text-white/60 hover:bg-bg-hover'
+                                ? 'bg-bearish text-white'
+                                : 'bg-bg-tertiary text-white/60 hover:bg-bg-hover'
                                 }`}
                         >
                             <TrendingDown className="w-4 h-4" />
@@ -249,14 +249,14 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
             {/* Active Alerts List */}
             <div className="flex-1 overflow-y-auto p-4">
                 <h3 className="text-sm font-semibold text-white/60 mb-3">
-                    Active Alerts ({alerts.length})
+                    Active Alerts ({(alerts || []).length})
                 </h3>
 
                 {loading ? (
                     <div className="flex items-center justify-center py-8">
                         <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                     </div>
-                ) : alerts.length === 0 ? (
+                ) : (alerts || []).length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-8 text-white/40">
                         <Bell className="w-12 h-12 mb-3 opacity-30" />
                         <p className="text-sm">No active alerts</p>
@@ -264,7 +264,7 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
                     </div>
                 ) : (
                     <div className="space-y-2">
-                        {alerts.map((alert) => (
+                        {(alerts || []).map((alert) => (
                             <div
                                 key={alert.id}
                                 className="flex items-center justify-between p-3 bg-bg-secondary border border-white/10 rounded-xl hover:border-white/20 transition-colors"
@@ -275,8 +275,8 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
                                         <div className="flex items-center gap-2">
                                             <span className="font-semibold text-white">{alert.symbol}</span>
                                             <span className={`text-xs px-2 py-0.5 rounded-full ${alert.direction === 'above'
-                                                    ? 'bg-bullish/20 text-bullish'
-                                                    : 'bg-bearish/20 text-bearish'
+                                                ? 'bg-bullish/20 text-bullish'
+                                                : 'bg-bearish/20 text-bearish'
                                                 }`}>
                                                 {alert.direction === 'above' ? '↑ Above' : '↓ Below'}
                                             </span>

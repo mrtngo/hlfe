@@ -67,9 +67,9 @@ export default function OrderBook({
 
             const data = await response.json();
 
-            if (data.levels) {
+            if (data && data.levels) {
                 // Process bids (buy orders) - highest prices first
-                const bidLevels = data.levels[0] || [];
+                const bidLevels = (data.levels[0] || []);
                 let bidTotal = 0;
                 const processedBids: OrderBookLevel[] = bidLevels
                     .slice(0, levels)
@@ -81,7 +81,7 @@ export default function OrderBook({
                     });
 
                 // Process asks (sell orders) - lowest prices first  
-                const askLevels = data.levels[1] || [];
+                const askLevels = (data.levels[1] || []);
                 let askTotal = 0;
                 const processedAsks: OrderBookLevel[] = askLevels
                     .slice(0, levels)
@@ -96,7 +96,7 @@ export default function OrderBook({
                 setAsks(processedAsks);
 
                 // Calculate spread
-                if (processedBids.length > 0 && processedAsks.length > 0) {
+                if ((processedBids || []).length > 0 && (processedAsks || []).length > 0) {
                     const bestBid = processedBids[0].price;
                     const bestAsk = processedAsks[0].price;
                     const spreadValue = bestAsk - bestBid;
@@ -120,8 +120,8 @@ export default function OrderBook({
 
     // Calculate max total for depth bar visualization
     const maxTotal = useMemo(() => {
-        const maxBid = bids.length > 0 ? bids[bids.length - 1].total : 0;
-        const maxAsk = asks.length > 0 ? asks[asks.length - 1].total : 0;
+        const maxBid = (bids || []).length > 0 ? bids[bids.length - 1].total : 0;
+        const maxAsk = (asks || []).length > 0 ? asks[asks.length - 1].total : 0;
         return Math.max(maxBid, maxAsk);
     }, [bids, asks]);
 
@@ -167,7 +167,7 @@ export default function OrderBook({
             {/* Asks (reversed to show lowest at bottom, near spread) */}
             <div className="flex-1 overflow-hidden">
                 <div className="flex flex-col-reverse">
-                    {asks.map((level) => (
+                    {(asks || []).map((level) => (
                         <div
                             key={`ask-${level.price}`}
                             className="relative grid grid-cols-3 px-3 py-1 cursor-pointer hover:bg-bg-secondary transition-colors"
@@ -207,7 +207,7 @@ export default function OrderBook({
 
             {/* Bids */}
             <div className="flex-1 overflow-hidden">
-                {bids.map((level) => (
+                {(bids || []).map((level) => (
                     <div
                         key={`bid-${level.price}`}
                         className="relative grid grid-cols-3 px-3 py-1 cursor-pointer hover:bg-bg-secondary transition-colors"
