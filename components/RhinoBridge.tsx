@@ -11,9 +11,11 @@ import {
     Loader2,
     ExternalLink
 } from 'lucide-react';
-import { parseUnits, type Address } from 'viem';
+import { parseUnits, formatUnits, createPublicClient, http, type Address } from 'viem';
 import { tokens } from '@/lib/design-tokens';
 import { arbitrum, mainnet, polygon, base, optimism } from 'viem/chains';
+import { USDC_ADDRESSES, USDC_ABI } from '@/lib/constants/bridge';
+import { useEffect } from 'react';
 
 interface RhinoBridgeProps {
     onComplete?: () => void;
@@ -53,6 +55,9 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
     const [error, setError] = useState('');
     const [txHash, setTxHash] = useState('');
     const [estimatedTime, setEstimatedTime] = useState('1-3 minutes');
+    const [fromBalance, setFromBalance] = useState<string | null>(null);
+    const [toBalance, setToBalance] = useState<string | null>(null);
+    const [loadingBalances, setLoadingBalances] = useState(false);
 
     // Chain options
     const chainOptions: { key: SupportedChainKey; name: string; icon: string }[] = [
@@ -61,6 +66,60 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
         { key: 'base', name: 'Base', icon: 'BASE' },
         { key: 'optimism', name: 'Optimism', icon: 'OP' },
     ];
+
+    // Fetch balances
+    useEffect(() => {
+        const fetchBalances = async () => {
+            if (!activeWallet?.address) return;
+
+            setLoadingBalances(true);
+            try {
+                // Fetch fromChain balance
+                const fromChainData = SUPPORTED_CHAINS[fromChain];
+                const fromClient = createPublicClient({
+                    chain: fromChainData,
+                    transport: http(),
+                });
+
+                const fromUsdcAddress = USDC_ADDRESSES[fromChain];
+                const fromBal = await fromClient.readContract({
+                    address: fromUsdcAddress as Address,
+                    abi: USDC_ABI,
+                    functionName: 'balanceOf',
+                    args: [activeWallet.address as Address],
+                });
+
+                // Fetch Arbitrum (toChain) balance
+                const arbiClient = createPublicClient({
+                    chain: arbitrum,
+                    transport: http(),
+                });
+
+                const arbiUsdcAddress = USDC_ADDRESSES.arbitrum;
+                const arbiBal = await arbiClient.readContract({
+                    address: arbiUsdcAddress as Address,
+                    abi: USDC_ABI,
+                    functionName: 'balanceOf',
+                    args: [activeWallet.address as Address],
+                });
+
+                // USDC has 6 decimals on most chains (Canonical/Native)
+                // Note: On some old bridged versions it might be different, but Rhino uses 6-decimal USDC
+                setFromBalance(formatUnits(fromBal as bigint, 6));
+                setToBalance(formatUnits(arbiBal as bigint, 6));
+            } catch (err) {
+                console.error('Error fetching bridge balances:', err);
+            } finally {
+                setLoadingBalances(false);
+            }
+        };
+
+        fetchBalances();
+
+        // Refresh balances every 30 seconds
+        const interval = setInterval(fetchBalances, 30000);
+        return () => clearInterval(interval);
+    }, [activeWallet?.address, fromChain]);
 
     const handleBridge = async () => {
         if (!activeWallet || !amount) return;
@@ -386,13 +445,26 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                 }}>
                     Arbitrum (for Hyperliquid deposit)
                 </div>
+                <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '4px', textAlign: 'right' }}>
+                    Balance: <span style={{ color: 'white', fontWeight: 600 }}>{loadingBalances ? '...' : toBalance ? `${parseFloat(toBalance).toFixed(2)} USDC` : '0.00 USDC'}</span>
+                </div>
             </div>
 
             {/* Amount Input */}
             <div>
-                <label style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '8px', display: 'block' }}>
-                    Amount (USDC)
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <label style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', display: 'block' }}>
+                        Amount (USDC)
+                    </label>
+                    <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)' }}>
+                        Available: <span
+                            style={{ color: tokens.brand, cursor: 'pointer', fontWeight: 600 }}
+                            onClick={() => fromBalance && setAmount(fromBalance)}
+                        >
+                            {loadingBalances ? '...' : fromBalance ? `${parseFloat(fromBalance).toFixed(2)} USDC` : '0.00 USDC'}
+                        </span>
+                    </div>
+                </div>
                 <input
                     type="number"
                     value={amount}

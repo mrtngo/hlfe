@@ -9,6 +9,15 @@ export const HYPERLIQUID_BRIDGE_ADDRESS = '0x2df1c51e09aecf9cacb7bc98cb1742757f1
 // Native USDC on Arbitrum One
 export const ARBITRUM_USDC_ADDRESS = '0xaf88d065e77c8cC2239327C5EDb3A432268e5831';
 
+// USDC Addresses for other chains
+export const USDC_ADDRESSES = {
+    ethereum: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+    arbitrum: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+    base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    optimism: '0x0b2C639c53A0d3930b597277E37b031F2758cC24',
+    polygon: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+} as const;
+
 // Minimum deposit amount (sending less than this will result in lost funds)
 export const MIN_BRIDGE_DEPOSIT = 5;
 
