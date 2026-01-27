@@ -14,18 +14,18 @@ type MarketTab = 'crypto' | 'stocks';
 
 export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {}) {
     const { t, formatCurrency, formatPercent } = useLanguage();
-    const { markets, selectedMarket, setSelectedMarket } = useHyperliquid();
+    const { markets = [], selectedMarket, setSelectedMarket } = useHyperliquid();
     const [isExpanded, setIsExpanded] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState<MarketTab>('crypto');
 
-    const currentMarket = markets.find(m => m.symbol === selectedMarket) || markets[0];
+    const currentMarket = markets?.find(m => m.symbol === selectedMarket) || markets?.[0];
     const isPositive = currentMarket?.change24h >= 0;
 
     // Filter markets based on Crypto vs Stocks (Trade.xyz)
     // For stocks tab: show identified stocks OR all isolated markets (HIP-3) as fallback
     // For crypto tab: show non-isolated markets (standard crypto)
-    const filteredMarkets = markets.filter(market => {
+    const filteredMarkets = (markets || []).filter(market => {
         // First filter by Crypto/Stocks
         if (activeTab === 'stocks') {
             // Show stocks if identified, OR show all isolated markets (HIP-3) as fallback
@@ -44,9 +44,9 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
     });
 
     // Debug: Log stock markets count
-    const stockMarketsCount = markets.filter(m => m.isStock === true).length;
-    const isolatedMarketsCount = markets.filter(m => m.onlyIsolated === true).length;
-    if (activeTab === 'stocks') {
+    const stockMarketsCount = (markets || []).filter(m => m.isStock === true).length;
+    const isolatedMarketsCount = (markets || []).filter(m => m.onlyIsolated === true).length;
+    if (activeTab === 'stocks' && markets && markets.length > 0) {
         console.log(`📊 Stocks tab: ${stockMarketsCount} identified stock markets, ${isolatedMarketsCount} isolated markets total`);
         console.log('📊 All isolated markets:', markets.filter(m => m.onlyIsolated === true).map(m => ({ name: m.name, isStock: m.isStock })));
     }

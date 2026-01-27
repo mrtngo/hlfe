@@ -458,10 +458,8 @@ export default function SpotTradingPanel() {
     const formatSmartPrice = (price: number): string => {
         if (price === 0) return '$0.00';
         if (price >= 1000) return `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        if (price >= 1) return `$${price.toFixed(2)}`;
-        if (price >= 0.01) return `$${price.toFixed(4)}`;
-        if (price >= 0.0001) return `$${price.toFixed(6)}`;
-        return `$${price.toFixed(8)}`;
+        const absPrice = Math.abs(price);
+        return formatCurrency(price);
     };
 
     // Format large numbers
@@ -727,7 +725,7 @@ export default function SpotTradingPanel() {
                                 <TokenLogo symbol={selectedPair?.baseName || 'BTC'} size={32} />
                                 <div>
                                     <div className="text-sm font-bold text-white">{selectedPair?.baseName}</div>
-                                    <div className="text-xs text-white/50 font-mono">{baseBalance.toFixed(6)}</div>
+                                    <div className="text-xs text-white/50 font-mono">{baseBalance > 0 ? baseBalance.toFixed(6) : '0.000000'}</div>
                                 </div>
                             </div>
                             <div className="text-right">
@@ -834,11 +832,11 @@ export default function SpotTradingPanel() {
                 <div className="grid grid-cols-2 gap-3 mb-4">
                     <div className="p-3 bg-black/30 border border-white/5 rounded-xl">
                         <div className="text-[10px] text-white/50 mb-0.5">USDC</div>
-                        <div className="text-white font-mono font-semibold">${usdcBalance.toFixed(2)}</div>
+                        <div className="text-white font-mono font-semibold">{formatCurrency(usdcBalance)}</div>
                     </div>
                     <div className="p-3 bg-black/30 border border-white/5 rounded-xl">
                         <div className="text-[10px] text-white/50 mb-0.5">{selectedPair?.baseName}</div>
-                        <div className="text-white font-mono font-semibold">{baseBalance.toFixed(4)}</div>
+                        <div className="text-white font-mono font-semibold">{baseBalance > 0 ? baseBalance.toFixed(4) : '0.0000'}</div>
                     </div>
                 </div>
 
