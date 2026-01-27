@@ -141,6 +141,8 @@ interface HyperliquidContextType {
     refreshUserData: () => Promise<void>;
     refreshAccountData: () => Promise<void>; // Force refresh account, positions, orders
     refreshMarketData: () => Promise<void>; // Force refresh market prices and data
+    syncTrades: () => Promise<{ synced: number; totalPnl: number } | null>; // Sync trades from Hyperliquid fills
+
     // Account actions
     withdraw: (amount: string, destination: string) => Promise<any>;
 
