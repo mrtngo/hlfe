@@ -16,9 +16,8 @@ interface StatItem {
 
 export default function MarketStats() {
     const { selectedMarket, getMarket } = useHyperliquid();
-    const { formatCurrency } = useLanguage();
-
     const market = getMarket(selectedMarket);
+    const { formatCurrency } = useLanguage();
 
     if (!market) {
         return null;
