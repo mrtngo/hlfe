@@ -12,28 +12,9 @@ interface WithdrawModalProps {
     onClose: () => void;
 }
 
-// Hyperliquid EIP-712 domain
-const WITHDRAW_DOMAIN = {
-    name: 'HyperliquidSignTransaction',
-    version: '1',
-    chainId: 42161, // Arbitrum
-    verifyingContract: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-};
-
-// EIP-712 types for withdraw3
-const WITHDRAW_TYPES = {
-    'HyperliquidTransaction:Withdraw': [
-        { name: 'hyperliquidChain', type: 'string' },
-        { name: 'destination', type: 'string' },
-        { name: 'amount', type: 'string' },
-        { name: 'time', type: 'uint64' },
-    ],
-} as const;
-
 export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
-    const { address, account } = useHyperliquid();
+    const { address, account, withdraw } = useHyperliquid();
     const { wallets } = useWallets();
-    const activeWallet = wallets?.[0];
 
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -54,86 +35,16 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const isValidAmount = amountNum >= MIN_WITHDRAWAL && amountNum <= availableBalance;
 
     const handleWithdraw = async () => {
-        if (!activeWallet || !address || !isValidAmount) return;
+        if (!address || !isValidAmount) return;
 
         setLoading(true);
         setError('');
         setSuccess(false);
 
         try {
-            const provider = await activeWallet.getEthereumProvider();
-            const nonce = Date.now();
-
-            // Prepare the withdraw action
-            const withdrawAction = {
-                type: 'withdraw3',
-                hyperliquidChain: 'Mainnet',
-                signatureChainId: '0xa4b1', // Arbitrum in hex
-                destination: address,
-                amount: amount,
-                time: nonce,
-            };
-
-            // EIP-712 message to sign
-            const message = {
-                hyperliquidChain: 'Mainnet',
-                destination: address,
-                amount: amount,
-                time: BigInt(nonce),
-            };
-
-            // Sign with EIP-712
-            const signature = await provider.request({
-                method: 'eth_signTypedData_v4',
-                params: [
-                    address,
-                    JSON.stringify({
-                        domain: WITHDRAW_DOMAIN,
-                        types: {
-                            EIP712Domain: [
-                                { name: 'name', type: 'string' },
-                                { name: 'version', type: 'string' },
-                                { name: 'chainId', type: 'uint256' },
-                                { name: 'verifyingContract', type: 'address' },
-                            ],
-                            ...WITHDRAW_TYPES,
-                        },
-                        primaryType: 'HyperliquidTransaction:Withdraw',
-                        message: {
-                            hyperliquidChain: 'Mainnet',
-                            destination: address,
-                            amount: amount,
-                            time: nonce,
-                        },
-                    }),
-                ],
-            });
-
-            // Parse signature into r, s, v
-            const sig = signature.slice(2);
-            const r = '0x' + sig.slice(0, 64);
-            const s = '0x' + sig.slice(64, 128);
-            const v = parseInt(sig.slice(128, 130), 16);
-
-            // Send to Hyperliquid
-            const response = await fetch(`${API_URL}/exchange`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: withdrawAction,
-                    nonce,
-                    signature: { r, s, v },
-                }),
-            });
-
-            const result = await response.json();
-
-            if (result.status === 'ok' || result.response?.type === 'default') {
-                setSuccess(true);
-                setAmount('');
-            } else {
-                throw new Error(result.response?.data || result.error || 'Withdrawal failed');
-            }
+            await withdraw(amount, address);
+            setSuccess(true);
+            setAmount('');
         } catch (err: any) {
             console.error('Withdrawal error:', err);
             setError(err.message || 'Failed to process withdrawal');

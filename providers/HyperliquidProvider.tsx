@@ -141,9 +141,10 @@ interface HyperliquidContextType {
     refreshUserData: () => Promise<void>;
     refreshAccountData: () => Promise<void>; // Force refresh account, positions, orders
     refreshMarketData: () => Promise<void>; // Force refresh market prices and data
-    syncTrades: () => Promise<{ synced: number; totalPnl: number } | null>; // Sync trades from Hyperliquid fills
+    // Account actions
+    withdraw: (amount: string, destination: string) => Promise<any>;
 
-    // Agent Wallet
+    // User Data (cached)
     agentWalletEnabled: boolean;
     setupAgentWallet: () => Promise<{ success: boolean; message: string }>;
 
@@ -2128,6 +2129,111 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         return markets.find(m => m.symbol === symbol);
     }, [markets]);
 
+    // Withdrawal logic
+    const withdraw = useCallback(async (amount: string, destination: string) => {
+        if (!isConnected || !address) throw new Error('Not connected');
+
+        setLoading(true);
+        try {
+            console.log(`🏦 Initiating withdrawal of ${amount} USDC to ${destination}`);
+
+            const nonce = Date.now();
+            const withdrawAction = {
+                type: 'withdraw3',
+                hyperliquidChain: 'Mainnet',
+                signatureChainId: '0xa4b1', // Arbitrum in hex
+                destination: destination,
+                amount: amount,
+                time: nonce,
+            };
+
+            const WITHDRAW_DOMAIN = {
+                name: 'HyperliquidSignTransaction',
+                version: '1',
+                chainId: 42161, // Arbitrum
+                verifyingContract: '0x0000000000000000000000000000000000000000' as `0x${string}`,
+            };
+
+            const WITHDRAW_TYPES = {
+                'HyperliquidTransaction:Withdraw': [
+                    { name: 'hyperliquidChain', type: 'string' },
+                    { name: 'destination', type: 'string' },
+                    { name: 'amount', type: 'string' },
+                    { name: 'time', type: 'uint64' },
+                ],
+            } as const;
+
+            // Withdrawals MUST be signed by the user wallet, not agent
+            const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
+            let signingProvider = null;
+
+            if (embeddedWallet) {
+                signingProvider = await embeddedWallet.getEthereumProvider();
+            } else if (typeof window !== 'undefined' && (window as any).ethereum) {
+                signingProvider = (window as any).ethereum;
+            }
+
+            if (!signingProvider) throw new Error('No signing wallet available');
+
+            const signature = await signingProvider.request({
+                method: 'eth_signTypedData_v4',
+                params: [
+                    address,
+                    JSON.stringify({
+                        domain: WITHDRAW_DOMAIN,
+                        types: {
+                            EIP712Domain: [
+                                { name: 'name', type: 'string' },
+                                { name: 'version', type: 'string' },
+                                { name: 'chainId', type: 'uint256' },
+                                { name: 'verifyingContract', type: 'address' },
+                            ],
+                            ...WITHDRAW_TYPES,
+                        },
+                        primaryType: 'HyperliquidTransaction:Withdraw',
+                        message: {
+                            hyperliquidChain: 'Mainnet',
+                            destination: destination,
+                            amount: amount,
+                            time: BigInt(nonce),
+                        },
+                    }),
+                ],
+            });
+
+            // Parse signature
+            const sig = (signature as string).slice(2);
+            const r = '0x' + sig.slice(0, 64);
+            const s = '0x' + sig.slice(64, 128);
+            const v = parseInt(sig.slice(128, 130), 16);
+
+            // Send to exchange
+            const response = await fetch(`${API_URL}/exchange`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: withdrawAction,
+                    nonce,
+                    signature: { r, s, v },
+                }),
+            });
+
+            const result = await response.json();
+            if (result.status === 'ok' || result.response?.type === 'default') {
+                console.log('✅ Withdrawal successful');
+                setTimeout(() => refreshAccountData(), 2000);
+                return result;
+            } else {
+                throw new Error(result.response?.data || result.error || 'Withdrawal failed');
+            }
+        } catch (error: any) {
+            console.error('❌ Withdrawal error:', error);
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    }, [isConnected, address, wallets, refreshAccountData, setLoading]);
+
     const value = {
         connected: isConnected,
         address,
@@ -2144,6 +2250,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         placeTriggerOrder,
         cancelOrder,
         closePosition,
+        withdraw,
         account,
         positions,
         orders,
