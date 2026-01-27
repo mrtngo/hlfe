@@ -24,19 +24,19 @@ export default function MarketSelector() {
         const fetchCategories = async () => {
             // Try getAllWithCounts first, fallback to getAll if RPC doesn't exist
             let cats = await db.categories.getAllWithCounts();
-            if (cats.length === 0) {
+            if ((cats || []).length === 0) {
                 cats = await db.categories.getAll();
             }
-            setCategories(cats);
+            setCategories(cats || []);
         };
         fetchCategories();
     }, []);
 
-    const currentMarket = markets.find(m => m.symbol === selectedMarket) || markets[0];
+    const currentMarket = (markets || []).find(m => m.symbol === selectedMarket) || (markets || [])[0];
     const isPositive = (currentMarket?.change24h ?? 0) >= 0;
 
     // Memoize filtered markets to prevent recalculation on every render
-    const filteredMarkets = useMemo(() => markets.filter((market) => {
+    const filteredMarkets = useMemo(() => (markets || []).filter((market) => {
         // Tab filtering (crypto vs stocks)
         if (activeTab === 'stocks') {
             const isStockMarket = market.isStock === true;

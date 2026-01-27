@@ -724,9 +724,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // 1. Get asset index
             console.log('placeOrder called with symbol:', symbol);
             console.log('markets array:', markets.map(m => m.symbol));
-            console.log('markets length:', markets.length);
-
-            if (markets.length === 0) {
+            console.log('markets length:', (markets || []).length);
+            if ((markets || []).length === 0) {
                 throw new Error('Markets not loaded yet. Please wait a moment and try again.');
             }
 
@@ -2007,7 +2006,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             if (assetIndex === -1) {
-                console.error(`❌ Could not find asset index for ${symbol}. Markets:`, markets.length);
+                console.error(`❌ Could not find asset index for ${symbol}. Markets:`, (markets || []).length);
                 throw new Error(`Could not find asset index for ${symbol}`);
             }
 

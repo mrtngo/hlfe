@@ -93,9 +93,9 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     }, [setSelectedMarket, onTokenClick]);
 
     // Default watchlist tokens if empty - using centralized constant
-    const watchlistToShow = watchlist.length > 0 ? watchlist : DEFAULT_WATCHLIST;
+    const watchlistToShow = (watchlist || []).length > 0 ? watchlist : DEFAULT_WATCHLIST;
     const watchlistMarkets = useMemo(() =>
-        markets.filter(m => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol)),
+        (markets || []).filter(m => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol)),
         [markets, watchlistToShow]
     );
     const portfolioValue = account.equity || account.balance;
@@ -116,8 +116,8 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
     // Calculate top gainers and losers
     const { cryptoGainers, cryptoLosers, stockGainers, stockLosers } = useMemo(() => {
-        const cryptoMarkets = markets.filter(m => !m.isStock && m.change24h !== undefined);
-        const stockMarkets = markets.filter(m => m.isStock && m.change24h !== undefined);
+        const cryptoMarkets = (markets || []).filter(m => !m.isStock && m.change24h !== undefined);
+        const stockMarkets = (markets || []).filter(m => m.isStock && m.change24h !== undefined);
 
         const cGainers = [...cryptoMarkets]
             .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))

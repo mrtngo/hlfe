@@ -168,7 +168,7 @@ export default function FeeCalculator() {
 
             {/* Results */}
             <div className="space-y-3 pt-2">
-                {calculation.map((item, idx) => (
+                {(calculation || []).map((item, idx) => (
                     <div
                         key={item.name}
                         className={`relative p-3 rounded-xl border transition-all ${item.highlight
@@ -194,13 +194,13 @@ export default function FeeCalculator() {
                             <div
                                 className="h-full rounded-full transition-all duration-500"
                                 style={{
-                                    width: `${item.cost === 0 || calculation.length === 0 ? 0 : Math.max(5, (item.cost / calculation[calculation.length - 1].cost) * 100)}%`,
+                                    width: `${item.cost === 0 || (calculation || []).length === 0 ? 0 : Math.max(5, (item.cost / (calculation || [])[(calculation || []).length - 1].cost) * 100)}%`,
                                     backgroundColor: item.color
                                 }}
                             />
                         </div>
 
-                        {item.notes.length > 0 && (
+                        {(item.notes || []).length > 0 && (
                             <div className="flex flex-wrap gap-2">
                                 {item.notes.map((note, i) => (
                                     <span key={i} className="text-[10px] bg-bg-secondary text-coffee-medium px-2 py-0.5 rounded flex items-center gap-1">

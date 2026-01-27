@@ -149,7 +149,7 @@ export default function SpotTradingPanel() {
 
     // Format chart data
     const chartData = useMemo(() => {
-        return candles.map(candle => ({
+        return (candles || []).map(candle => ({
             time: new Date(candle.time * 1000).toLocaleTimeString('en-US', {
                 hour: '2-digit',
                 minute: '2-digit',
@@ -162,8 +162,8 @@ export default function SpotTradingPanel() {
 
     // Y-axis domain
     const { yDomainMin, yDomainMax } = useMemo(() => {
-        if (chartData.length === 0) return { yDomainMin: 0, yDomainMax: 100 };
-        const prices = chartData.map(d => d.price);
+        if ((chartData || []).length === 0) return { yDomainMin: 0, yDomainMax: 100 };
+        const prices = (chartData || []).map(d => d.price);
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
         const priceRange = maxPrice - minPrice;
@@ -295,9 +295,9 @@ export default function SpotTradingPanel() {
 
     // Filter pairs by search
     const filteredPairs = useMemo(() => {
-        if (!searchQuery) return pairs;
+        if (!searchQuery) return (pairs || []);
         const query = searchQuery.toLowerCase();
-        return pairs.filter(p =>
+        return (pairs || []).filter(p =>
             p.baseName?.toLowerCase().includes(query) ||
             p.name.toLowerCase().includes(query)
         );

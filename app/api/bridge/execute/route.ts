@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
             token: token as typeof SupportedTokens[keyof typeof SupportedTokens],
             chainIn: fromChain as typeof SupportedChains[keyof typeof SupportedChains],
             chainOut: toChain as typeof SupportedChains[keyof typeof SupportedChains],
-            amount: amount,
+            amount: amount, // Pass human-readable amount to Rhino SDK
             mode: 'pay',
             depositor: depositor,
             recipient: recipient || depositor,
@@ -187,8 +187,8 @@ export async function POST(request: NextRequest) {
         const tokenAddress = tokenConfig.address;
         const tokenDecimals = tokenConfig.decimals || 6;
 
-        // Parse amount to proper token units
-        const tokenAmount = BigInt(amount); // Amount already in smallest units from client
+        // Parse amount to proper token units for contract call
+        const tokenAmount = parseUnits(amount, tokenDecimals);
 
         // Build the depositWithId calldata
         const depositCalldata = encodeFunctionData({

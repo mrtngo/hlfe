@@ -83,7 +83,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                     fromChain: CHAIN_NAME_MAP[fromChain],
                     toChain: 'ARBITRUM',
                     token: 'USDC',
-                    amount: parseUnits(amount, 6).toString(),
+                    amount: amount,
                     depositor: activeWallet.address,
                     recipient: activeWallet.address,
                 }),
