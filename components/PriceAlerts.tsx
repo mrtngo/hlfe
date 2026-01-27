@@ -232,7 +232,7 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
                     <button
                         onClick={handleCreateAlert}
                         disabled={creating || !targetPrice || !user}
-                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary text-black font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <BellPlus className="w-5 h-5" />
                         {creating ? 'Creating...' : 'Create Alert'}

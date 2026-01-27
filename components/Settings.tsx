@@ -109,9 +109,9 @@ export default function Settings() {
                                 className="shrink-0 p-2 rounded-xl transition-all flex items-center justify-center bg-primary hover:opacity-90"
                             >
                                 {copied ? (
-                                    <Check className="w-4 h-4 text-black" />
+                                    <Check className="w-4 h-4 text-white" />
                                 ) : (
-                                    <Copy className="w-4 h-4 text-black" />
+                                    <Copy className="w-4 h-4 text-white" />
                                 )}
                             </button>
                         </div>
@@ -191,7 +191,7 @@ export default function Settings() {
                                 <button
                                     onClick={() => pushNotifications.subscribe(user?.id || address || undefined)}
                                     disabled={pushNotifications.isLoading || !pushNotifications.isSupported || !pushNotifications.isSecureContext}
-                                    className="px-4 py-2 bg-brand text-black rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
+                                    className="px-4 py-2 bg-brand text-white rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                 >
                                     {pushNotifications.isLoading ? 'Enabling...' : 'Enable'}
                                 </button>
@@ -289,7 +289,7 @@ export default function Settings() {
                                     <button
                                         onClick={handleSetupAgentWallet}
                                         disabled={settingUpAgent}
-                                        className="px-4 py-2 bg-brand text-black rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
+                                        className="px-4 py-2 bg-brand text-white rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                     >
                                         {settingUpAgent ? 'Setting up...' : 'Activar'}
                                     </button>
@@ -372,7 +372,7 @@ export default function Settings() {
                                     <button
                                         onClick={handleApproveBuilderFee}
                                         disabled={builderFeeLoading}
-                                        className="px-4 py-2 bg-brand text-black rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
+                                        className="px-4 py-2 bg-brand text-white rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                     >
                                         {builderFeeLoading ? 'Approving...' : 'Aprobar'}
                                     </button>

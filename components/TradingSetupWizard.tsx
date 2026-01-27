@@ -239,7 +239,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
 
                             <button
                                 onClick={() => setStep(needsAgentWallet ? 'agent' : 'builder')}
-                                className="w-full py-4 bg-brand text-black rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                                className="w-full py-4 bg-brand text-white rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                             >
                                 {wizard.letsGo}
                             </button>
@@ -273,7 +273,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             <button
                                 onClick={handleSetupAgent}
                                 disabled={loading}
-                                className="w-full py-4 bg-brand text-black rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-brand text-white rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <>
@@ -308,7 +308,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
                             <button
                                 onClick={handleApproveBuilder}
                                 disabled={loading}
-                                className="w-full py-4 bg-brand text-black rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-brand text-white rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? (
                                     <>
@@ -356,7 +356,7 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
 
                             <button
                                 onClick={handleClose}
-                                className="w-full py-4 bg-brand text-black rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                                className="w-full py-4 bg-brand text-white rounded-2xl font-bold text-base hover:bg-brand-hover transition-colors shadow-[0_0_20px_rgba(255,255,0,0.3)]"
                             >
                                 {wizard.complete.startTrading}
                             </button>

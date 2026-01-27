@@ -209,223 +209,223 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                     boxShadow: '-10px 10px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255, 255, 0, 0.2), inset 0 0 20px rgba(255, 255, 0, 0.05)',
                 }}
             >
-            {/* Header */}
-            <div
-                className="flex items-center justify-between p-4 border-b shrink-0"
-                style={{
-                    borderColor: 'rgba(255, 255, 0, 0.2)',
-                    background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 100%)',
-                    borderTopLeftRadius: '22px',
-                    borderTopRightRadius: '22px',
-                }}
-            >
-                <div className="flex items-center gap-3">
-                    <div className="relative">
-                        <MessageSquare className="w-6 h-6 text-brand" />
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse" />
-                    </div>
-                    <div>
-                        <h2 className="text-lg font-bold text-white">Trollbox</h2>
-                        <div className="flex items-center gap-1.5 text-[10px] text-green-400">
-                            <Users className="w-3 h-3" />
-                            <span className="font-semibold">{onlineCount} online</span>
-                        </div>
-                    </div>
-                </div>
-                <button
-                    onClick={onClose}
-                    className="p-2.5 hover:bg-red-500/20 rounded-full transition-all hover:rotate-90 border border-transparent hover:border-red-500/30"
-                    style={{ transition: 'all 0.3s' }}
-                >
-                    <X className="w-5 h-5 text-gray-400 hover:text-red-400" strokeWidth={2.5} />
-                </button>
-            </div>
-
-            {/* Messages Area */}
-            <div
-                ref={messagesContainerRef}
-                onScroll={handleScroll}
-                className="trollbox-messages flex-1 overflow-y-auto p-4 space-y-3"
-                style={{
-                    background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50px)',
-                    scrollbarWidth: 'thin',
-                    scrollbarColor: 'rgba(250, 204, 21, 0.5) rgba(0, 0, 0, 0.2)',
-                }}
-            >
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-500">
-                        <div className="w-10 h-10 border-3 border-[#FFFF00]/20 border-t-[#FFFF00] rounded-full animate-spin" />
-                        <span className="text-sm font-semibold">Loading messages...</span>
-                    </div>
-                ) : messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                        <div className="relative mb-4">
-                            <MessageSquare className="w-16 h-16 text-brand/20" />
-                            <div className="absolute inset-0 animate-pulse">
-                                <MessageSquare className="w-16 h-16 text-brand/10" />
-                            </div>
-                        </div>
-                        <h3 className="text-white font-bold text-lg mb-2">It's quiet here...</h3>
-                        <p className="text-sm text-gray-400">Be the first to break the silence!</p>
-                    </div>
-                ) : (
-                    messages.map((msg) => {
-                        const userColor = msg.is_system ? '#FFFF00' : getUserColor(msg.user_id);
-                        const isCurrentUser = currentUser && msg.user_id === currentUser.id;
-
-                        return (
-                            <div key={msg.id} className="group flex flex-col gap-1.5 animate-fadeIn">
-                                <div className="flex items-center justify-between gap-2">
-                                    <div className="flex items-center gap-2">
-                                        <div
-                                            className="w-6 h-6 rounded-full flex items-center justify-center border-2 overflow-hidden shadow-lg"
-                                            style={{
-                                                borderColor: userColor,
-                                                background: `linear-gradient(135deg, ${userColor}20, ${userColor}10)`,
-                                            }}
-                                        >
-                                            {msg.user?.avatar_url ? (
-                                                <img src={msg.user.avatar_url} alt="" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <User className="w-3.5 h-3.5" style={{ color: userColor }} />
-                                            )}
-                                        </div>
-                                        <span
-                                            className="text-[13px] font-bold"
-                                            style={{
-                                                color: userColor,
-                                                textShadow: `0 0 10px ${userColor}40`
-                                            }}
-                                        >
-                                            {msg.user?.username || (msg.user?.wallet_address ? `${msg.user.wallet_address.slice(0, 6)}...${msg.user.wallet_address.slice(-4)}` : 'System')}
-                                            {isCurrentUser && (
-                                                <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-brand/20 text-brand">
-                                                    YOU
-                                                </span>
-                                            )}
-                                        </span>
-                                    </div>
-                                    <span className="text-[10px] text-gray-500 flex items-center gap-1">
-                                        <Clock className="w-2.5 h-2.5" />
-                                        {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true }).replace('about ', '')}
-                                    </span>
-                                </div>
-                                <div
-                                    className="text-[14px] p-3 rounded-xl rounded-tl-none break-words leading-relaxed transition-all group-hover:shadow-lg"
-                                    style={{
-                                        background: msg.is_system
-                                            ? 'linear-gradient(135deg, rgba(255, 255, 0, 0.15), rgba(255, 255, 0, 0.05))'
-                                            : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
-                                        border: `1px solid ${userColor}30`,
-                                        color: msg.is_system ? '#FFF8DC' : '#E5E5E5',
-                                        fontStyle: msg.is_system ? 'italic' : 'normal',
-                                        boxShadow: `0 2px 8px ${userColor}10`,
-                                    }}
-                                >
-                                    {msg.content}
-                                </div>
-                            </div>
-                        );
-                    })
-                )}
-                <div ref={messagesEndRef} />
-            </div>
-
-            {/* Scroll to Bottom Button */}
-            {showScrollButton && (
-                <button
-                    onClick={() => scrollToBottom()}
-                    className="absolute bottom-24 right-8 p-3 rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all z-10 animate-bounce"
+                {/* Header */}
+                <div
+                    className="flex items-center justify-between p-4 border-b shrink-0"
                     style={{
-                        background: 'linear-gradient(135deg, #FFFF00, #FFD700)',
-                        boxShadow: '0 4px 20px rgba(255, 255, 0, 0.5)',
+                        borderColor: 'rgba(255, 255, 0, 0.2)',
+                        background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 100%)',
+                        borderTopLeftRadius: '22px',
+                        borderTopRightRadius: '22px',
                     }}
                 >
-                    <svg className="w-5 h-5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                    </svg>
-                </button>
-            )}
+                    <div className="flex items-center gap-3">
+                        <div className="relative">
+                            <MessageSquare className="w-6 h-6 text-brand" />
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-white">Trollbox</h2>
+                            <div className="flex items-center gap-1.5 text-[10px] text-green-400">
+                                <Users className="w-3 h-3" />
+                                <span className="font-semibold">{onlineCount} online</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2.5 hover:bg-red-500/20 rounded-full transition-all hover:rotate-90 border border-transparent hover:border-red-500/30"
+                        style={{ transition: 'all 0.3s' }}
+                    >
+                        <X className="w-5 h-5 text-gray-400 hover:text-red-400" strokeWidth={2.5} />
+                    </button>
+                </div>
 
-            {/* Input Area */}
-            <div
-                className="p-4 border-t shrink-0"
-                style={{
-                    borderColor: 'rgba(255, 255, 0, 0.2)',
-                    background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%)',
-                    borderBottomLeftRadius: '22px',
-                    borderBottomRightRadius: '22px',
-                }}
-            >
-                {!address ? (
-                    <div
-                        className="p-4 rounded-xl text-center"
+                {/* Messages Area */}
+                <div
+                    ref={messagesContainerRef}
+                    onScroll={handleScroll}
+                    className="trollbox-messages flex-1 overflow-y-auto p-4 space-y-3"
+                    style={{
+                        background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50px)',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgba(250, 204, 21, 0.5) rgba(0, 0, 0, 0.2)',
+                    }}
+                >
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-500">
+                            <div className="w-10 h-10 border-3 border-[#FFFF00]/20 border-t-[#FFFF00] rounded-full animate-spin" />
+                            <span className="text-sm font-semibold">Loading messages...</span>
+                        </div>
+                    ) : messages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                            <div className="relative mb-4">
+                                <MessageSquare className="w-16 h-16 text-brand/20" />
+                                <div className="absolute inset-0 animate-pulse">
+                                    <MessageSquare className="w-16 h-16 text-brand/10" />
+                                </div>
+                            </div>
+                            <h3 className="text-white font-bold text-lg mb-2">It's quiet here...</h3>
+                            <p className="text-sm text-gray-400">Be the first to break the silence!</p>
+                        </div>
+                    ) : (
+                        messages.map((msg) => {
+                            const userColor = msg.is_system ? '#FFFF00' : getUserColor(msg.user_id);
+                            const isCurrentUser = currentUser && msg.user_id === currentUser.id;
+
+                            return (
+                                <div key={msg.id} className="group flex flex-col gap-1.5 animate-fadeIn">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="w-6 h-6 rounded-full flex items-center justify-center border-2 overflow-hidden shadow-lg"
+                                                style={{
+                                                    borderColor: userColor,
+                                                    background: `linear-gradient(135deg, ${userColor}20, ${userColor}10)`,
+                                                }}
+                                            >
+                                                {msg.user?.avatar_url ? (
+                                                    <img src={msg.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="w-3.5 h-3.5" style={{ color: userColor }} />
+                                                )}
+                                            </div>
+                                            <span
+                                                className="text-[13px] font-bold"
+                                                style={{
+                                                    color: userColor,
+                                                    textShadow: `0 0 10px ${userColor}40`
+                                                }}
+                                            >
+                                                {msg.user?.username || (msg.user?.wallet_address ? `${msg.user.wallet_address.slice(0, 6)}...${msg.user.wallet_address.slice(-4)}` : 'System')}
+                                                {isCurrentUser && (
+                                                    <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-brand/20 text-brand">
+                                                        YOU
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </div>
+                                        <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                                            <Clock className="w-2.5 h-2.5" />
+                                            {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true }).replace('about ', '')}
+                                        </span>
+                                    </div>
+                                    <div
+                                        className="text-[14px] p-3 rounded-xl rounded-tl-none break-words leading-relaxed transition-all group-hover:shadow-lg"
+                                        style={{
+                                            background: msg.is_system
+                                                ? 'linear-gradient(135deg, rgba(255, 255, 0, 0.15), rgba(255, 255, 0, 0.05))'
+                                                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
+                                            border: `1px solid ${userColor}30`,
+                                            color: msg.is_system ? '#FFF8DC' : '#E5E5E5',
+                                            fontStyle: msg.is_system ? 'italic' : 'normal',
+                                            boxShadow: `0 2px 8px ${userColor}10`,
+                                        }}
+                                    >
+                                        {msg.content}
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                {/* Scroll to Bottom Button */}
+                {showScrollButton && (
+                    <button
+                        onClick={() => scrollToBottom()}
+                        className="absolute bottom-24 right-8 p-3 rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all z-10 animate-bounce"
                         style={{
-                            background: 'linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.05))',
-                            border: '2px solid rgba(255, 68, 68, 0.3)',
-                            boxShadow: '0 4px 12px rgba(255, 68, 68, 0.2)',
+                            background: 'linear-gradient(135deg, #FFFF00, #FFD700)',
+                            boxShadow: '0 4px 20px rgba(255, 255, 0, 0.5)',
                         }}
                     >
-                        <p className="text-sm text-red-400 font-bold">🔒 Connect wallet to join the chat</p>
-                    </div>
-                ) : !currentUser ? (
-                    <div
-                        className="p-4 rounded-xl text-center"
-                        style={{
-                            background: 'linear-gradient(135deg, rgba(255, 165, 0, 0.1), rgba(255, 165, 0, 0.05))',
-                            border: '2px solid rgba(255, 165, 0, 0.3)',
-                            boxShadow: '0 4px 12px rgba(255, 165, 0, 0.2)',
-                        }}
-                    >
-                        <p className="text-sm text-orange-400 font-bold">⏳ Initializing profile...</p>
-                    </div>
-                ) : (
-                    <form onSubmit={handleSendMessage} className="relative flex items-center gap-3">
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Type your message..."
-                            maxLength={500}
-                            className="flex-1 rounded-full px-5 py-3.5 text-sm text-white placeholder-gray-400 focus:outline-none transition-all"
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                        </svg>
+                    </button>
+                )}
+
+                {/* Input Area */}
+                <div
+                    className="p-4 border-t shrink-0"
+                    style={{
+                        borderColor: 'rgba(255, 255, 0, 0.2)',
+                        background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%)',
+                        borderBottomLeftRadius: '22px',
+                        borderBottomRightRadius: '22px',
+                    }}
+                >
+                    {!address ? (
+                        <div
+                            className="p-4 rounded-xl text-center"
                             style={{
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
-                                border: '2px solid rgba(255, 255, 0, 0.2)',
-                                boxShadow: isSending ? 'none' : '0 2px 8px rgba(255, 255, 0, 0.1)',
-                            }}
-                            disabled={isSending}
-                            onFocus={(e) => {
-                                e.target.style.borderColor = 'rgba(255, 255, 0, 0.5)';
-                                e.target.style.boxShadow = '0 4px 16px rgba(255, 255, 0, 0.2)';
-                            }}
-                            onBlur={(e) => {
-                                e.target.style.borderColor = 'rgba(255, 255, 0, 0.2)';
-                                e.target.style.boxShadow = '0 2px 8px rgba(255, 255, 0, 0.1)';
-                            }}
-                        />
-                        <button
-                            type="submit"
-                            disabled={!newMessage.trim() || isSending}
-                            className="p-3.5 rounded-full text-black disabled:opacity-40 disabled:grayscale transition-all hover:scale-110 active:scale-95 flex items-center justify-center shrink-0 shadow-lg"
-                            style={{
-                                background: !newMessage.trim() || isSending
-                                    ? 'rgba(100, 100, 100, 0.5)'
-                                    : 'linear-gradient(135deg, #FFFF00, #FFD700)',
-                                boxShadow: !newMessage.trim() || isSending
-                                    ? 'none'
-                                    : '0 4px 16px rgba(255, 255, 0, 0.4)',
+                                background: 'linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 68, 68, 0.05))',
+                                border: '2px solid rgba(255, 68, 68, 0.3)',
+                                boxShadow: '0 4px 12px rgba(255, 68, 68, 0.2)',
                             }}
                         >
-                            {isSending ? (
-                                <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                            ) : (
-                                <Send className="w-5 h-5 flex-shrink-0" />
-                            )}
-                        </button>
-                    </form>
-                )}
+                            <p className="text-sm text-red-400 font-bold">🔒 Connect wallet to join the chat</p>
+                        </div>
+                    ) : !currentUser ? (
+                        <div
+                            className="p-4 rounded-xl text-center"
+                            style={{
+                                background: 'linear-gradient(135deg, rgba(255, 165, 0, 0.1), rgba(255, 165, 0, 0.05))',
+                                border: '2px solid rgba(255, 165, 0, 0.3)',
+                                boxShadow: '0 4px 12px rgba(255, 165, 0, 0.2)',
+                            }}
+                        >
+                            <p className="text-sm text-orange-400 font-bold">⏳ Initializing profile...</p>
+                        </div>
+                    ) : (
+                        <form onSubmit={handleSendMessage} className="relative flex items-center gap-3">
+                            <input
+                                type="text"
+                                value={newMessage}
+                                onChange={(e) => setNewMessage(e.target.value)}
+                                placeholder="Type your message..."
+                                maxLength={500}
+                                className="flex-1 rounded-full px-5 py-3.5 text-sm text-white placeholder-gray-400 focus:outline-none transition-all"
+                                style={{
+                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
+                                    border: '2px solid rgba(255, 255, 0, 0.2)',
+                                    boxShadow: isSending ? 'none' : '0 2px 8px rgba(255, 255, 0, 0.1)',
+                                }}
+                                disabled={isSending}
+                                onFocus={(e) => {
+                                    e.target.style.borderColor = 'rgba(255, 255, 0, 0.5)';
+                                    e.target.style.boxShadow = '0 4px 16px rgba(255, 255, 0, 0.2)';
+                                }}
+                                onBlur={(e) => {
+                                    e.target.style.borderColor = 'rgba(255, 255, 0, 0.2)';
+                                    e.target.style.boxShadow = '0 2px 8px rgba(255, 255, 0, 0.1)';
+                                }}
+                            />
+                            <button
+                                type="submit"
+                                disabled={!newMessage.trim() || isSending}
+                                className="p-3.5 rounded-full text-white disabled:opacity-40 disabled:grayscale transition-all hover:scale-110 active:scale-95 flex items-center justify-center shrink-0 shadow-lg"
+                                style={{
+                                    background: !newMessage.trim() || isSending
+                                        ? 'rgba(100, 100, 100, 0.5)'
+                                        : 'linear-gradient(135deg, #FFFF00, #FFD700)',
+                                    boxShadow: !newMessage.trim() || isSending
+                                        ? 'none'
+                                        : '0 4px 16px rgba(255, 255, 0, 0.4)',
+                                }}
+                            >
+                                {isSending ? (
+                                    <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                ) : (
+                                    <Send className="w-5 h-5 flex-shrink-0" />
+                                )}
+                            </button>
+                        </form>
+                    )}
+                </div>
             </div>
-        </div>
         </>
     );
 }

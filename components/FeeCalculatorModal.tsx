@@ -171,7 +171,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                     key={val}
                                     onClick={() => setAmount(val.toString())}
                                     className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg ${numericAmount === val
-                                        ? 'bg-brand text-black'
+                                        ? 'bg-brand text-white'
                                         : 'bg-bg-elevated text-white hover:bg-bg-hover border border-white/20'
                                         }`}
                                     style={numericAmount === val ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.4)' } : {}}
@@ -207,7 +207,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
                                 className={`py-3 rounded-full text-sm font-bold flex flex-col items-center gap-1.5 transition-all ${activeTab === tab.id
-                                    ? 'bg-brand text-black shadow-lg'
+                                    ? 'bg-brand text-white shadow-lg'
                                     : 'bg-bg-elevated text-white hover:bg-bg-hover border border-white/20'
                                     }`}
                                 style={activeTab === tab.id ? { boxShadow: '0 4px 16px rgba(255, 255, 0, 0.3)' } : {}}
@@ -222,8 +222,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     <div className="space-y-3">
                         {/* Rayo Card */}
                         <div
-                            className="bg-brand rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group text-black"
-                            style={{ color: '#000000' }}
+                            className="bg-brand rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group text-white"
                         >
                             <div className="absolute inset-0 bg-bg-hover translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 skew-x-12" />
                             <div className="flex items-center gap-3 relative z-10">
@@ -231,13 +230,13 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                     R
                                 </div>
                                 <div>
-                                    <h3 className="text-black font-black text-base !text-black" style={{ color: '#000000' }}>RAYO</h3>
-                                    <p className="text-black/70 text-[10px] font-bold !text-black/70" style={{ color: 'rgba(0,0,0,0.7)' }}>Tarifa Taker 0.075%</p>
+                                    <h3 className="text-white font-black text-base">RAYO</h3>
+                                    <p className="text-white/70 text-[10px] font-bold">Tarifa Taker 0.075%</p>
                                 </div>
                             </div>
                             <div className="text-right relative z-10">
-                                <div className="text-xl font-black text-black font-mono !text-black" style={{ color: '#000000' }}>{formatCurrency(calculation.rayo)}</div>
-                                <div className="text-black/70 text-[9px] font-bold uppercase !text-black/70" style={{ color: 'rgba(0,0,0,0.7)' }}>Costo Total</div>
+                                <div className="text-xl font-black text-white font-mono">{formatCurrency(calculation.rayo)}</div>
+                                <div className="text-white/70 text-[9px] font-bold uppercase">Costo Total</div>
                             </div>
                         </div>
 
@@ -248,7 +247,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                 <div key={comp.name} className="bg-bg-secondary border border-white/5 rounded-xl p-3 flex items-center justify-between hover:bg-bg-elevated transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div
-                                            className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full flex-shrink-0 flex items-center justify-center font-bold text-black text-[10px] shadow-inner overflow-hidden bg-white"
+                                            className="w-8 h-8 min-w-[2rem] min-h-[2rem] rounded-full flex-shrink-0 flex items-center justify-center font-bold text-white text-[10px] shadow-inner overflow-hidden bg-white"
                                             style={{ width: '32px', height: '32px' }}
                                         >
                                             <img

@@ -81,7 +81,7 @@ export default function Leaderboard() {
                         key={p}
                         onClick={() => setPeriod(p)}
                         className={`flex-1 py-3 rounded-full font-semibold transition-all ${period === p
-                                ? 'bg-brand text-black'
+                                ? 'bg-brand text-white'
                                 : 'text-coffee-medium hover:text-white'
                             }`}
                     >

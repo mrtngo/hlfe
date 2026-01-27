@@ -143,21 +143,21 @@ export default function FeeCalculator() {
                     <div className="grid grid-cols-3 gap-2">
                         <button
                             onClick={() => setStrategy('standard')}
-                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'standard' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'standard' ? 'bg-brand border-[#FFFF00] text-white' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Estándar
                         </button>
                         <button
                             onClick={() => setStrategy('dividends')}
-                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'dividends' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'dividends' ? 'bg-brand border-[#FFFF00] text-white' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Dividendos
                         </button>
                         <button
                             onClick={() => setStrategy('usa')}
-                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'usa' ? 'bg-brand border-[#FFFF00] text-black' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
+                            className={`p-2 rounded-full border text-xs font-bold transition-all ${strategy === 'usa' ? 'bg-brand border-[#FFFF00] text-white' : 'bg-transparent border-white/10 text-coffee-medium hover:text-white'
                                 }`}
                         >
                             Acciones USA
@@ -172,12 +172,12 @@ export default function FeeCalculator() {
                     <div
                         key={item.name}
                         className={`relative p-3 rounded-xl border transition-all ${item.highlight
-                                ? 'bg-brand/10 border-[#FFFF00] scale-[1.02] shadow-[0_0_20px_rgba(255,255,0,0.1)]'
-                                : 'bg-bg-secondary border-transparent opacity-80'
+                            ? 'bg-brand/10 border-[#FFFF00] scale-[1.02] shadow-[0_0_20px_rgba(255,255,0,0.1)]'
+                            : 'bg-bg-secondary border-transparent opacity-80'
                             }`}
                     >
                         {item.highlight && (
-                            <div className="absolute -top-3 right-4 bg-brand text-black text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <div className="absolute -top-3 right-4 bg-brand text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                 <Trophy className="w-3 h-3" /> MEJOR OPCIÓN
                             </div>
                         )}

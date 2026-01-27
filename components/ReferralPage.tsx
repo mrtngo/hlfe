@@ -86,7 +86,7 @@ export default function ReferralPage() {
                     </code>
                     <button
                         onClick={copyReferralLink}
-                        className="flex-shrink-0 p-3 bg-brand text-black rounded-xl hover:opacity-90 transition-all"
+                        className="flex-shrink-0 p-3 bg-brand text-white rounded-xl hover:opacity-90 transition-all"
                     >
                         {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     </button>

@@ -116,7 +116,7 @@ export function NewsFeed({ height = 600, showHeader = true }: NewsFeedProps) {
                     href="https://twitter.com/i/lists/create"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-brand text-black font-bold rounded-full hover:bg-[#FFD700] transition-all"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-brand text-white font-bold rounded-full hover:bg-[#FFD700] transition-all"
                 >
                     Create Your News List on X
                     <ExternalLink className="w-4 h-4" />

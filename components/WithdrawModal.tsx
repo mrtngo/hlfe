@@ -261,7 +261,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                     <button
                         onClick={handleWithdraw}
                         disabled={loading || !isValidAmount || !address}
-                        className="w-full py-4 bg-brand text-black font-bold rounded-full hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-brand text-white font-bold rounded-full hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <>

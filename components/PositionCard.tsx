@@ -196,7 +196,7 @@ export default function PositionCard({
                                 e.stopPropagation();
                                 onClose(position.symbol);
                             }}
-                            className="flex-1 py-3 px-4 bg-brand hover:bg-brand-hover text-black rounded-xl text-xs font-bold transition-all active:scale-[0.98] shadow-glow-brand"
+                            className="flex-1 py-3 px-4 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98] shadow-glow-brand"
                         >
                             CLOSE
                         </button>

@@ -299,7 +299,7 @@ export default function CandlestickChart({
                         key={tf.value}
                         onClick={() => handleTimeframeChange(tf.value)}
                         className={`px-3 py-1.5 text-xs font-semibold rounded transition-all ${timeframe === tf.value
-                            ? 'bg-primary text-black'
+                            ? 'bg-primary text-white'
                             : 'text-coffee-medium hover:text-white hover:bg-bg-secondary'
                             }`}
                     >

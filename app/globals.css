@@ -144,7 +144,7 @@ select:-webkit-autofill {
 
 html,
 body {
-  color: #FFFFFF;
+  color: #FFFFFF !important;
 }
 
 /* Ensure all common text elements default to white */
@@ -167,19 +167,33 @@ strong,
 em,
 b,
 i,
-small {
-  color: inherit;
+small,
+input,
+textarea,
+select,
+option {
+  color: #FFFFFF !important;
 }
 
 /* Force button text to be white unless explicitly set */
 button {
-  color: #FFFFFF;
+  color: #FFFFFF !important;
+}
+
+/* OVERRIDE Tailwind text-black and related classes */
+.text-black,
+.text-black\/70,
+.text-gray-900,
+.text-gray-800,
+.text-slate-900,
+.text-neutral-900 {
+  color: #FFFFFF !important;
 }
 
 /* Dropdown/select specific fixes */
 select option {
   color: #FFFFFF !important;
-  background-color: #1a1a1a !important;
+  background-color: #000000 !important;
 }
 
 /* iOS/Safari select fixes */
@@ -188,7 +202,7 @@ select {
   -moz-appearance: none;
   appearance: none;
   color: #FFFFFF !important;
-  background-color: rgba(0, 0, 0, 0.8) !important;
+  background-color: rgba(30, 30, 30, 0.9) !important;
 }
 
 /* Fix for any element that might inherit black */
@@ -199,7 +213,20 @@ select {
 [class*="menu"],
 [class*="Menu"],
 [class*="option"],
-[class*="Option"] {
+[class*="Option"],
+[class*="category"],
+[class*="Category"] {
+  color: #FFFFFF !important;
+}
+
+/* Special fix for the active category tab which was hardcoded black */
+button.bg-brand,
+button[class*="bg-brand"] {
+  color: #FFFFFF !important;
+}
+
+button.text-black,
+.bg-brand.text-black {
   color: #FFFFFF !important;
 }
 

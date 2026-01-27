@@ -209,7 +209,7 @@ export default function Profile() {
                             <button
                                 onClick={saveUsername}
                                 disabled={saving || tempUsername.length < 3}
-                                className="px-6 py-2.5 bg-brand text-black rounded-full text-sm font-black disabled:opacity-50 active:scale-95 transition-all"
+                                className="px-6 py-2.5 bg-brand text-white rounded-full text-sm font-black disabled:opacity-50 active:scale-95 transition-all"
                             >
                                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.save}
                             </button>
@@ -342,7 +342,7 @@ export default function Profile() {
                     </code>
                     <button
                         onClick={copyReferralLink}
-                        className="p-3 bg-brand/10 border border-brand/30 rounded-xl text-brand hover:bg-brand hover:text-black transition-all active:scale-95"
+                        className="p-3 bg-brand/10 border border-brand/30 rounded-xl text-brand hover:bg-brand hover:text-white transition-all active:scale-95"
                     >
                         {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     </button>
@@ -379,13 +379,13 @@ export default function Profile() {
                         <div className="flex gap-1">
                             <button
                                 onClick={() => setLanguage('en')}
-                                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'en' ? 'bg-brand text-black shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
+                                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'en' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
                             >
                                 ENGLISH
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
-                                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'es' ? 'bg-brand text-black shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
+                                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'es' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
                             >
                                 ESPAÑOL
                             </button>
@@ -481,7 +481,7 @@ export default function Profile() {
                                 className={`w-5 h-5 rounded-full shadow-xl absolute top-1 transition-all duration-300 ${agentWalletEnabled ? 'right-1 bg-black' : 'left-1 bg-white/40'}`}
                             />
                             {settingUpAgent && (
-                                <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-black" />
+                                <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-white" />
                             )}
                         </button>
                     </div>

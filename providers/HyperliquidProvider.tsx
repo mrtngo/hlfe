@@ -1957,10 +1957,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             console.log(`🗑️ Cancelling order ${orderId} for ${symbol}`);
 
             // 1. Get asset index
+            // The symbol passed might be "BTC-PERP", "BTC", or "HYPE/USDC"
+            const market = markets.find(m => m.symbol === symbol || m.name === symbol);
             const isSpot = symbol.includes('/');
-            const market = markets.find(m => m.symbol === symbol);
             const isTradeXyzAsset = market?.isStock === true;
-            const baseCoin = symbol.split('-')[0].split('/')[0];
+            const baseCoin = (market?.name || symbol.split('-')[0].split('/')[0]);
 
             let assetIndex = -1;
 
@@ -1972,7 +1973,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 });
                 if (response.ok) {
                     const [spotMeta] = await response.json();
-                    const pairIndex = spotMeta.universe.findIndex((p: any) => p.name === symbol);
+                    // Match by universe name
+                    const universeName = market?.symbol || symbol;
+                    const pairIndex = spotMeta.universe.findIndex((p: any) => p.name === universeName);
                     if (pairIndex !== -1) assetIndex = 10000 + pairIndex;
                 }
             } else if (isTradeXyzAsset) {
@@ -1995,12 +1998,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 });
                 if (response.ok) {
                     const meta = await response.json();
-                    const assetName = (baseCoin === 'HYPE' ? 'HYPE' : `${baseCoin}-PERP`);
-                    assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
+                    const universeName = (baseCoin === 'HYPE' ? 'HYPE' : `${baseCoin}-PERP`);
+                    assetIndex = meta.universe.findIndex((u: any) => u.name === universeName);
                 }
             }
 
             if (assetIndex === -1) {
+                console.error(`❌ Could not find asset index for ${symbol}. Markets:`, markets.length);
                 throw new Error(`Could not find asset index for ${symbol}`);
             }
 
