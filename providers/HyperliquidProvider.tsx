@@ -243,7 +243,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     // Update markets from real data
     // Use startTransition to defer state updates and avoid hydration issues
     useEffect(() => {
-        if (realMarkets.length > 0) {
+        if (realMarkets && realMarkets.length > 0) {
             startTransition(() => {
                 setMarkets(realMarkets);
             });
