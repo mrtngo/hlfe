@@ -233,7 +233,12 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             <div style={{ marginBottom: '32px' }}>
                 <button
                     onClick={() => setShowDepositModal(true)}
-                    className="w-full py-4 bg-brand mb-8 text-black font-bold rounded-2xl hover:bg-brand-hover transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,0,0.3)]"
+                    className="w-full py-4 mb-8 font-bold rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                    style={{
+                        backgroundColor: '#FACC15',
+                        color: '#000000',
+                        boxShadow: '0 0 20px rgba(255, 255, 0, 0.3)'
+                    }}
                 >
                     <CreditCard className="w-5 h-5" />
                     Deposit

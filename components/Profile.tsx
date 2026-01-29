@@ -342,7 +342,7 @@ export default function Profile() {
                     </code>
                     <button
                         onClick={copyReferralLink}
-                        className="p-3 bg-brand/10 border border-brand/30 rounded-xl text-brand hover:bg-brand hover:text-white transition-all active:scale-95"
+                        className="p-3 bg-brand/10 border border-brand/30 rounded-xl text-brand hover:bg-brand hover:text-black transition-all active:scale-95"
                     >
                         {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     </button>
