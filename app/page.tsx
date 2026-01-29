@@ -207,13 +207,12 @@ export default function Home() {
                             opacity: view === 'home' ? 1 : 0.6
                         }}
                     >
-                        <div className="w-7 h-7 flex items-center justify-center">
-                            <img
-                                src="/logo.svg"
-                                alt="Home"
-                                className="w-8 h-8"
-                            />
-                        </div>
+                        <img
+                            src="/logo.svg"
+                            alt="Home"
+                            className="w-7 h-7"
+                            style={{ objectFit: 'contain' }}
+                        />
                         <span className="text-[11px] font-semibold">{t.nav.home}</span>
                     </button>
 
