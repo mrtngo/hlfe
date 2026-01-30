@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
-import { TrendingUp, TrendingDown, AlertCircle, Info, Settings2, Zap, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Info, Settings2, Zap } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from '@/components/OrderNotification';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
@@ -16,7 +16,7 @@ type MarginMode = 'isolated' | 'cross';
 
 export default function OrderPanel() {
     const { t, formatCurrency } = useLanguage();
-    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData, agentWalletEnabled, builderFeeApproved, setupAgentWallet, approveBuilderFee, dexAbstractionEnabled, dexAbstractionLoading, enableDexAbstraction } = useHyperliquid();
+    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData, agentWalletEnabled, builderFeeApproved, setupAgentWallet, approveBuilderFee } = useHyperliquid();
 
     const [mode, setMode] = useState<OrderMode>('basic');
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
@@ -41,15 +41,11 @@ export default function OrderPanel() {
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [setupLoading, setSetupLoading] = useState(false);
     const [setupError, setSetupError] = useState<string>('');
-    const [showStockApprovalModal, setShowStockApprovalModal] = useState(false);
 
     const market = getMarket(selectedMarket);
     const displaySymbol = selectedMarket?.replace(/-(USD|PERP)$/i, '') || selectedMarket;
     const currentPrice = market?.price || 0;
     const maxLeverage = market?.maxLeverage || 20;
-
-    // Check if this is a stock/XYZ asset (HIP-3)
-    const isStockAsset = market?.isStock === true || market?.onlyIsolated === true;
 
     const { wallets } = useWallets();
     const isUsingEmbeddedWallet = wallets.some((w: any) => w.walletClientType === 'privy');
@@ -158,12 +154,6 @@ export default function OrderPanel() {
         // Check if setup is needed
         if (!agentWalletEnabled || (BUILDER_CONFIG.enabled && !builderFeeApproved)) {
             setShowSetupWizard(true);
-            return;
-        }
-
-        // Check if trying to trade a stock without DEX abstraction enabled
-        if (isStockAsset && !dexAbstractionEnabled) {
-            setShowStockApprovalModal(true);
             return;
         }
 
@@ -813,62 +803,6 @@ export default function OrderPanel() {
                 order={orderNotification}
                 onClose={() => setOrderNotification(null)}
             />
-
-            {/* Stock Approval Modal */}
-            {showStockApprovalModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#111111] border border-[#FFFF00]/30 rounded-2xl p-6 max-w-sm w-full">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <Zap className="w-5 h-5 text-blue-400" />
-                                <h3 className="text-lg font-bold text-white">Enable Stock Trading</h3>
-                            </div>
-                            <button
-                                onClick={() => setShowStockApprovalModal(false)}
-                                className="text-white/50 hover:text-white"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <p className="text-white/70 text-sm mb-6">
-                            To trade <span className="text-[#FFFF00] font-bold">{displaySymbol}</span> and other XYZ stocks, you need to enable stock trading on your account. This is a one-time approval.
-                        </p>
-
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => setShowStockApprovalModal(false)}
-                                className="flex-1 py-3 rounded-xl font-bold text-sm bg-white/10 text-white/70 hover:bg-white/20 transition-all"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    const result = await enableDexAbstraction();
-                                    setShowStockApprovalModal(false);
-                                    if (!result.success) {
-                                        setError(result.message);
-                                    }
-                                }}
-                                disabled={dexAbstractionLoading}
-                                className="flex-1 py-3 rounded-xl font-bold text-sm bg-blue-500 text-white hover:bg-blue-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {dexAbstractionLoading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Enabling...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Zap className="w-4 h-4" />
-                                        Enable Stocks
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Trading Setup Wizard */}
             <TradingSetupWizard
