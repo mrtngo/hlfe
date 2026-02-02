@@ -750,8 +750,8 @@ export default function SpotTradingPanel() {
                     <button
                         onClick={() => setIsBuy(true)}
                         className={`py-3 rounded-l-xl font-bold transition-all flex items-center justify-center gap-2 ${isBuy
-                            ? 'bg-yellow-500 text-black'
-                            : 'bg-black/30 text-red-500 border border-white/10'
+                            ? 'bg-[#34C759] text-white shadow-[0_0_20px_rgba(52,199,89,0.3)]'
+                            : 'bg-black/30 text-[#34C759]/50 border border-white/10 hover:text-[#34C759]'
                             }`}
                     >
                         <TrendingUp className="w-4 h-4" />
@@ -761,7 +761,7 @@ export default function SpotTradingPanel() {
                         onClick={() => setIsBuy(false)}
                         className={`py-3 rounded-r-xl font-bold transition-all flex items-center justify-center gap-2 ${!isBuy
                             ? 'bg-black/30 text-red-500 border border-red-500/50'
-                            : 'bg-black/30 text-red-500/50 border border-white/10'
+                            : 'bg-black/30 text-white/40 border border-white/10 hover:text-white/60'
                             }`}
                     >
                         <TrendingDown className="w-4 h-4" />
@@ -804,7 +804,7 @@ export default function SpotTradingPanel() {
                             <span className="text-white/50">Limit Price</span>
                             <button
                                 onClick={() => setLimitPrice(currentPrice.toFixed(6))}
-                                className="text-yellow-500 hover:underline font-semibold"
+                                className="text-[#34C759] hover:underline font-semibold"
                             >
                                 Use Current: {formatSmartPrice(currentPrice)}
                             </button>
@@ -817,7 +817,7 @@ export default function SpotTradingPanel() {
                                 placeholder={currentPrice.toFixed(2)}
                                 step="any"
                                 min="0"
-                                className="w-full py-3 px-4 pr-16 bg-black/30 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-yellow-500/50 outline-none"
+                                className="w-full py-3 px-4 pr-16 bg-black/30 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-[#34C759]/50 outline-none"
                                 style={{ fontSize: '16px' }}
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 text-sm font-semibold">
@@ -845,7 +845,7 @@ export default function SpotTradingPanel() {
                         <span className="text-white/50">Amount</span>
                         <button
                             onClick={() => setAmount(maxAmount.toFixed(6))}
-                            className="text-yellow-500 hover:underline font-semibold"
+                            className="text-[#34C759] hover:underline font-semibold"
                         >
                             Max: {maxAmount.toFixed(4)}
                         </button>
@@ -862,7 +862,7 @@ export default function SpotTradingPanel() {
                             placeholder="0.00"
                             step="any"
                             min="0"
-                            className="w-full py-3 px-4 pr-16 bg-black/30 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-yellow-500/50 outline-none"
+                            className="w-full py-3 px-4 pr-16 bg-black/30 border border-white/10 rounded-xl text-white text-lg font-mono focus:border-[#34C759]/50 outline-none"
                             style={{ fontSize: '16px' }}
                         />
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 text-sm font-semibold">
@@ -877,7 +877,7 @@ export default function SpotTradingPanel() {
                         <button
                             key={pct}
                             onClick={() => setAmount((maxAmount * pct / 100).toFixed(6))}
-                            className="flex-1 py-2 text-xs font-semibold text-white/50 hover:text-yellow-500 bg-black/30 hover:bg-yellow-500/10 rounded-lg transition-all"
+                            className="flex-1 py-2 text-xs font-semibold text-white/50 hover:text-[#34C759] bg-black/30 hover:bg-[#34C759]/10 rounded-lg transition-all"
                         >
                             {pct}%
                         </button>
@@ -901,7 +901,7 @@ export default function SpotTradingPanel() {
                         </div>
                         <div className="flex justify-between pt-1 border-t border-white/5">
                             <span className="text-white/50">{isBuy ? 'Total' : 'Receive'}</span>
-                            <span className="text-yellow-500 font-mono font-bold">
+                            <span className="text-[#34C759] font-mono font-bold">
                                 {formatSmartPrice(orderType === 'limit' && limitPrice
                                     ? amountNum * parseFloat(limitPrice)
                                     : totalValue)}
@@ -934,7 +934,7 @@ export default function SpotTradingPanel() {
                     onClick={handleOrder}
                     disabled={loading || !isValidAmount || !connected || !selectedPair}
                     className={`w-full py-4 rounded-full font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${isBuy
-                        ? 'bg-yellow-500 hover:brightness-110 text-black'
+                        ? 'bg-[#34C759] hover:bg-[#2DB34F] text-white shadow-[0_0_20px_rgba(52,199,89,0.3)]'
                         : 'bg-black border border-red-500/50 text-red-500 hover:bg-red-500/10'
                         } disabled:opacity-40 disabled:cursor-not-allowed`}
                 >

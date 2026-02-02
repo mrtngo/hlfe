@@ -261,10 +261,10 @@ export default function OrderPanel() {
                             <button
                                 onClick={() => setOrderSide('long')}
                                 className={`flex-1 py-6 rounded-2xl font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'long'
-                                    ? 'bg-gradient-to-b from-[#FFFF00] to-[#FFD700] text-black shadow-[0_0_30px_rgba(255,255,0,0.5),0_4px_15px_rgba(0,0,0,0.3)] scale-[1.02] border-2 border-[#FFFF33]'
-                                    : 'bg-[#0D0D0D] text-brand border-2 border-[#FFFF00]/20 hover:border-[#FFFF00]/50 hover:bg-brand/5'
+                                    ? 'bg-gradient-to-b from-[#34C759] to-[#28A745] text-white shadow-[0_0_30px_rgba(52,199,89,0.5),0_4px_15px_rgba(0,0,0,0.3)] scale-[1.02] border-2 border-[#45D76D]'
+                                    : 'bg-[#0D0D0D] text-[#34C759] border-2 border-[#34C759]/20 hover:border-[#34C759]/50 hover:bg-[#34C759]/5'
                                     }`}
-                                style={orderSide === 'long' ? { color: '#000' } : undefined}
+                                style={orderSide === 'long' ? { color: '#FFF' } : undefined}
                             >
                                 <TrendingUp className="w-8 h-8" strokeWidth={3} />
                                 <span className="tracking-wide">{t.order.buy}</span>
@@ -519,8 +519,8 @@ export default function OrderPanel() {
                             <button
                                 onClick={() => setOrderSide('long')}
                                 className={`py-4 rounded-full font-bold transition-all border-2 ${orderSide === 'long'
-                                    ? 'bg-brand text-black border-brand shadow-glow-brand'
-                                    : 'bg-brand/20 text-brand border-brand/40 hover:bg-brand/30'
+                                    ? 'bg-[#34C759] text-white border-[#34C759] shadow-[0_0_20px_rgba(52,199,89,0.3)]'
+                                    : 'bg-[#34C759]/20 text-[#34C759] border-[#34C759]/40 hover:bg-[#34C759]/30'
                                     }`}
                             >
                                 <div className="flex items-center justify-center gap-2">
@@ -731,10 +731,10 @@ export default function OrderPanel() {
                     onClick={handlePlaceOrder}
                     disabled={loading || (connected && agentWalletEnabled && (tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE))}
                     className={`w-full rounded-full text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
-                        ? 'bg-brand hover:bg-brand-hover text-black shadow-[0_0_20px_rgba(255,255,0,0.3)]'
+                        ? 'bg-[#34C759] hover:bg-[#2DB34F] text-white shadow-[0_0_20px_rgba(52,199,89,0.3)]'
                         : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'
                         }`}
-                    style={orderSide === 'long' ? { color: '#000', minHeight: '80px' } : { minHeight: '80px' }}
+                    style={orderSide === 'long' ? { color: '#FFF', minHeight: '80px' } : { minHeight: '80px' }}
                 >
                     {loading ? (
                         <div className="flex items-center justify-center gap-2">
