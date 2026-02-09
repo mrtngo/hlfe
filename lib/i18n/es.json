@@ -23,14 +23,14 @@
     "online": "en línea",
     "loadingMessages": "Cargando mensajes...",
     "beTheFirst": "¡Sé el primero en romper el silencio!",
-    "itsQuiet": "Está muy tranquilo aquí...",
+    "itsQuiet": "Está tranquilo por aquí...",
     "typeMessage": "Escribe tu mensaje...",
     "deposit": "Depositar",
     "thirtyDay": "30d"
   },
   "nav": {
     "home": "Inicio",
-    "trade": "Tradear",
+    "trade": "Comerciar",
     "markets": "Mercados",
     "portfolio": "Portafolio",
     "history": "Historial",
@@ -79,21 +79,21 @@
     "max": "Máx",
     "balance": "Balance",
     "insufficientBalance": "Balance insuficiente",
-    "placeOrder": "Enviar Orden",
-    "placing": "Enviando...",
-    "orderPlaced": "Orden enviada",
-    "placeFailed": "Error al enviar orden",
+    "placeOrder": "Realizar Orden",
+    "placing": "Procesando...",
+    "orderPlaced": "Orden realizada",
+    "placeFailed": "Error al realizar la orden",
     "invalidSize": "Ingresa un tamaño válido",
     "invalidPrice": "Ingresa un precio válido",
-    "buyLong": "Comprar / Largo",
-    "sellShort": "Vender / Corto",
-    "enterAmount": "Ingresa Cantidad",
+    "buyLong": "Comprar / Long",
+    "sellShort": "Vender / Short",
+    "enterAmount": "Ingresar Cantidad",
     "tpSl": "Take Profit / Stop Loss",
     "tpPrice": "Precio TP",
     "slPrice": "Precio SL",
-    "reduceOnly": "Solo Reducción",
+    "reduceOnly": "Solo Reducir",
     "mid": "Medio",
-    "value": "Valor de Orden"
+    "value": "Valor de la Orden"
   },
   "positions": {
     "title": "Posiciones",
@@ -111,15 +111,15 @@
     "close": "Cerrar",
     "closeAll": "Cerrar Todo",
     "addMargin": "Añadir Margen",
-    "removeMargin": "Retirar Margen",
+    "removeMargin": "Quitar Margen",
     "editLeverage": "Editar Apalancamiento",
     "closePosition": "¿Cerrar esta posición?",
     "positionClosed": "Posición cerrada",
-    "closeFailed": "Error al cerrar posición",
+    "closeFailed": "Error al cerrar la posición",
     "activePositions": "{{count}} posición activa",
     "activePositionsPlural": "{{count}} posiciones activas",
-    "long": "LARGO ↑",
-    "short": "CORTO ↓",
+    "long": "LONG ↑",
+    "short": "SHORT ↓",
     "cancelTp": "¿Cancelar Take Profit?",
     "cancelSl": "¿Cancelar Stop Loss?"
   },
@@ -144,13 +144,13 @@
     },
     "cancelOrder": "¿Cancelar esta orden?",
     "orderCancelled": "Orden cancelada",
-    "cancelFailed": "Error al cancelar orden",
+    "cancelFailed": "Error al cancelar la orden",
     "pendingOrders": "{{count}} orden pendiente",
     "pendingOrdersPlural": "{{count}} órdenes pendientes",
     "limitOrder": "Orden Límite",
     "buy": "COMPRA",
     "sell": "VENTA",
-    "orderValue": "Valor de Orden"
+    "orderValue": "Valor de la Orden"
   },
   "portfolio": {
     "title": "Portafolio",
@@ -162,9 +162,9 @@
   },
   "history": {
     "title": "Historial",
-    "trades": "Trades",
+    "trades": "Operaciones",
     "transfers": "Transferencias",
-    "funding": "Funding",
+    "funding": "Financiamiento",
     "noHistory": "No hay historial disponible"
   },
   "profile": {
@@ -186,36 +186,55 @@
     "currency": "Moneda",
     "theme": "Tema",
     "notifications": "Notificaciones",
-    "trading": "Trading",
-    "oneClickTrading": "Trading un clic",
-    "slippage": "Slippage",
+    "trading": "Comercio",
+    "oneClickTrading": "Comercio en un clic",
+    "slippage": "Deslizamiento",
     "confirmations": "Confirmaciones"
   },
   "depositModal": {
-    "tabStandard": "Depósito de Activos",
-    "tabBridge": "Puente Rhino.fi",
-    "titleStandard": "Depósito Estándar",
-    "titleBridge": "Puente entre Cadenas",
-    "descStandard": "Envía USDC directamente a tu dirección de Rayo en Arbitrum.",
-    "descBridge": "Puentea activos desde otras cadenas directamente a tu cuenta de Rayo.",
+    "tabStandard": "Depósito",
+    "tabBridge": "Puente Arbitrum",
+    "tabMultiChain": "Multi-Cadena",
+    "tabTransfer": "Transferir",
+    "title": "Depositar USDC",
+    "instruction": "Envía USDC desde la Red Rayo a esta dirección.",
+    "walletAddressLabel": "Dirección de Billetera",
+    "connectWallet": "Conecta tu billetera para ver la dirección",
+    "warningTitle": "Importante: Solo USDC",
+    "warningText": "Solo envía USDC en la red Rayo. El envío de cualquier otro activo o a través de otra red resultará en una pérdida permanente.",
     "copyAddress": "Copiar Dirección de Depósito",
-    "addressCopied": "¡Copiada!",
+    "addressCopied": "¡Copiado!",
     "networkNote": "Solo envía USDC en la red Arbitrum",
     "bridgeShortcut": "¿Tienes fondos en otras cadenas?",
     "bridgeAction": "Usar Puente Multi-cadena"
   },
   "bridge": {
+    "title": "Puente USDC",
     "from": "Desde",
     "to": "Hacia",
     "bridge": "Puente",
     "bridging": "Puenteando...",
     "confirmBridge": "Confirmar Puente",
-    "bridgeSuccess": "¡Puente completado!"
+    "bridgeSuccess": "¡Puente completado!",
+    "fromArbitrum": "Depositar desde Arbitrum",
+    "sendUsdcFromArbitrum": "Envía USDC desde tu billetera de Arbitrum directamente a Rayo.",
+    "minDeposit": "Depósito mín: 10 USDC",
+    "connectToBridge": "Conecta tu billetera para usar el puente",
+    "switchToArbitrum": "Cambiar a Arbitrum",
+    "switchToArbitrumDesc": "El puente solo funciona en la red Arbitrum. Por favor, cambia la red de tu billetera.",
+    "switching": "Cambiando...",
+    "balance": "Balance",
+    "minRequired": "Se requiere un mínimo de 10 USDC",
+    "processing": "Procesando...",
+    "approveUsdc": "Aprobar USDC",
+    "bridgeToHyperliquid": "Puente a Rayo",
+    "txSent": "¡Transacción enviada! Tus fondos llegarán pronto."
   },
   "transfer": {
     "title": "Transferir USDC",
+    "description": "Mueve USDC entre tus cuentas de Spot y Perp. Instantáneo y gratuito.",
     "betweenAccounts": "Transferir Entre Cuentas",
-    "moveBetween": "Mueve USDC entre tus cuentas de Spot y Perp. Instantáneo y gratis.",
+    "moveBetween": "Mueve USDC entre tus cuentas de Spot y Perp. Instantáneo y gratuito.",
     "spotToPerp": "Spot → Perp",
     "perpToSpot": "Perp → Spot",
     "spotBalance": "Balance Spot",
@@ -227,23 +246,23 @@
   },
   "tooltips": {
     "leverage": "El apalancamiento aumenta tu poder de compra pero también el riesgo de liquidación.",
-    "liquidation": "El precio estimado al cual tu posición será cerrada.",
-    "slippage": "La diferencia máxima entre el precio esperado y el precio de ejecución."
+    "liquidation": "Precio estimado al que se cerrará tu posición.",
+    "slippage": "Diferencia máxima entre el precio esperado y el de ejecución."
   },
   "formatters": {
     "compactBalance": "{{amount}} USDC",
     "pnl": "{{amount}} ({{percent}}%)"
   },
   "home": {
-    "welcome": "Bienvenido de Rayo",
+    "welcome": "Bienvenido a Rayo",
     "welcomeDescription": "La plataforma de trading más rápida y sencilla.",
-    "signInToContinue": "Inicia sesión para empezar",
+    "signInToContinue": "Inicia sesión para continuar",
     "portfolioValue": "Valor del Portafolio",
     "portfolioHistory": "Historial del Portafolio",
     "openPositions": "Posiciones Abiertas",
-    "watchlist": "Favoritos",
-    "addToWatchlist": "Añadir a Favoritos",
-    "noTokensInWatchlist": "No tienes tokens en tus favoritos",
+    "watchlist": "Lista de Seguimiento",
+    "addToWatchlist": "Añadir a la Lista",
+    "noTokensInWatchlist": "No hay tokens en tu lista",
     "tapToAddTokens": "Toca + para añadir un token",
     "hi": "Hola",
     "thirtyDayPnl": "PnL 30d",
@@ -251,38 +270,38 @@
     "browseByCategory": "Explorar por Categoría",
     "exploreBySector": "Explora tokens por sector",
     "noAssetsInCategory": "No hay activos en esta categoría",
-    "hotCrypto": "Cripto Hot",
-    "hotStocks": "Acciones Hot",
+    "hotCrypto": "Criptos Populares",
+    "hotStocks": "Acciones Populares",
     "gainers": "Ganadores",
     "losers": "Perdedores",
-    "compareFees": "Comparar Tarifas 2025",
+    "compareFees": "Compara Comisiones 2025",
     "saveOnFees": "Descubre cuánto ahorras operando en Rayo",
     "buyAndSell": "Compra y vende BTC, ETH, HYPE, SOL"
   },
   "setupWizard": {
-    "title": "Configurar Cuenta de Trading",
-    "description": "Configura tu cuenta para operar sin gas y con un solo clic.",
+    "title": "Configuración de Trading",
+    "description": "Configura tu cuenta para operar sin gas y en un solo clic.",
     "agent": {
-      "title": "Billetera Agente (Un Solo Clic)",
-      "description": "Permite el trading sin confirmar cada transacción en tu billetera principal.",
-      "enable": "Activar Un Solo Clic",
+      "title": "Billetera Agente (Un Clic)",
+      "description": "Permite operar sin confirmar cada transacción en tu billetera principal.",
+      "enable": "Activar Un Clic",
       "enabling": "Activando...",
-      "active": "Un Solo Clic Activado"
+      "active": "Un Clic Activado"
     },
     "fee": {
-      "title": "Permisos de Protocolo",
+      "title": "Permisos del Protocolo",
       "description": "Otorga los permisos necesarios para interactuar con el protocolo Hyperliquid.",
       "approve": "Aprobar Comisión",
       "skip": "Saltar por ahora",
       "waiting": "Esperando firma...",
-      "preSignNote": "Estás aprobando una pequeña comisión que ayuda a mantener la app en funcionamiento."
+      "preSignNote": "Estás aprobando una pequeña comisión que ayuda a mantener la aplicación."
     },
     "complete": {
-      "title": "¡Todo Listo! 🎉",
-      "description": "El trading está habilitado. ¡No más ventanas de firma!",
+      "title": "¡Todo listo! 🎉",
+      "description": "El trading ya está activado. ¡No más firmas emergentes!",
       "agentActive": "Billetera agente activa",
-      "builderApproved": "Comisión de builder aprobada",
-      "startTrading": "Empezar a Tradear ⚡"
+      "builderApproved": "Comisión de constructor aprobada",
+      "startTrading": "Empezar a Operar ⚡"
     }
   },
   "marketOverview": {
@@ -293,8 +312,8 @@
   },
   "advancedOrder": {
     "availToTrade": "Disp. para operar",
-    "enableStocks": "Activar Trading de Acciones",
-    "enableStocksDesc": "Para operar {{coin}} y otras acciones XYZ, necesitas activar el trading de acciones en tu cuenta. Esta es una aprobación única.",
+    "enableStocks": "Activar Comercio de Acciones",
+    "enableStocksDesc": "Para operar con {{coin}} y otras acciones XYZ, necesitas activar el comercio de acciones en tu cuenta. Es una aprobación única.",
     "enabling": "Activando..."
   },
   "trollbox": {
@@ -303,6 +322,6 @@
     "onlyTraders": "Solo los traders de Rayo pueden enviar mensajes",
     "newMessages": "Nuevos mensajes",
     "initializingProfile": "⏳ Inicializando perfil...",
-    "connectWalletChat": "🔒 Conecta tu billetera para chatear"
+    "connectWalletChat": "🔒 Conecta tu billetera para unirte al chat"
   }
 }
