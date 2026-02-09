@@ -7,11 +7,12 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign, ArrowLeftRight, Bell, BellOff, Smartphone, CheckCircle2, Book, ExternalLink } from 'lucide-react';
+import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign, ArrowLeftRight, Bell, BellOff, Smartphone, CheckCircle2, Book, ExternalLink, MessageSquare } from 'lucide-react';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { DOCS_URL } from '@/lib/constants';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import TransferModal from './TransferModal';
+import Trollbox from './Trollbox';
 
 export default function Profile() {
     const { t, language, setLanguage } = useLanguage();
@@ -44,6 +45,7 @@ export default function Profile() {
     const [syncResult, setSyncResult] = useState<string | null>(null);
 
     const [showTransferModal, setShowTransferModal] = useState(false);
+    const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
     // Calculate total volume from fills (sum of price * size for each fill)
     const totalVolume = useMemo(() => {
@@ -358,6 +360,29 @@ export default function Profile() {
                         <div className="text-2xl font-black text-brand font-mono">${loadingReferrals ? '...' : totalEarnings.toFixed(2)}</div>
                     </div>
                 </div>
+
+                {/* ===== TROLLBOX BUTTON ===== */}
+                <button
+                    onClick={() => setIsTrollboxOpen(true)}
+                    className="w-full premium-card rounded-[24px] p-6 border border-brand/30 hover:border-brand/50 transition-all flex items-center justify-between group"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-brand/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <MessageSquare className="w-6 h-6 text-brand" />
+                        </div>
+                        <div className="text-left">
+                            <div className="text-lg font-black text-white">Trollbox</div>
+                            <div className="text-xs text-white/40 font-bold">Chat with the community</div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-xs text-green-400 font-bold uppercase tracking-wider">Live</span>
+                    </div>
+                </button>
+
+                {/* Trollbox Modal */}
+                <Trollbox isOpen={isTrollboxOpen} onClose={() => setIsTrollboxOpen(false)} />
             </div>
 
             {/* ===== SETTINGS ===== */}

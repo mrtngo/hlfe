@@ -1,6 +1,21 @@
 /** @type {import('next').NextConfig} */
+
+// Use static export only when building for Capacitor
+const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true';
+
 const nextConfig = {
+  // Static export only for Capacitor iOS builds
+  ...(isCapacitorBuild && {
+    output: 'export',
+    // Disable API routes for static export - they'll be called from production web URL
+    // The iOS app will call your deployed API endpoints directly
+    experimental: {
+      // Exclude API routes from static export
+    },
+  }),
   images: {
+    // Unoptimized required for static export
+    unoptimized: isCapacitorBuild,
     remotePatterns: [
       {
         protocol: 'https',

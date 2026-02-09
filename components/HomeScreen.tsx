@@ -279,7 +279,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Top Movers - Crypto */}
             {cryptoGainers.length > 0 && (
-                <div className="glass-card rounded-2xl p-5">
+                <div className="glass-card rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
                         <div className="flex items-center gap-2">
                             <span className="text-xl">🔥</span>
@@ -292,22 +292,22 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <TrendingUp className="w-4 h-4 text-positive" />
                         <span className="text-sm font-bold text-positive">Ganadores</span>
                     </div>
-                    <div className="space-y-2 mb-5">
+                    <div className="space-y-1 mb-6">
                         {cryptoGainers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             return (
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-bg-elevated hover:bg-bg-hover transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-4 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
                                 >
-                                    <TokenLogo symbol={market.symbol} size={28} className="rounded-full shrink-0" />
+                                    <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
                                     <div className="flex-1 text-left min-w-0">
-                                        <div className="font-bold text-white text-sm">{ticker}</div>
+                                        <div className="font-bold text-white text-base">{ticker}</div>
                                     </div>
                                     <div className="text-right shrink-0">
-                                        <div className="text-brand font-bold font-mono text-sm">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                        <div className="text-positive font-bold font-mono text-xs">+{(market.change24h || 0).toFixed(2)}%</div>
+                                        <div className="text-brand font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                        <div className="text-positive font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
                             );
@@ -318,22 +318,22 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <TrendingDown className="w-4 h-4 text-negative" />
                         <span className="text-sm font-bold text-negative">Perdedores</span>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                         {cryptoLosers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             return (
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-bg-elevated hover:bg-bg-hover transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-4 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
                                 >
-                                    <TokenLogo symbol={market.symbol} size={28} className="rounded-full shrink-0" />
+                                    <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
                                     <div className="flex-1 text-left min-w-0">
-                                        <div className="font-bold text-white text-sm">{ticker}</div>
+                                        <div className="font-bold text-white text-base">{ticker}</div>
                                     </div>
                                     <div className="text-right shrink-0">
-                                        <div className="text-brand font-bold font-mono text-sm">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                        <div className="text-negative font-bold font-mono text-xs">{(market.change24h || 0).toFixed(2)}%</div>
+                                        <div className="text-brand font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                        <div className="text-negative font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
                             );
@@ -344,7 +344,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Top Movers - Stocks */}
             {stockGainers.length > 0 && (
-                <div className="glass-card rounded-2xl p-5">
+                <div className="glass-card rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
                         <div className="flex items-center gap-2">
                             <span className="text-xl">📈</span>
@@ -357,22 +357,22 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <TrendingUp className="w-4 h-4 text-positive" />
                         <span className="text-sm font-bold text-positive">Ganadores</span>
                     </div>
-                    <div className="space-y-2 mb-5">
+                    <div className="space-y-1 mb-6">
                         {stockGainers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             return (
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-bg-elevated hover:bg-bg-hover transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-4 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
                                 >
-                                    <TokenLogo symbol={market.symbol} size={28} className="rounded-full shrink-0" />
+                                    <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
                                     <div className="flex-1 text-left min-w-0">
-                                        <div className="font-bold text-white text-sm">{ticker}</div>
+                                        <div className="font-bold text-white text-base">{ticker}</div>
                                     </div>
                                     <div className="text-right shrink-0">
-                                        <div className="text-brand font-bold font-mono text-sm">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                        <div className="text-positive font-bold font-mono text-xs">+{(market.change24h || 0).toFixed(2)}%</div>
+                                        <div className="text-brand font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                        <div className="text-positive font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
                             );
@@ -383,22 +383,22 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <TrendingDown className="w-4 h-4 text-negative" />
                         <span className="text-sm font-bold text-negative">Perdedores</span>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                         {stockLosers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             return (
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-bg-elevated hover:bg-bg-hover transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-4 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
                                 >
-                                    <TokenLogo symbol={market.symbol} size={28} className="rounded-full shrink-0" />
+                                    <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
                                     <div className="flex-1 text-left min-w-0">
-                                        <div className="font-bold text-white text-sm">{ticker}</div>
+                                        <div className="font-bold text-white text-base">{ticker}</div>
                                     </div>
                                     <div className="text-right shrink-0">
-                                        <div className="text-brand font-bold font-mono text-sm">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                        <div className="text-negative font-bold font-mono text-xs">{(market.change24h || 0).toFixed(2)}%</div>
+                                        <div className="text-brand font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                        <div className="text-negative font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
                             );

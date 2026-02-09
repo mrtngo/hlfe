@@ -20,8 +20,29 @@
 - **i18n**: next-intl (Spanish default, English secondary)
 - **Charts**: Lightweight Charts, Recharts
 - **PWA**: manifest.json, mobile-first
+- **Mobile**: Capacitor (iOS native app)
 
 ---
+
+## iOS / Capacitor
+
+The app can be built as a native iOS app using Capacitor.
+
+### Commands
+
+```bash
+npm run build:ios    # Build static export for iOS
+npm run cap:sync     # Sync web assets to native project
+npm run cap:open     # Open Xcode project
+npm run ios          # Full build + sync + open Xcode
+```
+
+### Key Points
+
+- **Static Export**: iOS builds use `output: 'export'` (set via `CAPACITOR_BUILD=true`)
+- **API Routes**: Temporarily moved during build (handled by `scripts/build-ios.sh`)
+- **Native Project**: Lives in `ios/` directory
+- **Config**: `capacitor.config.ts` contains iOS-specific settings
 
 ## Project Structure
 

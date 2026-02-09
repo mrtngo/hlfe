@@ -310,21 +310,7 @@ export default function Home() {
             {/* Trollbox Component */}
             <Trollbox isOpen={isTrollboxOpen} onClose={() => setIsTrollboxOpen(false)} />
 
-            {/* Floating Chat Button - Mid screen for easy mobile access */}
-            <button
-                onClick={() => setIsTrollboxOpen(!isTrollboxOpen)}
-                className="fixed w-16 h-16 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 z-50 text-black border-4 border-black group"
-                style={{
-                    top: '50%',
-                    right: '16px',
-                    transform: 'translateY(-50%)',
-                    background: 'linear-gradient(135deg, #FFFF00 0%, #FFD700 100%)',
-                    boxShadow: '0 10px 40px rgba(255, 255, 0, 0.5), 0 0 20px rgba(255, 255, 0, 0.3)',
-                }}
-            >
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-black animate-pulse shadow-lg" />
-                <MessageSquare className="w-7 h-7 group-hover:rotate-12 transition-transform" strokeWidth={2.5} />
-            </button>
+
 
             {/* Trading Setup Wizard - Auto-prompt */}
             <TradingSetupWizard
