@@ -65,7 +65,7 @@ const nextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https: http:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://api.hyperliquid.xyz wss://api.hyperliquid.xyz https://api.hyperliquid-testnet.xyz wss://api.hyperliquid-testnet.xyz https://app.hyperliquid.xyz https://app.trade.xyz https://api.rhino.fi https://*.supabase.co https://auth.privy.io https://*.privy.io https://*.privy.systems wss://*.privy.systems https://www.datos.gov.co https://unavatar.io https://wise.com https://raw.githubusercontent.com https://explorer-api.walletconnect.com wss://www.walletlink.org wss://relay.walletconnect.com wss://relay.walletconnect.org https://*.walletconnect.com",
+      "connect-src 'self' https://api.hyperliquid.xyz wss://api.hyperliquid.xyz https://api.hyperliquid-testnet.xyz wss://api.hyperliquid-testnet.xyz https://app.hyperliquid.xyz https://app.trade.xyz https://api.rhino.fi https://*.supabase.co https://auth.privy.io https://*.privy.io https://*.privy.systems wss://*.privy.systems https://www.datos.gov.co https://unavatar.io https://wise.com https://raw.githubusercontent.com https://explorer-api.walletconnect.com wss://www.walletlink.org wss://relay.walletconnect.com wss://relay.walletconnect.org https://*.walletconnect.com https://mainnet.base.org https://arb1.arbitrum.io https://mainnet.optimism.io https://polygon-rpc.com https://eth.llamarpc.com https://cloudflare-eth.com https://rpc.ankr.com",
       "frame-src 'self' https://auth.privy.io https://*.privy.io",
       "frame-ancestors 'none'",
       "form-action 'self'",
