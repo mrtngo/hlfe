@@ -6,6 +6,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
 import { X, ArrowLeftRight, Loader2, AlertCircle } from 'lucide-react';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useLanguage } from '@/hooks/useLanguage';
 import { API_URL } from '@/lib/hyperliquid/client';
 
 interface TransferModalProps {
@@ -16,6 +17,7 @@ interface TransferModalProps {
 export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
     const { wallets } = useWallets();
     const { address, account } = useHyperliquid();
+    const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const activeWallet = wallets?.[0];
 
@@ -187,7 +189,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
                     <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', margin: 0 }}>
-                        Transfer USDC
+                        {t.transfer.title}
                     </h2>
                     <button
                         onClick={onClose}
@@ -215,9 +217,9 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                     }}>
                         <ArrowLeftRight style={{ width: '20px', height: '20px', color: '#FFFF00', flexShrink: 0 }} />
                         <div style={{ fontSize: '13px' }}>
-                            <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>Transfer Between Accounts</div>
+                            <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>{t.transfer.betweenAccounts}</div>
                             <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                                Move USDC between your Spot and Perp accounts. Instant and free.
+                                {t.transfer.moveBetween}
                             </div>
                         </div>
                     </div>
@@ -245,7 +247,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                                 transition: 'all 0.2s',
                             }}
                         >
-                            Spot → Perp
+                            {t.transfer.spotToPerp}
                         </button>
                         <button
                             onClick={() => setToPerp(false)}
@@ -262,7 +264,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                                 transition: 'all 0.2s',
                             }}
                         >
-                            Perp → Spot
+                            {t.transfer.perpToSpot}
                         </button>
                     </div>
 
@@ -275,7 +277,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                             padding: '12px'
                         }}>
                             <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
-                                Spot Balance
+                                {t.transfer.spotBalance}
                             </div>
                             <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
                                 {formatCurrency(spotBalance)}
@@ -288,7 +290,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                             padding: '12px'
                         }}>
                             <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
-                                Perp Balance
+                                {t.transfer.perpBalance}
                             </div>
                             <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
                                 {formatCurrency(availableBalance)}
@@ -299,12 +301,12 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                     {/* Amount Input */}
                     <div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '8px' }}>
-                            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Amount:</span>
+                            <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{t.order.amount}:</span>
                             <span
                                 style={{ color: 'white', cursor: 'pointer', textDecoration: 'underline' }}
                                 onClick={() => setAmount(toPerp ? spotBalance.toString() : availableBalance.toString())}
                             >
-                                Max: {formatCurrency(sourceBalance)}
+                                {t.order.max}: {formatCurrency(sourceBalance)}
                             </span>
                         </div>
                         <div style={{ position: 'relative' }}>
@@ -369,12 +371,12 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                         {loading ? (
                             <>
                                 <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                                Processing...
+                                {t.common.processing}
                             </>
                         ) : (
                             <>
                                 <ArrowLeftRight style={{ width: '16px', height: '16px' }} />
-                                Transfer
+                                {t.transfer.transfer}
                             </>
                         )}
                     </button>
@@ -405,7 +407,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                             color: '#4ade80',
                             fontSize: '13px'
                         }}>
-                            ✅ Transfer completed!
+                            {t.transfer.transferComplete}
                         </div>
                     )}
                 </div>

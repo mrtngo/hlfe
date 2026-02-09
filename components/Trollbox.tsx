@@ -225,10 +225,10 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-black animate-pulse" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-white">Trollbox</h2>
+                            <h2 className="text-lg font-bold text-white">{t.trollbox.title}</h2>
                             <div className="flex items-center gap-1.5 text-[10px] text-green-400">
                                 <Users className="w-3 h-3" />
-                                <span className="font-semibold">{onlineCount} online</span>
+                                <span className="font-semibold">{t.trollbox.usersOnline.replace('{{count}}', onlineCount.toString())}</span>
                             </div>
                         </div>
                     </div>
@@ -255,7 +255,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-500">
                             <div className="w-10 h-10 border-3 border-[#FFFF00]/20 border-t-[#FFFF00] rounded-full animate-spin" />
-                            <span className="text-sm font-semibold">Loading messages...</span>
+                            <span className="text-sm font-semibold">{t.common.loadingMessages}</span>
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-full text-center p-8">
@@ -265,8 +265,8 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                                     <MessageSquare className="w-16 h-16 text-brand/10" />
                                 </div>
                             </div>
-                            <h3 className="text-white font-bold text-lg mb-2">It's quiet here...</h3>
-                            <p className="text-sm text-gray-400">Be the first to break the silence!</p>
+                            <h3 className="text-white font-bold text-lg mb-2">{t.common.itsQuiet}</h3>
+                            <p className="text-sm text-gray-400">{t.common.beTheFirst}</p>
                         </div>
                     ) : (
                         messages.map((msg) => {
@@ -300,7 +300,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                                                 {msg.user?.username || (msg.user?.wallet_address ? `${msg.user.wallet_address.slice(0, 6)}...${msg.user.wallet_address.slice(-4)}` : 'System')}
                                                 {isCurrentUser && (
                                                     <span className="ml-1.5 text-[9px] px-1.5 py-0.5 rounded bg-brand/20 text-brand">
-                                                        YOU
+                                                        {t.common.you}
                                                     </span>
                                                 )}
                                             </span>
@@ -366,7 +366,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                                 boxShadow: '0 4px 12px rgba(255, 68, 68, 0.2)',
                             }}
                         >
-                            <p className="text-sm text-red-400 font-bold">🔒 Connect wallet to join the chat</p>
+                            <p className="text-sm text-red-400 font-bold">{t.trollbox.connectWalletChat}</p>
                         </div>
                     ) : !currentUser ? (
                         <div
@@ -377,7 +377,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                                 boxShadow: '0 4px 12px rgba(255, 165, 0, 0.2)',
                             }}
                         >
-                            <p className="text-sm text-orange-400 font-bold">⏳ Initializing profile...</p>
+                            <p className="text-sm text-orange-400 font-bold">{t.trollbox.initializingProfile}</p>
                         </div>
                     ) : (
                         <form onSubmit={handleSendMessage} className="relative flex items-center gap-3">
@@ -385,7 +385,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                                 type="text"
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
-                                placeholder="Type your message..."
+                                placeholder={t.common.typeMessage}
                                 maxLength={500}
                                 className="flex-1 rounded-full px-5 py-3.5 text-sm text-white placeholder-gray-400 focus:outline-none transition-all"
                                 style={{

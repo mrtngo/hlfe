@@ -143,7 +143,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     if (!mounted) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="text-[var(--color-text-tertiary)]">Loading...</div>
+                <div className="text-[var(--color-text-tertiary)]">{t.common.loading}</div>
             </div>
         );
     }
@@ -201,7 +201,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             {formatCurrency(portfolioValue)}
                         </div>
                         <div className="text-sm text-[var(--color-text-secondary)] mt-2">
-                            30d: <span className={thirtyDayMovement >= 0 ? 'text-positive' : 'text-negative'}>
+                            {t.common.thirtyDay}: <span className={thirtyDayMovement >= 0 ? 'text-positive' : 'text-negative'}>
                                 {thirtyDayMovement >= 0 ? '+' : ''}{thirtyDayMovement.toFixed(2)}%
                                 {thirtyDayPnl !== 0 && ` (${thirtyDayPnl >= 0 ? '+' : ''}${formatCurrency(Math.abs(thirtyDayPnl))})`}
                             </span>
@@ -221,7 +221,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 className="btn btn-primary w-full rounded-2xl text-lg"
             >
                 <CreditCard className="w-5 h-5" />
-                Deposit
+                {t.common.deposit}
             </button>
 
             {/* Open Positions */}
@@ -234,7 +234,9 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-white">{t.home.openPositions}</h2>
-                            <p className="text-xs text-[var(--color-text-tertiary)]">{positions.length} active position{positions.length !== 1 ? 's' : ''}</p>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">
+                                {positions.length === 1 ? t.positions.activePositions.replace('{{count}}', positions.length.toString()) : t.positions.activePositionsPlural.replace('{{count}}', positions.length.toString())}
+                            </p>
                         </div>
                     </div>
                     <div className="space-y-4">
@@ -262,8 +264,10 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             <Clock className="w-5 h-5 text-brand" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-white">Open Orders</h2>
-                            <p className="text-xs text-[var(--color-text-tertiary)]">{openOrders.length} pending order{openOrders.length !== 1 ? 's' : ''}</p>
+                            <h2 className="text-lg font-bold text-white">{t.orders.openOrders}</h2>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">
+                                {openOrders.length === 1 ? t.orders.pendingOrders.replace('{{count}}', openOrders.length.toString()) : t.orders.pendingOrdersPlural.replace('{{count}}', openOrders.length.toString())}
+                            </p>
                         </div>
                     </div>
                     <div className="space-y-4">
@@ -283,14 +287,14 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
                         <div className="flex items-center gap-2">
                             <span className="text-xl">🔥</span>
-                            <h2 className="text-lg font-bold text-white">Cripto Hot</h2>
+                            <h2 className="text-lg font-bold text-white">{t.home.hotCrypto}</h2>
                         </div>
                         <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-brand-primary-muted)] text-brand font-semibold">24h</span>
                     </div>
                     {/* Gainers */}
                     <div className="flex items-center gap-1.5 mb-2">
                         <TrendingUp className="w-4 h-4 text-positive" />
-                        <span className="text-sm font-bold text-positive">Ganadores</span>
+                        <span className="text-sm font-bold text-positive">{t.home.gainers}</span>
                     </div>
                     <div className="space-y-1 mb-6">
                         {cryptoGainers.map((market) => {
@@ -316,7 +320,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     {/* Losers */}
                     <div className="flex items-center gap-1.5 mb-2">
                         <TrendingDown className="w-4 h-4 text-negative" />
-                        <span className="text-sm font-bold text-negative">Perdedores</span>
+                        <span className="text-sm font-bold text-negative">{t.home.losers}</span>
                     </div>
                     <div className="space-y-1">
                         {cryptoLosers.map((market) => {
@@ -348,14 +352,14 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
                         <div className="flex items-center gap-2">
                             <span className="text-xl">📈</span>
-                            <h2 className="text-lg font-bold text-white">Acciones Hot</h2>
+                            <h2 className="text-lg font-bold text-white">{t.home.hotStocks}</h2>
                         </div>
                         <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-brand-primary-muted)] text-brand font-semibold">24h</span>
                     </div>
                     {/* Gainers */}
                     <div className="flex items-center gap-1.5 mb-2">
                         <TrendingUp className="w-4 h-4 text-positive" />
-                        <span className="text-sm font-bold text-positive">Ganadores</span>
+                        <span className="text-sm font-bold text-positive">{t.home.gainers}</span>
                     </div>
                     <div className="space-y-1 mb-6">
                         {stockGainers.map((market) => {
@@ -381,7 +385,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     {/* Losers */}
                     <div className="flex items-center gap-1.5 mb-2">
                         <TrendingDown className="w-4 h-4 text-negative" />
-                        <span className="text-sm font-bold text-negative">Perdedores</span>
+                        <span className="text-sm font-bold text-negative">{t.home.losers}</span>
                     </div>
                     <div className="space-y-1">
                         {stockLosers.map((market) => {
@@ -417,8 +421,8 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <DollarSign className="w-6 h-6 text-black" strokeWidth={2.5} />
                     </div>
                     <div className="text-left">
-                        <h3 className="font-bold text-white text-base">Comparar Tarifas 2025</h3>
-                        <p className="text-sm text-brand">Descubre cuánto ahorras operando en Rayo</p>
+                        <h3 className="font-bold text-white text-base">{t.home.compareFees}</h3>
+                        <p className="text-sm text-brand">{t.home.saveOnFees}</p>
                     </div>
                 </div>
                 <ArrowUpRight className="w-5 h-5 text-brand shrink-0" strokeWidth={2.5} />
@@ -441,7 +445,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     </div>
                     <div className="text-left">
                         <h3 className="font-bold text-white text-base">Spot Trading</h3>
-                        <p className="text-sm text-positive">Buy & sell BTC, ETH, HYPE, SOL</p>
+                        <p className="text-sm text-positive">{t.home.buyAndSell}</p>
                     </div>
                 </div>
                 <ArrowUpRight className="w-5 h-5 text-positive shrink-0" strokeWidth={2.5} />
@@ -457,7 +461,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-white">{t.home.watchlist}</h2>
-                            <p className="text-xs text-[var(--color-text-tertiary)]">{watchlistMarkets.length} tokens tracked</p>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">{t.home.tokensTracked.replace('{{count}}', watchlistMarkets.length.toString())}</p>
                         </div>
                     </div>
                     <div className="relative" ref={dropdownRef}>
@@ -505,7 +509,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-text-tertiary)]" />
                                             <input
                                                 type="text"
-                                                placeholder="Search markets..."
+                                                placeholder={t.markets.search}
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                                 className="w-full pl-10 pr-10 py-2.5 rounded-lg text-white placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/50 text-base md:text-sm bg-bg-secondary border border-[var(--color-border-default)]"
@@ -534,7 +538,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
                                             if (filteredMarkets.length === 0) {
                                                 return (
-                                                    <div className="text-center text-sm text-white/60 py-8">No markets found</div>
+                                                    <div className="text-center text-sm text-white/60 py-8">{t.markets.noMarketsFound}</div>
                                                 );
                                             }
 
@@ -618,8 +622,8 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <span className="text-lg">🏷️</span>
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-white">Browse by Category</h2>
-                        <p className="text-xs text-[var(--color-text-tertiary)]">Explore tokens by sector</p>
+                        <h2 className="text-lg font-bold text-white">{t.home.browseByCategory}</h2>
+                        <p className="text-xs text-[var(--color-text-tertiary)]">{t.home.exploreBySector}</p>
                     </div>
                 </div>
 
@@ -658,7 +662,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                     if (categoryMarkets.length === 0) {
                         return (
                             <div className="text-center py-12 text-[var(--color-text-secondary)] bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
-                                <p>No assets in this category</p>
+                                <p>{t.home.noAssetsInCategory}</p>
                             </div>
                         );
                     }

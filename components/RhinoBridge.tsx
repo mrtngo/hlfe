@@ -16,6 +16,7 @@ import { tokens } from '@/lib/design-tokens';
 import { arbitrum, mainnet, polygon, base, optimism } from 'viem/chains';
 import { USDC_ADDRESSES, USDC_ABI } from '@/lib/constants/bridge';
 import { useEffect } from 'react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface RhinoBridgeProps {
     onComplete?: () => void;
@@ -44,6 +45,7 @@ const CHAIN_NAME_MAP: Record<SupportedChainKey, string> = {
 };
 
 export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
+    const { t } = useLanguage();
     const { wallets } = useWallets();
     const { sendTransaction } = useSendTransaction();
     const activeWallet = wallets?.[0];
@@ -229,7 +231,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
     if (!activeWallet) {
         return (
             <div style={{ textAlign: 'center', padding: '24px', color: 'rgba(255, 255, 255, 0.5)' }}>
-                Connect your wallet to bridge funds.
+                {t.bridge.connectToBridge}
             </div>
         );
     }
@@ -247,13 +249,13 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                 <CheckCircle style={{ width: '64px', height: '64px', color: tokens.positive }} />
                 <div>
                     <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
-                        Bridge Initiated!
+                        {t.bridge.bridgeInitiated}
                     </div>
                     <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '16px' }}>
-                        Your USDC is being bridged to Arbitrum
+                        {t.bridge.usdcBeingBridged}
                     </div>
                     <div style={{ fontSize: '13px', color: tokens.brand }}>
-                        Estimated time: {estimatedTime}
+                        {t.bridge.estimatedTime}
                     </div>
                 </div>
 
@@ -274,7 +276,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                             borderRadius: tokens.radiusFull,
                         }}
                     >
-                        View Transaction <ExternalLink style={{ width: '14px', height: '14px' }} />
+                        {t.bridge.viewTransaction} <ExternalLink style={{ width: '14px', height: '14px' }} />
                     </a>
                 )}
 
@@ -287,8 +289,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                     color: 'rgba(255, 255, 255, 0.7)',
                     width: '100%'
                 }}>
-                    <strong style={{ color: tokens.brand }}>Next Step:</strong> Once your USDC arrives on Arbitrum,
-                    use the "Bridge" tab in the Deposit Modal to complete your deposit to Hyperliquid.
+                    <strong style={{ color: tokens.brand }}>{t.bridge.nextStep}</strong> {t.bridge.nextStepDesc}
                 </div>
 
                 <button
@@ -296,7 +297,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                     className="btn-primary"
                     style={{ width: '100%', marginTop: '8px' }}
                 >
-                    Bridge More Funds
+                    {t.bridge.bridgeMoreFunds}
                 </button>
             </div>
         );
@@ -304,38 +305,13 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
 
     if (step === 'error') {
         return (
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '20px',
-                padding: '32px 16px',
-                textAlign: 'center'
-            }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', padding: '32px 16px', textAlign: 'center' }}>
                 <AlertCircle style={{ width: '64px', height: '64px', color: tokens.negative }} />
                 <div>
-                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
-                        Bridge Failed
-                    </div>
-                    <div style={{
-                        fontSize: '14px',
-                        color: 'rgba(255, 255, 255, 0.6)',
-                        marginBottom: '16px',
-                        padding: '12px',
-                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                        borderRadius: '8px'
-                    }}>
-                        {error}
-                    </div>
+                    <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>{t.bridge.bridgeFailed}</div>
+                    <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)', marginBottom: '16px', padding: '12px', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>{error}</div>
                 </div>
-
-                <button
-                    onClick={handleReset}
-                    className="btn-secondary"
-                    style={{ width: '100%' }}
-                >
-                    Try Again
-                </button>
+                <button onClick={handleReset} className="btn-secondary" style={{ width: '100%' }}>{t.bridge.tryAgain}</button>
             </div>
         );
     }
@@ -358,12 +334,12 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                 }} />
                 <div>
                     <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '8px' }}>
-                        {step === 'confirming' ? 'Switching Network...' : 'Bridging Funds...'}
+                        {step === 'confirming' ? t.bridge.switchingNetwork : t.bridge.bridgingFunds}
                     </div>
                     <div style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
                         {step === 'confirming'
-                            ? 'Please confirm the network switch in your wallet'
-                            : 'Please confirm the transaction in your wallet'
+                            ? t.bridge.confirmNetworkSwitch
+                            : t.bridge.confirmTransaction
                         }
                     </div>
                 </div>
@@ -386,10 +362,10 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                 <RefreshCw style={{ width: '20px', height: '20px', color: '#8b5cf6', flexShrink: 0 }} />
                 <div style={{ fontSize: '13px' }}>
                     <div style={{ fontWeight: 600, color: '#8b5cf6', marginBottom: '4px' }}>
-                        Cross-Chain Bridge
+                        {t.bridge.crossChainBridge}
                     </div>
                     <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                        Bridge USDC from Ethereum, Polygon, Base, and more to Arbitrum using your Privy wallet.
+                        {t.bridge.crossChainDesc}
                     </div>
                 </div>
             </div>
@@ -397,7 +373,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
             {/* Chain Selector */}
             <div>
                 <label style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '8px', display: 'block' }}>
-                    From Chain
+                    {t.bridge.fromChain}
                 </label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                     {chainOptions.map((chain) => (
@@ -432,7 +408,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
             {/* To Chain (Fixed) */}
             <div>
                 <label style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '8px', display: 'block' }}>
-                    To Chain
+                    {t.bridge.toChain}
                 </label>
                 <div style={{
                     padding: '12px',
@@ -443,7 +419,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                     fontWeight: 600,
                     color: 'rgba(255, 255, 255, 0.7)',
                 }}>
-                    Arbitrum (for Hyperliquid deposit)
+                    {t.bridge.arbitrumForHl}
                 </div>
                 <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '4px', textAlign: 'right' }}>
                     Balance: <span style={{ color: 'white', fontWeight: 600 }}>{loadingBalances ? '...' : toBalance ? `${parseFloat(toBalance).toFixed(2)} USDC` : '0.00 USDC'}</span>
@@ -454,10 +430,10 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                     <label style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.7)', display: 'block' }}>
-                        Amount (USDC)
+                        {t.bridge.amountUsdc}
                     </label>
                     <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)' }}>
-                        Available: <span
+                        {t.bridge.available}: <span
                             style={{ color: tokens.brand, cursor: 'pointer', fontWeight: 600 }}
                             onClick={() => fromBalance && setAmount(fromBalance)}
                         >
@@ -486,7 +462,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
                 className="btn-primary"
                 style={{ width: '100%', fontSize: '16px', padding: '16px' }}
             >
-                Bridge to Arbitrum
+                {t.bridge.bridgeToArbitrum}
             </button>
 
             {/* Info */}
@@ -502,8 +478,8 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
             }}>
                 <Info style={{ width: '16px', height: '16px', flexShrink: 0, color: tokens.brand }} />
                 <div>
-                    After bridging to Arbitrum, use the "Bridge" tab to deposit USDC from Arbitrum to Hyperliquid.
-                    Estimated time: {estimatedTime}
+                    {t.bridge.afterBridging}
+                    {' '}{t.bridge.estimatedTime}
                 </div>
             </div>
         </div>

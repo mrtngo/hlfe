@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { useLanguage } from '@/hooks/useLanguage';
 import { AlertCircle, Check, ChevronDown, Zap, X } from 'lucide-react';
 
 // Order types
@@ -25,6 +26,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
         dexAbstractionLoading,
         enableDexAbstraction,
     } = useHyperliquid();
+    const { t } = useLanguage();
 
     const marketSymbol = symbol || selectedMarket;
     const market = getMarket(marketSymbol);
@@ -95,17 +97,17 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
     // Handle order submission
     const handleSubmit = useCallback(async () => {
         if (!marketSymbol || !size || parseFloat(size) <= 0) {
-            setError('Enter a valid size');
+            setError(t.order.invalidSize);
             return;
         }
 
         if (orderType === 'limit' && (!price || parseFloat(price) <= 0)) {
-            setError('Enter a valid price');
+            setError(t.order.invalidPrice);
             return;
         }
 
         if (!connected) {
-            setError('Please connect wallet first');
+            setError(t.wallet.connectFirst);
             return;
         }
 
@@ -132,7 +134,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             setSize('');
             setSizePercent(0);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Order failed');
+            setError(err instanceof Error ? err.message : t.order.placeFailed);
         } finally {
             setLoading(false);
         }
@@ -168,7 +170,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
-                        Limit
+                        {t.order.limit}
                     </button>
                     <button
                         onClick={() => setOrderType('market')}
@@ -177,7 +179,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
-                        Market
+                        {t.order.market}
                     </button>
                 </div>
 
@@ -215,7 +217,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                                 onClick={() => setShowLeverageDropdown(false)}
                                 className="w-full mt-3 py-1.5 text-xs bg-brand text-black font-bold rounded"
                             >
-                                Confirm
+                                {t.common.confirm}
                             </button>
                         </div>
                     )}
@@ -231,7 +233,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         : 'bg-[#34C759]/20 text-[#34C759] border border-[#34C759]/30 hover:bg-[#34C759]/30'
                         }`}
                 >
-                    Buy / Long
+                    {t.order.buyLong}
                 </button>
                 <button
                     onClick={() => setSide('sell')}
@@ -240,13 +242,13 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         : 'bg-[#FF3B30]/20 text-[#FF3B30] border border-[#FF3B30]/30 hover:bg-[#FF3B30]/30'
                         }`}
                 >
-                    Sell / Short
+                    {t.order.sellShort}
                 </button>
             </div>
 
             {/* Available to Trade */}
             <div className="flex justify-between text-xs mb-3">
-                <span className="text-brand/60">Avail. to Trade</span>
+                <span className="text-brand/60">{t.advancedOrder.availToTrade}</span>
                 <span className="text-brand font-mono">{availableMargin.toFixed(2)} USDC</span>
             </div>
 
@@ -254,7 +256,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             {orderType === 'limit' && (
                 <div className="mb-3">
                     <div className="flex items-center justify-between bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2.5">
-                        <span className="text-xs text-brand/60">Price (USDC)</span>
+                        <span className="text-xs text-brand/60">{t.order.price} (USDC)</span>
                         <div className="flex items-center gap-2">
                             <input
                                 type="number"
@@ -270,7 +272,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                                 onClick={() => market?.price && setPrice(formatPrice(market.price))}
                                 className="text-[10px] text-black bg-brand font-medium border border-[#FFFF00] px-1.5 py-0.5 rounded"
                             >
-                                Mid
+                                {t.order.mid}
                             </button>
                         </div>
                     </div>
@@ -280,7 +282,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             {/* Size Input */}
             <div className="mb-3">
                 <div className="flex items-center justify-between bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2.5">
-                    <span className="text-xs text-brand/60">Size</span>
+                    <span className="text-xs text-brand/60">{t.order.amount}</span>
                     <div className="flex items-center gap-2">
                         <input
                             type="number"
@@ -343,7 +345,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     >
                         {reduceOnly && <Check className="w-3 h-3 text-black" />}
                     </div>
-                    <span className="text-xs text-brand/70">Reduce Only</span>
+                    <span className="text-xs text-brand/70">{t.order.reduceOnly}</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -354,7 +356,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     >
                         {enableTpSl && <Check className="w-3 h-3 text-black" />}
                     </div>
-                    <span className="text-xs text-brand/70">Take Profit / Stop Loss</span>
+                    <span className="text-xs text-brand/70">{t.order.tpSl}</span>
                 </label>
             </div>
 
@@ -362,7 +364,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             {enableTpSl && (
                 <div className="grid grid-cols-2 gap-2 mb-4">
                     <div className="bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2">
-                        <span className="text-[10px] text-brand/50 block mb-1">TP Price</span>
+                        <span className="text-[10px] text-brand/50 block mb-1">{t.order.tpPrice}</span>
                         <input
                             type="number"
                             value={tpPrice}
@@ -375,7 +377,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         />
                     </div>
                     <div className="bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2">
-                        <span className="text-[10px] text-brand/50 block mb-1">SL Price</span>
+                        <span className="text-[10px] text-brand/50 block mb-1">{t.order.slPrice}</span>
                         <input
                             type="number"
                             value={slPrice}
@@ -393,15 +395,15 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             {/* Order Summary */}
             <div className="border-t border-[#FFFF00]/20 pt-3 mb-4 space-y-1">
                 <div className="flex justify-between text-xs">
-                    <span className="text-brand/50">Order Value</span>
+                    <span className="text-brand/50">{t.order.value}</span>
                     <span className="text-brand font-mono">${orderValue.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                    <span className="text-brand/50">Margin Required</span>
+                    <span className="text-brand/50">{t.positions.margin}</span>
                     <span className="text-brand font-mono">${margin.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                    <span className="text-brand/50">Est. Liq. Price</span>
+                    <span className="text-brand/50">{t.positions.liq}</span>
                     <span className="text-brand/50 font-mono">---</span>
                 </div>
             </div>
@@ -426,12 +428,12 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                 {loading ? (
                     <div className="flex items-center justify-center gap-2">
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Placing Order...
+                        {t.order.placing}
                     </div>
                 ) : !size || parseFloat(size) <= 0 ? (
-                    'Enter Amount'
+                    { t.order.enterAmount }
                 ) : (
-                    `${side === 'buy' ? 'Buy / Long' : 'Sell / Short'} ${coin}`
+                    `${side === 'buy' ? t.order.buyLong : t.order.sellShort} ${coin}`
                 )}
             </button>
 
@@ -442,7 +444,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <Zap className="w-5 h-5 text-blue-400" />
-                                <h3 className="text-lg font-bold text-white">Enable Stock Trading</h3>
+                                <h3 className="text-lg font-bold text-white">{t.advancedOrder.enableStocks}</h3>
                             </div>
                             <button
                                 onClick={() => setShowStockApprovalModal(false)}
@@ -452,16 +454,14 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                             </button>
                         </div>
 
-                        <p className="text-white/70 text-sm mb-6">
-                            To trade <span className="text-[#FFFF00] font-bold">{coin}</span> and other XYZ stocks, you need to enable stock trading on your account. This is a one-time approval.
-                        </p>
+                        {t.advancedOrder.enableStocksDesc.replace('{{coin}}', coin)}
 
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowStockApprovalModal(false)}
                                 className="flex-1 py-3 rounded-xl font-bold text-sm bg-white/10 text-white/70 hover:bg-white/20 transition-all"
                             >
-                                Cancel
+                                {t.common.cancel}
                             </button>
                             <button
                                 onClick={handleEnableStocks}
@@ -471,12 +471,12 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                                 {dexAbstractionLoading ? (
                                     <>
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Enabling...
+                                        {t.advancedOrder.enabling}
                                     </>
                                 ) : (
                                     <>
                                         <Zap className="w-4 h-4" />
-                                        Enable Stocks
+                                        {t.advancedOrder.enableStocks}
                                     </>
                                 )}
                             </button>

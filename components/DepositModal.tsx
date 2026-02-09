@@ -225,6 +225,7 @@ function AssetsDeposit({ address, t, copied, onCopy }: {
 
 // --- Bridge Deposit Tab (New) ---
 function BridgeDeposit() {
+    const { t } = useLanguage();
     const { wallets } = useWallets();
     const activeWallet = wallets?.[0];
 
@@ -371,24 +372,24 @@ function BridgeDeposit() {
             }}>
                 <ArrowRight style={{ width: '20px', height: '20px', color: '#FFFF00', flexShrink: 0 }} />
                 <div style={{ fontSize: '13px' }}>
-                    <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>Bridge from Arbitrum</div>
+                    <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>{t.bridge.fromArbitrum}</div>
                     <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                        Send USDC from Arbitrum to Hyperliquid. Funds arrive in ~1 minute.
-                        <br /><span style={{ color: '#FFFF00' }}>Min: {MIN_BRIDGE_DEPOSIT} USDC</span>
+                        {t.bridge.sendUsdcFromArbitrum}
+                        <br /><span style={{ color: '#FFFF00' }}>{t.bridge.minDeposit}</span>
                     </div>
                 </div>
             </div>
 
             {!activeWallet ? (
                 <div style={{ textAlign: 'center', padding: '24px', color: 'rgba(255, 255, 255, 0.5)' }}>
-                    Connect your wallet to bridge funds.
+                    {t.bridge.connectToBridge}
                 </div>
             ) : !isArbitrum ? (
                 <div style={{ textAlign: 'center', padding: '24px' }}>
                     <AlertCircle style={{ width: '40px', height: '40px', color: '#FFFF00', margin: '0 auto 12px' }} />
-                    <div style={{ color: 'white', fontWeight: 'bold', marginBottom: '8px' }}>Switch to Arbitrum</div>
+                    <div style={{ color: 'white', fontWeight: 'bold', marginBottom: '8px' }}>{t.bridge.switchToArbitrum}</div>
                     <div style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '14px', marginBottom: '16px' }}>
-                        Please switch to Arbitrum One to continue.
+                        {t.bridge.switchToArbitrumDesc}
                     </div>
                     <button
                         onClick={handleSwitchNetwork}
@@ -405,14 +406,14 @@ function BridgeDeposit() {
                             opacity: loading ? 0.7 : 1,
                         }}
                     >
-                        {loading ? 'Switching...' : 'Switch to Arbitrum'}
+                        {loading ? t.bridge.switching : t.bridge.switchToArbitrum}
                     </button>
                 </div>
             ) : (
                 <>
                     {/* Balance */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                        <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Balance:</span>
+                        <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{t.bridge.balance}:</span>
                         <span
                             style={{ color: 'white', cursor: 'pointer' }}
                             onClick={() => setAmount(usdcBalance)}
@@ -461,7 +462,7 @@ function BridgeDeposit() {
                     {amountNum > 0 && amountNum < MIN_BRIDGE_DEPOSIT && (
                         <div style={{ color: '#FF6B6B', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <AlertCircle style={{ width: '12px', height: '12px' }} />
-                            Minimum {MIN_BRIDGE_DEPOSIT} USDC required
+                            {t.bridge.minRequired}
                         </div>
                     )}
 
@@ -488,12 +489,12 @@ function BridgeDeposit() {
                         {loading ? (
                             <>
                                 <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                                Processing...
+                                {t.bridge.processing}
                             </>
                         ) : needsApproval ? (
-                            'Approve USDC'
+                            t.bridge.approveUsdc
                         ) : (
-                            'Bridge to Hyperliquid'
+                            t.bridge.bridgeToHyperliquid
                         )}
                     </button>
 
@@ -519,7 +520,7 @@ function BridgeDeposit() {
                             color: '#4ade80',
                             fontSize: '13px'
                         }}>
-                            🎉 Transaction sent! Funds will arrive in ~1 minute.
+                            {t.bridge.txSent}
                         </div>
                     )}
                 </>
@@ -532,6 +533,7 @@ function BridgeDeposit() {
 import { API_URL } from '@/lib/hyperliquid/client';
 
 function SpotPerpTransfer() {
+    const { t } = useLanguage();
     const { wallets } = useWallets();
     const { address, account } = useHyperliquid();
     const activeWallet = wallets?.[0];
@@ -653,9 +655,9 @@ function SpotPerpTransfer() {
             }}>
                 <ArrowLeftRight style={{ width: '20px', height: '20px', color: '#FFFF00', flexShrink: 0 }} />
                 <div style={{ fontSize: '13px' }}>
-                    <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>Transferir USDC</div>
+                    <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>{t.transfer.title}</div>
                     <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                        Mueve fondos entre tu cuenta Spot y Perp. Instantáneo y sin fees.
+                        {t.transfer.description}
                     </div>
                 </div>
             </div>
@@ -683,7 +685,7 @@ function SpotPerpTransfer() {
                         transition: 'all 0.2s',
                     }}
                 >
-                    Spot → Perp
+                    {t.transfer.spotToPerp}
                 </button>
                 <button
                     onClick={() => setToPerp(false)}
@@ -700,13 +702,13 @@ function SpotPerpTransfer() {
                         transition: 'all 0.2s',
                     }}
                 >
-                    Perp → Spot
+                    {t.transfer.perpToSpot}
                 </button>
             </div>
 
             {/* Balance */}
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>Disponible (Perp):</span>
+                <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{t.transfer.availablePerp}:</span>
                 <span
                     style={{ color: 'white', cursor: 'pointer' }}
                     onClick={() => setAmount(availableBalance.toFixed(2))}
@@ -775,12 +777,12 @@ function SpotPerpTransfer() {
                 {loading ? (
                     <>
                         <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                        Procesando...
+                        {t.transfer.transferring}
                     </>
                 ) : (
                     <>
                         <ArrowLeftRight style={{ width: '16px', height: '16px' }} />
-                        Transferir
+                        {t.transfer.transfer}
                     </>
                 )}
             </button>
@@ -807,7 +809,7 @@ function SpotPerpTransfer() {
                     color: '#4ade80',
                     fontSize: '13px'
                 }}>
-                    ✅ Transferencia completada!
+                    {t.transfer.transferComplete}
                 </div>
             )}
         </div>
@@ -959,7 +961,7 @@ export default function DepositModal({ isOpen, onClose }: DepositModalProps) {
                                 transition: 'all 0.2s',
                             }}
                         >
-                            Multi-Chain
+                            {t.depositModal.tabMultiChain}
                         </button>
                         <button
                             onClick={() => setActiveTab('transfer')}
