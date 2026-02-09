@@ -395,19 +395,23 @@ export default function OrderPanel() {
                                     box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 2px 6px rgba(0,0,0,0.3);
                                 }
                                 .leverage-btn {
-                                    background-color: #4A4A4C;
-                                    color: white;
+                                    background-color: #2F3033;
+                                    color: #F3F4F6;
+                                    border: 1px solid #3A3A3C;
+                                    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
                                 }
                                 .leverage-btn:hover:not(:disabled) {
-                                    filter: brightness(1.1);
+                                    background-color: #3A3B3F;
+                                    border-color: #4A4A4F;
                                 }
                                 .leverage-btn:active:not(:disabled) {
-                                    background-color: #FFFF00;
-                                    color: #000;
+                                    background-color: #1F2023;
+                                    border-color: #6B7280;
+                                    color: #FFFFFF;
                                 }
                                 .leverage-btn-disabled {
-                                    background-color: #2C2C2E;
-                                    color: rgba(255,255,255,0.3);
+                                    background-color: #242427;
+                                    color: rgba(255,255,255,0.35);
                                     cursor: not-allowed;
                                 }
                             `}</style>

@@ -7,7 +7,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign, ArrowLeftRight, Book, Clock } from 'lucide-react';
+import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign, ArrowLeftRight, Clock } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import FeeCalculatorModal from '@/components/FeeCalculatorModal';
@@ -18,7 +18,7 @@ import PositionCard from '@/components/PositionCard';
 import OpenOrdersCard from '@/components/OpenOrdersCard';
 import type { Market } from '@/hooks/useHyperliquid';
 import type { Position } from '@/types/hyperliquid';
-import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST, DOCS_URL } from '@/lib/constants';
+import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
 import { CATEGORIES, getTokenCategories, isInCategory, type TokenCategory } from '@/lib/token-categories';
 
 const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
@@ -143,7 +143,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     if (!mounted) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="text-coffee-light">Loading...</div>
+                <div className="text-[var(--color-text-tertiary)]">Loading...</div>
             </div>
         );
     }
@@ -161,7 +161,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                         <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
                             {t.home.welcome}
                         </h1>
-                        <p className="text-coffee-medium mb-8 max-w-md mx-auto">
+                        <p className="text-[var(--color-text-secondary)] mb-8 max-w-md mx-auto">
                             {t.home.welcomeDescription}
                         </p>
                         <button
@@ -177,103 +177,64 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     }
 
     return (
-        <div className="max-w-2xl mx-auto flex flex-col gap-8">
+        <div className="max-w-2xl mx-auto flex flex-col" style={{ gap: '2rem' }}>
             {/* Hero Section - Greeting and Portfolio */}
-            <div className="glass-card p-8 relative overflow-hidden" style={{ marginBottom: '32px' }}>
-                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
+            <div className="glass-card rounded-2xl p-6 relative overflow-hidden">
                 <div className="relative z-10">
                     {/* Greeting */}
-                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-8 text-center relative">
-                        {t.home.hi}, {getUsername()}
+                    <div className="flex items-center justify-between mb-6">
+                        <h1 className="text-2xl md:text-3xl font-bold text-white">
+                            {t.home.hi}, {getUsername()}
+                        </h1>
                         <button
                             onClick={toggleCurrency}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 text-xs font-bold px-2 py-1 rounded-lg bg-bg-elevated hover:bg-bg-hover transition-all border border-white/10 text-coffee-medium hover:text-white"
+                            className="text-xs font-bold px-3 py-1.5 rounded-full bg-bg-elevated hover:bg-bg-hover transition-all border border-[var(--color-border-default)] text-[var(--color-text-secondary)] hover:text-white"
                         >
                             {currency}
                         </button>
-                    </h1>
-
-                    <div className="flex justify-center mb-8">
-                        <a
-                            href={DOCS_URL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold hover:bg-primary/20 transition-all pointer-events-auto"
-                        >
-                            <Book className="w-3.5 h-3.5" />
-                            Documentation
-                            <ArrowUpRight className="w-3 h-3" />
-                        </a>
                     </div>
 
                     {/* Portfolio Value and 30-day Movement */}
-                    <div className="space-y-6">
-                        <div className="text-center">
-                            <div className="text-sm text-coffee-medium mb-2">{t.home.portfolioValue}</div>
-                            <div className="text-5xl md:text-6xl font-bold text-white tracking-tight">
-                                {formatCurrency(portfolioValue)}
-                            </div>
-                            <div className="text-sm text-coffee-medium mt-2">
-                                30d: <span className={thirtyDayMovement >= 0 ? 'text-bullish' : 'text-bearish'}>
-                                    {thirtyDayMovement >= 0 ? '+' : ''}{thirtyDayMovement.toFixed(2)}%
-                                    {thirtyDayPnl !== 0 && ` (${thirtyDayPnl >= 0 ? '+' : ''}${formatCurrency(Math.abs(thirtyDayPnl))})`}
-                                </span>
-                            </div>
+                    <div className="text-center mb-4">
+                        <div className="text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] mb-1">{t.home.portfolioValue}</div>
+                        <div className="text-4xl md:text-5xl font-bold text-white tracking-tight font-mono">
+                            {formatCurrency(portfolioValue)}
                         </div>
+                        <div className="text-sm text-[var(--color-text-secondary)] mt-2">
+                            30d: <span className={thirtyDayMovement >= 0 ? 'text-positive' : 'text-negative'}>
+                                {thirtyDayMovement >= 0 ? '+' : ''}{thirtyDayMovement.toFixed(2)}%
+                                {thirtyDayPnl !== 0 && ` (${thirtyDayPnl >= 0 ? '+' : ''}${formatCurrency(Math.abs(thirtyDayPnl))})`}
+                            </span>
+                        </div>
+                    </div>
 
-                        {/* Portfolio Chart */}
-                        <div className="pt-4">
-                            <PortfolioChart />
-                        </div>
+                    {/* Portfolio Chart */}
+                    <div className="pt-2">
+                        <PortfolioChart />
                     </div>
                 </div>
             </div>
 
-            {/* Deposit Button - Standalone */}
-            <div style={{ marginBottom: '32px' }}>
-                <button
-                    onClick={() => setShowDepositModal(true)}
-                    style={{
-                        width: '100%',
-                        padding: '16px',
-                        marginBottom: '32px',
-                        fontWeight: 'bold',
-                        borderRadius: '16px',
-                        border: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        backgroundColor: '#FACC15',
-                        color: '#000000',
-                        boxShadow: '0 0 20px rgba(255, 255, 0, 0.3)',
-                        cursor: 'pointer',
-                    }}
-                >
-                    <CreditCard style={{ width: '20px', height: '20px', color: '#000000' }} />
-                    <span style={{ color: '#000000' }}>Deposit</span>
-                </button>
-            </div>
+            {/* Deposit Button */}
+            <button
+                onClick={() => setShowDepositModal(true)}
+                className="btn btn-primary w-full rounded-2xl text-lg"
+            >
+                <CreditCard className="w-5 h-5" />
+                Deposit
+            </button>
 
             {/* Open Positions */}
             {positions.length > 0 && (
-                <div
-                    className="rounded-3xl p-6"
-                    style={{
-                        marginBottom: '32px',
-                        background: 'linear-gradient(135deg, rgba(20, 20, 25, 0.95) 0%, rgba(15, 15, 20, 0.98) 100%)',
-                        border: '2px solid rgba(250, 204, 21, 0.3)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(250, 204, 21, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                    }}
-                >
+                <div className="glass-card rounded-2xl p-5">
                     {/* Section Header */}
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-                        <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(250, 204, 21, 0.3)' }}>
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
                             <TrendingUp className="w-5 h-5 text-brand" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">{t.home.openPositions}</h2>
-                            <p className="text-xs text-white/50">{positions.length} active position{positions.length !== 1 ? 's' : ''}</p>
+                            <h2 className="text-lg font-bold text-white">{t.home.openPositions}</h2>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">{positions.length} active position{positions.length !== 1 ? 's' : ''}</p>
                         </div>
                     </div>
                     <div className="space-y-4">
@@ -294,23 +255,15 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Open Orders */}
             {openOrders && openOrders.length > 0 && (
-                <div
-                    className="rounded-3xl p-6"
-                    style={{
-                        marginBottom: '32px',
-                        background: 'linear-gradient(135deg, rgba(25, 15, 35, 0.95) 0%, rgba(20, 10, 30, 0.98) 100%)',
-                        border: '2px solid rgba(168, 85, 247, 0.3)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                    }}
-                >
+                <div className="glass-card rounded-2xl p-5">
                     {/* Section Header */}
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>
-                            <Clock className="w-5 h-5 text-purple-400" />
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
+                            <Clock className="w-5 h-5 text-brand" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">Open Orders</h2>
-                            <p className="text-xs text-white/50">{openOrders.length} pending order{openOrders.length !== 1 ? 's' : ''}</p>
+                            <h2 className="text-lg font-bold text-white">Open Orders</h2>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">{openOrders.length} pending order{openOrders.length !== 1 ? 's' : ''}</p>
                         </div>
                     </div>
                     <div className="space-y-4">
@@ -326,172 +279,130 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Top Movers - Crypto */}
             {cryptoGainers.length > 0 && (
-                <div
-                    className="rounded-3xl p-6"
-                    style={{
-                        marginBottom: '32px',
-                        background: 'linear-gradient(135deg, rgba(25, 20, 15, 0.95) 0%, rgba(20, 15, 10, 0.98) 100%)',
-                        border: '2px solid rgba(255, 149, 0, 0.3)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 149, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                    }}
-                >
-                    {/* Section Header */}
-                    <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b border-white/10">
-                        <span className="text-2xl">🔥</span>
-                        <h2 className="text-xl font-bold text-white">Cripto Hot</h2>
-                        <span className="text-xs px-2 py-1 rounded-full bg-orange-500/20 text-orange-400 font-semibold">24h</span>
+                <div className="glass-card rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl">🔥</span>
+                            <h2 className="text-lg font-bold text-white">Cripto Hot</h2>
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-brand-primary-muted)] text-brand font-semibold">24h</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-6">
-                        {/* Gainers */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-full bg-[#34C759]/20 flex items-center justify-center">
-                                    <TrendingUp className="w-4 h-4 text-[#34C759]" />
-                                </div>
-                                <span className="font-bold text-[#34C759]">Ganadores</span>
-                            </div>
-                            <div className="space-y-3">
-                                {cryptoGainers.map((market, idx) => {
-                                    const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
-                                    return (
-                                        <button
-                                            key={market.name}
-                                            onClick={() => {
-                                                setSelectedMarket(market.symbol);
-                                                if (onTokenClick) onTokenClick(market.symbol);
-                                            }}
-                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] hover:from-[#2C2C2E] hover:to-[#3C3C3E] transition-all active:scale-[0.98]"
-                                        >
-                                            <span className="text-xs font-bold text-[#FFD60A] min-w-[20px]">#{idx + 1}</span>
-                                            <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
-                                            <div className="flex-1 text-left">
-                                                <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
-                                                <div className="text-xs text-[#FFD60A] font-mono">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                            </div>
-                                            <span className="text-[#34C759] font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                        {/* Losers */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-full bg-[#FF3B30]/20 flex items-center justify-center">
-                                    <TrendingDown className="w-4 h-4 text-[#FF3B30]" />
-                                </div>
-                                <span className="font-bold text-[#FF3B30]">Perdedores</span>
-                            </div>
-                            <div className="space-y-3">
-                                {cryptoLosers.map((market, idx) => {
-                                    const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
-                                    return (
-                                        <button
-                                            key={market.name}
-                                            onClick={() => {
-                                                setSelectedMarket(market.symbol);
-                                                if (onTokenClick) onTokenClick(market.symbol);
-                                            }}
-                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] hover:from-[#2C2C2E] hover:to-[#3C3C3E] transition-all active:scale-[0.98]"
-                                        >
-                                            <span className="text-xs font-bold text-[#FFD60A] min-w-[20px]">#{idx + 1}</span>
-                                            <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
-                                            <div className="flex-1 text-left">
-                                                <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
-                                                <div className="text-xs text-[#FFD60A] font-mono">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                            </div>
-                                            <span className="text-[#FF3B30] font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                    {/* Gainers */}
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <TrendingUp className="w-4 h-4 text-positive" />
+                        <span className="text-sm font-bold text-positive">Ganadores</span>
+                    </div>
+                    <div className="space-y-2 mb-5">
+                        {cryptoGainers.map((market) => {
+                            const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                            return (
+                                <button
+                                    key={market.name}
+                                    onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-bg-elevated hover:bg-bg-hover transition-all active:scale-[0.98]"
+                                >
+                                    <TokenLogo symbol={market.symbol} size={28} className="rounded-full shrink-0" />
+                                    <div className="flex-1 text-left min-w-0">
+                                        <div className="font-bold text-white text-sm">{ticker}</div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <div className="text-brand font-bold font-mono text-sm">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                        <div className="text-positive font-bold font-mono text-xs">+{(market.change24h || 0).toFixed(2)}%</div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                    {/* Losers */}
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <TrendingDown className="w-4 h-4 text-negative" />
+                        <span className="text-sm font-bold text-negative">Perdedores</span>
+                    </div>
+                    <div className="space-y-2">
+                        {cryptoLosers.map((market) => {
+                            const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                            return (
+                                <button
+                                    key={market.name}
+                                    onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-bg-elevated hover:bg-bg-hover transition-all active:scale-[0.98]"
+                                >
+                                    <TokenLogo symbol={market.symbol} size={28} className="rounded-full shrink-0" />
+                                    <div className="flex-1 text-left min-w-0">
+                                        <div className="font-bold text-white text-sm">{ticker}</div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <div className="text-brand font-bold font-mono text-sm">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                        <div className="text-negative font-bold font-mono text-xs">{(market.change24h || 0).toFixed(2)}%</div>
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
 
             {/* Top Movers - Stocks */}
             {stockGainers.length > 0 && (
-                <div
-                    className="rounded-3xl p-6"
-                    style={{
-                        marginBottom: '32px',
-                        background: 'linear-gradient(135deg, rgba(15, 25, 20, 0.95) 0%, rgba(10, 20, 15, 0.98) 100%)',
-                        border: '2px solid rgba(52, 199, 89, 0.3)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(52, 199, 89, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                    }}
-                >
-                    {/* Section Header */}
-                    <div className="flex items-center justify-center gap-3 mb-6 pb-4 border-b border-white/10">
-                        <span className="text-2xl">📈</span>
-                        <h2 className="text-xl font-bold text-white">Acciones Hot</h2>
-                        <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400 font-semibold">24h</span>
+                <div className="glass-card rounded-2xl p-5">
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl">📈</span>
+                            <h2 className="text-lg font-bold text-white">Acciones Hot</h2>
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-brand-primary-muted)] text-brand font-semibold">24h</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-6">
-                        {/* Gainers */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-full bg-[#34C759]/20 flex items-center justify-center">
-                                    <TrendingUp className="w-4 h-4 text-[#34C759]" />
-                                </div>
-                                <span className="font-bold text-[#34C759]">Ganadores</span>
-                            </div>
-                            <div className="space-y-3">
-                                {stockGainers.map((market, idx) => {
-                                    const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
-                                    return (
-                                        <button
-                                            key={market.name}
-                                            onClick={() => {
-                                                setSelectedMarket(market.symbol);
-                                                if (onTokenClick) onTokenClick(market.symbol);
-                                            }}
-                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] hover:from-[#2C2C2E] hover:to-[#3C3C3E] transition-all active:scale-[0.98]"
-                                        >
-                                            <span className="text-xs font-bold text-[#FFD60A] min-w-[20px]">#{idx + 1}</span>
-                                            <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
-                                            <div className="flex-1 text-left">
-                                                <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
-                                                <div className="text-xs text-[#FFD60A] font-mono">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                            </div>
-                                            <span className="text-[#34C759] font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                        {/* Losers */}
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-full bg-[#FF3B30]/20 flex items-center justify-center">
-                                    <TrendingDown className="w-4 h-4 text-[#FF3B30]" />
-                                </div>
-                                <span className="font-bold text-[#FF3B30]">Perdedores</span>
-                            </div>
-                            <div className="space-y-3">
-                                {stockLosers.map((market, idx) => {
-                                    const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
-                                    return (
-                                        <button
-                                            key={market.name}
-                                            onClick={() => {
-                                                setSelectedMarket(market.symbol);
-                                                if (onTokenClick) onTokenClick(market.symbol);
-                                            }}
-                                            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-[#1C1C1E] to-[#2C2C2E] hover:from-[#2C2C2E] hover:to-[#3C3C3E] transition-all active:scale-[0.98]"
-                                        >
-                                            <span className="text-xs font-bold text-[#FFD60A] min-w-[20px]">#{idx + 1}</span>
-                                            <TokenLogo symbol={market.symbol} size={28} className="rounded-full" />
-                                            <div className="flex-1 text-left">
-                                                <div className="font-bold text-[#FFFFFF] text-sm" style={{ color: '#FFFFFF' }}>{ticker}</div>
-                                                <div className="text-xs text-[#FFD60A] font-mono">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                            </div>
-                                            <span className="text-[#FF3B30] font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
+                    {/* Gainers */}
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <TrendingUp className="w-4 h-4 text-positive" />
+                        <span className="text-sm font-bold text-positive">Ganadores</span>
+                    </div>
+                    <div className="space-y-2 mb-5">
+                        {stockGainers.map((market) => {
+                            const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                            return (
+                                <button
+                                    key={market.name}
+                                    onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-bg-elevated hover:bg-bg-hover transition-all active:scale-[0.98]"
+                                >
+                                    <TokenLogo symbol={market.symbol} size={28} className="rounded-full shrink-0" />
+                                    <div className="flex-1 text-left min-w-0">
+                                        <div className="font-bold text-white text-sm">{ticker}</div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <div className="text-brand font-bold font-mono text-sm">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                        <div className="text-positive font-bold font-mono text-xs">+{(market.change24h || 0).toFixed(2)}%</div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                    {/* Losers */}
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <TrendingDown className="w-4 h-4 text-negative" />
+                        <span className="text-sm font-bold text-negative">Perdedores</span>
+                    </div>
+                    <div className="space-y-2">
+                        {stockLosers.map((market) => {
+                            const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                            return (
+                                <button
+                                    key={market.name}
+                                    onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
+                                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-bg-elevated hover:bg-bg-hover transition-all active:scale-[0.98]"
+                                >
+                                    <TokenLogo symbol={market.symbol} size={28} className="rounded-full shrink-0" />
+                                    <div className="flex-1 text-left min-w-0">
+                                        <div className="font-bold text-white text-sm">{ticker}</div>
+                                    </div>
+                                    <div className="text-right shrink-0">
+                                        <div className="text-brand font-bold font-mono text-sm">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                        <div className="text-negative font-bold font-mono text-xs">{(market.change24h || 0).toFixed(2)}%</div>
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -499,36 +410,18 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             {/* Fee Calculator Banner */}
             <button
                 onClick={() => setShowFeeCalculator(true)}
-                className="w-full p-5 flex items-center justify-between group transition-all active:scale-[0.98] relative overflow-hidden rounded-2xl"
-                style={{
-                    marginBottom: '32px',
-                    background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(20, 20, 20, 0.9) 100%)',
-                    border: '2px solid rgba(255, 255, 0, 0.4)',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 0, 0.15)',
-                }}
+                className="w-full p-4 flex items-center justify-between group transition-all active:scale-[0.98] rounded-2xl glass-card border-[var(--color-brand-primary-border)]"
             >
-                {/* Background Gradient Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FFFF00]/0 via-[#FFFF00]/10 to-[#FFFF00]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
-
-                <div className="flex items-center gap-4 relative z-10">
-                    <div
-                        className="w-14 h-14 rounded-full bg-brand flex items-center justify-center"
-                        style={{ boxShadow: '0 0 20px rgba(255, 255, 0, 0.5)' }}
-                    >
-                        <DollarSign className="w-7 h-7 text-black" strokeWidth={2.5} />
+                <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-[var(--color-brand-primary)] flex items-center justify-center shrink-0">
+                        <DollarSign className="w-6 h-6 text-black" strokeWidth={2.5} />
                     </div>
                     <div className="text-left">
-                        <h3 className="font-bold text-white text-lg mb-1" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}>
-                            Comparar Tarifas 2025
-                        </h3>
-                        <p className="text-sm font-medium" style={{ color: '#FFD700' }}>
-                            Descubre cuánto ahorras operando en Rayo
-                        </p>
+                        <h3 className="font-bold text-white text-base">Comparar Tarifas 2025</h3>
+                        <p className="text-sm text-brand">Descubre cuánto ahorras operando en Rayo</p>
                     </div>
                 </div>
-                <div className="bg-brand p-3 rounded-xl shadow-lg">
-                    <ArrowUpRight className="w-6 h-6 text-black" strokeWidth={2.5} />
-                </div>
+                <ArrowUpRight className="w-5 h-5 text-brand shrink-0" strokeWidth={2.5} />
             </button>
 
             {/* Fee Calculator Modal */}
@@ -540,68 +433,39 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             {/* Spot Trading Banner */}
             <button
                 onClick={() => router.push('/spot')}
-                className="w-full p-5 flex items-center justify-between group transition-all active:scale-[0.98] relative overflow-hidden rounded-2xl"
-                style={{
-                    marginBottom: '32px',
-                    background: 'linear-gradient(135deg, rgba(0, 100, 0, 0.2) 0%, rgba(0, 50, 0, 0.3) 100%)',
-                    border: '2px solid rgba(52, 199, 89, 0.4)',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(52, 199, 89, 0.15)',
-                }}
+                className="w-full p-4 flex items-center justify-between group transition-all active:scale-[0.98] rounded-2xl glass-card border-[var(--color-positive-muted)]"
             >
-                {/* Background Gradient Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#34C759]/0 via-[#34C759]/10 to-[#34C759]/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 pointer-events-none" />
-
-                <div className="flex items-center gap-4 relative z-10">
-                    <div
-                        className="w-14 h-14 rounded-full bg-[#34C759] flex items-center justify-center"
-                        style={{ boxShadow: '0 0 20px rgba(52, 199, 89, 0.5)' }}
-                    >
-                        <ArrowLeftRight className="w-7 h-7 text-white" strokeWidth={2.5} />
+                <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-[var(--color-positive)] flex items-center justify-center shrink-0">
+                        <ArrowLeftRight className="w-6 h-6 text-white" strokeWidth={2.5} />
                     </div>
                     <div className="text-left">
-                        <h3 className="font-bold text-white text-lg mb-1" style={{ textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)' }}>
-                            Spot Trading
-                        </h3>
-                        <p className="text-sm font-medium text-[#34C759]">
-                            Buy & sell BTC, ETH, HYPE, SOL
-                        </p>
+                        <h3 className="font-bold text-white text-base">Spot Trading</h3>
+                        <p className="text-sm text-positive">Buy & sell BTC, ETH, HYPE, SOL</p>
                     </div>
                 </div>
-                <div className="bg-[#34C759] p-3 rounded-xl shadow-lg">
-                    <ArrowUpRight className="w-6 h-6 text-white" strokeWidth={2.5} />
-                </div>
+                <ArrowUpRight className="w-5 h-5 text-positive shrink-0" strokeWidth={2.5} />
             </button>
 
             {/* Watchlist */}
-            <div
-                className="rounded-3xl p-6"
-                style={{
-                    background: 'linear-gradient(135deg, rgba(20, 20, 30, 0.95) 0%, rgba(15, 15, 25, 0.98) 100%)',
-                    border: '2px solid rgba(99, 102, 241, 0.3)',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                }}
-            >
+            <div className="glass-card rounded-2xl p-5">
                 {/* Section Header */}
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}>
+                        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
                             <span className="text-lg">⭐</span>
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold text-white">{t.home.watchlist}</h2>
-                            <p className="text-xs text-white/50">{watchlistMarkets.length} tokens tracked</p>
+                            <h2 className="text-lg font-bold text-white">{t.home.watchlist}</h2>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">{watchlistMarkets.length} tokens tracked</p>
                         </div>
                     </div>
                     <div className="relative" ref={dropdownRef}>
                         <button
-                            className="p-2 transition-all"
-                            style={{
-                                background: 'transparent',
-                                border: 'none'
-                            }}
+                            className="p-2 transition-all bg-transparent border-none"
                             onClick={() => setShowAddDropdown(!showAddDropdown)}
                         >
-                            <Plus className="w-7 h-7 text-brand" style={{ filter: 'drop-shadow(0 0 4px rgba(255, 255, 0, 0.4))' }} />
+                            <Plus className="w-6 h-6 text-brand" />
                         </button>
 
                         {/* Add Token Modal */}
@@ -617,17 +481,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                 />
                                 {/* Modal - Styled like MarketSelector */}
                                 <div
-                                    className="fixed z-[100] rounded-xl shadow-2xl overflow-hidden backdrop-blur-md"
-                                    style={{
-                                        left: '16px',
-                                        right: '16px',
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        maxHeight: '70vh',
-                                        backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                                        border: '1px solid rgba(255, 255, 0, 0.35)',
-                                        boxShadow: '0 10px 32px rgba(0, 0, 0, 0.8), 0 0 16px rgba(255, 255, 0, 0.12)',
-                                    }}
+                                    className="fixed z-[100] rounded-xl shadow-2xl overflow-hidden backdrop-blur-md left-4 right-4 top-1/2 -translate-y-1/2 max-h-[70vh] bg-[var(--color-bg-primary)]/95 border border-[var(--color-brand-primary-border)]"
                                 >
                                     {/* Header */}
                                     <div className="p-4 border-b border-white/10">
@@ -648,24 +502,19 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                     {/* Search */}
                                     <div className="p-4 border-b border-white/10">
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-coffee-medium" />
+                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-text-tertiary)]" />
                                             <input
                                                 type="text"
                                                 placeholder="Search markets..."
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="w-full pl-10 pr-10 py-2.5 rounded-lg text-white placeholder-coffee-medium focus:outline-none focus:ring-1 focus:ring-primary/50 md:text-sm"
-                                                style={{
-                                                    backgroundColor: '#0a0a0a',
-                                                    border: '1px solid rgba(255, 255, 0, 0.2)',
-                                                    fontSize: '16px', // Force 16px to prevent iOS zoom
-                                                }}
+                                                className="w-full pl-10 pr-10 py-2.5 rounded-lg text-white placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/50 text-base md:text-sm bg-bg-secondary border border-[var(--color-border-default)]"
                                             />
                                             {searchQuery && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setSearchQuery('')}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-coffee-medium hover:text-white transition-colors"
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-white transition-colors"
                                                 >
                                                     <X className="w-4 h-4" />
                                                 </button>
@@ -699,30 +548,27 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                             addToWatchlist(market.name);
                                                             setSearchQuery('');
                                                         }}
-                                                        className="w-full text-left p-3 transition-all rounded-lg border border-white/10 hover:border-primary/50 hover:bg-primary/10"
-                                                        style={{
-                                                            backgroundColor: '#0a0a0a',
-                                                        }}
+                                                        className="w-full text-left p-3 transition-all rounded-lg border border-[var(--color-border-default)] hover:border-[var(--color-brand-primary-border)] bg-bg-secondary hover:bg-bg-elevated"
                                                     >
                                                         <div className="flex items-center justify-between w-full">
                                                             {/* Left: Logo + Name */}
                                                             <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
                                                                 <TokenLogo symbol={market.symbol} size={36} />
                                                                 <div className="flex flex-col min-w-0 truncate pr-2">
-                                                                    <div className="font-bold text-base truncate" style={{ color: '#FFFFFF' }}>
+                                                                    <div className="font-bold text-base truncate text-white">
                                                                         {getTokenFullName(market.name)}
                                                                     </div>
-                                                                    <div className="text-xs truncate" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+                                                                    <div className="text-xs truncate text-[var(--color-text-secondary)]">
                                                                         {market.name}
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                             {/* Right: Price + Change */}
                                                             <div className="text-right shrink-0">
-                                                                <div className="font-mono font-bold text-base" style={{ color: '#FFFFFF' }}>
+                                                                <div className="font-mono font-bold text-base text-white">
                                                                     {market.price ? formatCurrency(market.price) : '0.00'}
                                                                 </div>
-                                                                <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
+                                                                <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-positive' : 'text-negative'}`}>
                                                                     {marketIsPositive ? (
                                                                         <TrendingUp className="w-3 h-3" />
                                                                     ) : (
@@ -746,7 +592,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                 </div>
                 {/* Watchlist items */}
                 {watchlistMarkets.length === 0 ? (
-                    <div id="home-market-list" className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
+                    <div id="home-market-list" className="text-center py-12 text-[var(--color-text-secondary)] bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
                         <p>{t.home.noTokensInWatchlist}</p>
                         <p className="text-xs mt-2 opacity-60">{t.home.tapToAddTokens}</p>
                     </div>
@@ -765,63 +611,39 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
             </div>
 
             {/* Categories Section */}
-            <div
-                className="rounded-3xl p-6"
-                style={{
-                    marginTop: '80px',
-                    background: 'linear-gradient(135deg, rgba(25, 15, 25, 0.95) 0%, rgba(20, 10, 20, 0.98) 100%)',
-                    border: '2px solid rgba(168, 85, 247, 0.3)',
-                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                }}
-            >
+            <div className="glass-card rounded-2xl p-5">
                 {/* Section Header */}
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)' }}>
+                <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
+                    <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
                         <span className="text-lg">🏷️</span>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-white">Browse by Category</h2>
-                        <p className="text-xs text-white/50">Explore tokens by sector</p>
+                        <h2 className="text-lg font-bold text-white">Browse by Category</h2>
+                        <p className="text-xs text-[var(--color-text-tertiary)]">Explore tokens by sector</p>
                     </div>
                 </div>
 
                 {/* Category Tabs */}
-                <div className="flex items-center gap-4 overflow-x-auto pb-6 -mx-6 px-6 scrollbar-hide mb-6" style={{ scrollSnapType: 'x mandatory' }}>
+                <div className="flex items-center gap-3 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide mb-4" style={{ scrollSnapType: 'x mandatory' }}>
                     {CATEGORIES.filter(cat => cat.id !== 'watchlist').map((category) => (
                         <button
                             key={category.id}
                             onClick={() => setSelectedCategory(category.id)}
-                            className={`flex flex-col items-center justify-center gap-2 rounded-3xl font-bold whitespace-nowrap transition-all shrink-0 active:scale-95 ${selectedCategory === category.id
-                                ? 'text-black'
-                                : 'text-white/80 hover:text-white'
+                            className={`flex flex-col items-center justify-center gap-1.5 rounded-2xl font-bold whitespace-nowrap transition-all shrink-0 active:scale-95 w-20 h-20 ${selectedCategory === category.id
+                                ? 'text-black bg-[var(--color-brand-primary)] border-2 border-white/30'
+                                : 'text-white/80 hover:text-white bg-bg-elevated border border-[var(--color-border-default)]'
                                 }`}
-                            style={{
-                                scrollSnapAlign: 'start',
-                                width: '100px',
-                                height: '100px',
-                                ...(selectedCategory === category.id
-                                    ? {
-                                        background: 'linear-gradient(135deg, #FACC15 0%, #F59E0B 100%)',
-                                        boxShadow: '0 8px 24px rgba(250, 204, 21, 0.5), 0 0 40px rgba(250, 204, 21, 0.25)',
-                                        border: '3px solid rgba(255, 255, 255, 0.3)'
-                                    }
-                                    : {
-                                        background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.98) 0%, rgba(25, 25, 30, 0.98) 100%)',
-                                        border: '2px solid rgba(255, 255, 255, 0.15)',
-                                        boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                                    }
-                                )
-                            }}
+                            style={{ scrollSnapAlign: 'start' }}
                         >
-                            <span className="text-3xl">{category.emoji}</span>
-                            <span className="text-sm">{category.label}</span>
+                            <span className="text-2xl">{category.emoji}</span>
+                            <span className="text-xs">{category.label}</span>
                         </button>
                     ))}
                 </div>
 
                 {/* Category Description */}
                 <div className="mb-4 text-center">
-                    <p className="text-white/50 text-sm">
+                    <p className="text-[var(--color-text-tertiary)] text-sm">
                         {CATEGORIES.find(c => c.id === selectedCategory)?.description}
                     </p>
                 </div>
@@ -835,7 +657,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
                     if (categoryMarkets.length === 0) {
                         return (
-                            <div className="text-center py-12 text-coffee-medium bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
+                            <div className="text-center py-12 text-[var(--color-text-secondary)] bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
                                 <p>No assets in this category</p>
                             </div>
                         );
@@ -898,29 +720,29 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove, showRemoveButton =
 
     return (
         <div
-            className="relative bg-gradient-to-br from-[#2C2C2E] to-[#1C1C1E] rounded-3xl p-4 md:p-5 hover:from-[#3C3C3E] hover:to-[#2C2C2E] transition-all cursor-pointer group active:scale-[0.98] shadow-lg"
+            className="relative bg-bg-elevated hover:bg-bg-hover rounded-2xl p-4 transition-all cursor-pointer group active:scale-[0.98]"
             onClick={() => onTokenClick(market.symbol)}
         >
             {/* Remove button - appears on hover */}
             {showRemoveButton && (
                 <button
                     onClick={handleRemove}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-[#FF3B30] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-[#FF5545] z-10"
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-[var(--color-negative)] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
                     aria-label="Remove from watchlist"
                 >
                     <X className="w-3.5 h-3.5 text-white" />
                 </button>
             )}
 
-            <div className="flex items-center gap-2 md:gap-4">
+            <div className="flex items-center gap-3">
                 {/* Token Logo */}
                 <div className="shrink-0">
-                    <TokenLogo symbol={market.symbol} size={36} className="rounded-full md:w-11 md:h-11" />
+                    <TokenLogo symbol={market.symbol} size={36} className="rounded-full" />
                 </div>
 
                 {/* Token Name */}
                 <div className="flex-1 min-w-0">
-                    <div className="font-bold text-white text-lg md:text-xl">{cleanTicker}</div>
+                    <div className="font-bold text-white text-base">{cleanTicker}</div>
                 </div>
 
                 {/* Mini Chart - Hidden on small mobile, visible on larger screens */}
@@ -933,12 +755,12 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove, showRemoveButton =
                     />
                 </div>
 
-                {/* Price and Change - Right aligned, responsive sizing */}
+                {/* Price and Change - Right aligned */}
                 <div className="flex flex-col items-end shrink-0">
-                    <div className="text-[#FFD60A] font-bold text-base md:text-xl font-mono mb-0.5 whitespace-nowrap">
+                    <div className="text-brand font-bold text-base font-mono mb-0.5 whitespace-nowrap">
                         {market.price ? formatCurrency(market.price) : '0.00'}
                     </div>
-                    <div className={`text-sm md:text-base font-semibold whitespace-nowrap ${isPositive ? 'text-[#34C759]' : 'text-[#FF3B30]'}`}>
+                    <div className={`text-sm font-semibold whitespace-nowrap font-mono ${isPositive ? 'text-positive' : 'text-negative'}`}>
                         {isPositive ? '+' : ''}{priceChangePercent.toFixed(2)}%
                     </div>
                 </div>
