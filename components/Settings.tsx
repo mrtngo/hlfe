@@ -73,7 +73,7 @@ export default function Settings() {
             {/* Header */}
             <div className="sticky top-0 bg-bg-secondary border-b border-white/10 z-10">
                 <div className="flex items-center justify-between p-4">
-                    <h1 className="text-lg font-bold text-white">Settings</h1>
+                    <h1 className="text-lg font-bold text-white">{t.settings.title}</h1>
                     <button className="p-2 hover:bg-bg-hover rounded-full transition-colors">
                         <HelpCircle className="w-5 h-5 text-white" />
                     </button>
@@ -88,12 +88,12 @@ export default function Settings() {
                         <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
                                 <Wallet className="w-5 h-5 text-white" />
-                                <span className="font-semibold text-white">Wallet Address</span>
+                                <span className="font-semibold text-white">{t.settings.walletAddress}</span>
                             </div>
                         </div>
                         <div className="bg-bg-tertiary/50 border border-white/5 rounded-xl p-4 flex items-center justify-between gap-3">
                             <div className="flex-1 min-w-0">
-                                <div className="text-xs text-coffee-medium mb-1 uppercase tracking-wider font-semibold">Address</div>
+                                <div className="text-xs text-coffee-medium mb-1 uppercase tracking-wider font-semibold">{t.settings.address}</div>
                                 <div className="text-sm md:text-base font-mono break-all text-white/90">
                                     {address}
                                 </div>
@@ -123,7 +123,7 @@ export default function Settings() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Wallet className="w-5 h-5 text-white" />
-                            <span className="font-semibold text-white">Connect Wallet</span>
+                            <span className="font-semibold text-white">{t.settings.connectWallet}</span>
                         </div>
                         <button
                             onClick={() => setConnectWallet(!connectWallet)}
@@ -151,7 +151,7 @@ export default function Settings() {
                                     : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
                                     }`}
                             >
-                                English
+                                {t.settings.english}
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
@@ -160,7 +160,7 @@ export default function Settings() {
                                     : 'bg-bg-tertiary text-coffee-medium hover:bg-bg-hover border border-white/10'
                                     }`}
                             >
-                                Español
+                                {t.settings.spanish}
                             </button>
                         </div>
                     </div>
@@ -175,7 +175,7 @@ export default function Settings() {
                                 <div>
                                     <span className="font-semibold text-white block">{t.settings.notifications}</span>
                                     <span className="text-xs text-coffee-medium">
-                                        Get alerts for orders, positions & prices
+                                        {t.settings.notificationsDesc}
                                     </span>
                                 </div>
                             </div>
@@ -185,7 +185,7 @@ export default function Settings() {
                                     disabled={pushNotifications.isLoading}
                                     className="px-4 py-2 bg-bullish/20 text-bullish rounded-full text-sm font-semibold hover:bg-bullish/30 transition-colors"
                                 >
-                                    {pushNotifications.isLoading ? 'Disabling...' : 'Disable'}
+                                    {pushNotifications.isLoading ? t.settings.disabling : t.settings.disable}
                                 </button>
                             ) : (
                                 <button
@@ -193,7 +193,7 @@ export default function Settings() {
                                     disabled={pushNotifications.isLoading || !pushNotifications.isSupported || !pushNotifications.isSecureContext}
                                     className="px-4 py-2 bg-brand text-white rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                 >
-                                    {pushNotifications.isLoading ? 'Enabling...' : 'Enable'}
+                                    {pushNotifications.isLoading ? t.settings.enabling : t.settings.enable}
                                 </button>
                             )}
                         </div>
@@ -203,9 +203,9 @@ export default function Settings() {
                             <div className="flex items-start gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
                                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                 <div>
-                                    <span className="font-semibold block">Insecure Context</span>
+                                    <span className="font-semibold block">{t.settings.insecureContextTitle}</span>
                                     <span className="text-xs">
-                                        Push notifications require HTTPS. If testing locally, use localhost or a secure tunnel (ngrok).
+                                        {t.settings.insecureContextDesc}
                                     </span>
                                 </div>
                             </div>
@@ -216,9 +216,9 @@ export default function Settings() {
                             <div className="flex items-start gap-2 p-3 bg-primary/10 border border-primary/20 rounded-lg text-sm text-primary">
                                 <Smartphone className="w-4 h-4 shrink-0 mt-0.5" />
                                 <div>
-                                    <span className="font-semibold block">Add to Home Screen</span>
+                                    <span className="font-semibold block">{t.settings.addToHomeScreen}</span>
                                     <span className="text-xs text-coffee-medium">
-                                        On iOS, tap the Share button and "Add to Home Screen" to enable notifications
+                                        {t.settings.isiOSDesc}
                                     </span>
                                 </div>
                             </div>
@@ -229,9 +229,9 @@ export default function Settings() {
                             <div className="flex items-start gap-2 p-3 bg-bearish/10 border border-bearish/20 rounded-lg text-sm text-bearish">
                                 <BellOff className="w-4 h-4 shrink-0 mt-0.5" />
                                 <div>
-                                    <span className="font-semibold block">Notifications Blocked</span>
+                                    <span className="font-semibold block">{t.settings.notificationsBlocked}</span>
                                     <span className="text-xs">
-                                        Enable notifications in your browser/device settings
+                                        {t.settings.notificationsBlockedDesc}
                                     </span>
                                 </div>
                             </div>
@@ -241,7 +241,7 @@ export default function Settings() {
                         {!pushNotifications.isSupported && !pushNotifications.isLoading && (
                             <div className="flex items-start gap-2 p-3 bg-bg-tertiary border border-white/10 rounded-lg text-sm text-coffee-medium">
                                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                                <span>Push notifications are not supported on this browser</span>
+                                <span>{t.settings.notSupported}</span>
                             </div>
                         )}
 
@@ -260,7 +260,7 @@ export default function Settings() {
                                 className="flex items-center gap-2 px-3 py-2 bg-bg-tertiary text-coffee-medium rounded-lg text-xs hover:bg-bg-hover transition-colors"
                             >
                                 <Bell className="w-3 h-3" />
-                                Send test notification
+                                {t.settings.testNotification}
                             </button>
                         )}
                     </div>
@@ -274,16 +274,16 @@ export default function Settings() {
                                 <div className="flex items-center gap-3">
                                     <Shield className="w-5 h-5 text-white" />
                                     <div>
-                                        <span className="font-semibold text-white block">Agent Wallet</span>
+                                        <span className="font-semibold text-white block">{t.settings.agentWallet}</span>
                                         <span className="text-xs text-coffee-medium">
-                                            Trade without signing every transaction
+                                            {t.settings.agentWalletDesc}
                                         </span>
                                     </div>
                                 </div>
                                 {agentWalletEnabled ? (
                                     <div className="flex items-center gap-2 text-bullish">
                                         <CheckCircle2 className="w-5 h-5" />
-                                        <span className="text-sm font-semibold">Active</span>
+                                        <span className="text-sm font-semibold">{t.settings.active}</span>
                                     </div>
                                 ) : (
                                     <button
@@ -291,7 +291,7 @@ export default function Settings() {
                                         disabled={settingUpAgent}
                                         className="px-4 py-2 bg-brand text-white rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                     >
-                                        {settingUpAgent ? 'Setting up...' : 'Activar'}
+                                        {settingUpAgent ? t.settings.settingUp : t.settings.enable}
                                     </button>
                                 )}
                             </div>
@@ -312,7 +312,7 @@ export default function Settings() {
                                             className="flex items-center gap-2 px-3 py-2 bg-bg-tertiary text-coffee-medium rounded-lg text-xs hover:bg-bg-hover transition-colors"
                                         >
                                             <RotateCcw className="w-3 h-3" />
-                                            Reset local agent data
+                                            {t.settings.resetAgent}
                                         </button>
                                     )}
                                 </div>
@@ -321,20 +321,20 @@ export default function Settings() {
                             {agentSetupSuccess && (
                                 <div className="flex items-center gap-2 p-3 bg-bullish/10 border border-bullish/20 rounded-lg text-sm text-bullish">
                                     <CheckCircle2 className="w-4 h-4 shrink-0" />
-                                    <span>Agent wallet enabled! You can now trade without signing each transaction.</span>
+                                    <span>{t.settings.agentSuccess}</span>
                                 </div>
                             )}
 
                             {!agentWalletEnabled && !settingUpAgent && !agentSetupError && (
                                 <p className="text-xs text-coffee-medium mt-2">
-                                    Approve once to enable automatic signing. You'll sign ONE transaction to approve the agent, then all future trades will be signed automatically.
+                                    {t.settings.agentInstruction}
                                 </p>
                             )}
 
                             {agentWalletEnabled && (
                                 <button
                                     onClick={() => {
-                                        if (confirm('This will disable automatic signing. You will need to sign each transaction manually. Continue?')) {
+                                        if (confirm(t.settings.disableAgent + '?')) {
                                             clearAgentWallet();
                                             window.location.reload();
                                         }
@@ -342,7 +342,7 @@ export default function Settings() {
                                     className="flex items-center gap-2 px-3 py-2 bg-bg-tertiary text-coffee-medium rounded-lg text-xs hover:bg-bg-hover transition-colors mt-2"
                                 >
                                     <RotateCcw className="w-3 h-3" />
-                                    Disable agent wallet
+                                    {t.settings.disableAgent}
                                 </button>
                             )}
                         </div>
@@ -357,16 +357,16 @@ export default function Settings() {
                                 <div className="flex items-center gap-3">
                                     <DollarSign className="w-5 h-5 text-primary" />
                                     <div>
-                                        <span className="font-semibold text-white block">Builder Fee</span>
+                                        <span className="font-semibold text-white block">{t.settings.builderFee}</span>
                                         <span className="text-xs text-coffee-medium">
-                                            Support Rayo with a {(BUILDER_CONFIG.fee / 10).toFixed(1)} bps fee on trades
+                                            {t.settings.builderFeeDesc.replace('{{fee}}', (BUILDER_CONFIG.fee / 10).toFixed(1))}
                                         </span>
                                     </div>
                                 </div>
                                 {builderFeeApproved ? (
                                     <div className="flex items-center gap-2 text-bullish">
                                         <CheckCircle2 className="w-5 h-5" />
-                                        <span className="text-sm font-semibold">Approved</span>
+                                        <span className="text-sm font-semibold">{t.settings.approved}</span>
                                     </div>
                                 ) : (
                                     <button
@@ -374,7 +374,7 @@ export default function Settings() {
                                         disabled={builderFeeLoading}
                                         className="px-4 py-2 bg-brand text-white rounded-full text-sm font-semibold hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-glow-brand"
                                     >
-                                        {builderFeeLoading ? 'Approving...' : 'Aprobar'}
+                                        {builderFeeLoading ? t.settings.approving : t.settings.enable}
                                     </button>
                                 )}
                             </div>
@@ -389,13 +389,15 @@ export default function Settings() {
                             {builderFeeSuccess && (
                                 <div className="flex items-center gap-2 p-3 bg-bullish/10 border border-bullish/20 rounded-lg text-sm text-bullish">
                                     <CheckCircle2 className="w-4 h-4 shrink-0" />
-                                    <span>Builder fee approved! Thank you for supporting Rayo.</span>
+                                    <span>{t.settings.builderFeeSuccess}</span>
                                 </div>
                             )}
 
                             {!builderFeeApproved && !builderFeeLoading && !builderFeeError && (
                                 <p className="text-xs text-coffee-medium mt-2">
-                                    Approve once to enable trading fees. A small {(BUILDER_CONFIG.fee / 10).toFixed(1)} basis points ({(BUILDER_CONFIG.fee / 1000 * 100).toFixed(3)}%) fee will be collected on each trade to support Rayo development.
+                                    {t.settings.builderFeeInstruction
+                                        .replace('{{fee}}', (BUILDER_CONFIG.fee / 10).toFixed(1))
+                                        .replace('{{percent}}', (BUILDER_CONFIG.fee / 1000 * 100).toFixed(3))}
                                 </p>
                             )}
                         </div>
@@ -407,7 +409,7 @@ export default function Settings() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <Shield className="w-5 h-5 text-white" />
-                            <span className="font-semibold text-white">Security</span>
+                            <span className="font-semibold text-white">{t.settings.security}</span>
                         </div>
                     </div>
                 </div>
@@ -417,7 +419,7 @@ export default function Settings() {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <HelpCircle className="w-5 h-5 text-white" />
-                            <span className="font-semibold text-white">Help & Support</span>
+                            <span className="font-semibold text-white">{t.settings.support}</span>
                         </div>
                     </div>
                 </div>
@@ -431,7 +433,7 @@ export default function Settings() {
                 >
                     <div className="flex items-center gap-3">
                         <Book className="w-5 h-5 text-primary" />
-                        <span className="font-semibold text-white">Documentation</span>
+                        <span className="font-semibold text-white">{t.common.documentation}</span>
                     </div>
                     <ExternalLink className="w-4 h-4 text-white/40 group-hover:text-primary transition-colors" />
                 </a>
@@ -440,7 +442,7 @@ export default function Settings() {
                 <div className="pt-8 pb-4 flex justify-center">
                     <button className="flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full text-white font-semibold text-sm hover:bg-white/20 transition-colors">
                         <Zap className="w-4 h-4" />
-                        Powered by Hyperliquid
+                        {t.settings.poweredBy}
                     </button>
                 </div>
             </div>

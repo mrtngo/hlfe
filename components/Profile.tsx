@@ -576,7 +576,7 @@ export default function Profile() {
                     className="w-full py-4 bg-brand/10 hover:bg-brand/20 border border-brand/30 rounded-2xl text-brand font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                 >
                     <Book className="w-4 h-4" />
-                    {t.profile.documentation}
+                    {t.common.documentation}
                     <ExternalLink className="w-3 h-3 opacity-50" />
                 </a>
             </div>

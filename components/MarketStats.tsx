@@ -17,7 +17,7 @@ interface StatItem {
 export default function MarketStats() {
     const { selectedMarket, getMarket } = useHyperliquid();
     const market = getMarket(selectedMarket);
-    const { formatCurrency } = useLanguage();
+    const { t, formatCurrency } = useLanguage();
 
     if (!market) {
         return null;
@@ -51,37 +51,37 @@ export default function MarketStats() {
     const stats: StatItem[] = [
         {
             icon: Activity,
-            label: 'Open Interest',
+            label: t.marketStats.openInterest,
             value: formatLargeNumber(openInterestUSD),
             variant: 'brand',
         },
         {
             icon: DollarSign,
-            label: '24h Volume',
+            label: t.marketStats.volume24h,
             value: formatLargeNumber(market.volume24h),
             variant: 'info',
         },
         {
             icon: TrendingUp,
-            label: 'Funding Rate',
+            label: t.marketStats.fundingRate,
             value: formatFundingRate(market.fundingRate),
             variant: market.fundingRate >= 0 ? 'positive' : 'negative',
         },
         {
             icon: Zap,
-            label: 'Max Leverage',
+            label: t.marketStats.maxLeverage,
             value: `${market.maxLeverage}x`,
             variant: 'warning',
         },
         {
             icon: ArrowUpCircle,
-            label: '24h High',
+            label: t.marketStats.high24h,
             value: formatCurrency(estimatedHigh),
             variant: 'positive',
         },
         {
             icon: ArrowDownCircle,
-            label: '24h Low',
+            label: t.marketStats.low24h,
             value: formatCurrency(estimatedLow),
             variant: 'negative',
         },

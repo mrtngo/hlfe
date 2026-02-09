@@ -375,12 +375,12 @@ export default function MarketSelector() {
                                                         </span>
                                                         {market.onlyIsolated && (
                                                             <span className="text-[10px] bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded-md font-bold">
-                                                                ISO
+                                                                {t.markets.isolated}
                                                             </span>
                                                         )}
                                                         {market.isStock && (
                                                             <span className="text-[10px] bg-blue-500/30 text-blue-300 px-2 py-0.5 rounded-md font-bold">
-                                                                STOCK
+                                                                {t.markets.stock}
                                                             </span>
                                                         )}
                                                     </div>
@@ -405,11 +405,11 @@ export default function MarketSelector() {
                                             {/* Market Stats Row */}
                                             <div className="flex items-center gap-3 text-[10px] font-mono">
                                                 <div className="flex items-center gap-1">
-                                                    <span className="text-white/50">Lev:</span>
+                                                    <span className="text-white/50">{t.markets.lev}:</span>
                                                     <span className="text-purple-400 font-bold">{market.maxLeverage}x</span>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    <span className="text-white/50">Vol:</span>
+                                                    <span className="text-white/50">{t.markets.vol}:</span>
                                                     <span className="text-cyan-400 font-bold">
                                                         {market.volume24h >= 1_000_000_000
                                                             ? `$${(market.volume24h / 1_000_000_000).toFixed(1)}B`
@@ -420,7 +420,7 @@ export default function MarketSelector() {
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    <span className="text-white/50">OI:</span>
+                                                    <span className="text-white/50">{t.markets.oi}:</span>
                                                     <span className="text-yellow-400 font-bold">
                                                         {(() => {
                                                             const oi = market.openInterest * market.price;
