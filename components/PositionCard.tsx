@@ -80,7 +80,7 @@ export default function PositionCard({
             {/* Position Value & Margin - Key info prominently displayed */}
             <div className="flex gap-2 mb-3 relative z-10">
                 <div className="flex-1 bg-brand/10 border border-brand/20 px-3 py-2 rounded-xl">
-                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider">{t.positions.value || 'Value'}</span>
+                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider">{t.positions.value}</span>
                     <div className="font-mono text-sm text-white font-bold">
                         {formatCurrency(position.entryPrice * position.size)}
                     </div>

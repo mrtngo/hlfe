@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
 import { X, AlertCircle, Loader2, ArrowUpRight, Clock, DollarSign } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 import { API_URL } from '@/lib/hyperliquid/client';
 
 interface WithdrawModalProps {
@@ -15,6 +16,7 @@ interface WithdrawModalProps {
 export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const { address, account, withdraw } = useHyperliquid();
     const { wallets } = useWallets();
+    const { t } = useLanguage();
 
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -67,7 +69,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
             <div className="relative w-full max-w-[400px] bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
-                    <h2 className="text-xl font-bold text-white">Retirar USDC</h2>
+                    <h2 className="text-xl font-bold text-white">{t.withdraw.title}</h2>
                     <button
                         onClick={onClose}
                         className="p-2 rounded-full hover:bg-bg-secondary transition-colors"
@@ -82,18 +84,18 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                     <div className="bg-brand/10 border border-[#FFFF00]/20 rounded-xl p-3 flex gap-3">
                         <ArrowUpRight className="w-5 h-5 text-brand shrink-0" />
                         <div className="text-sm">
-                            <div className="font-semibold text-brand mb-1">Retiro a Arbitrum</div>
+                            <div className="font-semibold text-brand mb-1">{t.withdraw.toArbitrum}</div>
                             <div className="text-white/60">
-                                Los fondos llegarán a tu wallet en ~5 minutos.
+                                {t.withdraw.desc}
                                 <br />
-                                <span className="text-brand">Fee: ${WITHDRAWAL_FEE} USDC</span>
+                                <span className="text-brand">{t.withdraw.fee}: ${WITHDRAWAL_FEE} USDC</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Balance */}
                     <div className="flex justify-between items-center text-sm">
-                        <span className="text-white/50">Disponible:</span>
+                        <span className="text-white/50">{t.withdraw.available}:</span>
                         <button
                             onClick={() => setAmount(availableBalance.toFixed(2))}
                             className="text-white hover:text-brand transition-colors font-mono"
@@ -137,15 +139,15 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                     {amountNum > 0 && (
                         <div className="bg-[#1A1A1A] rounded-xl p-3 space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-white/50">Monto</span>
+                                <span className="text-white/50">{t.withdraw.amount}</span>
                                 <span className="text-white font-mono">${amountNum.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-white/50">Fee</span>
+                                <span className="text-white/50">{t.withdraw.fee}</span>
                                 <span className="text-white/70 font-mono">-${WITHDRAWAL_FEE.toFixed(2)}</span>
                             </div>
                             <div className="border-t border-white/10 pt-2 flex justify-between">
-                                <span className="text-white/50">Recibirás</span>
+                                <span className="text-white/50">{t.withdraw.receive}</span>
                                 <span className={`font-mono font-bold ${netAmount > 0 ? 'text-brand' : 'text-red-400'}`}>
                                     ${Math.max(0, netAmount).toFixed(2)}
                                 </span>
@@ -157,14 +159,14 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                     {amountNum > 0 && amountNum < MIN_WITHDRAWAL && (
                         <div className="flex items-center gap-2 text-red-400 text-sm">
                             <AlertCircle className="w-4 h-4" />
-                            Mínimo ${MIN_WITHDRAWAL} USDC
+                            {t.withdraw.minAmount.replace('{{amount}}', MIN_WITHDRAWAL.toString())}
                         </div>
                     )}
 
                     {amountNum > availableBalance && (
                         <div className="flex items-center gap-2 text-red-400 text-sm">
                             <AlertCircle className="w-4 h-4" />
-                            Saldo insuficiente
+                            {t.withdraw.insufficient}
                         </div>
                     )}
 
@@ -177,12 +179,12 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                         {loading ? (
                             <>
                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                Procesando...
+                                {t.withdraw.processing}
                             </>
                         ) : (
                             <>
                                 <ArrowUpRight className="w-5 h-5" />
-                                Retirar
+                                {t.withdraw.withdraw}
                             </>
                         )}
                     </button>
@@ -197,14 +199,14 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                     {success && (
                         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-green-400 text-sm flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            ¡Retiro iniciado! Llegará en ~5 minutos.
+                            {t.withdraw.success}
                         </div>
                     )}
 
                     {/* Time Estimate */}
                     <div className="flex items-center justify-center gap-2 text-white/40 text-xs">
                         <Clock className="w-3 h-3" />
-                        Tiempo estimado: ~5 minutos
+                        {t.withdraw.estTime}
                     </div>
                 </div>
             </div>

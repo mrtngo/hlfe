@@ -18,6 +18,7 @@
     "ok": "OK",
     "copy": "Copiar",
     "processing": "Procesando...",
+    "important": "Importante",
     "you": "TÚ",
     "system": "Sistema",
     "online": "en línea",
@@ -47,6 +48,8 @@
     "equity": "Capital",
     "availableMargin": "Margen Disponible",
     "usedMargin": "Margen Usado",
+    "checkConsole": "Ver consola para detalles",
+    "copyAddress": "Copiar dirección",
     "connecting": "Conectando...",
     "connectFirst": "Por favor, conecta tu billetera primero"
   },
@@ -57,7 +60,11 @@
     "all": "Todos",
     "top": "Top",
     "new": "Nuevos",
-    "noMarketsFound": "No se encontraron mercados"
+    "noMarketsFound": "No se encontraron mercados",
+    "crypto": "Cripto",
+    "stocks": "Acciones",
+    "filterByCategory": "Filtrar por Categoría",
+    "tapToChange": "Toca para cambiar de mercado"
   },
   "chart": {
     "candlestick": "Velas",
@@ -83,6 +90,7 @@
     "placing": "Procesando...",
     "orderPlaced": "Orden realizada",
     "placeFailed": "Error al realizar la orden",
+    "invalidAmount": "Ingresa una cantidad válida",
     "invalidSize": "Ingresa un tamaño válido",
     "invalidPrice": "Ingresa un precio válido",
     "buyLong": "Comprar / Long",
@@ -93,13 +101,32 @@
     "slPrice": "Precio SL",
     "reduceOnly": "Solo Reducir",
     "mid": "Medio",
-    "value": "Valor de la Orden"
+    "value": "Valor de la Orden",
+    "basic": "Básico",
+    "advanced": "Avanzado",
+    "positionSize": "Tamaño de Posición",
+    "youWillBuy": "Comprarás",
+    "youWillSell": "Venderás",
+    "liqPrice": "Precio Liq.",
+    "orderType": "Tipo de Orden",
+    "limitOrder": "Orden Límite",
+    "limitPrice": "Precio Límite",
+    "current": "Actual",
+    "useCurrent": "Usar actual",
+    "amountTokens": "Cantidad en Tokens",
+    "marginMode": "Modo de Margen",
+    "notional": "Valor Nocional",
+    "marginNeeded": "Margen Necesario",
+    "estLiquidation": "Liquidación Est.",
+    "available": "Disponible"
   },
   "positions": {
     "title": "Posiciones",
     "noPositions": "No tienes posiciones abiertas",
     "symbol": "Símbolo",
+    "side": "Lado",
     "size": "Tamaño",
+    "value": "Valor",
     "entry": "Entrada",
     "mark": "Marca",
     "liq": "Liq.",
@@ -165,14 +192,44 @@
     "trades": "Operaciones",
     "transfers": "Transferencias",
     "funding": "Financiamiento",
-    "noHistory": "No hay historial disponible"
+    "noHistory": "No hay historial disponible",
+    "connectWalletToView": "Conecta tu billetera para ver el historial",
+    "loading": "Cargando historial...",
+    "long": "Long",
+    "short": "Short",
+    "price": "Precio",
+    "size": "Tamaño",
+    "realizedPnl": "PnL Realizado"
   },
   "profile": {
     "title": "Perfil",
     "account": "Cuenta",
     "settings": "Ajustes",
+    "equity": "Capital",
+    "available": "Disponible",
+    "volume": "Volumen",
+    "rewards": "Recompensas",
+    "transferFunds": "Transferir Fondos",
+    "inviteFriends": "Invitar Amigos",
+    "referrals": "Referidos",
+    "earned": "Ganado",
+    "trollbox": {
+      "title": "Trollbox",
+      "desc": "Chatea con la comunidad",
+      "live": "En Vivo"
+    },
+    "agentWallet": "Billetera Agente",
+    "agentWalletDesc": "Trading en 1-Tap",
+    "approved": "Aprobado",
+    "approveFee": "Aprobar Tarifa",
+    "sync": "Sincronizar",
+    "export": "Exportar",
+    "documentation": "Documentación",
+    "loading": "Cargando...",
+    "enabled": "Habilitado",
+    "disabled": "Deshabilitado",
+    "insecureContext": "Las notificaciones requieren HTTPS.",
     "security": "Seguridad",
-    "referral": "Referidos",
     "support": "Soporte",
     "logout": "Cerrar Sesión",
     "copyAddress": "Copiar Dirección",
@@ -189,7 +246,12 @@
     "trading": "Comercio",
     "oneClickTrading": "Comercio en un clic",
     "slippage": "Deslizamiento",
-    "confirmations": "Confirmaciones"
+    "confirmations": "Confirmaciones",
+    "testNotification": "Enviar Notificación de Prueba",
+    "english": "Inglés",
+    "spanish": "Español",
+    "light": "Claro",
+    "dark": "Oscuro"
   },
   "depositModal": {
     "tabStandard": "Depósito",
@@ -206,7 +268,11 @@
     "addressCopied": "¡Copiado!",
     "networkNote": "Solo envía USDC en la red Arbitrum",
     "bridgeShortcut": "¿Tienes fondos en otras cadenas?",
-    "bridgeAction": "Usar Puente Multi-cadena"
+    "bridgeAction": "Usar Puente Multi-cadena",
+    "generatingAddress": "Generando dirección...",
+    "minDeposit": "Depósito Mínimo",
+    "networkFee": "Tarifa de Red",
+    "onlyAsset": "Solo {{asset}}"
   },
   "bridge": {
     "title": "Puente USDC",
@@ -228,7 +294,45 @@
     "processing": "Procesando...",
     "approveUsdc": "Aprobar USDC",
     "bridgeToHyperliquid": "Puente a Rayo",
-    "txSent": "¡Transacción enviada! Tus fondos llegarán pronto."
+    "txSent": "¡Transacción enviada! Tus fondos llegarán pronto.",
+    "bridgeInitiated": "Puente Iniciado",
+    "checkProgress": "Ver Progreso",
+    "usdcBeingBridged": "Tus USDC están siendo puenteados...",
+    "estimatedTime": "Tiempo estimado: ~5 mins",
+    "viewTransaction": "Ver Transacción",
+    "nextStep": "Siguiente Paso:",
+    "nextStepDesc": "Espera ~5-20 min a que los fondos aparezcan en tu cuenta.",
+    "bridgeMoreFunds": "Puente de más fondos",
+    "bridgeFailed": "Fallo en el Puente",
+    "tryAgain": "Intentar de Nuevo",
+    "switchingNetwork": "Cambiando de Red...",
+    "bridgingFunds": "Puenteando Fondos...",
+    "confirmNetworkSwitch": "Por favor confirma el cambio de red en tu billetera",
+    "confirmTransaction": "Por favor confirma la transacción en tu billetera",
+    "crossChainBridge": "Puente Multi-Cadena",
+    "crossChainDesc": "Pasa USDC de otras redes a Rayo (Hyperliquid).",
+    "fromChain": "Desde la Red",
+    "toChain": "Hacia la Red",
+    "arbitrumForHl": "Arbitrum (Puente USDC para Rayo)",
+    "amountUsdc": "Monto (USDC)",
+    "bridgeToArbitrum": "Puente a Arbitrum",
+    "afterBridging": "Después del puente, deposita de Arbitrum a Rayo usando la pestaña 'Puente Arbitrum'.",
+    "available": "Disponible"
+  },
+  "withdraw": {
+    "title": "Retirar USDC",
+    "toArbitrum": "Retiro a Arbitrum",
+    "desc": "Los fondos llegarán a tu wallet en ~5 minutos.",
+    "fee": "Tarifa",
+    "available": "Disponible",
+    "amount": "Monto",
+    "receive": "Recibirás",
+    "withdraw": "Retirar",
+    "processing": "Procesando...",
+    "success": "¡Retiro iniciado! Llegando en ~5 mins.",
+    "estTime": "Tiempo estimado: ~5 minutos",
+    "insufficient": "Saldo insuficiente",
+    "minAmount": "Mínimo {{amount}} USDC"
   },
   "transfer": {
     "title": "Transferir USDC",
@@ -251,7 +355,10 @@
   },
   "formatters": {
     "compactBalance": "{{amount}} USDC",
-    "pnl": "{{amount}} ({{percent}}%)"
+    "pnl": "{{amount}} ({{percent}}%)",
+    "thousand": ".",
+    "decimal": ",",
+    "currency": "$"
   },
   "home": {
     "welcome": "Bienvenido a Rayo",
@@ -323,5 +430,28 @@
     "newMessages": "Nuevos mensajes",
     "initializingProfile": "⏳ Inicializando perfil...",
     "connectWalletChat": "🔒 Conecta tu billetera para unirte al chat"
+  },
+  "orderBook": {
+    "title": "Libro de Órdenes",
+    "price": "Precio",
+    "size": "Cantidad",
+    "total": "Total",
+    "spread": "Diferencial",
+    "minNotional": "Mínimo",
+    "required": "requerido"
+  },
+  "errors": {
+    "walletNotConnected": "Billetera no conectada",
+    "insufficientFunds": "Fondos insuficientes",
+    "unknown": "Ocurrió un error desconocido"
+  },
+  "setup": {
+    "title": "Configuración Requerida",
+    "enableAgent": "Habilitar Agente",
+    "approveFee": "Aprobar Tarifa",
+    "agentDesc": "Habilita el Agente para operar sin firmar cada transacción.",
+    "feeDesc": "Aprueba la tarifa para comenzar a operar.",
+    "processing": "Procesando...",
+    "important": "Importante"
   }
 }

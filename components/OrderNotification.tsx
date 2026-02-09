@@ -235,25 +235,25 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                             padding: '16px',
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.side || 'Side'}</span>
+                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions.side}</span>
                                 <span style={{
                                     fontSize: '14px',
                                     fontWeight: 'bold',
                                     color: isLong ? '#00FF00' : '#FF4444'
                                 }}>
-                                    {isLong ? 'LONG' : 'SHORT'}
+                                    {isLong ? t.positions.long.replace(' ↑', '') : t.positions.short.replace(' ↓', '')}
                                 </span>
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.size || 'Size'}</span>
+                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions.size}</span>
                                 <span style={{ fontSize: '14px', fontFamily: 'monospace', fontWeight: '600', color: '#FFFFFF' }}>
                                     {order.size.toFixed(4)}
                                 </span>
                             </div>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.order?.price || 'Price'}</span>
+                                <span style={{ fontSize: '14px', color: '#888888' }}>{t.order.price}</span>
                                 <span style={{ fontSize: '14px', fontFamily: 'monospace', fontWeight: '600', color: '#FFFFFF' }}>
                                     ${order.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
@@ -267,7 +267,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                                     borderTop: '1px solid rgba(255, 255, 255, 0.1)'
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions?.pnl || 'Realized P&L'}</span>
+                                        <span style={{ fontSize: '14px', color: '#888888' }}>{t.positions.realizedPnl}</span>
                                         <span style={{
                                             fontSize: '14px',
                                             fontFamily: 'monospace',

@@ -18,6 +18,7 @@
     "ok": "OK",
     "copy": "Copy",
     "processing": "Processing...",
+    "important": "Important",
     "you": "YOU",
     "system": "System",
     "online": "online",
@@ -46,6 +47,8 @@
     "balance": "Balance",
     "equity": "Equity",
     "availableMargin": "Available Margin",
+    "checkConsole": "Check console for details",
+    "copyAddress": "Copy address",
     "usedMargin": "Used Margin",
     "connecting": "Connecting...",
     "connectFirst": "Please connect wallet first"
@@ -57,7 +60,11 @@
     "all": "All",
     "top": "Top",
     "new": "New",
-    "noMarketsFound": "No markets found"
+    "noMarketsFound": "No markets found",
+    "crypto": "Crypto",
+    "stocks": "Stocks",
+    "filterByCategory": "Filter by Category",
+    "tapToChange": "Tap to change market"
   },
   "chart": {
     "candlestick": "Candlestick",
@@ -83,6 +90,7 @@
     "placing": "Placing...",
     "orderPlaced": "Order placed",
     "placeFailed": "Failed to place order",
+    "invalidAmount": "Enter a valid amount",
     "invalidSize": "Enter a valid size",
     "invalidPrice": "Enter a valid price",
     "buyLong": "Buy / Long",
@@ -93,13 +101,32 @@
     "slPrice": "SL Price",
     "reduceOnly": "Reduce Only",
     "mid": "Mid",
-    "value": "Order Value"
+    "value": "Order Value",
+    "basic": "Basic",
+    "advanced": "Advanced",
+    "positionSize": "Position Size",
+    "youWillBuy": "You will buy",
+    "youWillSell": "You will sell",
+    "liqPrice": "Liq. Price",
+    "orderType": "Order Type",
+    "limitOrder": "Limit Order",
+    "limitPrice": "Limit Price",
+    "current": "Current",
+    "useCurrent": "Use current",
+    "amountTokens": "Amount in Tokens",
+    "marginMode": "Margin Mode",
+    "notional": "Notional Value",
+    "marginNeeded": "Margin Needed",
+    "estLiquidation": "Est. Liquidation",
+    "available": "Available"
   },
   "positions": {
     "title": "Positions",
     "noPositions": "You have no open positions",
     "symbol": "Symbol",
+    "side": "Side",
     "size": "Size",
+    "value": "Value",
     "entry": "Entry",
     "mark": "Mark",
     "liq": "Liq.",
@@ -165,7 +192,14 @@
     "trades": "Trades",
     "transfers": "Transfers",
     "funding": "Funding",
-    "noHistory": "No history available"
+    "noHistory": "No history available",
+    "connectWalletToView": "Connect wallet to view order history",
+    "loading": "Loading order history...",
+    "long": "Long",
+    "short": "Short",
+    "price": "Price",
+    "size": "Size",
+    "realizedPnl": "Realized P&L"
   },
   "profile": {
     "title": "Profile",
@@ -178,7 +212,31 @@
     "copyAddress": "Copy Address",
     "addressCopied": "Address copied",
     "userSince": "User since",
-    "verified": "Verified"
+    "verified": "Verified",
+    "equity": "Equity",
+    "available": "Available",
+    "volume": "Volume",
+    "rewards": "Rewards",
+    "transferFunds": "Transfer Funds",
+    "inviteFriends": "Invite Friends",
+    "referrals": "Referrals",
+    "earned": "Earned",
+    "trollbox": {
+      "title": "Trollbox",
+      "desc": "Chat with the community",
+      "live": "Live"
+    },
+    "agentWallet": "Agent Wallet",
+    "agentWalletDesc": "1-Tap Trading",
+    "approved": "Approved",
+    "approveFee": "Approve Fee",
+    "sync": "Sync",
+    "export": "Export",
+    "documentation": "Documentation",
+    "loading": "Loading...",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "insecureContext": "Push notifications require HTTPS."
   },
   "settings": {
     "title": "Settings",
@@ -189,7 +247,12 @@
     "trading": "Trading",
     "oneClickTrading": "One-click trading",
     "slippage": "Slippage",
-    "confirmations": "Confirmations"
+    "confirmations": "Confirmations",
+    "testNotification": "Send Test Notification",
+    "english": "English",
+    "spanish": "Spanish",
+    "light": "Light",
+    "dark": "Dark"
   },
   "depositModal": {
     "tabStandard": "Deposit",
@@ -206,7 +269,11 @@
     "addressCopied": "Copied!",
     "networkNote": "Only send USDC on Arbitrum network",
     "bridgeShortcut": "Have funds on other chains?",
-    "bridgeAction": "Use Multi-chain Bridge"
+    "bridgeAction": "Use Multi-chain Bridge",
+    "generatingAddress": "Generating address...",
+    "minDeposit": "Minimum Deposit",
+    "networkFee": "Network Fee",
+    "onlyAsset": "Only {{asset}}"
   },
   "bridge": {
     "title": "Bridge USDC",
@@ -228,7 +295,45 @@
     "processing": "Processing...",
     "approveUsdc": "Approve USDC",
     "bridgeToHyperliquid": "Bridge to Rayo",
-    "txSent": "Transaction sent! Your funds will arrive shortly."
+    "txSent": "Transaction sent! Your funds will arrive shortly.",
+    "bridgeInitiated": "Bridge Initiated",
+    "checkProgress": "Check Progress",
+    "usdcBeingBridged": "Your USDC is being bridged...",
+    "estimatedTime": "Estimated time: ~5 mins",
+    "viewTransaction": "View Transaction",
+    "nextStep": "Next Step:",
+    "nextStepDesc": "Wait ~5-20 min for funds to appear in your account.",
+    "bridgeMoreFunds": "Bridge More Funds",
+    "bridgeFailed": "Bridge Failed",
+    "tryAgain": "Try Again",
+    "switchingNetwork": "Switching Network...",
+    "bridgingFunds": "Bridging Funds...",
+    "confirmNetworkSwitch": "Please confirm the network switch in your wallet",
+    "confirmTransaction": "Please confirm the transaction in your wallet",
+    "crossChainBridge": "Multi-Chain Bridge",
+    "crossChainDesc": "Bridge USDC from other networks to Rayo (Hyperliquid).",
+    "fromChain": "From Chain",
+    "toChain": "To Chain",
+    "arbitrumForHl": "Arbitrum (USDC Bridge for Rayo)",
+    "amountUsdc": "Amount (USDC)",
+    "bridgeToArbitrum": "Bridge to Arbitrum",
+    "afterBridging": "After bridging, deposit from Arbitrum to Rayo using the 'Arbitrum Bridge' tab.",
+    "available": "Available"
+  },
+  "withdraw": {
+    "title": "Withdraw USDC",
+    "toArbitrum": "Withdraw to Arbitrum",
+    "desc": "Funds will arrive in your wallet in ~5 minutes.",
+    "fee": "Fee",
+    "available": "Available",
+    "amount": "Amount",
+    "receive": "You Will Receive",
+    "withdraw": "Withdraw",
+    "processing": "Processing...",
+    "success": "Withdrawal initiated! Arriving in ~5 mins.",
+    "estTime": "Estimated time: ~5 minutes",
+    "insufficient": "Insufficient balance",
+    "minAmount": "Minimum {{amount}} USDC"
   },
   "transfer": {
     "title": "Transfer USDC",
@@ -251,7 +356,10 @@
   },
   "formatters": {
     "compactBalance": "{{amount}} USDC",
-    "pnl": "{{amount}} ({{percent}}%)"
+    "pnl": "{{amount}} ({{percent}}%)",
+    "thousand": ",",
+    "decimal": ".",
+    "currency": "$"
   },
   "home": {
     "welcome": "Welcome to Rayo",
@@ -323,5 +431,28 @@
     "newMessages": "New messages",
     "initializingProfile": "⏳ Initializing profile...",
     "connectWalletChat": "🔒 Connect wallet to join the chat"
+  },
+  "orderBook": {
+    "title": "Order Book",
+    "price": "Price",
+    "size": "Size",
+    "total": "Total",
+    "spread": "Spread",
+    "minNotional": "Minimum",
+    "required": "required"
+  },
+  "errors": {
+    "walletNotConnected": "Wallet not connected",
+    "insufficientFunds": "Insufficient funds",
+    "unknown": "An unknown error occurred"
+  },
+  "setup": {
+    "title": "Configuration Required",
+    "enableAgent": "Enable Agent",
+    "approveFee": "Approve Fee",
+    "agentDesc": "Enable the Agent to trade without signing every transaction.",
+    "feeDesc": "Approve the fee to start trading.",
+    "processing": "Processing...",
+    "important": "Important"
   }
 }

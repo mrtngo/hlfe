@@ -54,10 +54,10 @@ export default function OrderHistory() {
         return (
             <div className="glass-card h-full flex flex-col bg-bg-secondary rounded-lg shadow-soft-lg min-w-0 border border-white/10">
                 <div className="p-4 border-b border-white/10">
-                    <h3 className="text-sm font-semibold text-white">{history.title || 'Order History'}</h3>
+                    <h3 className="text-sm font-semibold text-white">{t.history.title}</h3>
                 </div>
                 <div className="flex-1 flex items-center justify-center p-8">
-                    <p className="text-coffee-medium text-center">{history.connectWalletToView || 'Connect wallet to view order history'}</p>
+                    <p className="text-coffee-medium text-center">{t.history.connectWalletToView}</p>
                 </div>
             </div>
         );
@@ -66,7 +66,7 @@ export default function OrderHistory() {
     return (
         <div className="glass-card h-full flex flex-col bg-bg-secondary rounded-lg shadow-soft-lg min-w-0 border border-white/10">
             <div className="p-4 border-b border-white/10">
-                <h3 className="text-sm font-semibold text-white">{history.title || 'Order History'}</h3>
+                <h3 className="text-sm font-semibold text-white">{t.history.title}</h3>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -74,12 +74,12 @@ export default function OrderHistory() {
                     <div className="flex items-center justify-center h-full">
                         <div className="text-center">
                             <div className="spinner mx-auto mb-2"></div>
-                            <p className="text-coffee-medium">{history.loading || 'Loading order history...'}</p>
+                            <p className="text-coffee-medium">{t.history.loading}</p>
                         </div>
                     </div>
                 ) : orderHistory.length === 0 ? (
                     <div className="flex items-center justify-center h-full">
-                        <p className="text-coffee-medium">{history.noHistory || 'No order history'}</p>
+                        <p className="text-coffee-medium">{t.history.noHistory}</p>
                     </div>
                 ) : (
                     orderHistory.map((order) => {
@@ -111,7 +111,7 @@ export default function OrderHistory() {
                                             <TrendingDown className="w-4 h-4 text-negative" />
                                         )}
                                         <span className="font-semibold text-white">
-                                            {isLong ? (history.long || 'Long') : (history.short || 'Short')} {order.symbol.replace('-USD', '')}
+                                            {isLong ? t.history.long : t.history.short} {order.symbol.replace('-USD', '')}
                                         </span>
                                     </div>
                                     <span className="text-xs text-coffee-medium">
@@ -120,20 +120,20 @@ export default function OrderHistory() {
                                 </div>
                                 <div className="space-y-1 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-coffee-medium">{history.price || 'Price'}</span>
+                                        <span className="text-coffee-medium">{t.history.price}</span>
                                         <span className="font-mono text-white">
                                             ${order.exitPrice.toFixed(2)}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-coffee-medium">{history.size || 'Size'}</span>
+                                        <span className="text-coffee-medium">{t.history.size}</span>
                                         <span className="font-mono text-white">
                                             {order.size.toFixed(4)}
                                         </span>
                                     </div>
                                     {order.pnl !== 0 && (
                                         <div className="flex justify-between pt-2 border-t border-white/10">
-                                            <span className="text-coffee-medium">{history.realizedPnl || 'Realized P&L'}</span>
+                                            <span className="text-coffee-medium">{t.history.realizedPnl}</span>
                                             <span className={`font-mono font-bold ${isPositive ? 'text-brand' : 'text-negative'}`}>
                                                 {isPositive ? '+' : ''}${order.pnl.toFixed(2)}
                                             </span>

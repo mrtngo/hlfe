@@ -529,7 +529,7 @@ export default function OrderPanel() {
                             >
                                 <div className="flex items-center justify-center gap-2">
                                     <TrendingUp className="w-5 h-5" />
-                                    {t.order.long}
+                                    {t.positions.long}
                                 </div>
                             </button>
                             <button
@@ -541,7 +541,7 @@ export default function OrderPanel() {
                             >
                                 <div className="flex items-center justify-center gap-2">
                                     <TrendingDown className="w-5 h-5" />
-                                    {t.order.short}
+                                    {t.positions.short}
                                 </div>
                             </button>
                         </div>
@@ -726,7 +726,7 @@ export default function OrderPanel() {
                     (mode === 'advanced' && tokenSize > 0 && notionalValue < MIN_NOTIONAL_VALUE)) && (
                         <div className="flex items-center gap-2 p-3 bg-secondary/10 border border-secondary/20 rounded-lg text-sm text-secondary">
                             <AlertCircle className="w-4 h-4 shrink-0" />
-                            <span>Minimum ${MIN_NOTIONAL_VALUE} required</span>
+                            <span>{t.orderBook.minNotional || 'Minimum'} ${MIN_NOTIONAL_VALUE} {t.orderBook.required || 'required'}</span>
                         </div>
                     )}
 
@@ -750,7 +750,7 @@ export default function OrderPanel() {
                     ) : (
                         mode === 'basic'
                             ? `${orderSide === 'long' ? t.order.buy : t.order.sell} ${displaySymbol}`
-                            : `${t.order.placeOrder} ${orderSide === 'long' ? t.order.long : t.order.short}`
+                            : `${t.order.placeOrder} ${orderSide === 'long' ? t.positions.long : t.positions.short}`
                     )}
                 </button>
 
@@ -758,12 +758,12 @@ export default function OrderPanel() {
                 {connected && (!agentWalletEnabled || (BUILDER_CONFIG.enabled && !builderFeeApproved)) && (
                     <div className="mt-4 p-4 bg-brand/10 border border-[#FFFF00]/30 rounded-xl">
                         <p className="text-sm text-brand font-semibold mb-3">
-                            ⚡ Configuración Requerida
+                            ⚡ {t.setup.title}
                         </p>
                         <p className="text-xs text-white/70 mb-3">
                             {!agentWalletEnabled
-                                ? 'Habilita el Agente para operar sin firmar cada transacción.'
-                                : 'Aprueba la tarifa para comenzar a operar.'}
+                                ? t.setup.agentDesc
+                                : t.setup.feeDesc}
                         </p>
                         {setupError && (
                             <p className="text-xs text-red-400 mb-3">{setupError}</p>
@@ -790,12 +790,12 @@ export default function OrderPanel() {
                             {setupLoading ? (
                                 <>
                                     <div className="spinner" style={{ borderTopColor: '#000' }} />
-                                    Procesando...
+                                    {t.setup.processing}
                                 </>
                             ) : !agentWalletEnabled ? (
-                                'Habilitar Agente'
+                                t.setup.enableAgent
                             ) : (
-                                'Aprobar Tarifa'
+                                t.setup.approveFee
                             )}
                         </button>
                     </div>

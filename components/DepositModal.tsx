@@ -22,7 +22,7 @@ import TokenLogo from '@/components/TokenLogo';
 import dynamic from 'next/dynamic';
 const RhinoBridge = dynamic(() => import('@/components/RhinoBridge'), {
     ssr: false,
-    loading: () => <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.5)' }}>Loading bridge...</div>
+    loading: () => <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255, 255, 255, 0.5)' }}>Loading...</div>
 });
 
 interface DepositModalProps {
@@ -113,7 +113,7 @@ function AssetsDeposit({ address, t, copied, onCopy }: {
             <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '13px', textAlign: 'center', margin: 0 }}>
                 {selectedAsset.symbol === 'USDC'
                     ? t.depositModal.instruction
-                    : `Send ${selectedAsset.name} from the ${selectedAsset.chain} network to this address. Credits to Hyperliquid in ~20 min.`}
+                    : t.depositModal.onlyAsset.replace('{{asset}}', selectedAsset.symbol)}
             </p>
 
             {/* Deposit Address Box */}
@@ -134,7 +134,7 @@ function AssetsDeposit({ address, t, copied, onCopy }: {
                         {loading ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255, 255, 255, 0.4)' }}>
                                 <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
-                                <span style={{ fontSize: '13px' }}>Generando dirección...</span>
+                                <span style={{ fontSize: '13px' }}>{t.depositModal.generatingAddress}</span>
                             </div>
                         ) : error ? (
                             <span style={{ fontSize: '12px', color: '#FF6B6B' }}>{error}</span>
@@ -179,7 +179,7 @@ function AssetsDeposit({ address, t, copied, onCopy }: {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                             <div>
                                 <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '2px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    Minimum Deposit
+                                    {t.depositModal.minDeposit}
                                 </div>
                                 <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontFamily: 'monospace' }}>
                                     {HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO].minDeposit} {selectedAsset.symbol}
@@ -187,7 +187,7 @@ function AssetsDeposit({ address, t, copied, onCopy }: {
                             </div>
                             <div>
                                 <div style={{ color: 'rgba(255, 255, 255, 0.5)', marginBottom: '2px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    Network Fee
+                                    {t.depositModal.networkFee}
                                 </div>
                                 <div style={{ color: '#8b5cf6', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '11px' }}>
                                     {HYPERUNIT_DEPOSIT_INFO[selectedAsset.symbol as keyof typeof HYPERUNIT_DEPOSIT_INFO].fee}
@@ -209,12 +209,12 @@ function AssetsDeposit({ address, t, copied, onCopy }: {
                     <AlertCircle style={{ width: '18px', height: '18px', color: '#FFFF00', flexShrink: 0, marginTop: '2px' }} />
                     <div style={{ fontSize: '12px', lineHeight: '1.4' }}>
                         <div style={{ fontWeight: 'bold', color: '#FFFF00', marginBottom: '2px' }}>
-                            {selectedAsset.symbol === 'USDC' ? t.depositModal.warningTitle : `Importante: Solo ${selectedAsset.symbol}`}
+                            {selectedAsset.symbol === 'USDC' ? t.depositModal.warningTitle : `${t.common.important || 'Importante'}: Solo ${selectedAsset.symbol}`}
                         </div>
                         <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
                             {selectedAsset.symbol === 'USDC'
                                 ? t.depositModal.warningText
-                                : `Deposita únicamente ${selectedAsset.name} desde la red ${selectedAsset.chain}. El envío de otros activos o redes resultará en la pérdida permanente de los fondos.`}
+                                : t.depositModal.warningText}
                         </div>
                     </div>
                 </div>

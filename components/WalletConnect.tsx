@@ -59,14 +59,14 @@ export default function WalletConnect() {
 
                     {account.equity === 0 && (
                         <div className="hidden md:block text-xs text-coffee-light px-2">
-                            Check console for details
+                            {t.wallet.checkConsole}
                         </div>
                     )}
 
                     <button
                         onClick={copyAddress}
                         className="hidden md:flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-all shadow-soft"
-                        title={t.common.copy || 'Copy address'}
+                        title={t.wallet.copyAddress}
                     >
                         <Wallet className="w-4 h-4 text-primary" />
                         <span className="text-sm font-mono font-semibold text-coffee-dark">{formatAddress(address)}</span>

@@ -21,7 +21,6 @@ export default function Profile() {
     const { user, loading: userLoading, updateUsername } = useUser();
     const pushNotifications = usePushNotifications();
 
-    const profile = (t as any).profile || {};
 
     const [copied, setCopied] = useState(false);
     const [referralCopied, setReferralCopied] = useState(false);
@@ -264,7 +263,7 @@ export default function Profile() {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                     <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
                         <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
-                            {language === 'es' ? 'Capital' : 'Equity'}
+                            {t.profile.equity}
                         </div>
                         <div className="text-xl font-black text-white font-mono">
                             ${account.equity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -272,7 +271,7 @@ export default function Profile() {
                     </div>
                     <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
                         <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
-                            {language === 'es' ? 'Libre' : 'Available'}
+                            {t.profile.available}
                         </div>
                         <div className="text-xl font-black text-white font-mono">
                             ${account.availableMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -284,7 +283,7 @@ export default function Profile() {
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-1 text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
                             <TrendingUp className="w-3 h-3" />
-                            {language === 'es' ? 'Volumen' : 'Volume'}
+                            {t.profile.volume}
                         </div>
                         <div className="text-lg font-black text-white font-mono">
                             ${totalVolume >= 1000000
@@ -298,7 +297,7 @@ export default function Profile() {
                     <div className="text-center">
                         <div className="flex items-center justify-center gap-1 text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
                             <Gift className="w-3 h-3" />
-                            {language === 'es' ? 'Premios' : 'Rewards'}
+                            {t.profile.rewards}
                         </div>
                         <div className="text-lg font-black text-brand font-mono">
                             ${referralRewards.toFixed(2)}
@@ -313,7 +312,7 @@ export default function Profile() {
                 >
                     <ArrowLeftRight className="w-5 h-5" />
                     <span className="uppercase tracking-[0.1em] text-xs font-black">
-                        {language === 'es' ? 'Transferir Fondos' : 'Transfer Funds'}
+                        {t.profile.transferFunds}
                     </span>
                 </button>
             </div>
@@ -331,7 +330,7 @@ export default function Profile() {
                         <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center">
                             <Gift className="w-5 h-5 text-brand" />
                         </div>
-                        <h2 className="text-lg font-black text-white tracking-tight">{profile.inviteFriends || 'Invitar Amigos'}</h2>
+                        <h2 className="text-lg font-black text-white tracking-tight">{t.profile.inviteFriends}</h2>
                     </div>
                     <div className="bg-brand/20 text-brand px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-brand/30">
                         10% Back
@@ -340,7 +339,7 @@ export default function Profile() {
 
                 <div className="bg-black/40 border border-white/10 rounded-2xl p-4 flex items-center gap-3 mb-6 group hover:border-brand/40 transition-all">
                     <code className="flex-1 text-xs text-brand font-mono font-bold truncate">
-                        {referralLink || 'Loading...'}
+                        {referralLink || t.profile.loading}
                     </code>
                     <button
                         onClick={copyReferralLink}
@@ -352,11 +351,11 @@ export default function Profile() {
 
                 <div className="grid grid-cols-2 gap-4">
                     <div className="text-center bg-white/5 py-4 rounded-2xl border border-white/5">
-                        <div className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">{profile.referrals || 'Referidos'}</div>
+                        <div className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">{t.profile.referrals}</div>
                         <div className="text-2xl font-black text-white">{loadingReferrals ? '...' : referredUsers.length}</div>
                     </div>
                     <div className="text-center bg-white/5 py-4 rounded-2xl border border-white/5">
-                        <div className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">{profile.earned || 'Ganado'}</div>
+                        <div className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">{t.profile.earned}</div>
                         <div className="text-2xl font-black text-brand font-mono">${loadingReferrals ? '...' : totalEarnings.toFixed(2)}</div>
                     </div>
                 </div>
@@ -371,13 +370,13 @@ export default function Profile() {
                             <MessageSquare className="w-6 h-6 text-brand" />
                         </div>
                         <div className="text-left">
-                            <div className="text-lg font-black text-white">Trollbox</div>
-                            <div className="text-xs text-white/40 font-bold">Chat with the community</div>
+                            <div className="text-lg font-black text-white">{t.profile.trollbox.title}</div>
+                            <div className="text-xs text-white/40 font-bold">{t.profile.trollbox.desc}</div>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-green-400 font-bold uppercase tracking-wider">Live</span>
+                        <span className="text-xs text-green-400 font-bold uppercase tracking-wider">{t.profile.trollbox.live}</span>
                     </div>
                 </button>
 
@@ -391,7 +390,7 @@ export default function Profile() {
                     <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
                         <span className="text-xl">⚙️</span>
                     </div>
-                    <h2 className="text-lg font-black text-white tracking-tight">{language === 'es' ? 'Configuración' : 'Settings'}</h2>
+                    <h2 className="text-lg font-black text-white tracking-tight">{t.settings.title}</h2>
                 </div>
 
                 <div className="space-y-6">
@@ -399,20 +398,20 @@ export default function Profile() {
                     <div className="flex items-center justify-between p-1 bg-black/40 rounded-2xl border border-white/5">
                         <div className="flex items-center gap-4 ml-3">
                             <Globe className="w-5 h-5 text-white/40" />
-                            <span className="text-white/80 text-xs font-black uppercase tracking-wider">Language</span>
+                            <span className="text-white/80 text-xs font-black uppercase tracking-wider">{t.settings.language}</span>
                         </div>
                         <div className="flex gap-1">
                             <button
                                 onClick={() => setLanguage('en')}
                                 className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'en' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
                             >
-                                ENGLISH
+                                {t.settings.english}
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
                                 className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'es' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
                             >
-                                ESPAÑOL
+                                {t.settings.spanish}
                             </button>
                         </div>
                     </div>
@@ -426,7 +425,7 @@ export default function Profile() {
                                 <div>
                                     <div className="text-white text-xs font-bold uppercase">{t.settings.notifications}</div>
                                     <div className="text-[10px] text-white/40">
-                                        {pushNotifications.isLoading ? 'Loading...' : pushNotifications.isSubscribed ? 'Enabled' : 'Disabled'}
+                                        {pushNotifications.isLoading ? t.profile.loading : pushNotifications.isSubscribed ? t.profile.enabled : t.profile.disabled}
                                     </div>
                                 </div>
                             </div>
@@ -466,7 +465,7 @@ export default function Profile() {
                         {/* Insecure Context Warning */}
                         {!pushNotifications.isSecureContext && (
                             <div className="text-[10px] text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
-                                ⚠️ Insecure Context: Push notifications require HTTPS.
+                                ⚠️ {t.profile.insecureContext}
                             </div>
                         )}
 
@@ -483,7 +482,7 @@ export default function Profile() {
                                 onClick={() => pushNotifications.sendTestNotification()}
                                 className="w-full py-2 bg-white/10 hover:bg-white/20 text-white/70 rounded-lg text-[10px] font-bold uppercase transition-all"
                             >
-                                🔔 Send Test Notification
+                                🔔 {t.settings.testNotification || 'Send Test'}
                             </button>
                         )}
                     </div>
@@ -493,8 +492,8 @@ export default function Profile() {
                         <div className="flex items-center gap-4">
                             <Zap className="w-5 h-5 text-brand" />
                             <div>
-                                <div className="text-white text-xs font-black uppercase tracking-wider">{profile.agentWallet || 'Billetera Agente'}</div>
-                                <div className="text-[10px] text-white/40 font-bold">1-Tap Trading</div>
+                                <div className="text-white text-xs font-black uppercase tracking-wider">{t.profile.agentWallet}</div>
+                                <div className="text-[10px] text-white/40 font-bold">{t.profile.agentWalletDesc}</div>
                             </div>
                         </div>
                         <button
@@ -517,7 +516,7 @@ export default function Profile() {
                         <div className="flex flex-col gap-3">
                             {builderFeeApproved ? (
                                 <div className="flex items-center justify-center gap-2 py-3.5 bg-brand/10 border border-brand/30 rounded-2xl text-brand font-black text-[10px] uppercase tracking-widest">
-                                    <Check className="w-4 h-4" /> Approved
+                                    <Check className="w-4 h-4" /> {t.profile.approved}
                                 </div>
                             ) : (
                                 <button
@@ -525,7 +524,7 @@ export default function Profile() {
                                     disabled={approvingFee}
                                     className="btn-premium py-3.5 text-[10px] uppercase tracking-widest font-black"
                                 >
-                                    {approvingFee ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Approve Fee'}
+                                    {approvingFee ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t.profile.approveFee}
                                 </button>
                             )}
                         </div>
@@ -537,7 +536,7 @@ export default function Profile() {
                             className="bg-white/5 border border-white/10 hover:bg-white/10 py-3.5 rounded-2xl text-white/80 font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                         >
                             {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                            {syncResult || 'Sync'}
+                            {syncResult || t.profile.sync}
                         </button>
                     </div>
                     {/* Stock & Export Row */}
@@ -553,7 +552,7 @@ export default function Profile() {
                             className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border ${dexAbstractionEnabled ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/10 text-white/60'}`}
                         >
                             {dexAbstractionEnabled ? <Check className="w-4 h-4" /> : <Zap className="w-4 h-4 text-blue-400" />}
-                            Stocks
+                            {t.markets.stocks}
                         </button>
 
                         {/* Export Wallet */}
@@ -563,7 +562,7 @@ export default function Profile() {
                                 className="bg-purple-500/10 border border-purple-500/30 text-purple-400 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-500/20 transition-all flex items-center justify-center gap-2"
                             >
                                 <Share2 className="w-4 h-4" />
-                                Export
+                                {t.profile.export}
                             </button>
                         )}
                     </div>
@@ -577,7 +576,7 @@ export default function Profile() {
                     className="w-full py-4 bg-brand/10 hover:bg-brand/20 border border-brand/30 rounded-2xl text-brand font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
                 >
                     <Book className="w-4 h-4" />
-                    Documentation
+                    {t.profile.documentation}
                     <ExternalLink className="w-3 h-3 opacity-50" />
                 </a>
             </div>
@@ -587,7 +586,7 @@ export default function Profile() {
                 onClick={logout}
                 className="w-full py-5 bg-white/5 hover:bg-red-500/10 hover:text-red-500 border border-white/10 hover:border-red-500/30 transition-all text-white/40 font-black uppercase tracking-[0.2em] text-xs rounded-[24px]"
             >
-                {t.wallet.disconnect || 'Desconectar'}
+                {t.wallet.disconnect}
             </button>
         </div>
     );

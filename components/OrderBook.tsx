@@ -28,7 +28,7 @@ export default function OrderBook({
     levels = 5,
     onPriceClick
 }: OrderBookProps) {
-    const { formatCurrency } = useLanguage();
+    const { formatCurrency, t } = useLanguage();
     const { selectedMarket, getMarket } = useHyperliquid();
     const [bids, setBids] = useState<OrderBookLevel[]>([]);
     const [asks, setAsks] = useState<OrderBookLevel[]>([]);
@@ -153,15 +153,15 @@ export default function OrderBook({
         <div className="flex flex-col h-full bg-black overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2 bg-black border-b border-[#FFFF00]/20">
-                <span className="text-xs font-semibold text-brand">Order Book</span>
+                <span className="text-xs font-semibold text-brand">{t.orderBook.title}</span>
                 <span className="text-xs text-brand/60">{levels}x{levels}</span>
             </div>
 
             {/* Column headers */}
             <div className="grid grid-cols-3 px-3 py-1 text-[10px] text-brand/50 font-medium border-b border-[#FFFF00]/10">
-                <span>Price</span>
-                <span className="text-right">Size</span>
-                <span className="text-right">Total</span>
+                <span>{t.orderBook.price}</span>
+                <span className="text-right">{t.orderBook.size}</span>
+                <span className="text-right">{t.orderBook.total}</span>
             </div>
 
             {/* Asks (reversed to show lowest at bottom, near spread) */}
@@ -199,7 +199,7 @@ export default function OrderBook({
             {spread && (
                 <div className="flex items-center justify-center px-3 py-2 bg-bg-secondary border-y border-white/5">
                     <span className="text-xs text-coffee-light">
-                        Spread: <span className="text-white font-mono">{formatPrice(spread.value)}</span>
+                        {t.orderBook.spread}: <span className="text-white font-mono">{formatPrice(spread.value)}</span>
                         <span className="text-coffee-light ml-1">({spread.percent.toFixed(3)}%)</span>
                     </span>
                 </div>

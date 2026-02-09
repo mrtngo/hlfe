@@ -165,7 +165,7 @@ export default function MarketSelector() {
                             className="text-[11px]"
                             style={{ color: 'rgba(255,255,255,0.8)', textShadow: '0 0 4px rgba(0,0,0,0.6)' }}
                         >
-                            Tap to change market
+                            {t.markets.tapToChange}
                         </div>
                     </div>
                 </div>
@@ -240,7 +240,7 @@ export default function MarketSelector() {
                                     boxShadow: activeTab === 'crypto' ? '0 4px 12px rgba(250, 204, 21, 0.4)' : 'none',
                                 }}
                             >
-                                Crypto
+                                {t.markets.crypto}
                             </button>
                             <button
                                 type="button"
@@ -252,7 +252,7 @@ export default function MarketSelector() {
                                     boxShadow: activeTab === 'stocks' ? '0 4px 12px rgba(250, 204, 21, 0.4)' : 'none',
                                 }}
                             >
-                                Stocks
+                                {t.markets.stocks}
                             </button>
                         </div>
                     </div>
@@ -263,7 +263,7 @@ export default function MarketSelector() {
                             <div className="flex items-center gap-2 mb-3">
                                 <Filter className="w-4 h-4 text-brand" />
                                 <span className="text-xs font-bold text-white uppercase tracking-wider">
-                                    Filter by Category
+                                    {t.markets.filterByCategory}
                                 </span>
                             </div>
                             <div className="flex flex-wrap gap-2">
@@ -277,7 +277,7 @@ export default function MarketSelector() {
                                         border: selectedCategory === null ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
                                     }}
                                 >
-                                    All
+                                    {t.markets.all}
                                 </button>
                                 {categories
                                     .filter(cat => {
@@ -343,7 +343,7 @@ export default function MarketSelector() {
 
                     <div className="market-list max-h-[360px] overflow-y-auto p-4 space-y-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(250, 204, 21, 0.5) rgba(0, 0, 0, 0.3)' }}>
                         {filteredMarkets.length === 0 ? (
-                            <div className="text-center py-8 text-sm font-semibold text-white">No markets found</div>
+                            <div className="text-center py-8 text-sm font-semibold text-white">{t.markets.noMarketsFound}</div>
                         ) : (
                             filteredMarkets.map((market) => {
                                 const isSelected = market.symbol === selectedMarket;

@@ -85,7 +85,11 @@ export default function PositionsPanel() {
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-white tracking-tight">{t.positions.title}</h3>
-                            <p className="text-xs text-white/50">{positions.length} active position{positions.length !== 1 ? 's' : ''}</p>
+                            <p className="text-xs text-white/50">
+                                {positions.length === 1
+                                    ? t.positions.activePositions.replace('{{count}}', '1')
+                                    : t.positions.activePositionsPlural.replace('{{count}}', positions.length.toString())}
+                            </p>
                         </div>
                     </div>
 
