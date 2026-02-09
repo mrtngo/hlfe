@@ -431,7 +431,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         {t.order.placing}
                     </div>
                 ) : !size || parseFloat(size) <= 0 ? (
-                    { t.order.enterAmount }
+                    t.order.enterAmount
                 ) : (
                     `${side === 'buy' ? t.order.buyLong : t.order.sellShort} ${coin}`
                 )}
