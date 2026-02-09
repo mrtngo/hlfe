@@ -26,6 +26,7 @@ export default function PositionCard({
     showActions = true
 }: PositionCardProps) {
     const { formatCurrency } = useCurrency();
+    const { t } = useLanguage();
     const { cancelOrder } = useHyperliquidContext();
     const isLong = position.side === 'long';
     const isPositive = position.unrealizedPnl >= 0;
@@ -60,7 +61,7 @@ export default function PositionCard({
                             </span>
                         </div>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${isLong ? 'bg-bullish/20 text-bullish border-bullish/30' : 'bg-bearish/20 text-bearish border-bearish/30'}`}>
-                            {isLong ? 'LONG ↑' : 'SHORT ↓'}
+                            {isLong ? t.positions.long : t.positions.short}
                         </span>
                     </div>
                 </div>
@@ -79,13 +80,13 @@ export default function PositionCard({
             {/* Position Value & Margin - Key info prominently displayed */}
             <div className="flex gap-2 mb-3 relative z-10">
                 <div className="flex-1 bg-brand/10 border border-brand/20 px-3 py-2 rounded-xl">
-                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider">Value</span>
+                    <span className="text-[10px] font-bold text-brand uppercase tracking-wider">{t.positions.value || 'Value'}</span>
                     <div className="font-mono text-sm text-white font-bold">
                         {formatCurrency(position.entryPrice * position.size)}
                     </div>
                 </div>
                 <div className="flex-1 bg-white/5 border border-white/10 px-3 py-2 rounded-xl">
-                    <span className="text-[10px] font-bold text-coffee-medium uppercase tracking-wider">Margin</span>
+                    <span className="text-[10px] font-bold text-coffee-medium uppercase tracking-wider">{t.positions.margin}</span>
                     <div className="font-mono text-sm text-white font-bold">
                         {formatCurrency((position.entryPrice * position.size) / position.leverage)}
                     </div>
@@ -95,21 +96,21 @@ export default function PositionCard({
             <div className="grid grid-cols-2 gap-2 mb-4 relative z-10 px-1">
                 <div className="space-y-1">
                     <div className="flex justify-between items-center bg-white/5 p-2 rounded-xl border border-white/5">
-                        <span className="text-[10px] uppercase tracking-wider text-coffee-medium font-bold">Size</span>
+                        <span className="text-[10px] uppercase tracking-wider text-coffee-medium font-bold">{t.positions.size}</span>
                         <span className="font-mono text-xs text-white font-bold">{position.size.toFixed(4)}</span>
                     </div>
                     <div className="flex justify-between items-center bg-white/5 p-2 rounded-xl border border-white/5">
-                        <span className="text-[10px] uppercase tracking-wider text-coffee-medium font-bold">Entry</span>
+                        <span className="text-[10px] uppercase tracking-wider text-coffee-medium font-bold">{t.positions.entry}</span>
                         <span className="font-mono text-xs text-white/80">{formatCurrency(position.entryPrice)}</span>
                     </div>
                 </div>
                 <div className="space-y-1">
                     <div className="flex justify-between items-center bg-white/5 p-2 rounded-xl border border-white/5">
-                        <span className="text-[10px] uppercase tracking-wider text-coffee-medium font-bold">Mark</span>
+                        <span className="text-[10px] uppercase tracking-wider text-coffee-medium font-bold">{t.positions.mark}</span>
                         <span className="font-mono text-xs text-white/80">{formatCurrency(position.markPrice)}</span>
                     </div>
                     <div className="flex justify-between items-center bg-white/5 p-2 rounded-xl border border-white/5">
-                        <span className="text-[10px] uppercase tracking-wider text-coffee-medium font-bold">Liq</span>
+                        <span className="text-[10px] uppercase tracking-wider text-coffee-medium font-bold">{t.positions.liq}</span>
                         <span className="font-mono text-xs text-bearish font-bold">
                             {position.liquidationPrice > 0 ? formatCurrency(position.liquidationPrice) : '-'}
                         </span>
@@ -130,7 +131,7 @@ export default function PositionCard({
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (window.confirm('Cancel Take Profit?')) {
+                                        if (window.confirm(t.positions.cancelTp)) {
                                             cancelOrder(position.symbol, position.takeProfitOrderId!);
                                         }
                                     }}
@@ -151,7 +152,7 @@ export default function PositionCard({
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        if (window.confirm('Cancel Stop Loss?')) {
+                                        if (window.confirm(t.positions.cancelSl)) {
                                             cancelOrder(position.symbol, position.stopLossOrderId!);
                                         }
                                     }}
@@ -198,7 +199,7 @@ export default function PositionCard({
                             }}
                             className="flex-1 py-3 px-4 bg-brand hover:bg-brand-hover text-black rounded-xl text-xs font-bold transition-all active:scale-[0.98] shadow-glow-brand"
                         >
-                            CLOSE
+                            {t.positions.close.toUpperCase()}
                         </button>
                     )}
                 </div>

@@ -117,7 +117,11 @@
     "positionClosed": "Position closed",
     "closeFailed": "Failed to close position",
     "activePositions": "{{count}} active position",
-    "activePositionsPlural": "{{count}} active positions"
+    "activePositionsPlural": "{{count}} active positions",
+    "long": "LONG ↑",
+    "short": "SHORT ↓",
+    "cancelTp": "Cancel Take Profit?",
+    "cancelSl": "Cancel Stop Loss?"
   },
   "orders": {
     "title": "Orders",
@@ -142,7 +146,11 @@
     "orderCancelled": "Order cancelled",
     "cancelFailed": "Failed to cancel order",
     "pendingOrders": "{{count}} pending order",
-    "pendingOrdersPlural": "{{count}} pending orders"
+    "pendingOrdersPlural": "{{count}} pending orders",
+    "limitOrder": "Limit Order",
+    "buy": "BUY",
+    "sell": "SELL",
+    "orderValue": "Order Value"
   },
   "portfolio": {
     "title": "Portfolio",

@@ -108,7 +108,7 @@
     "leverage": "Apalancamiento",
     "unrealizedPnl": "PnL No Realizado",
     "realizedPnl": "PnL Realizado",
-    "close": "Close",
+    "close": "Cerrar",
     "closeAll": "Cerrar Todo",
     "addMargin": "Añadir Margen",
     "removeMargin": "Retirar Margen",
@@ -117,7 +117,11 @@
     "positionClosed": "Posición cerrada",
     "closeFailed": "Error al cerrar posición",
     "activePositions": "{{count}} posición activa",
-    "activePositionsPlural": "{{count}} posiciones activas"
+    "activePositionsPlural": "{{count}} posiciones activas",
+    "long": "LARGO ↑",
+    "short": "CORTO ↓",
+    "cancelTp": "¿Cancelar Take Profit?",
+    "cancelSl": "¿Cancelar Stop Loss?"
   },
   "orders": {
     "title": "Órdenes",
@@ -142,7 +146,11 @@
     "orderCancelled": "Orden cancelada",
     "cancelFailed": "Error al cancelar orden",
     "pendingOrders": "{{count}} orden pendiente",
-    "pendingOrdersPlural": "{{count}} órdenes pendientes"
+    "pendingOrdersPlural": "{{count}} órdenes pendientes",
+    "limitOrder": "Orden Límite",
+    "buy": "COMPRA",
+    "sell": "VENTA",
+    "orderValue": "Valor de Orden"
   },
   "portfolio": {
     "title": "Portafolio",
@@ -227,7 +235,7 @@
     "pnl": "{{amount}} ({{percent}}%)"
   },
   "home": {
-    "welcome": "Bienvenido a Rayo",
+    "welcome": "Bienvenido de Rayo",
     "welcomeDescription": "La plataforma de trading más rápida y sencilla.",
     "signInToContinue": "Inicia sesión para empezar",
     "portfolioValue": "Valor del Portafolio",

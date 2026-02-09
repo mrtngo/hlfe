@@ -110,7 +110,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                     : 'bg-primary/50 text-primary-foreground hover:bg-primary'
                                     }`}
                             >
-                                Crypto
+                                {t.marketOverview.crypto}
                             </button>
                             <button
                                 onClick={(e) => {
@@ -122,7 +122,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                     : 'bg-primary/50 text-primary-foreground hover:bg-primary'
                                     }`}
                             >
-                                Stocks
+                                {t.marketOverview.stocks}
                             </button>
                         </div>
                     </div>
@@ -170,12 +170,12 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                                 <div className="font-semibold text-sm text-white">{market.name}</div>
                                                 {market.onlyIsolated && (
                                                     <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-semibold">
-                                                        Isolated
+                                                        {t.marketOverview.isolated}
                                                     </span>
                                                 )}
                                                 {market.isStock && (
                                                     <span className="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-semibold">
-                                                        Stock
+                                                        {t.marketOverview.stock}
                                                     </span>
                                                 )}
                                             </div>

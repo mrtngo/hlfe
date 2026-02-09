@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, Clock, TrendingUp, TrendingDown } from 'lucide-react';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import TokenLogo from './TokenLogo';
 
@@ -24,6 +25,7 @@ interface OpenOrdersCardProps {
 
 export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps) {
     const { formatCurrency } = useCurrency();
+    const { t } = useLanguage();
     const { cancelOrder, refreshAccountData } = useHyperliquid();
 
     // Use raw coin for display
@@ -75,12 +77,12 @@ export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps)
                         <div className="flex items-center gap-2 mb-0.5">
                             <span className="font-bold text-lg text-white">{displayCoin}</span>
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${isBuy ? 'bg-bullish/20 text-bullish border-bullish/30' : 'bg-bearish/20 text-bearish border-bearish/30'}`}>
-                                {isBuy ? 'BUY' : 'SELL'}
+                                {isBuy ? t.orders.buy : t.orders.sell}
                             </span>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-coffee-medium">
                             <Clock className="w-3 h-3" />
-                            <span>Limit Order</span>
+                            <span>{t.orders.limitOrder}</span>
                         </div>
                     </div>
                 </div>
@@ -99,7 +101,7 @@ export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps)
                     <button
                         onClick={handleCancel}
                         className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 transition-all group"
-                        title="Cancel Order"
+                        title={t.orders.cancel}
                     >
                         <X className="w-4 h-4 text-red-400 group-hover:text-red-300" />
                     </button>
@@ -108,7 +110,7 @@ export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps)
 
             {/* Order value row */}
             <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/5 relative z-10">
-                <span className="text-xs text-coffee-medium">Order Value</span>
+                <span className="text-xs text-coffee-medium">{t.orders.orderValue}</span>
                 <span className="text-sm font-mono font-semibold text-white">
                     {formatCurrency(notional)}
                 </span>
