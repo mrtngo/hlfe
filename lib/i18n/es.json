@@ -432,17 +432,22 @@
   },
   "setupWizard": {
     "title": "Configuración de Trading",
-    "description": "Configura tu cuenta para operar sin gas y en un solo clic.",
+    "letsGo": "¡Vamos! ⚡",
+    "signatureNote": "Tendrás que firmar {{count}} transacción (una sola vez)",
+    "signatureNotePlural": "Tendrás que firmar {{count}} transacciones (una sola vez)",
     "agent": {
       "title": "Billetera Agente (Un Clic)",
       "description": "Permite operar sin confirmar cada transacción en tu billetera principal.",
-      "enable": "Activar Un Clic",
-      "enabling": "Activando...",
-      "active": "Un Clic Activado"
+      "longDescription": "Firma una vez para activar el trading automático. ¡No más ventanas emergentes por cada orden!",
+      "approve": "Activar Un Clic",
+      "waiting": "Esperando firma...",
+      "active": "Un Clic Activado",
+      "preSignNote": "Estás a punto de aprobar una billetera que puede ejecutar operaciones en tu nombre."
     },
     "fee": {
       "title": "Permisos del Protocolo",
       "description": "Otorga los permisos necesarios para interactuar con el protocolo Hyperliquid.",
+      "longDescription": "Una pequeña comisión de {{fee}} bps en las operaciones ayuda a mantener Rayo.",
       "approve": "Aprobar Comisión",
       "skip": "Saltar por ahora",
       "waiting": "Esperando firma...",

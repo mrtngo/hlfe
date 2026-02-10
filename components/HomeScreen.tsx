@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, memo, useCallback, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -44,6 +45,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<TokenCategory>('l1');
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -65,10 +67,13 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
         }
     }, [watchlist, mounted]);
 
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside (check both the trigger button and the portal modal)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            const target = event.target as Node;
+            const insideTrigger = dropdownRef.current?.contains(target);
+            const insideModal = modalRef.current?.contains(target);
+            if (!insideTrigger && !insideModal) {
                 setShowAddDropdown(false);
             }
         };
@@ -464,70 +469,128 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                             <p className="text-xs text-[var(--color-text-tertiary)]">{t.home.tokensTracked.replace('{{count}}', watchlistMarkets.length.toString())}</p>
                         </div>
                     </div>
-                    <div className="relative" ref={dropdownRef}>
+                    <div ref={dropdownRef}>
                         <button
                             className="p-2 transition-all bg-transparent border-none"
                             onClick={() => setShowAddDropdown(!showAddDropdown)}
                         >
                             <Plus className="w-6 h-6 text-brand" />
                         </button>
+                    </div>
 
-                        {/* Add Token Modal */}
-                        {showAddDropdown && (
-                            <>
-                                {/* Backdrop */}
+                    {/* Add Token Modal — portaled to body to escape iOS stacking context */}
+                    {showAddDropdown && typeof document !== 'undefined' && createPortal(
+                        <div ref={modalRef} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
+                            {/* Backdrop */}
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0, left: 0, right: 0, bottom: 0,
+                                    background: 'rgba(0,0,0,0.75)',
+                                    backdropFilter: 'blur(8px)',
+                                    WebkitBackdropFilter: 'blur(8px)',
+                                }}
+                                onClick={() => {
+                                    setShowAddDropdown(false);
+                                    setSearchQuery('');
+                                }}
+                            />
+                            {/* Modal — centered */}
+                            <div
+                                style={{
+                                    position: 'absolute',
+                                    top: 0, left: 0, right: 0, bottom: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '16px',
+                                    pointerEvents: 'none',
+                                }}
+                            >
                                 <div
-                                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99]"
-                                    onClick={() => {
-                                        setShowAddDropdown(false);
-                                        setSearchQuery('');
+                                    style={{
+                                        pointerEvents: 'auto',
+                                        width: '100%',
+                                        maxWidth: '420px',
+                                        maxHeight: '75vh',
+                                        borderRadius: '20px',
+                                        overflow: 'hidden',
+                                        display: 'flex',
+                                        flexDirection: 'column' as const,
+                                        animation: 'slideUp 0.25s ease-out',
+                                        background: 'linear-gradient(to bottom, rgba(30,30,35,0.98), rgba(18,18,22,0.99))',
+                                        border: '1px solid rgba(255,214,10,0.15)',
+                                        boxShadow: '0 0 60px rgba(255,214,10,0.08), 0 25px 50px -12px rgba(0,0,0,0.6)',
                                     }}
-                                />
-                                {/* Modal - Styled like MarketSelector */}
-                                <div
-                                    className="fixed z-[100] rounded-xl shadow-2xl overflow-hidden backdrop-blur-md left-4 right-4 top-1/2 -translate-y-1/2 max-h-[70vh] bg-[var(--color-bg-primary)]/95 border border-[var(--color-brand-primary-border)]"
                                 >
-                                    {/* Header */}
-                                    <div className="p-4 border-b border-white/10">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-sm font-semibold text-white">{t.home.addToWatchlist}</h3>
+                                    {/* Header with gradient accent */}
+                                    <div style={{ position: 'relative', padding: '20px 20px 16px' }}>
+                                        {/* Subtle gradient line at top */}
+                                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, transparent, var(--color-brand-primary), transparent)' }} />
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ width: '36px', height: '36px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,214,10,0.12)' }}>
+                                                    <Plus className="w-5 h-5 text-brand" />
+                                                </div>
+                                                <div>
+                                                    <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#fff', margin: 0 }}>{t.home.addToWatchlist}</h3>
+                                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: '2px 0 0' }}>{t.home.tapToAddTokens}</p>
+                                                </div>
+                                            </div>
                                             <button
                                                 onClick={() => {
                                                     setShowAddDropdown(false);
                                                     setSearchQuery('');
                                                 }}
-                                                className="p-1.5 hover:bg-bg-elevated rounded-lg transition-colors"
+                                                style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: 'none', cursor: 'pointer' }}
                                             >
-                                                <X className="w-4 h-4 text-white/70" />
+                                                <X className="w-4 h-4 text-white/60" />
                                             </button>
                                         </div>
                                     </div>
 
                                     {/* Search */}
-                                    <div className="p-4 border-b border-white/10">
-                                        <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--color-text-tertiary)]" />
+                                    <div style={{ padding: '0 20px 16px' }}>
+                                        <div style={{ position: 'relative' }}>
+                                            <Search style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: 'rgba(255,255,255,0.3)' }} />
                                             <input
                                                 type="text"
                                                 placeholder={t.markets.search}
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="w-full pl-10 pr-10 py-2.5 rounded-lg text-white placeholder-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-brand-primary)]/50 text-base md:text-sm bg-bg-secondary border border-[var(--color-border-default)]"
+                                                autoFocus
+                                                style={{
+                                                    width: '100%',
+                                                    paddingLeft: '40px',
+                                                    paddingRight: '40px',
+                                                    paddingTop: '12px',
+                                                    paddingBottom: '12px',
+                                                    borderRadius: '12px',
+                                                    color: '#fff',
+                                                    fontSize: '14px',
+                                                    outline: 'none',
+                                                    background: 'rgba(255,255,255,0.05)',
+                                                    border: '1px solid rgba(255,255,255,0.08)',
+                                                    caretColor: 'var(--color-brand-primary)',
+                                                }}
                                             />
                                             {searchQuery && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setSearchQuery('')}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-white transition-colors"
+                                                    style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', cursor: 'pointer' }}
                                                 >
-                                                    <X className="w-4 h-4" />
+                                                    <X style={{ width: '12px', height: '12px', color: 'rgba(255,255,255,0.6)' }} />
                                                 </button>
                                             )}
                                         </div>
                                     </div>
 
+                                    {/* Divider */}
+                                    <div style={{ margin: '0 20px', height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+
                                     {/* Markets List */}
-                                    <div className="max-h-[360px] overflow-y-auto p-4 space-y-2">
+                                    <div style={{ flex: 1, overflowY: 'auto', padding: '12px', scrollbarWidth: 'thin' as const, scrollbarColor: 'rgba(255,255,255,0.1) transparent' }}>
                                         {(() => {
                                             const filteredMarkets = markets
                                                 .filter(m => !watchlist.includes(m.name))
@@ -538,7 +601,10 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
                                             if (filteredMarkets.length === 0) {
                                                 return (
-                                                    <div className="text-center text-sm text-white/60 py-8">{t.markets.noMarketsFound}</div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', padding: '48px 0', color: 'rgba(255,255,255,0.4)', gap: '8px' }}>
+                                                        <Search style={{ width: '32px', height: '32px', opacity: 0.4 }} />
+                                                        <p style={{ fontSize: '14px', margin: 0 }}>{t.markets.noMarketsFound}</p>
+                                                    </div>
                                                 );
                                             }
 
@@ -552,35 +618,43 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                                             addToWatchlist(market.name);
                                                             setSearchQuery('');
                                                         }}
-                                                        className="w-full text-left p-3 transition-all rounded-lg border border-[var(--color-border-default)] hover:border-[var(--color-brand-primary-border)] bg-bg-secondary hover:bg-bg-elevated"
+                                                        style={{
+                                                            width: '100%',
+                                                            textAlign: 'left' as const,
+                                                            padding: '12px',
+                                                            borderRadius: '12px',
+                                                            background: 'transparent',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            transition: 'background 0.15s',
+                                                        }}
+                                                        onTouchStart={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
+                                                        onTouchEnd={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                                                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                                                        onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
                                                     >
-                                                        <div className="flex items-center justify-between w-full">
+                                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '12px' }}>
                                                             {/* Left: Logo + Name */}
-                                                            <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
-                                                                <TokenLogo symbol={market.symbol} size={36} />
-                                                                <div className="flex flex-col min-w-0 truncate pr-2">
-                                                                    <div className="font-bold text-base truncate text-white">
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
+                                                                <div style={{ flexShrink: 0, borderRadius: '50%', overflow: 'hidden', boxShadow: '0 0 0 1px rgba(255,255,255,0.08)' }}>
+                                                                    <TokenLogo symbol={market.symbol} size={38} />
+                                                                </div>
+                                                                <div style={{ display: 'flex', flexDirection: 'column' as const, minWidth: 0, paddingRight: '8px' }}>
+                                                                    <div style={{ fontWeight: 700, fontSize: '14px', color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
                                                                         {getTokenFullName(market.name)}
                                                                     </div>
-                                                                    <div className="text-xs truncate text-[var(--color-text-secondary)]">
+                                                                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
                                                                         {market.name}
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                             {/* Right: Price + Change */}
-                                                            <div className="text-right shrink-0">
-                                                                <div className="font-mono font-bold text-base text-white">
+                                                            <div style={{ textAlign: 'right' as const, flexShrink: 0 }}>
+                                                                <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '14px', color: '#fff' }}>
                                                                     {market.price ? formatCurrency(market.price) : '0.00'}
                                                                 </div>
-                                                                <div className={`flex items-center justify-end gap-1 text-xs ${marketIsPositive ? 'text-positive' : 'text-negative'}`}>
-                                                                    {marketIsPositive ? (
-                                                                        <TrendingUp className="w-3 h-3" />
-                                                                    ) : (
-                                                                        <TrendingDown className="w-3 h-3" />
-                                                                    )}
-                                                                    <span className="font-mono font-semibold">
-                                                                        {marketIsPositive ? '+' : ''}{(market.change24h || 0).toFixed(2)}%
-                                                                    </span>
+                                                                <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: marketIsPositive ? 'var(--color-positive)' : 'var(--color-negative)' }}>
+                                                                    {marketIsPositive ? '+' : ''}{(market.change24h || 0).toFixed(2)}%
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -590,9 +664,10 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
                                         })()}
                                     </div>
                                 </div>
-                            </>
-                        )}
-                    </div>
+                            </div>
+                        </div>,
+                        document.body
+                    )}
                 </div>
                 {/* Watchlist items */}
                 {watchlistMarkets.length === 0 ? (

@@ -508,6 +508,18 @@ h6 {
   animation: fadeIn var(--transition-base) ease-out;
 }
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* Neon Glow Animation */
 @keyframes neonPulse {
 
