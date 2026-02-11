@@ -176,19 +176,18 @@ export default function PositionCard({
                             }}
                             style={{
                                 padding: '12px 16px',
-                                background: 'linear-gradient(135deg, rgba(52,199,89,0.85), rgba(255,59,48,0.85))',
+                                background: 'rgba(255,255,255,0.08)',
                                 color: '#fff',
                                 borderRadius: '16px',
                                 fontSize: '12px',
                                 fontWeight: 700,
-                                border: 'none',
+                                border: '1px solid rgba(255,255,255,0.12)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px',
                                 flex: 1,
                                 justifyContent: 'center',
                                 whiteSpace: 'nowrap',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                                 cursor: 'pointer',
                             }}
                         >

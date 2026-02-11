@@ -616,7 +616,7 @@ export default function OrderPanel() {
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => setOrderSide('long')}
-                                className={`py-4 rounded-full font-bold transition-all border-2 ${orderSide === 'long'
+                                className={`py-4 rounded-3xl font-bold transition-all border-2 ${orderSide === 'long'
                                     ? 'bg-[#34C759] text-white border-[#34C759] shadow-[0_0_20px_rgba(52,199,89,0.3)]'
                                     : 'bg-[#34C759]/20 text-[#34C759] border-[#34C759]/40 hover:bg-[#34C759]/30'
                                     }`}
@@ -628,7 +628,7 @@ export default function OrderPanel() {
                             </button>
                             <button
                                 onClick={() => setOrderSide('short')}
-                                className={`py-4 rounded-full font-bold transition-all border-2 ${orderSide === 'short'
+                                className={`py-4 rounded-3xl font-bold transition-all border-2 ${orderSide === 'short'
                                     ? 'bg-bearish text-white border-bearish shadow-lg'
                                     : 'bg-bearish/20 text-bearish border-bearish/40 hover:bg-bearish/30'
                                     }`}
@@ -828,7 +828,7 @@ export default function OrderPanel() {
                 <button
                     onClick={handlePlaceOrder}
                     disabled={loading || (connected && agentWalletEnabled && (tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE))}
-                    className={`w-full rounded-full text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
+                    className={`w-full rounded-[30px] text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
                         ? 'bg-[#34C759] hover:bg-[#2DB34F] text-white shadow-[0_0_20px_rgba(52,199,89,0.3)]'
                         : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'
                         }`}

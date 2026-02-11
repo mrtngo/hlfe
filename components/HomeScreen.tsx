@@ -28,9 +28,10 @@ const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
 interface HomeScreenProps {
     onTokenClick?: (symbol: string) => void;
     onTradeClick?: () => void;
+    onSpotClick?: () => void;
 }
 
-export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenProps = {}) {
+export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: HomeScreenProps = {}) {
     const router = useRouter();
     const { t } = useLanguage();
     const { currency, toggleCurrency, formatCurrency } = useCurrency();
@@ -45,6 +46,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
     const [showFeeCalculator, setShowFeeCalculator] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<TokenCategory>('l1');
+    const [isPositionsExpanded, setIsPositionsExpanded] = useState(false);
 
 
     useEffect(() => {
@@ -219,32 +221,41 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Open Positions */}
             {positions.length > 0 && (
-                <div className="glass-card rounded-2xl p-5">
+                <div className="glass-card rounded-2xl p-5 transition-all">
                     {/* Section Header */}
-                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
-                            <TrendingUp className="w-5 h-5 text-brand" />
+                    <button
+                        onClick={() => setIsPositionsExpanded(!isPositionsExpanded)}
+                        className="w-full flex items-center justify-between"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
+                                <TrendingUp className="w-5 h-5 text-brand" />
+                            </div>
+                            <div className="text-left">
+                                <h2 className="text-lg font-bold text-white">{t.home.openPositions}</h2>
+                                <p className="text-xs text-[var(--color-text-tertiary)]">
+                                    {positions.length === 1 ? t.positions.activePositions.replace('{{count}}', positions.length.toString()) : t.positions.activePositionsPlural.replace('{{count}}', positions.length.toString())}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-white">{t.home.openPositions}</h2>
-                            <p className="text-xs text-[var(--color-text-tertiary)]">
-                                {positions.length === 1 ? t.positions.activePositions.replace('{{count}}', positions.length.toString()) : t.positions.activePositionsPlural.replace('{{count}}', positions.length.toString())}
-                            </p>
+                        <ChevronDown className={`w-5 h-5 text-[var(--color-text-secondary)] transition-transform duration-200 ${isPositionsExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isPositionsExpanded && (
+                        <div className="space-y-6 mt-4 pt-3 border-t border-[var(--color-border-default)] animate-in slide-in-from-top-2 fade-in duration-200">
+                            {positions.map((position) => (
+                                <PositionCard
+                                    key={position.symbol}
+                                    position={position}
+                                    onShare={setSharePosition}
+                                    onClick={() => {
+                                        setSelectedMarket(position.symbol);
+                                        onTokenClick?.(position.symbol);
+                                    }}
+                                />
+                            ))}
                         </div>
-                    </div>
-                    <div className="space-y-4">
-                        {positions.map((position) => (
-                            <PositionCard
-                                key={position.symbol}
-                                position={position}
-                                onShare={setSharePosition}
-                                onClick={() => {
-                                    setSelectedMarket(position.symbol);
-                                    onTokenClick?.(position.symbol);
-                                }}
-                            />
-                        ))}
-                    </div>
+                    )}
                 </div>
             )}
 
@@ -429,7 +440,10 @@ export default function HomeScreen({ onTokenClick, onTradeClick }: HomeScreenPro
 
             {/* Spot Trading Banner */}
             <button
-                onClick={() => router.push('/spot')}
+                onClick={() => {
+                    if (onSpotClick) onSpotClick();
+                    else router.push('/spot');
+                }}
                 className="w-full p-4 flex items-center justify-between group transition-all active:scale-[0.98] rounded-2xl glass-card border-[var(--color-positive-muted)]"
             >
                 <div className="flex items-center gap-3">
