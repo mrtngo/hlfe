@@ -80,7 +80,6 @@ export default function PositionsPanel() {
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(250, 204, 21, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
                     }}
                 >
-                >
                     <button
                         onClick={() => setIsExpanded(!isExpanded)}
                         className="w-full flex items-center justify-between mb-6 pb-4 border-b border-white/10"
