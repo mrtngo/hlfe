@@ -283,28 +283,55 @@ export default function OrderPanel() {
                         </div>
 
                         {/* Order Type Toggle - Market/Limit */}
-                        <div className="grid grid-cols-2 gap-0 px-2">
+                        <div className="grid grid-cols-2 gap-2 px-2">
                             <button
                                 onClick={() => setBasicOrderType('market')}
-                                className={`py-2.5 rounded-l-xl text-sm font-semibold transition-all ${basicOrderType === 'market'
-                                    ? 'bg-white/10 text-white border border-white/20'
-                                    : 'bg-black/20 text-white/50 border border-white/5 hover:text-white/70'
-                                    }`}
+                                style={{
+                                    padding: '10px 0',
+                                    borderRadius: '12px',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    transition: 'all 0.2s',
+                                    cursor: 'pointer',
+                                    ...(basicOrderType === 'market' ? {
+                                        background: 'rgba(255,214,10,0.15)',
+                                        color: '#FFD60A',
+                                        border: '1px solid rgba(255,214,10,0.3)',
+                                        boxShadow: '0 0 12px rgba(255,214,10,0.1)',
+                                    } : {
+                                        background: 'rgba(255,255,255,0.05)',
+                                        color: 'rgba(255,255,255,0.5)',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                    }),
+                                }}
                             >
                                 Market
                             </button>
                             <button
                                 onClick={() => {
                                     setBasicOrderType('limit');
-                                    // Pre-fill with current price if empty
                                     if (!basicLimitPrice && currentPrice > 0) {
                                         setBasicLimitPrice(currentPrice.toFixed(2));
                                     }
                                 }}
-                                className={`py-2.5 rounded-r-xl text-sm font-semibold transition-all ${basicOrderType === 'limit'
-                                    ? 'bg-white/10 text-white border border-white/20'
-                                    : 'bg-black/20 text-white/50 border border-white/5 hover:text-white/70'
-                                    }`}
+                                style={{
+                                    padding: '10px 0',
+                                    borderRadius: '12px',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    transition: 'all 0.2s',
+                                    cursor: 'pointer',
+                                    ...(basicOrderType === 'limit' ? {
+                                        background: 'rgba(255,214,10,0.15)',
+                                        color: '#FFD60A',
+                                        border: '1px solid rgba(255,214,10,0.3)',
+                                        boxShadow: '0 0 12px rgba(255,214,10,0.1)',
+                                    } : {
+                                        background: 'rgba(255,255,255,0.05)',
+                                        color: 'rgba(255,255,255,0.5)',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                    }),
+                                }}
                             >
                                 Limit
                             </button>
@@ -374,47 +401,7 @@ export default function OrderPanel() {
                                         : '#3A3A3C',
                                 }}
                             />
-                            <style jsx>{`
-                                input[type="range"]::-webkit-slider-thumb {
-                                    -webkit-appearance: none;
-                                    appearance: none;
-                                    width: 28px;
-                                    height: 28px;
-                                    border-radius: 50%;
-                                    background: linear-gradient(to bottom, #FFFF00, #CCCC00);
-                                    cursor: pointer;
-                                    box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 2px 6px rgba(0,0,0,0.3);
-                                }
-                                input[type="range"]::-moz-range-thumb {
-                                    width: 28px;
-                                    height: 28px;
-                                    border-radius: 50%;
-                                    background: linear-gradient(to bottom, #FFFF00, #CCCC00);
-                                    cursor: pointer;
-                                    border: none;
-                                    box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 2px 6px rgba(0,0,0,0.3);
-                                }
-                                .leverage-btn {
-                                    background-color: #2F3033;
-                                    color: #F3F4F6;
-                                    border: 1px solid #3A3A3C;
-                                    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-                                }
-                                .leverage-btn:hover:not(:disabled) {
-                                    background-color: #3A3B3F;
-                                    border-color: #4A4A4F;
-                                }
-                                .leverage-btn:active:not(:disabled) {
-                                    background-color: #1F2023;
-                                    border-color: #6B7280;
-                                    color: #FFFFFF;
-                                }
-                                .leverage-btn-disabled {
-                                    background-color: #242427;
-                                    color: rgba(255,255,255,0.35);
-                                    cursor: not-allowed;
-                                }
-                            `}</style>
+
                         </div>
 
                         {/* Leverage Selector */}
@@ -432,8 +419,65 @@ export default function OrderPanel() {
                                             key={`lev-sub-${dec}`}
                                             onClick={() => handleLeverageDecrease(dec)}
                                             disabled={isDisabled}
-                                            className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center leverage-btn ${isDisabled ? 'leverage-btn-disabled' : ''}`}
-                                            style={{ minHeight: '56px' }}
+                                            style={{
+                                                flex: 1,
+                                                minHeight: '56px',
+                                                borderRadius: '16px',
+                                                fontSize: '16px',
+                                                fontWeight: 700,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s',
+                                                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                                // Inline styles based on state
+                                                background: isDisabled
+                                                    ? 'rgba(25,25,28,0.8)'
+                                                    : 'linear-gradient(145deg, rgba(40,40,45,0.9), rgba(28,28,32,0.95))',
+                                                color: isDisabled ? 'rgba(255,255,255,0.2)' : '#E5E7EB',
+                                                border: isDisabled
+                                                    ? '1px solid rgba(255,255,255,0.03)'
+                                                    : '1px solid rgba(255,255,255,0.08)',
+                                                boxShadow: isDisabled
+                                                    ? 'none'
+                                                    : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
+                                            }}
+                                            // Add hover/active effects via className or just accept inline limitation
+                                            // For simplicity and reliability, we'll use inline but add a class for simple hover if needed,
+                                            // or just rely on the base style being good enough.
+                                            // Actually, let's keep it simple. The inline style guarantees the base look.
+                                            // To get hover/active, we can use a small helper or just rely on the base style being much better than before.
+                                            // Let's stick to the base style which is "dark and rounded".
+                                            onMouseEnter={(e) => {
+                                                if (!isDisabled) {
+                                                    e.currentTarget.style.background = 'linear-gradient(145deg, rgba(50,50,55,0.95), rgba(35,35,40,0.95))';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,214,10,0.2)';
+                                                    e.currentTarget.style.color = '#FFFFFF';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!isDisabled) {
+                                                    e.currentTarget.style.background = 'linear-gradient(145deg, rgba(40,40,45,0.9), rgba(28,28,32,0.95))';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                                                    e.currentTarget.style.color = '#E5E7EB';
+                                                }
+                                            }}
+                                            onMouseDown={(e) => {
+                                                if (!isDisabled) {
+                                                    e.currentTarget.style.background = 'rgba(255,214,10,0.12)';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,214,10,0.35)';
+                                                    e.currentTarget.style.color = '#FFD60A';
+                                                    e.currentTarget.style.boxShadow = '0 0 16px rgba(255,214,10,0.1), inset 0 1px 0 rgba(255,255,255,0.04)';
+                                                }
+                                            }}
+                                            onMouseUp={(e) => {
+                                                if (!isDisabled) {
+                                                    e.currentTarget.style.background = 'linear-gradient(145deg, rgba(50,50,55,0.95), rgba(35,35,40,0.95))';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,214,10,0.2)';
+                                                    e.currentTarget.style.color = '#FFFFFF';
+                                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)';
+                                                }
+                                            }}
                                         >
                                             −{dec}x
                                         </button>
@@ -448,8 +492,58 @@ export default function OrderPanel() {
                                             key={`lev-add-${inc}`}
                                             onClick={() => handleLeverageIncrease(inc)}
                                             disabled={isDisabled}
-                                            className={`flex-1 rounded-lg text-base font-bold transition-all flex items-center justify-center leverage-btn ${isDisabled ? 'leverage-btn-disabled' : ''}`}
-                                            style={{ minHeight: '56px' }}
+                                            style={{
+                                                flex: 1,
+                                                minHeight: '56px',
+                                                borderRadius: '16px',
+                                                fontSize: '16px',
+                                                fontWeight: 700,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                transition: 'all 0.2s',
+                                                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                                background: isDisabled
+                                                    ? 'rgba(25,25,28,0.8)'
+                                                    : 'linear-gradient(145deg, rgba(40,40,45,0.9), rgba(28,28,32,0.95))',
+                                                color: isDisabled ? 'rgba(255,255,255,0.2)' : '#E5E7EB',
+                                                border: isDisabled
+                                                    ? '1px solid rgba(255,255,255,0.03)'
+                                                    : '1px solid rgba(255,255,255,0.08)',
+                                                boxShadow: isDisabled
+                                                    ? 'none'
+                                                    : '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (!isDisabled) {
+                                                    e.currentTarget.style.background = 'linear-gradient(145deg, rgba(50,50,55,0.95), rgba(35,35,40,0.95))';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,214,10,0.2)';
+                                                    e.currentTarget.style.color = '#FFFFFF';
+                                                }
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (!isDisabled) {
+                                                    e.currentTarget.style.background = 'linear-gradient(145deg, rgba(40,40,45,0.9), rgba(28,28,32,0.95))';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                                                    e.currentTarget.style.color = '#E5E7EB';
+                                                }
+                                            }}
+                                            onMouseDown={(e) => {
+                                                if (!isDisabled) {
+                                                    e.currentTarget.style.background = 'rgba(255,214,10,0.12)';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,214,10,0.35)';
+                                                    e.currentTarget.style.color = '#FFD60A';
+                                                    e.currentTarget.style.boxShadow = '0 0 16px rgba(255,214,10,0.1), inset 0 1px 0 rgba(255,255,255,0.04)';
+                                                }
+                                            }}
+                                            onMouseUp={(e) => {
+                                                if (!isDisabled) {
+                                                    e.currentTarget.style.background = 'linear-gradient(145deg, rgba(50,50,55,0.95), rgba(35,35,40,0.95))';
+                                                    e.currentTarget.style.borderColor = 'rgba(255,214,10,0.2)';
+                                                    e.currentTarget.style.color = '#FFFFFF';
+                                                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)';
+                                                }
+                                            }}
                                         >
                                             +{inc}x
                                         </button>

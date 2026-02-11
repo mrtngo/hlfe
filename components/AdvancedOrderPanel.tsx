@@ -162,10 +162,10 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
         <div className="flex flex-col bg-black p-4">
             {/* Order Type Tabs + Leverage */}
             <div className="flex items-center justify-between mb-3">
-                <div className="flex">
+                <div className="flex gap-2">
                     <button
                         onClick={() => setOrderType('limit')}
-                        className={`px-4 py-1.5 text-xs font-medium rounded-l-md border transition-colors ${orderType === 'limit'
+                        className={`px-4 py-1.5 text-xs font-medium rounded-xl border transition-colors ${orderType === 'limit'
                             ? 'bg-brand border-[#FFFF00] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
@@ -174,7 +174,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     </button>
                     <button
                         onClick={() => setOrderType('market')}
-                        className={`px-4 py-1.5 text-xs font-medium rounded-r-md border-t border-r border-b transition-colors ${orderType === 'market'
+                        className={`px-4 py-1.5 text-xs font-medium rounded-xl border transition-colors ${orderType === 'market'
                             ? 'bg-brand border-[#FFFF00] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
@@ -459,7 +459,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowStockApprovalModal(false)}
-                                className="flex-1 py-3 rounded-xl font-bold text-sm bg-white/10 text-white/70 hover:bg-white/20 transition-all"
+                                className="flex-1 py-3 rounded-xl font-bold text-sm bg-white/8 text-white/70 border border-white/10 hover:bg-white/15 transition-all"
                             >
                                 {t.common.cancel}
                             </button>

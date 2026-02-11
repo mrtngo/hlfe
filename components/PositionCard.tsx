@@ -174,7 +174,23 @@ export default function PositionCard({
                                 e.stopPropagation();
                                 onSetSlTp(position);
                             }}
-                            className="py-3 px-4 bg-gradient-to-r from-bullish to-bearish hover:from-bullish/90 hover:to-bearish/90 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg flex-1 justify-center whitespace-nowrap"
+                            style={{
+                                padding: '12px 16px',
+                                background: 'linear-gradient(135deg, rgba(52,199,89,0.85), rgba(255,59,48,0.85))',
+                                color: '#fff',
+                                borderRadius: '16px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                border: 'none',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                flex: 1,
+                                justifyContent: 'center',
+                                whiteSpace: 'nowrap',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                                cursor: 'pointer',
+                            }}
                         >
                             <Target className="w-3.5 h-3.5" />
                             SL/TP
@@ -186,7 +202,20 @@ export default function PositionCard({
                                 e.stopPropagation();
                                 onShare(position);
                             }}
-                            className="py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/10 hover:border-white/20 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                            style={{
+                                padding: '12px 16px',
+                                background: 'rgba(255,255,255,0.08)',
+                                color: '#fff',
+                                borderRadius: '16px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                cursor: 'pointer',
+                            }}
                         >
                             <Share2 className="w-3.5 h-3.5" />
                         </button>
@@ -197,7 +226,18 @@ export default function PositionCard({
                                 e.stopPropagation();
                                 onClose(position.symbol);
                             }}
-                            className="flex-1 py-3 px-4 bg-brand hover:bg-brand-hover text-black rounded-xl text-xs font-bold transition-all active:scale-[0.98] shadow-glow-brand"
+                            style={{
+                                padding: '12px 16px',
+                                background: '#FFD60A',
+                                color: '#000',
+                                borderRadius: '16px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                border: 'none',
+                                flex: 1,
+                                cursor: 'pointer',
+                                boxShadow: '0 0 20px rgba(255,214,10,0.2)',
+                            }}
                         >
                             {t.positions.close.toUpperCase()}
                         </button>

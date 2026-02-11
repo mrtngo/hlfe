@@ -770,13 +770,27 @@ export default function SpotTradingPanel() {
                 </div>
 
                 {/* Order Type Toggle - Market/Limit */}
-                <div className="grid grid-cols-2 gap-0 mb-4">
+                <div className="grid grid-cols-2 gap-2 mb-4">
                     <button
                         onClick={() => setOrderType('market')}
-                        className={`py-2.5 rounded-l-xl text-sm font-semibold transition-all ${orderType === 'market'
-                            ? 'bg-white/10 text-white border border-white/20'
-                            : 'bg-black/20 text-white/50 border border-white/5 hover:text-white/70'
-                            }`}
+                        style={{
+                            padding: '10px 0',
+                            borderRadius: '12px',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            transition: 'all 0.2s',
+                            cursor: 'pointer',
+                            ...(orderType === 'market' ? {
+                                background: 'rgba(255,214,10,0.15)',
+                                color: '#FFD60A',
+                                border: '1px solid rgba(255,214,10,0.3)',
+                                boxShadow: '0 0 12px rgba(255,214,10,0.1)',
+                            } : {
+                                background: 'rgba(255,255,255,0.05)',
+                                color: 'rgba(255,255,255,0.5)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                            }),
+                        }}
                     >
                         Market
                     </button>
@@ -788,10 +802,24 @@ export default function SpotTradingPanel() {
                                 setLimitPrice(currentPrice.toFixed(2));
                             }
                         }}
-                        className={`py-2.5 rounded-r-xl text-sm font-semibold transition-all ${orderType === 'limit'
-                            ? 'bg-white/10 text-white border border-white/20'
-                            : 'bg-black/20 text-white/50 border border-white/5 hover:text-white/70'
-                            }`}
+                        style={{
+                            padding: '10px 0',
+                            borderRadius: '12px',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            transition: 'all 0.2s',
+                            cursor: 'pointer',
+                            ...(orderType === 'limit' ? {
+                                background: 'rgba(255,214,10,0.15)',
+                                color: '#FFD60A',
+                                border: '1px solid rgba(255,214,10,0.3)',
+                                boxShadow: '0 0 12px rgba(255,214,10,0.1)',
+                            } : {
+                                background: 'rgba(255,255,255,0.05)',
+                                color: 'rgba(255,255,255,0.5)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                            }),
+                        }}
                     >
                         Limit
                     </button>
