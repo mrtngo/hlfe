@@ -232,7 +232,7 @@ export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: 
                     {/* Section Header */}
                     <button
                         onClick={() => setIsPositionsExpanded(!isPositionsExpanded)}
-                        className="w-full flex items-center justify-between"
+                        className="w-full flex items-center justify-between bg-transparent border-none p-0 cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
