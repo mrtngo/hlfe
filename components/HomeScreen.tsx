@@ -221,7 +221,14 @@ export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: 
 
             {/* Open Positions */}
             {positions.length > 0 && (
-                <div className="glass-card rounded-2xl p-5 transition-all">
+                <div
+                    className="rounded-2xl p-5 transition-all"
+                    style={{
+                        background: 'linear-gradient(135deg, rgba(20, 20, 25, 0.95) 0%, rgba(15, 15, 20, 0.98) 100%)',
+                        border: '2px solid rgba(250, 204, 21, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(250, 204, 21, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                    }}
+                >
                     {/* Section Header */}
                     <button
                         onClick={() => setIsPositionsExpanded(!isPositionsExpanded)}

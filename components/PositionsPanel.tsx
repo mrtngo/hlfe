@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { TrendingUp, Share2, Target } from 'lucide-react';
+import { TrendingUp, Share2, Target, ChevronDown } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from './OrderNotification';
 import ShareModal from './ShareModal';
 import SetSLTPModal from './SetSLTPModal';
@@ -16,6 +16,7 @@ export default function PositionsPanel() {
     const [closeNotification, setCloseNotification] = useState<OrderNotificationData | null>(null);
     const [sharePosition, setSharePosition] = useState<Position | null>(null);
     const [slTpPosition, setSlTpPosition] = useState<Position | null>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const handleClosePosition = async (symbol: string) => {
         if (confirm(t.positions.closePosition)) {
@@ -79,32 +80,41 @@ export default function PositionsPanel() {
                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(250, 204, 21, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
                     }}
                 >
-                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-                        <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(250, 204, 21, 0.3)' }}>
-                            <TrendingUp className="w-5 h-5 text-brand" />
+                >
+                    <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="w-full flex items-center justify-between mb-6 pb-4 border-b border-white/10"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(250, 204, 21, 0.3)' }}>
+                                <TrendingUp className="w-5 h-5 text-brand" />
+                            </div>
+                            <div className="text-left">
+                                <h3 className="text-xl font-bold text-white tracking-tight">{t.positions.title}</h3>
+                                <p className="text-xs text-white/50">
+                                    {positions.length === 1
+                                        ? t.positions.activePositions.replace('{{count}}', '1')
+                                        : t.positions.activePositionsPlural.replace('{{count}}', positions.length.toString())}
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-xl font-bold text-white tracking-tight">{t.positions.title}</h3>
-                            <p className="text-xs text-white/50">
-                                {positions.length === 1
-                                    ? t.positions.activePositions.replace('{{count}}', '1')
-                                    : t.positions.activePositionsPlural.replace('{{count}}', positions.length.toString())}
-                            </p>
-                        </div>
-                    </div>
+                        <ChevronDown className={`w-5 h-5 text-white/50 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                    </button>
 
-                    <div className="space-y-6">
-                        {positions.map((position) => (
-                            <PositionCard
-                                key={position.symbol}
-                                position={position}
-                                onShare={setSharePosition}
-                                onClose={handleClosePosition}
-                                onSetSlTp={setSlTpPosition}
-                                onClick={() => setSelectedMarket(position.symbol)}
-                            />
-                        ))}
-                    </div>
+                    {isExpanded && (
+                        <div className="space-y-6 animate-in slide-in-from-top-2 fade-in duration-200">
+                            {positions.map((position) => (
+                                <PositionCard
+                                    key={position.symbol}
+                                    position={position}
+                                    onShare={setSharePosition}
+                                    onClose={handleClosePosition}
+                                    onSetSlTp={setSlTpPosition}
+                                    onClick={() => setSelectedMarket(position.symbol)}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
