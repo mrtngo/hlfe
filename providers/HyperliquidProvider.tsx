@@ -200,6 +200,24 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const { markets: realMarkets, loading: marketsLoading, refreshMarketData } = useMarketData();
     const [markets, setMarkets] = useState<Market[]>([]);
 
+    // WebSocket price update callback — updates individual market prices in-place
+    const handlePriceUpdate = useCallback((coin: string, price: number) => {
+        setMarkets(prev => {
+            // Normalize coin name: allMids sends "xyz:TSLA", market.name is "TSLA"
+            const normalizedCoin = coin.replace(/^xyz:/i, '').replace(/-PERP$/i, '');
+            const idx = prev.findIndex(m => m.name === normalizedCoin);
+            if (idx === -1) return prev;
+
+            const existing = prev[idx];
+            // Skip if price hasn't changed meaningfully (avoids unnecessary re-renders)
+            if (Math.abs(existing.price - price) < existing.price * 0.000001) return prev;
+
+            const updated = [...prev];
+            updated[idx] = { ...existing, price };
+            return updated;
+        });
+    }, []);
+
     // Use account hook for state management
     const {
         account,
@@ -213,7 +231,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         setAccount,
         setPositions,
         setOrders
-    } = useHyperliquidAccount(address, isConnected, markets);
+    } = useHyperliquidAccount(address, isConnected, markets, handlePriceUpdate);
 
     // Rate limiting state (for fallback HTTP calls only)
     const [rateLimited, setRateLimited] = useState(false);
@@ -251,15 +269,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     }, [realMarkets]);
 
 
-
-    // Subscribe to user data when address is available
-    useEffect(() => {
-        if (address && wsManager.isConnected()) {
-            const normalizedAddress = address.toLowerCase();
-            wsManager.subscribeToUserData(normalizedAddress);
-            wsManager.subscribeToUserEvents(normalizedAddress);
-        }
-    }, [address, wsManager.isConnected()]);
 
     // Get wallet address from Privy (embedded or external wallet)
     useEffect(() => {

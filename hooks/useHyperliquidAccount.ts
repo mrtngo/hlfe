@@ -121,7 +121,8 @@ function parsePosition(pos: any, markets: Market[]): Position | null {
 export function useHyperliquidAccount(
     address: string | null,
     isConnected: boolean,
-    markets: Market[]
+    markets: Market[],
+    onPriceUpdate?: (coin: string, price: number) => void
 ): AccountHookResult {
     const [loading, setLoading] = useState(false);
     const [rateLimited, setRateLimited] = useState(false);
@@ -589,7 +590,10 @@ export function useHyperliquidAccount(
         };
 
         // Connect WebSocket with callbacks
-        wsManager.connect(callbacks);
+        wsManager.connect({
+            ...callbacks,
+            onPriceUpdate,
+        });
 
         // Fetch initial data once per address
         if (!initialFetchDone.current) {
@@ -597,9 +601,10 @@ export function useHyperliquidAccount(
             fetchInitialAccountData();
         }
 
-        // Subscribe to user data
+        // Subscribe to user data and prices
         const normalizedAddress = address.toLowerCase();
         if (wsManager.isConnected()) {
+            wsManager.subscribeToPrices();
             wsManager.subscribeToUserData(normalizedAddress);
             wsManager.subscribeToUserEvents(normalizedAddress);
         }
@@ -607,7 +612,7 @@ export function useHyperliquidAccount(
         return () => {
             // Cleanup handled by WebSocket manager
         };
-    }, [isConnected, address, markets, fetchInitialAccountData]);
+    }, [isConnected, address, markets, fetchInitialAccountData, onPriceUpdate]);
 
     // MERGE STATES AND CALCULATE REAL-TIME PNL
     const { mergedAccount, mergedPositions } = useMemo(() => {

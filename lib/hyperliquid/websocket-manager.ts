@@ -18,6 +18,7 @@ export interface WebSocketCallbacks {
     onUserEvent?: (event: any) => void;
     onCandleUpdate?: (coin: string, interval: string, candle: any) => void;
     onAssetCtxUpdate?: (coin: string, ctx: any) => void;
+    onL2BookUpdate?: (coin: string, levels: { bids: any[]; asks: any[] }) => void;
     onConnect?: () => void;
     onError?: (error: Error) => void;
 }
@@ -103,7 +104,7 @@ class HyperliquidWebSocketManager {
             }
             // Don't return - let other handlers process if needed
         }
-        
+
         // Handle allMids (price updates)
         if (data.channel === 'allMids' && data.data?.mids) {
             const mids = data.data.mids;
@@ -122,7 +123,7 @@ class HyperliquidWebSocketManager {
         // Handle clearinghouse state (positions and margin)
         if (data.channel === 'clearinghouseState' && data.data) {
             this.callbacks.onAccountUpdate?.(data.data);
-            
+
             // Extract positions if available
             if (data.data.assetPositions) {
                 this.callbacks.onPositionUpdate?.(data.data.assetPositions);
@@ -133,19 +134,19 @@ class HyperliquidWebSocketManager {
         // Handle candle updates
         if (data.channel === 'candle' && data.data) {
             const candleData = data.data;
-            
+
             if (Array.isArray(candleData) && candleData.length > 0) {
                 const firstCandle = candleData[0];
                 const coin = firstCandle.s || firstCandle.coin;
                 const interval = firstCandle.i || firstCandle.interval;
-                
+
                 if (coin && interval) {
                     this.callbacks.onCandleUpdate?.(coin, interval, candleData);
                 }
             } else if (candleData && typeof candleData === 'object') {
                 if (candleData.coin && candleData.interval) {
-                    const candles = Array.isArray(candleData.candles) 
-                        ? candleData.candles 
+                    const candles = Array.isArray(candleData.candles)
+                        ? candleData.candles
                         : [candleData];
                     this.callbacks.onCandleUpdate?.(candleData.coin, candleData.interval, candles);
                 }
@@ -158,6 +159,19 @@ class HyperliquidWebSocketManager {
             const assetCtx = data.data;
             if (assetCtx.coin && assetCtx.ctx) {
                 this.callbacks.onAssetCtxUpdate?.(assetCtx.coin, assetCtx.ctx);
+            }
+            return;
+        }
+
+        // Handle l2Book updates (order book)
+        if (data.channel === 'l2Book' && data.data) {
+            const bookData = data.data;
+            const coin = bookData.coin;
+            if (coin && bookData.levels && Array.isArray(bookData.levels)) {
+                this.callbacks.onL2BookUpdate?.(coin, {
+                    bids: bookData.levels[0] || [],
+                    asks: bookData.levels[1] || [],
+                });
             }
             return;
         }
@@ -207,7 +221,7 @@ class HyperliquidWebSocketManager {
         }
 
         const normalizedUser = user.toLowerCase();
-        
+
         // Subscribe to webData3 (newer version)
         const webDataKey = `webData3:${normalizedUser}`;
         if (!this.subscriptions.has(webDataKey)) {
@@ -279,7 +293,7 @@ class HyperliquidWebSocketManager {
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
             return;
         }
-        
+
         const subscriptionKey = `candle:${coin}|${interval}`;
         if (!this.subscriptions.has(subscriptionKey)) {
             return;
@@ -316,7 +330,7 @@ class HyperliquidWebSocketManager {
 
     unsubscribeFromAssetCtx(coin: string) {
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-        
+
         const subscriptionKey = `activeAssetCtx:${coin}`;
         if (!this.subscriptions.has(subscriptionKey)) return;
 
@@ -326,6 +340,42 @@ class HyperliquidWebSocketManager {
         }));
 
         this.subscriptions.delete(subscriptionKey);
+    }
+
+    subscribeToL2Book(coin: string) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
+        const subscriptionKey = `l2Book:${coin}`;
+        if (this.subscriptions.has(subscriptionKey)) {
+            return;
+        }
+
+        this.ws.send(JSON.stringify({
+            method: 'subscribe',
+            subscription: { type: 'l2Book', coin }
+        }));
+
+        this.subscriptions.add(subscriptionKey);
+        log.info(`📊 Subscribed to l2Book for ${coin}`);
+    }
+
+    unsubscribeFromL2Book(coin: string) {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+        const subscriptionKey = `l2Book:${coin}`;
+        if (!this.subscriptions.has(subscriptionKey)) return;
+
+        try {
+            this.ws.send(JSON.stringify({
+                method: 'unsubscribe',
+                subscription: { type: 'l2Book', coin }
+            }));
+            this.subscriptions.delete(subscriptionKey);
+        } catch (error) {
+            this.subscriptions.delete(subscriptionKey);
+        }
     }
 
     private resubscribeAll() {
@@ -348,6 +398,9 @@ class HyperliquidWebSocketManager {
             } else if (sub.startsWith('activeAssetCtx:')) {
                 const coin = sub.replace('activeAssetCtx:', '');
                 this.subscribeToAssetCtx(coin);
+            } else if (sub.startsWith('l2Book:')) {
+                const coin = sub.replace('l2Book:', '');
+                this.subscribeToL2Book(coin);
             }
         });
     }

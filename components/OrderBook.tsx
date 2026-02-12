@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
+import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 
 // Colors
 const BULLISH = '#00C853';
@@ -40,83 +41,118 @@ export default function OrderBook({
     const coin = marketSymbol?.replace('-USD', '').replace('-PERP', '') || 'BTC';
     const isStock = market?.isStock === true;
 
-    // Fetch order book data
-    const fetchOrderBook = useCallback(async () => {
-        if (!coin) return;
+    // The coin name to use for WS/REST subscriptions
+    const wsCoin = isStock ? `xyz:${coin}` : coin;
+    const prevWsCoinRef = useRef<string | null>(null);
 
-        try {
-            // For stocks, we need to use the DEX endpoint
-            const endpoint = isStock
-                ? API_URL
-                : API_URL;
-
-            const body = isStock
-                ? { type: 'l2Book', coin: `xyz:${coin}`, dex: 'xyz' }
-                : { type: 'l2Book', coin };
-
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
+    // Process raw order book levels into our format
+    const processLevels = useCallback((rawBids: any[], rawAsks: any[], numLevels: number) => {
+        let bidTotal = 0;
+        const processedBids: OrderBookLevel[] = rawBids
+            .slice(0, numLevels)
+            .map((level: { px: string; sz: string }) => {
+                const price = parseFloat(level.px);
+                const size = parseFloat(level.sz);
+                bidTotal += size;
+                return { price, size, total: bidTotal };
             });
 
-            if (!response.ok) {
-                console.error('Order book fetch failed:', response.status);
-                return;
+        let askTotal = 0;
+        const processedAsks: OrderBookLevel[] = rawAsks
+            .slice(0, numLevels)
+            .map((level: { px: string; sz: string }) => {
+                const price = parseFloat(level.px);
+                const size = parseFloat(level.sz);
+                askTotal += size;
+                return { price, size, total: askTotal };
+            });
+
+        setBids(processedBids);
+        setAsks(processedAsks);
+        setLoading(false);
+
+        // Calculate spread
+        if (processedBids.length > 0 && processedAsks.length > 0) {
+            const bestBid = processedBids[0].price;
+            const bestAsk = processedAsks[0].price;
+            const spreadValue = bestAsk - bestBid;
+            const spreadPercent = (spreadValue / bestAsk) * 100;
+            setSpread({ value: spreadValue, percent: spreadPercent });
+        }
+    }, []);
+
+    // Fetch initial snapshot via REST, then subscribe to WS for updates
+    useEffect(() => {
+        if (!coin) return;
+
+        setLoading(true);
+
+        // Fetch initial snapshot via REST
+        const body = isStock
+            ? { type: 'l2Book', coin: `xyz:${coin}`, dex: 'xyz' }
+            : { type: 'l2Book', coin };
+
+        fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        })
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+                if (data?.levels) {
+                    processLevels(data.levels[0] || [], data.levels[1] || [], levels);
+                }
+            })
+            .catch(err => {
+                console.error('Failed to fetch initial order book:', err);
+                setLoading(false);
+            });
+
+        // Unsubscribe from previous coin if changed
+        if (prevWsCoinRef.current && prevWsCoinRef.current !== wsCoin) {
+            wsManager.unsubscribeFromL2Book(prevWsCoinRef.current);
+        }
+        prevWsCoinRef.current = wsCoin;
+
+        // Set up WS l2Book handler
+        const handleL2BookUpdate = (updatedCoin: string, bookLevels: { bids: any[]; asks: any[] }) => {
+            // Normalize both coins for comparison (strip xyz: prefix)
+            const normCoin = updatedCoin.replace(/^xyz:/i, '');
+            if (normCoin === coin) {
+                processLevels(bookLevels.bids, bookLevels.asks, levels);
             }
+        };
 
-            const data = await response.json();
+        // Connect with our l2Book handler (merges with existing callbacks)
+        wsManager.connect({
+            onL2BookUpdate: handleL2BookUpdate,
+        });
 
-            if (data && data.levels) {
-                // Process bids (buy orders) - highest prices first
-                const bidLevels = (data.levels[0] || []);
-                let bidTotal = 0;
-                const processedBids: OrderBookLevel[] = bidLevels
-                    .slice(0, levels)
-                    .map((level: { px: string; sz: string }) => {
-                        const price = parseFloat(level.px);
-                        const size = parseFloat(level.sz);
-                        bidTotal += size;
-                        return { price, size, total: bidTotal };
-                    });
+        // Subscribe once connected (with small delay for connection readiness)
+        const subscribeDelay = setTimeout(() => {
+            if (wsManager.isConnected()) {
+                wsManager.subscribeToL2Book(wsCoin);
+            }
+        }, 200);
 
-                // Process asks (sell orders) - lowest prices first  
-                const askLevels = (data.levels[1] || []);
-                let askTotal = 0;
-                const processedAsks: OrderBookLevel[] = askLevels
-                    .slice(0, levels)
-                    .map((level: { px: string; sz: string }) => {
-                        const price = parseFloat(level.px);
-                        const size = parseFloat(level.sz);
-                        askTotal += size;
-                        return { price, size, total: askTotal };
-                    });
+        // Also handle fresh connections
+        const handleConnect = () => {
+            wsManager.subscribeToL2Book(wsCoin);
+        };
+        wsManager.connect({ onConnect: handleConnect });
 
-                setBids(processedBids);
-                setAsks(processedAsks);
-
-                // Calculate spread
-                if ((processedBids || []).length > 0 && (processedAsks || []).length > 0) {
-                    const bestBid = processedBids[0].price;
-                    const bestAsk = processedAsks[0].price;
-                    const spreadValue = bestAsk - bestBid;
-                    const spreadPercent = (spreadValue / bestAsk) * 100;
-                    setSpread({ value: spreadValue, percent: spreadPercent });
+        return () => {
+            clearTimeout(subscribeDelay);
+            // Unsubscribe from this coin's l2Book
+            if (wsManager.isConnected()) {
+                try {
+                    wsManager.unsubscribeFromL2Book(wsCoin);
+                } catch (e) {
+                    // Silently ignore
                 }
             }
-        } catch (err) {
-            console.error('Failed to fetch order book:', err);
-        } finally {
-            setLoading(false);
-        }
-    }, [coin, levels, isStock]);
-
-    // Fetch on mount and periodically
-    useEffect(() => {
-        fetchOrderBook();
-        const interval = setInterval(fetchOrderBook, 1000); // Update every second
-        return () => clearInterval(interval);
-    }, [fetchOrderBook]);
+        };
+    }, [coin, levels, isStock, wsCoin, processLevels]);
 
     // Calculate max total for depth bar visualization
     const maxTotal = useMemo(() => {
