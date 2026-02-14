@@ -257,10 +257,10 @@ export default function OrderPanel() {
                         </div>
 
                         {/* Buy/Sell Selection - Casino/Slots Style */}
-                        <div className="flex gap-2 px-2">
+                        <div className="flex gap-4 px-2" style={{ marginBottom: '24px' }}>
                             <button
                                 onClick={() => setOrderSide('long')}
-                                className={`flex-1 py-6 rounded-2xl font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'long'
+                                className={`flex-1 py-6 rounded-[20px] font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'long'
                                     ? 'bg-gradient-to-b from-[#34C759] to-[#28A745] text-white shadow-[0_0_30px_rgba(52,199,89,0.5),0_4px_15px_rgba(0,0,0,0.3)] scale-[1.02] border-2 border-[#45D76D]'
                                     : 'bg-[#0D0D0D] text-[#34C759] border-2 border-[#34C759]/20 hover:border-[#34C759]/50 hover:bg-[#34C759]/5'
                                     }`}
@@ -271,7 +271,7 @@ export default function OrderPanel() {
                             </button>
                             <button
                                 onClick={() => setOrderSide('short')}
-                                className={`flex-1 py-6 rounded-2xl font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'short'
+                                className={`flex-1 py-6 rounded-[20px] font-black text-xl transition-all duration-200 flex flex-col items-center justify-center gap-1 ${orderSide === 'short'
                                     ? 'bg-gradient-to-b from-[#FF4444] to-[#CC0000] text-white shadow-[0_0_30px_rgba(255,68,68,0.5),0_4px_15px_rgba(0,0,0,0.3)] scale-[1.02] border-2 border-[#FF6666]'
                                     : 'bg-[#0D0D0D] text-negative border-2 border-[#FF4444]/20 hover:border-[#FF4444]/50 hover:bg-[#FF4444]/5'
                                     }`}
@@ -283,12 +283,12 @@ export default function OrderPanel() {
                         </div>
 
                         {/* Order Type Toggle - Market/Limit */}
-                        <div className="grid grid-cols-2 gap-2 px-2">
+                        <div className="grid grid-cols-2 gap-4 px-2" style={{ marginBottom: '20px' }}>
                             <button
                                 onClick={() => setBasicOrderType('market')}
                                 style={{
-                                    padding: '10px 0',
-                                    borderRadius: '12px',
+                                    padding: '12px 0',
+                                    borderRadius: '20px',
                                     fontSize: '14px',
                                     fontWeight: 600,
                                     transition: 'all 0.2s',
@@ -315,8 +315,8 @@ export default function OrderPanel() {
                                     }
                                 }}
                                 style={{
-                                    padding: '10px 0',
-                                    borderRadius: '12px',
+                                    padding: '12px 0',
+                                    borderRadius: '20px',
                                     fontSize: '14px',
                                     fontWeight: 600,
                                     transition: 'all 0.2s',
@@ -383,24 +383,7 @@ export default function OrderPanel() {
                                 max={account.availableMargin}
                             />
 
-                            {/* Slider - uses maxMarginAfterFees so user can always place order at max */}
-                            <input
-                                type="range"
-                                min="0"
-                                max={maxMarginAfterFees > 0 ? maxMarginAfterFees : 100}
-                                step="0.01"
-                                value={marginValue}
-                                onChange={(e) => {
-                                    const val = Math.min(parseFloat(e.target.value), maxMarginAfterFees);
-                                    setMarginAmount(val.toString());
-                                }}
-                                className="w-full h-[4px] rounded-full appearance-none cursor-pointer"
-                                style={{
-                                    background: maxMarginAfterFees > 0
-                                        ? `linear-gradient(to right, #FFFF00 0%, #FFFF00 ${(marginValue / maxMarginAfterFees) * 100}%, #3A3A3C ${(marginValue / maxMarginAfterFees) * 100}%, #3A3A3C 100%)`
-                                        : '#3A3A3C',
-                                }}
-                            />
+
 
                         </div>
 
@@ -410,7 +393,7 @@ export default function OrderPanel() {
                                 <label className="text-sm text-coffee-medium">{t.order.leverage}</label>
                                 <span className="text-lg font-bold text-brand">{leverage}x</span>
                             </div>
-                            <div className="flex gap-3">
+                            <div className="flex gap-4">
                                 {/* Decrease leverage buttons */}
                                 {[5, 2, 1].map((dec) => {
                                     const isDisabled = leverage - dec < 1;
