@@ -266,6 +266,59 @@ export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: 
                 </div>
             )}
 
+            {/* Watchlist */}
+            <div className="glass-card rounded-2xl p-5">
+                {/* Section Header */}
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
+                            <span className="text-lg">⭐</span>
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-white">{t.home.watchlist}</h2>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">{t.home.tokensTracked.replace('{{count}}', watchlistMarkets.length.toString())}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button
+                            className="p-2 transition-all bg-transparent border-none"
+                            onClick={() => setShowAddDropdown(!showAddDropdown)}
+                        >
+                            <Plus className="w-6 h-6 text-brand" />
+                        </button>
+                    </div>
+
+                    {/* Add Token Modal */}
+                    <MarketSelectModal
+                        isOpen={showAddDropdown}
+                        onClose={() => setShowAddDropdown(false)}
+                        onSelect={(market) => addToWatchlist(market.name)}
+                        markets={markets}
+                        title={t.home.addToWatchlist}
+                        subtitle={t.home.tapToAddTokens}
+                        excludeSymbols={watchlist}
+                    />
+                </div>
+                {/* Watchlist items */}
+                {watchlistMarkets.length === 0 ? (
+                    <div id="home-market-list" className="text-center py-12 text-[var(--color-text-secondary)] bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
+                        <p>{t.home.noTokensInWatchlist}</p>
+                        <p className="text-xs mt-2 opacity-60">{t.home.tapToAddTokens}</p>
+                    </div>
+                ) : (
+                    <div id="home-market-list" className="space-y-4">
+                        {watchlistMarkets.map((market) => (
+                            <WatchlistItem
+                                key={market.name}
+                                market={market}
+                                onTokenClick={handleTokenClick}
+                                onRemove={removeFromWatchlist}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* Open Orders */}
             {openOrders && openOrders.length > 0 && (
                 <div className="glass-card rounded-2xl p-5">
@@ -464,59 +517,6 @@ export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: 
                 </div>
                 <ArrowUpRight className="w-5 h-5 text-positive shrink-0" strokeWidth={2.5} />
             </button>
-
-            {/* Watchlist */}
-            <div className="glass-card rounded-2xl p-5">
-                {/* Section Header */}
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
-                            <span className="text-lg">⭐</span>
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-white">{t.home.watchlist}</h2>
-                            <p className="text-xs text-[var(--color-text-tertiary)]">{t.home.tokensTracked.replace('{{count}}', watchlistMarkets.length.toString())}</p>
-                        </div>
-                    </div>
-                    <div>
-                        <button
-                            className="p-2 transition-all bg-transparent border-none"
-                            onClick={() => setShowAddDropdown(!showAddDropdown)}
-                        >
-                            <Plus className="w-6 h-6 text-brand" />
-                        </button>
-                    </div>
-
-                    {/* Add Token Modal */}
-                    <MarketSelectModal
-                        isOpen={showAddDropdown}
-                        onClose={() => setShowAddDropdown(false)}
-                        onSelect={(market) => addToWatchlist(market.name)}
-                        markets={markets}
-                        title={t.home.addToWatchlist}
-                        subtitle={t.home.tapToAddTokens}
-                        excludeSymbols={watchlist}
-                    />
-                </div>
-                {/* Watchlist items */}
-                {watchlistMarkets.length === 0 ? (
-                    <div id="home-market-list" className="text-center py-12 text-[var(--color-text-secondary)] bg-bg-tertiary/30 rounded-2xl border border-white/5 border-dashed">
-                        <p>{t.home.noTokensInWatchlist}</p>
-                        <p className="text-xs mt-2 opacity-60">{t.home.tapToAddTokens}</p>
-                    </div>
-                ) : (
-                    <div id="home-market-list" className="space-y-4">
-                        {watchlistMarkets.map((market) => (
-                            <WatchlistItem
-                                key={market.name}
-                                market={market}
-                                onTokenClick={handleTokenClick}
-                                onRemove={removeFromWatchlist}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
 
             {/* Categories Section */}
             <div className="glass-card rounded-2xl p-5">

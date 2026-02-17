@@ -7,8 +7,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Shield, Share2, RefreshCw, TrendingUp, DollarSign, ArrowLeftRight, Bell, BellOff, Smartphone, CheckCircle2, Book, ExternalLink, MessageSquare } from 'lucide-react';
-import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Share2, RefreshCw, TrendingUp, ArrowLeftRight, Bell, Book, ExternalLink, MessageSquare } from 'lucide-react';
 import { DOCS_URL } from '@/lib/constants';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import TransferModal from './TransferModal';
@@ -67,6 +66,7 @@ export default function Profile() {
     const referralLink = user?.referral_code
         ? `${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${user.referral_code}`
         : '';
+    const hasEmbeddedWallet = privyUser?.wallet?.connectorType === 'embedded';
 
     useEffect(() => {
         const fetchReferralData = async () => {
@@ -146,8 +146,8 @@ export default function Profile() {
         setFeeError(null);
         try {
             await approveBuilderFee();
-        } catch (err: any) {
-            setFeeError(err?.message || 'Failed to approve builder fee');
+        } catch (err: unknown) {
+            setFeeError(err instanceof Error ? err.message : 'Failed to approve builder fee');
         } finally {
             setApprovingFee(false);
         }
@@ -163,7 +163,7 @@ export default function Profile() {
                 setSyncResult(`${result.synced} trades synced`);
                 setTimeout(() => setSyncResult(null), 3000);
             }
-        } catch (err) {
+        } catch {
             setSyncResult('Failed');
         } finally {
             setSyncing(false);
@@ -385,31 +385,37 @@ export default function Profile() {
             </div>
 
             {/* ===== SETTINGS ===== */}
-            <div className="premium-card rounded-[24px] p-6 border border-white/5 space-y-8">
-                <div className="flex items-center gap-3 mb-2">
+            <div className="premium-card rounded-[24px] p-5 md:p-6 border border-white/5 space-y-6">
+                <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
                         <span className="text-xl">⚙️</span>
                     </div>
                     <h2 className="text-lg font-black text-white tracking-tight">{t.settings.title}</h2>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-5">
                     {/* Language Toggle */}
-                    <div className="flex items-center justify-between p-1 bg-black/40 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-4 ml-3">
+                    <div className="bg-[rgba(0,0,0,0.4)] rounded-2xl border border-[rgba(255,255,255,0.08)] p-3 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
                             <Globe className="w-5 h-5 text-white/40" />
-                            <span className="text-white/80 text-xs font-black uppercase tracking-wider">{t.settings.language}</span>
+                            <span className="text-white/85 text-sm font-semibold">{t.settings.language}</span>
                         </div>
-                        <div className="flex gap-1">
+                        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
                             <button
                                 onClick={() => setLanguage('en')}
-                                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'en' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
+                                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all w-full appearance-none ${language === 'en'
+                                    ? 'bg-brand text-black shadow-lg shadow-brand/20'
+                                    : 'bg-bg-elevated text-brand hover:text-brand border border-[var(--color-brand-primary-border)]'
+                                    }`}
                             >
                                 {t.settings.english}
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
-                                className={`px-6 py-2.5 rounded-xl text-xs font-black transition-all ${language === 'es' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-white/40 hover:text-white'}`}
+                                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all w-full appearance-none ${language === 'es'
+                                    ? 'bg-brand text-black shadow-lg shadow-brand/20'
+                                    : 'bg-bg-elevated text-brand hover:text-brand border border-[var(--color-brand-primary-border)]'
+                                    }`}
                             >
                                 {t.settings.spanish}
                             </button>
@@ -417,14 +423,14 @@ export default function Profile() {
                     </div>
 
                     {/* Notifications Toggle */}
-                    <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
+                    <div className="p-5 bg-[rgba(0,0,0,0.4)] rounded-2xl border border-[rgba(255,255,255,0.08)] space-y-4">
                         {/* Main row with toggle */}
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
                                 <Bell className="w-5 h-5 text-white/40" />
                                 <div>
-                                    <div className="text-white text-xs font-bold uppercase">{t.settings.notifications}</div>
-                                    <div className="text-[10px] text-white/40">
+                                    <div className="text-white text-sm font-semibold">{t.settings.notifications}</div>
+                                    <div className="text-xs text-white/50">
                                         {pushNotifications.isLoading ? t.profile.loading : pushNotifications.isSubscribed ? t.profile.enabled : t.profile.disabled}
                                     </div>
                                 </div>
@@ -435,9 +441,9 @@ export default function Profile() {
                                 onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe(user?.id || address || undefined)}
                                 disabled={pushNotifications.isLoading || !pushNotifications.isSecureContext}
                                 style={{
-                                    width: '60px',
-                                    height: '32px',
-                                    borderRadius: '16px',
+                                    width: '64px',
+                                    height: '36px',
+                                    borderRadius: '18px',
                                     backgroundColor: pushNotifications.isSubscribed ? '#22c55e' : '#4b5563',
                                     border: '2px solid',
                                     borderColor: pushNotifications.isSubscribed ? '#16a34a' : '#374151',
@@ -448,13 +454,13 @@ export default function Profile() {
                             >
                                 <div
                                     style={{
-                                        width: '24px',
-                                        height: '24px',
-                                        borderRadius: '12px',
+                                        width: '26px',
+                                        height: '26px',
+                                        borderRadius: '13px',
                                         backgroundColor: 'white',
                                         position: 'absolute',
-                                        top: '2px',
-                                        left: pushNotifications.isSubscribed ? '32px' : '2px',
+                                        top: '3px',
+                                        left: pushNotifications.isSubscribed ? '33px' : '3px',
                                         transition: 'left 0.2s ease',
                                         boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                                     }}
@@ -464,14 +470,14 @@ export default function Profile() {
 
                         {/* Insecure Context Warning */}
                         {!pushNotifications.isSecureContext && (
-                            <div className="text-[10px] text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                            <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
                                 ⚠️ {t.profile.insecureContext}
                             </div>
                         )}
 
                         {/* Error Display */}
                         {pushNotifications.error && (
-                            <div className="text-[10px] text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                            <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
                                 ⚠️ {pushNotifications.error}
                             </div>
                         )}
@@ -480,49 +486,55 @@ export default function Profile() {
                         {pushNotifications.isSubscribed && (
                             <button
                                 onClick={() => pushNotifications.sendTestNotification()}
-                                className="w-full py-2 bg-white/10 hover:bg-white/20 text-white/70 rounded-lg text-[10px] font-bold uppercase transition-all"
+                                className="w-full py-3.5 btn-premium rounded-2xl text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2 appearance-none"
                             >
-                                🔔 {t.settings.testNotification || 'Send Test'}
+                                <Bell className="w-4 h-4" />
+                                {t.settings.testNotification || 'Send Test'}
                             </button>
                         )}
                     </div>
 
                     {/* Agent Wallet Toggle */}
-                    <div className="flex items-center justify-between px-4 py-2 bg-black/40 rounded-2xl border border-white/5">
-                        <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-between gap-3 p-4 bg-[rgba(0,0,0,0.4)] rounded-2xl border border-[rgba(255,255,255,0.08)]">
+                        <div className="flex items-center gap-3">
                             <Zap className="w-5 h-5 text-brand" />
                             <div>
-                                <div className="text-white text-xs font-black uppercase tracking-wider">{t.profile.agentWallet}</div>
-                                <div className="text-[10px] text-white/40 font-bold">{t.profile.agentWalletDesc}</div>
+                                <div className="text-white text-sm font-semibold">{t.profile.agentWallet}</div>
+                                <div className="text-xs text-white/50">{t.profile.agentWalletDesc}</div>
                             </div>
                         </div>
                         <button
                             onClick={agentWalletEnabled ? handleDisableAgentWallet : handleSetupAgentWallet}
                             disabled={settingUpAgent}
-                            className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 ${agentWalletEnabled ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
+                            className={`w-16 h-9 rounded-full transition-all relative flex-shrink-0 ${agentWalletEnabled ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
                         >
                             <div
-                                className={`w-5 h-5 rounded-full shadow-xl absolute top-1 transition-all duration-300 ${agentWalletEnabled ? 'right-1 bg-black' : 'left-1 bg-white/40'}`}
+                                className={`w-6 h-6 rounded-full shadow-xl absolute top-1 transition-all duration-300 ${agentWalletEnabled ? 'right-1 bg-black' : 'left-1 bg-white/40'}`}
                             />
                             {settingUpAgent && (
                                 <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-white" />
                             )}
                         </button>
                     </div>
+                    {agentSetupError && (
+                        <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+                            {agentSetupError}
+                        </div>
+                    )}
 
                     {/* Action Grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* Builder Fee */}
                         <div className="flex flex-col gap-3">
                             {builderFeeApproved ? (
-                                <div className="flex items-center justify-center gap-2 py-3.5 bg-brand/10 border border-brand/30 rounded-2xl text-brand font-black text-[10px] uppercase tracking-widest">
+                                <div className="flex items-center justify-center gap-2 py-3.5 bg-brand/15 border border-[var(--color-brand-primary-border)] rounded-2xl text-brand font-bold text-sm">
                                     <Check className="w-4 h-4" /> {t.profile.approved}
                                 </div>
                             ) : (
                                 <button
                                     onClick={handleApproveBuilderFee}
                                     disabled={approvingFee}
-                                    className="btn-premium py-3.5 text-[10px] uppercase tracking-widest font-black"
+                                    className="btn-premium py-3.5 text-sm tracking-wide font-bold"
                                 >
                                     {approvingFee ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t.profile.approveFee}
                                 </button>
@@ -533,14 +545,19 @@ export default function Profile() {
                         <button
                             onClick={handleSyncTrades}
                             disabled={syncing}
-                            className="bg-white/5 border border-white/10 hover:bg-white/10 py-3.5 rounded-2xl text-white/80 font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                            className="bg-bg-elevated border border-[var(--color-brand-primary-border)] hover:bg-brand/10 py-3.5 rounded-2xl text-brand font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-2 disabled:opacity-60 appearance-none"
                         >
                             {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                             {syncResult || t.profile.sync}
                         </button>
                     </div>
+                    {feeError && (
+                        <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+                            {feeError}
+                        </div>
+                    )}
                     {/* Stock & Export Row */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className={`grid ${hasEmbeddedWallet ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-3`}>
                         {/* Stock Trading */}
                         <button
                             onClick={async () => {
@@ -549,17 +566,20 @@ export default function Profile() {
                                 else { setSuccess(result.message); setTimeout(() => setSuccess(null), 3000); }
                             }}
                             disabled={dexAbstractionLoading}
-                            className={`py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border ${dexAbstractionEnabled ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-white/5 border-white/10 text-white/60'}`}
+                            className={`py-3.5 rounded-2xl text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2 border disabled:opacity-60 appearance-none ${dexAbstractionEnabled
+                                ? 'btn-premium text-black border-[var(--color-brand-primary)]'
+                                : 'bg-bg-elevated text-brand border-[var(--color-brand-primary-border)] hover:bg-brand/10'
+                                }`}
                         >
-                            {dexAbstractionEnabled ? <Check className="w-4 h-4" /> : <Zap className="w-4 h-4 text-blue-400" />}
+                            {dexAbstractionEnabled ? <Check className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
                             {t.markets.stocks}
                         </button>
 
                         {/* Export Wallet */}
-                        {privyUser?.wallet?.connectorType === 'embedded' && (
+                        {hasEmbeddedWallet && (
                             <button
                                 onClick={exportWallet}
-                                className="bg-purple-500/10 border border-purple-500/30 text-purple-400 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-500/20 transition-all flex items-center justify-center gap-2"
+                                className="bg-bg-elevated border border-[var(--color-brand-primary-border)] text-brand py-3.5 rounded-2xl text-sm font-bold tracking-wide hover:bg-brand/10 transition-all flex items-center justify-center gap-2 appearance-none"
                             >
                                 <Share2 className="w-4 h-4" />
                                 {t.profile.export}
@@ -573,7 +593,7 @@ export default function Profile() {
                     href={DOCS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-4 bg-brand/10 hover:bg-brand/20 border border-brand/30 rounded-2xl text-brand font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 btn-premium rounded-2xl text-black font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-2"
                 >
                     <Book className="w-4 h-4" />
                     {t.common.documentation}
@@ -584,9 +604,12 @@ export default function Profile() {
             {/* ===== DISCONNECT BUTTON ===== */}
             <button
                 onClick={logout}
-                className="w-full py-5 bg-white/5 hover:bg-red-500/10 hover:text-red-500 border border-white/10 hover:border-red-500/30 transition-all text-white/40 font-black uppercase tracking-[0.2em] text-xs rounded-[24px]"
+                className="w-full py-5 bg-[rgba(239,68,68,0.16)] hover:bg-[rgba(239,68,68,0.24)] border border-[rgba(248,113,113,0.38)] hover:border-[rgba(248,113,113,0.5)] transition-all text-red-300 font-black uppercase tracking-[0.18em] text-xs rounded-[24px] appearance-none"
             >
-                {t.wallet.disconnect}
+                <div className="flex items-center justify-center gap-2">
+                    <LogOut className="w-4 h-4" />
+                    <span>{t.wallet.disconnect}</span>
+                </div>
             </button>
         </div>
     );
