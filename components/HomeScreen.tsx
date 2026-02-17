@@ -8,7 +8,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, ArrowDownRight, LogIn, CreditCard, Search, TrendingUp, TrendingDown, Share2, ChevronDown, DollarSign, ArrowLeftRight, Clock } from 'lucide-react';
+import { Plus, X, ArrowUpRight, LogIn, CreditCard, TrendingUp, TrendingDown, ChevronDown, DollarSign, ArrowLeftRight, Clock } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import FeeCalculatorModal from '@/components/FeeCalculatorModal';
@@ -21,7 +21,7 @@ import MarketSelectModal from '@/components/MarketSelectModal';
 import type { Market } from '@/hooks/useHyperliquid';
 import type { Position } from '@/types/hyperliquid';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
-import { CATEGORIES, getTokenCategories, isInCategory, type TokenCategory } from '@/lib/token-categories';
+import { CATEGORIES, isInCategory, type TokenCategory } from '@/lib/token-categories';
 
 const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
 
@@ -31,36 +31,35 @@ interface HomeScreenProps {
     onSpotClick?: () => void;
 }
 
-export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: HomeScreenProps = {}) {
+export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProps = {}) {
     const router = useRouter();
     const { t } = useLanguage();
     const { currency, toggleCurrency, formatCurrency } = useCurrency();
     const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl, openOrders } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
     const { user } = useUser();
-    const [watchlist, setWatchlist] = useState<string[]>([]);
+    const [watchlist, setWatchlist] = useState<string[]>(() => {
+        if (typeof window === 'undefined') return [];
+        const saved = localStorage.getItem(WATCHLIST_STORAGE_KEY);
+        if (!saved) return [];
+
+        try {
+            return JSON.parse(saved);
+        } catch {
+            return [];
+        }
+    });
     const [mounted, setMounted] = useState(false);
     const [showAddDropdown, setShowAddDropdown] = useState(false);
     const [sharePosition, setSharePosition] = useState<Position | null>(null);
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showFeeCalculator, setShowFeeCalculator] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<TokenCategory>('l1');
     const [isPositionsExpanded, setIsPositionsExpanded] = useState(false);
 
 
     useEffect(() => {
-        setMounted(true);
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem(WATCHLIST_STORAGE_KEY);
-            if (saved) {
-                try {
-                    setWatchlist(JSON.parse(saved));
-                } catch (e) {
-                    // Silently fail on parse error
-                }
-            }
-        }
+        queueMicrotask(() => setMounted(true));
     }, []);
 
     useEffect(() => {
@@ -363,18 +362,28 @@ export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: 
                     <div className="space-y-1 mb-6">
                         {cryptoGainers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                            const tokenName = getTokenFullName(ticker);
                             return (
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-4 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-3 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
                                 >
                                     <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
-                                    <div className="flex-1 text-left min-w-0">
+                                    <div className="text-left min-w-0 w-[80px]">
                                         <div className="font-bold text-white text-base">{ticker}</div>
+                                        <div className="text-xs text-[var(--color-text-secondary)] truncate">{tokenName}</div>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <div className="text-brand font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                    <div className="flex-1 h-[34px] opacity-90 flex items-center justify-center">
+                                        <MiniChart
+                                            symbol={market.symbol}
+                                            isStock={market.isStock === true}
+                                            width={88}
+                                            height={34}
+                                        />
+                                    </div>
+                                    <div className="text-right w-[132px] shrink-0">
+                                        <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-positive font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
@@ -389,18 +398,28 @@ export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: 
                     <div className="space-y-1">
                         {cryptoLosers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                            const tokenName = getTokenFullName(ticker);
                             return (
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-4 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-3 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
                                 >
                                     <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
-                                    <div className="flex-1 text-left min-w-0">
+                                    <div className="text-left min-w-0 w-[80px]">
                                         <div className="font-bold text-white text-base">{ticker}</div>
+                                        <div className="text-xs text-[var(--color-text-secondary)] truncate">{tokenName}</div>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <div className="text-brand font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                    <div className="flex-1 h-[34px] opacity-90 flex items-center justify-center">
+                                        <MiniChart
+                                            symbol={market.symbol}
+                                            isStock={market.isStock === true}
+                                            width={88}
+                                            height={34}
+                                        />
+                                    </div>
+                                    <div className="text-right w-[132px] shrink-0">
+                                        <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-negative font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
@@ -428,18 +447,28 @@ export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: 
                     <div className="space-y-1 mb-6">
                         {stockGainers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                            const tokenName = getTokenFullName(ticker);
                             return (
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-4 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-3 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
                                 >
                                     <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
-                                    <div className="flex-1 text-left min-w-0">
+                                    <div className="text-left min-w-0 w-[80px]">
                                         <div className="font-bold text-white text-base">{ticker}</div>
+                                        <div className="text-xs text-[var(--color-text-secondary)] truncate">{tokenName}</div>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <div className="text-brand font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                    <div className="flex-1 h-[34px] opacity-90 flex items-center justify-center">
+                                        <MiniChart
+                                            symbol={market.symbol}
+                                            isStock={market.isStock === true}
+                                            width={88}
+                                            height={34}
+                                        />
+                                    </div>
+                                    <div className="text-right w-[132px] shrink-0">
+                                        <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-positive font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
@@ -454,18 +483,28 @@ export default function HomeScreen({ onTokenClick, onTradeClick, onSpotClick }: 
                     <div className="space-y-1">
                         {stockLosers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
+                            const tokenName = getTokenFullName(ticker);
                             return (
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-4 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-3 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
                                 >
                                     <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
-                                    <div className="flex-1 text-left min-w-0">
+                                    <div className="text-left min-w-0 w-[80px]">
                                         <div className="font-bold text-white text-base">{ticker}</div>
+                                        <div className="text-xs text-[var(--color-text-secondary)] truncate">{tokenName}</div>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <div className="text-brand font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
+                                    <div className="flex-1 h-[34px] opacity-90 flex items-center justify-center">
+                                        <MiniChart
+                                            symbol={market.symbol}
+                                            isStock={market.isStock === true}
+                                            width={88}
+                                            height={34}
+                                        />
+                                    </div>
+                                    <div className="text-right w-[132px] shrink-0">
+                                        <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-negative font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
@@ -644,27 +683,28 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove, showRemoveButton =
 
             <div className="flex items-center gap-3">
                 {/* Token Logo */}
-                <div className="shrink-0">
-                    <TokenLogo symbol={market.symbol} size={36} className="rounded-full" />
-                </div>
+                <TokenLogo symbol={market.symbol} size={36} className="rounded-full shrink-0" />
 
                 {/* Token Name */}
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 w-[80px]">
                     <div className="font-bold text-white text-base">{cleanTicker}</div>
+                    <div className="text-xs text-[var(--color-text-secondary)] truncate">
+                        {getTokenFullName(cleanTicker)}
+                    </div>
                 </div>
 
-                {/* Mini Chart - Hidden on small mobile, visible on larger screens */}
-                <div className="hidden sm:block w-20 md:w-28 h-10 md:h-12 shrink-0 opacity-90">
+                {/* Mini Chart */}
+                <div className="flex-1 h-[34px] opacity-90 flex items-center justify-center">
                     <MiniChart
                         symbol={market.symbol}
                         isStock={market.isStock === true}
-                        width={112}
-                        height={48}
+                        width={88}
+                        height={34}
                     />
                 </div>
 
                 {/* Price and Change - Right aligned */}
-                <div className="flex flex-col items-end shrink-0">
+                <div className="flex flex-col items-end w-[132px] shrink-0">
                     <div className="text-brand font-bold text-base font-mono mb-0.5 whitespace-nowrap">
                         {market.price ? formatCurrency(market.price) : '0.00'}
                     </div>

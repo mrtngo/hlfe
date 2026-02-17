@@ -2,11 +2,7 @@
 
 import { useMemo, useRef, useEffect, useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { cachedFetch, apiCache } from '@/lib/api-cache';
 import { API_URL } from '@/lib/hyperliquid/client';
-
-// Rayo Lightning Yellow
-const RAYO_YELLOW = '#FFD60A';
 
 interface MiniChartProps {
     symbol: string;
@@ -70,14 +66,16 @@ export default function MiniChart({ symbol, isStock = false, width = 64, height 
                 if (response.ok) {
                     const candleData = await response.json();
                     if (Array.isArray(candleData) && candleData.length > 0) {
-                        const prices = candleData.map((c: any) => parseFloat(c.c || '0')).filter((p: number) => p > 0);
+                        const prices = candleData
+                            .map((c: { c?: string }) => parseFloat(c.c || '0'))
+                            .filter((p: number) => p > 0);
                         if (prices.length > 0) {
                             chartCache.set(cacheKey, { data: prices, timestamp: Date.now() });
                             setSparklineData(prices);
                         }
                     }
                 }
-            } catch (err) {
+            } catch {
                 // Silently fail - sparkline is nice-to-have
             } finally {
                 setLoading(false);
@@ -134,38 +132,24 @@ export default function MiniChart({ symbol, isStock = false, width = 64, height 
         }
     }
 
-    // Create area path (same as line but closed at bottom)
-    const areaPath = pathData + ` L ${pathPoints[pathPoints.length - 1].x},${height} L ${pathPoints[0].x},${height} Z`;
-
     // Determine color based on price trend
     const firstPrice = prices[0];
     const lastPrice = prices[prices.length - 1];
     const isPositive = lastPrice >= firstPrice;
-    const chartColor = isPositive ? '#34C759' : '#FF3B30'; // iOS green and red
-
-    // Unique ID for gradient to avoid conflicts between multiple instances
-    const gradientId = `gradient-${symbol.replace(/[^a-zA-Z0-9]/g, '')}`;
+    const chartColor = isPositive ? '#4FB7B4' : '#E05858';
+    const lastPoint = pathPoints[pathPoints.length - 1];
 
     return (
         <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-            <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={chartColor} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
-                </linearGradient>
-            </defs>
-            <path
-                d={areaPath}
-                fill={`url(#${gradientId})`}
-            />
             <path
                 d={pathData}
                 fill="none"
                 stroke={chartColor}
-                strokeWidth="2"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
+            <circle cx={lastPoint.x} cy={lastPoint.y} r="2.8" fill={chartColor} />
         </svg>
     );
 }
