@@ -305,7 +305,7 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                         <p className="text-xs mt-2 opacity-60">{t.home.tapToAddTokens}</p>
                     </div>
                 ) : (
-                    <div id="home-market-list" className="space-y-4">
+                    <div id="home-market-list" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {watchlistMarkets.map((market) => (
                             <WatchlistItem
                                 key={market.name}
@@ -359,7 +359,7 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                         <TrendingUp className="w-4 h-4 text-positive" />
                         <span className="text-sm font-bold text-positive">{t.home.gainers}</span>
                     </div>
-                    <div className="space-y-1 mb-6">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                         {cryptoGainers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             const tokenName = getTokenFullName(ticker);
@@ -367,7 +367,8 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-3 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    style={{ paddingTop: '20px', paddingBottom: '20px' }}
                                 >
                                     <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
                                     <div className="text-left min-w-0 w-[80px]">
@@ -395,7 +396,7 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                         <TrendingDown className="w-4 h-4 text-negative" />
                         <span className="text-sm font-bold text-negative">{t.home.losers}</span>
                     </div>
-                    <div className="space-y-1">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {cryptoLosers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             const tokenName = getTokenFullName(ticker);
@@ -403,7 +404,8 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-3 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    style={{ paddingTop: '20px', paddingBottom: '20px' }}
                                 >
                                     <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
                                     <div className="text-left min-w-0 w-[80px]">
@@ -444,7 +446,7 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                         <TrendingUp className="w-4 h-4 text-positive" />
                         <span className="text-sm font-bold text-positive">{t.home.gainers}</span>
                     </div>
-                    <div className="space-y-1 mb-6">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                         {stockGainers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             const tokenName = getTokenFullName(ticker);
@@ -452,7 +454,8 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-3 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    style={{ paddingTop: '20px', paddingBottom: '20px' }}
                                 >
                                     <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
                                     <div className="text-left min-w-0 w-[80px]">
@@ -480,7 +483,7 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                         <TrendingDown className="w-4 h-4 text-negative" />
                         <span className="text-sm font-bold text-negative">{t.home.losers}</span>
                     </div>
-                    <div className="space-y-1">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {stockLosers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             const tokenName = getTokenFullName(ticker);
@@ -488,7 +491,8 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                                 <button
                                     key={market.name}
                                     onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 py-4 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    className="w-full flex items-center gap-3 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
+                                    style={{ paddingTop: '20px', paddingBottom: '20px' }}
                                 >
                                     <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
                                     <div className="text-left min-w-0 w-[80px]">
@@ -611,7 +615,7 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                     }
 
                     return (
-                        <div className="space-y-4">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             {categoryMarkets.map((market) => (
                                 <WatchlistItem
                                     key={market.name}
@@ -667,7 +671,8 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove, showRemoveButton =
 
     return (
         <div
-            className="relative bg-bg-elevated hover:bg-bg-hover rounded-2xl p-4 transition-all cursor-pointer group active:scale-[0.98]"
+            className="relative bg-bg-elevated hover:bg-bg-hover rounded-2xl transition-all cursor-pointer group active:scale-[0.98]"
+            style={{ padding: '20px' }}
             onClick={() => onTokenClick(market.symbol)}
         >
             {/* Remove button - appears on hover */}
