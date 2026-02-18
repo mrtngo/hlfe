@@ -383,8 +383,66 @@ export default function OrderPanel() {
                                 max={account.availableMargin}
                             />
 
+                            {/* Margin Slider */}
+                            <div style={{ marginTop: '4px' }}>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max={maxMarginAfterFees > 0 ? maxMarginAfterFees.toFixed(2) : "0"}
+                                    step="0.01"
+                                    value={marginValue || 0}
+                                    onChange={(e) => setMarginAmount(e.target.value)}
+                                    style={{
+                                        width: '100%',
+                                        height: '6px',
+                                        borderRadius: '3px',
+                                        appearance: 'none',
+                                        WebkitAppearance: 'none',
+                                        background: maxMarginAfterFees > 0
+                                            ? `linear-gradient(to right, #FFD60A 0%, #FFD60A ${(marginValue / maxMarginAfterFees) * 100}%, rgba(255,255,255,0.1) ${(marginValue / maxMarginAfterFees) * 100}%, rgba(255,255,255,0.1) 100%)`
+                                            : 'rgba(255,255,255,0.1)',
+                                        cursor: 'pointer',
+                                    }}
+                                />
+                                <div className="flex justify-between text-xs text-coffee-medium" style={{ marginTop: '4px' }}>
+                                    <span>0</span>
+                                    <span>{formatCurrency(maxMarginAfterFees)} max</span>
+                                </div>
+                            </div>
 
-
+                            {/* Quick percentage buttons */}
+                            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                {[25, 50, 75, 100].map((pct) => (
+                                    <button
+                                        key={pct}
+                                        onClick={() => setMarginAmount((maxMarginAfterFees * pct / 100).toFixed(2))}
+                                        style={{
+                                            flex: 1,
+                                            padding: '8px 0',
+                                            borderRadius: '10px',
+                                            fontSize: '13px',
+                                            fontWeight: 600,
+                                            cursor: 'pointer',
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            color: 'rgba(255,255,255,0.6)',
+                                            transition: 'all 0.15s',
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255,214,10,0.12)';
+                                            e.currentTarget.style.borderColor = 'rgba(255,214,10,0.3)';
+                                            e.currentTarget.style.color = '#FFD60A';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                                            e.currentTarget.style.color = 'rgba(255,255,255,0.6)';
+                                        }}
+                                    >
+                                        {pct}%
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Leverage Selector */}
