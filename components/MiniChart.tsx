@@ -28,10 +28,10 @@ export default function MiniChart({ symbol, isStock = false, width = 64, height 
     // Fetch historical data only once per symbol (with caching)
     useEffect(() => {
         if (fetchedRef.current) return;
-        
+
         const cacheKey = `minichart:${symbol}`;
         const cached = chartCache.get(cacheKey);
-        
+
         // Use cache if valid
         if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
             setSparklineData(cached.data);
@@ -45,10 +45,10 @@ export default function MiniChart({ symbol, isStock = false, width = 64, height 
             try {
                 const baseCoin = symbol.split('-')[0];
                 const coinName = isStock ? `xyz:${baseCoin}` : baseCoin;
-                
+
                 const endTime = Date.now();
                 const startTime = endTime - (24 * 60 * 60 * 1000); // Last 24 hours
-                
+
                 const response = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -123,33 +123,55 @@ export default function MiniChart({ symbol, isStock = false, width = 64, height 
         return { x, y };
     });
 
-    // Create smooth path
+    // Create smooth bezier curve path
     let pathData = '';
     if (pathPoints.length > 0) {
         pathData = `M ${pathPoints[0].x},${pathPoints[0].y}`;
         for (let i = 1; i < pathPoints.length; i++) {
-            pathData += ` L ${pathPoints[i].x},${pathPoints[i].y}`;
+            const prev = pathPoints[i - 1];
+            const curr = pathPoints[i];
+            const cpx = (prev.x + curr.x) / 2;
+            pathData += ` C ${cpx},${prev.y} ${cpx},${curr.y} ${curr.x},${curr.y}`;
         }
     }
+
+    // Create area fill path (line path + close to bottom)
+    const areaPath = pathPoints.length > 0
+        ? `${pathData} L ${pathPoints[pathPoints.length - 1].x},${height} L ${pathPoints[0].x},${height} Z`
+        : '';
 
     // Determine color based on price trend
     const firstPrice = prices[0];
     const lastPrice = prices[prices.length - 1];
     const isPositive = lastPrice >= firstPrice;
     const chartColor = isPositive ? '#4FB7B4' : '#E05858';
+    const gradientId = `gradient-${symbol.replace(/[^a-zA-Z0-9]/g, '')}`;
     const lastPoint = pathPoints[pathPoints.length - 1];
 
     return (
         <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+            <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={chartColor} stopOpacity="0.3" />
+                    <stop offset="100%" stopColor={chartColor} stopOpacity="0" />
+                </linearGradient>
+            </defs>
+            {/* Gradient area fill */}
+            <path
+                d={areaPath}
+                fill={`url(#${gradientId})`}
+            />
+            {/* Line */}
             <path
                 d={pathData}
                 fill="none"
                 stroke={chartColor}
-                strokeWidth="2.5"
+                strokeWidth="1.8"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
-            <circle cx={lastPoint.x} cy={lastPoint.y} r="2.8" fill={chartColor} />
+            {/* Endpoint dot */}
+            <circle cx={lastPoint.x} cy={lastPoint.y} r="2" fill={chartColor} />
         </svg>
     );
 }
