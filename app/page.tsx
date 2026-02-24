@@ -118,7 +118,6 @@ export default function Home() {
                                         setView('trading');
                                     }}
                                     onTradeClick={() => setView('trading')}
-                                    onSpotClick={() => setView('spot')}
                                 />
                             </div>
                         ) : view === 'history' ? (

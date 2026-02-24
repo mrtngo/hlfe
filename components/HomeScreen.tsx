@@ -2,13 +2,12 @@
 
 import { useState, useEffect, memo, useCallback, useMemo } from 'react';
 
-import { useRouter } from 'next/navigation';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, LogIn, CreditCard, TrendingUp, TrendingDown, ChevronDown, DollarSign, ArrowLeftRight, Clock } from 'lucide-react';
+import { Plus, X, ArrowUpRight, LogIn, CreditCard, TrendingUp, TrendingDown, ChevronDown, DollarSign, Clock } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
 import FeeCalculatorModal from '@/components/FeeCalculatorModal';
@@ -28,11 +27,9 @@ const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
 interface HomeScreenProps {
     onTokenClick?: (symbol: string) => void;
     onTradeClick?: () => void;
-    onSpotClick?: () => void;
 }
 
-export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProps = {}) {
-    const router = useRouter();
+export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
     const { t } = useLanguage();
     const { currency, toggleCurrency, formatCurrency } = useCurrency();
     const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl, openOrders } = useHyperliquid();
@@ -540,26 +537,6 @@ export default function HomeScreen({ onTokenClick, onSpotClick }: HomeScreenProp
                 isOpen={showFeeCalculator}
                 onClose={() => setShowFeeCalculator(false)}
             />
-
-            {/* Spot Trading Banner */}
-            <button
-                onClick={() => {
-                    if (onSpotClick) onSpotClick();
-                    else router.push('/spot');
-                }}
-                className="w-full p-4 flex items-center justify-between group transition-all active:scale-[0.98] rounded-2xl glass-card border-[var(--color-positive-muted)]"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-[var(--color-positive)] flex items-center justify-center shrink-0">
-                        <ArrowLeftRight className="w-6 h-6 text-white" strokeWidth={2.5} />
-                    </div>
-                    <div className="text-left">
-                        <h3 className="font-bold text-white text-base">Spot Trading</h3>
-                        <p className="text-sm text-positive">{t.home.buyAndSell}</p>
-                    </div>
-                </div>
-                <ArrowUpRight className="w-5 h-5 text-positive shrink-0" strokeWidth={2.5} />
-            </button>
 
             {/* Categories Section */}
             <div className="glass-card rounded-2xl p-5">
