@@ -19,7 +19,7 @@ import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotTradingPanel from '@/components/SpotTradingPanel';
 import Trollbox from '@/components/Trollbox';
-import { BarChart3, History, User, Trophy, Coins, MessageSquare } from 'lucide-react';
+import { BarChart3, History, User, Trophy, MessageSquare } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
@@ -231,21 +231,6 @@ export default function Home() {
                     >
                         <BarChart3 className="w-7 h-7" strokeWidth={2} />
                         <span className="text-[11px] font-semibold">{t.nav.trade}</span>
-                    </button>
-
-                    {/* Spot */}
-                    <button
-                        onClick={() => setView('spot')}
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'spot' ? 'scale-110' : ''}`}
-                        style={{
-                            color: '#FFFF00',
-                            background: 'transparent',
-                            filter: view === 'spot' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: view === 'spot' ? 1 : 0.6
-                        }}
-                    >
-                        <Coins className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">Spot</span>
                     </button>
 
                     {/* History */}

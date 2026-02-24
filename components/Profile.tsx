@@ -239,8 +239,11 @@ export default function Profile() {
                                 <div className="px-3 py-1 bg-white/5 rounded-full border border-white/10 flex items-center gap-2">
                                     <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
                                     <span className="text-white/40 text-[10px] font-mono font-bold tracking-widest">{formatAddress(address)}</span>
-                                    <button onClick={copyAddress} className="text-white/40 hover:text-brand transition-colors">
-                                        {copied ? <Check className="w-3 h-3 text-brand" /> : <Copy className="w-3 h-3" />}
+                                    <button
+                                        onClick={copyAddress}
+                                        className="w-6 h-6 rounded-md border border-brand/35 bg-black/60 text-brand flex items-center justify-center hover:bg-brand hover:text-black transition-all appearance-none"
+                                    >
+                                        {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                                     </button>
                                 </div>
                             </div>
@@ -343,7 +346,7 @@ export default function Profile() {
                     </code>
                     <button
                         onClick={copyReferralLink}
-                        className="p-3 bg-brand/10 border border-brand/30 rounded-xl text-brand hover:bg-brand hover:text-black transition-all active:scale-95"
+                        className="p-3 rounded-xl border border-brand/40 bg-black/60 text-brand hover:bg-brand hover:text-black transition-all active:scale-95 appearance-none"
                     >
                         {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
                     </button>
@@ -404,8 +407,8 @@ export default function Profile() {
                             <button
                                 onClick={() => setLanguage('en')}
                                 className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all w-full appearance-none ${language === 'en'
-                                    ? 'bg-brand text-black shadow-lg shadow-brand/20'
-                                    : 'bg-bg-elevated text-brand hover:text-brand border border-[var(--color-brand-primary-border)]'
+                                    ? 'bg-brand text-black border border-brand shadow-lg shadow-brand/20'
+                                    : 'bg-black/50 text-brand border border-brand/35 hover:bg-brand/15'
                                     }`}
                             >
                                 {t.settings.english}
@@ -413,8 +416,8 @@ export default function Profile() {
                             <button
                                 onClick={() => setLanguage('es')}
                                 className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all w-full appearance-none ${language === 'es'
-                                    ? 'bg-brand text-black shadow-lg shadow-brand/20'
-                                    : 'bg-bg-elevated text-brand hover:text-brand border border-[var(--color-brand-primary-border)]'
+                                    ? 'bg-brand text-black border border-brand shadow-lg shadow-brand/20'
+                                    : 'bg-black/50 text-brand border border-brand/35 hover:bg-brand/15'
                                     }`}
                             >
                                 {t.settings.spanish}
