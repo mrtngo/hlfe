@@ -4,7 +4,11 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.expandedContent {
+  padding: 0 var(--space-3) var(--space-3);
 }
 
 .stat {
@@ -109,4 +113,58 @@
 .value--warning {
   color: var(--color-warning);
   text-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
+}
+
+/* Asset Description */
+
+.descriptionCard {
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--space-4);
+}
+
+.descriptionToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.descriptionIcon {
+  width: 12px;
+  height: 12px;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.descriptionTitle {
+  flex: 1;
+  font-size: 9px;
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  opacity: 0.8;
+}
+
+.descriptionChevron {
+  width: 12px;
+  height: 12px;
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.descriptionText {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
 }

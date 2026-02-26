@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { TrendingUp, DollarSign, Activity, ArrowUpCircle, ArrowDownCircle, Zap } from 'lucide-react';
+import { TrendingUp, DollarSign, Activity, ArrowUpCircle, ArrowDownCircle, Zap, ChevronDown, BookOpen } from 'lucide-react';
+import { getTokenDescription } from '@/lib/constants/tokens';
 import styles from './MarketStats.module.css';
 
 type StatVariant = 'brand' | 'info' | 'positive' | 'negative' | 'warning';
@@ -18,6 +20,7 @@ export default function MarketStats() {
     const { selectedMarket, getMarket } = useHyperliquid();
     const market = getMarket(selectedMarket);
     const { t, formatCurrency } = useLanguage();
+    const [descExpanded, setDescExpanded] = useState(true);
 
     if (!market) {
         return null;
@@ -87,27 +90,51 @@ export default function MarketStats() {
         },
     ];
 
+    const description = getTokenDescription(market.name);
+
     return (
-        <div className={styles.container}>
-            {stats.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                    <div
-                        key={index}
-                        className={`${styles.stat} ${styles[`stat--${stat.variant}`]}`}
-                    >
-                        <div className={styles.header}>
-                            <Icon className={`${styles.icon} ${styles[`icon--${stat.variant}`]}`} />
-                            <span className={styles.label}>
-                                {stat.label}
-                            </span>
-                        </div>
-                        <div className={`${styles.value} ${styles[`value--${stat.variant}`]}`}>
-                            {stat.value}
-                        </div>
+        <div className={styles.descriptionCard}>
+            <button
+                className={styles.descriptionToggle}
+                onClick={() => setDescExpanded(v => !v)}
+            >
+                <BookOpen className={styles.descriptionIcon} />
+                <span className={styles.descriptionTitle}>Sobre {market.name}</span>
+                <ChevronDown
+                    className={styles.descriptionChevron}
+                    style={{ transform: descExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                />
+            </button>
+
+            {descExpanded && (
+                <div className={styles.expandedContent}>
+                    <div className={styles.container}>
+                        {stats.map((stat, index) => {
+                            const Icon = stat.icon;
+                            return (
+                                <div
+                                    key={index}
+                                    className={`${styles.stat} ${styles[`stat--${stat.variant}`]}`}
+                                >
+                                    <div className={styles.header}>
+                                        <Icon className={`${styles.icon} ${styles[`icon--${stat.variant}`]}`} />
+                                        <span className={styles.label}>
+                                            {stat.label}
+                                        </span>
+                                    </div>
+                                    <div className={`${styles.value} ${styles[`value--${stat.variant}`]}`}>
+                                        {stat.value}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                );
-            })}
+
+                    {description && (
+                        <p className={styles.descriptionText}>{description}</p>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
