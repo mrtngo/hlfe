@@ -380,7 +380,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                             height={34}
                                         />
                                     </div>
-                                    <div className="text-right w-[132px] shrink-0">
+                                    <div className="text-right w-[104px] shrink-0">
                                         <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-positive font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
@@ -417,7 +417,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                             height={34}
                                         />
                                     </div>
-                                    <div className="text-right w-[132px] shrink-0">
+                                    <div className="text-right w-[104px] shrink-0">
                                         <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-negative font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
@@ -467,7 +467,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                             height={34}
                                         />
                                     </div>
-                                    <div className="text-right w-[132px] shrink-0">
+                                    <div className="text-right w-[104px] shrink-0">
                                         <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-positive font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
@@ -504,7 +504,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                             height={34}
                                         />
                                     </div>
-                                    <div className="text-right w-[132px] shrink-0">
+                                    <div className="text-right w-[104px] shrink-0">
                                         <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-negative font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
@@ -686,7 +686,7 @@ const WatchlistItem = memo(({ market, onTokenClick, onRemove, showRemoveButton =
                 </div>
 
                 {/* Price and Change - Right aligned */}
-                <div className="flex flex-col items-end w-[132px] shrink-0">
+                <div className="flex flex-col items-end w-[104px] shrink-0">
                     <div className="text-brand font-bold text-base font-mono mb-0.5 whitespace-nowrap">
                         {market.price ? formatCurrency(market.price) : '0.00'}
                     </div>

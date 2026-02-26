@@ -7,32 +7,46 @@ import { API_URL } from '@/lib/hyperliquid/client';
 interface MiniChartProps {
     symbol: string;
     isStock?: boolean;
-    width?: number;
-    height?: number;
+    width?: number;  // ignored, kept for call-site compat
+    height?: number; // ignored, kept for call-site compat
 }
 
-// Cache for mini chart candles - shared across all instances
 const chartCache = new Map<string, { data: number[], timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache for mini charts
+const CACHE_TTL = 5 * 60 * 1000;
 
-export default function MiniChart({ symbol, isStock = false, width = 64, height = 40 }: MiniChartProps) {
+export default function MiniChart({ symbol, isStock = false }: MiniChartProps) {
     const { markets } = useHyperliquid();
     const [sparklineData, setSparklineData] = useState<number[]>([]);
     const [loading, setLoading] = useState(true);
+    const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
     const fetchedRef = useRef(false);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Get current price from shared market data (already updated via WebSocket)
     const market = markets.find(m => m.symbol === symbol);
     const currentPrice = market?.price || 0;
 
-    // Fetch historical data only once per symbol (with caching)
+    // Measure real container dimensions — no SVG rendered until we have them
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const observe = () => {
+            const { width, height } = el.getBoundingClientRect();
+            if (width > 0 && height > 0) setDims({ w: width, h: height });
+        };
+
+        const ro = new ResizeObserver(observe);
+        ro.observe(el);
+        observe(); // try immediately in case already laid out
+
+        return () => ro.disconnect();
+    }, []);
+
     useEffect(() => {
         if (fetchedRef.current) return;
 
         const cacheKey = `minichart:${symbol}`;
         const cached = chartCache.get(cacheKey);
-
-        // Use cache if valid
         if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
             setSparklineData(cached.data);
             setLoading(false);
@@ -40,33 +54,26 @@ export default function MiniChart({ symbol, isStock = false, width = 64, height 
             return;
         }
 
-        // Fetch minimal historical data for sparkline
-        const fetchSparklineData = async () => {
+        (async () => {
             try {
                 const baseCoin = symbol.split('-')[0];
                 const coinName = isStock ? `xyz:${baseCoin}` : baseCoin;
-
                 const endTime = Date.now();
-                const startTime = endTime - (24 * 60 * 60 * 1000); // Last 24 hours
+                const startTime = endTime - 24 * 60 * 60 * 1000;
 
-                const response = await fetch(`${API_URL}/info`, {
+                const res = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         type: 'candleSnapshot',
-                        req: {
-                            coin: coinName,
-                            interval: '1h',
-                            startTime,
-                            endTime
-                        }
+                        req: { coin: coinName, interval: '1h', startTime, endTime }
                     })
                 });
 
-                if (response.ok) {
-                    const candleData = await response.json();
-                    if (Array.isArray(candleData) && candleData.length > 0) {
-                        const prices = candleData
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        const prices = data
                             .map((c: { c?: string }) => parseFloat(c.c || '0'))
                             .filter((p: number) => p > 0);
                         if (prices.length > 0) {
@@ -76,102 +83,76 @@ export default function MiniChart({ symbol, isStock = false, width = 64, height 
                     }
                 }
             } catch {
-                // Silently fail - sparkline is nice-to-have
+                // sparkline is nice-to-have
             } finally {
                 setLoading(false);
                 fetchedRef.current = true;
             }
-        };
-
-        fetchSparklineData();
+        })();
     }, [symbol, isStock]);
 
-    // Reset fetch flag when symbol changes
-    useEffect(() => {
-        fetchedRef.current = false;
-    }, [symbol]);
+    useEffect(() => { fetchedRef.current = false; }, [symbol]);
 
-    // Combine historical data with current price for up-to-date display
     const prices = useMemo(() => {
-        if (sparklineData.length === 0) {
-            return currentPrice > 0 ? [currentPrice, currentPrice] : [];
-        }
-        // Replace last price with current live price from WebSocket
+        if (sparklineData.length === 0) return currentPrice > 0 ? [currentPrice, currentPrice] : [];
         return [...sparklineData.slice(0, -1), currentPrice];
     }, [sparklineData, currentPrice]);
 
-    if (loading || prices.length < 2) {
-        return (
-            <div className="w-full h-full flex items-center justify-center">
-                <div className="w-full h-2 bg-primary/20 rounded animate-pulse" />
-            </div>
-        );
-    }
+    const chart = useMemo(() => {
+        if (!dims || prices.length < 2) return null;
+        const { w, h } = dims;
 
-    // Calculate min and max for scaling with padding
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
-    const priceRange = maxPrice - minPrice || 1;
-    const paddedMin = minPrice - (priceRange * 0.05);
-    const paddedMax = maxPrice + (priceRange * 0.05);
-    const paddedRange = paddedMax - paddedMin || 1;
+        const min = Math.min(...prices);
+        const max = Math.max(...prices);
+        const range = max - min || 1;
+        const pMin = min - range * 0.05;
+        const pMax = max + range * 0.05;
+        const pRange = pMax - pMin;
 
-    // Generate SVG path points for smooth curve
-    const pathPoints = prices.map((price, index) => {
-        const x = (index / (prices.length - 1 || 1)) * width;
-        const y = height - ((price - paddedMin) / paddedRange) * height;
-        return { x, y };
-    });
+        const pts = prices.map((p, i) => ({
+            x: (i / (prices.length - 1)) * w,
+            y: h - ((p - pMin) / pRange) * h,
+        }));
 
-    // Create smooth bezier curve path
-    let pathData = '';
-    if (pathPoints.length > 0) {
-        pathData = `M ${pathPoints[0].x},${pathPoints[0].y}`;
-        for (let i = 1; i < pathPoints.length; i++) {
-            const prev = pathPoints[i - 1];
-            const curr = pathPoints[i];
+        let line = `M ${pts[0].x},${pts[0].y}`;
+        for (let i = 1; i < pts.length; i++) {
+            const prev = pts[i - 1], curr = pts[i];
             const cpx = (prev.x + curr.x) / 2;
-            pathData += ` C ${cpx},${prev.y} ${cpx},${curr.y} ${curr.x},${curr.y}`;
+            line += ` C ${cpx},${prev.y} ${cpx},${curr.y} ${curr.x},${curr.y}`;
         }
-    }
 
-    // Create area fill path (line path + close to bottom)
-    const areaPath = pathPoints.length > 0
-        ? `${pathData} L ${pathPoints[pathPoints.length - 1].x},${height} L ${pathPoints[0].x},${height} Z`
-        : '';
+        const area = `${line} L ${pts[pts.length - 1].x},${h} L ${pts[0].x},${h} Z`;
+        const isUp = prices[prices.length - 1] >= prices[0];
+        const color = isUp ? '#4FB7B4' : '#E05858';
+        const gid = `g-${symbol.replace(/[^a-zA-Z0-9]/g, '')}`;
 
-    // Determine color based on price trend
-    const firstPrice = prices[0];
-    const lastPrice = prices[prices.length - 1];
-    const isPositive = lastPrice >= firstPrice;
-    const chartColor = isPositive ? '#4FB7B4' : '#E05858';
-    const gradientId = `gradient-${symbol.replace(/[^a-zA-Z0-9]/g, '')}`;
-    const lastPoint = pathPoints[pathPoints.length - 1];
+        return { w, h, line, area, color, gid, last: pts[pts.length - 1] };
+    }, [dims, prices, symbol]);
 
     return (
-        <svg className="w-full h-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-            <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={chartColor} stopOpacity="0.3" />
-                    <stop offset="100%" stopColor={chartColor} stopOpacity="0" />
-                </linearGradient>
-            </defs>
-            {/* Gradient area fill */}
-            <path
-                d={areaPath}
-                fill={`url(#${gradientId})`}
-            />
-            {/* Line */}
-            <path
-                d={pathData}
-                fill="none"
-                stroke={chartColor}
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-            {/* Endpoint dot */}
-            <circle cx={lastPoint.x} cy={lastPoint.y} r="2" fill={chartColor} />
-        </svg>
+        <div ref={containerRef} style={{ width: '100%', height: '100%', display: 'block' }}>
+            {loading || !chart ? (
+                <div className="w-full h-full flex items-center">
+                    <div className="w-full h-2 bg-primary/20 rounded animate-pulse" />
+                </div>
+            ) : (
+                <svg
+                    width={chart.w}
+                    height={chart.h}
+                    viewBox={`0 0 ${chart.w} ${chart.h}`}
+                    style={{ display: 'block' }}
+                >
+                    <defs>
+                        <linearGradient id={chart.gid} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={chart.color} stopOpacity="0.3" />
+                            <stop offset="100%" stopColor={chart.color} stopOpacity="0" />
+                        </linearGradient>
+                    </defs>
+                    <path d={chart.area} fill={`url(#${chart.gid})`} />
+                    <path d={chart.line} fill="none" stroke={chart.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx={chart.last.x} cy={chart.last.y} r="2" fill={chart.color} />
+                </svg>
+            )}
+        </div>
     );
 }
