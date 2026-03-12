@@ -14,7 +14,7 @@ const wagmiConfig = createConfig({
     transports: {
         [arbitrum.id]: http(),
         [mainnet.id]: http(),
-        [polygon.id]: http(),
+        [polygon.id]: http('https://polygon-bor-rpc.publicnode.com'),
         [base.id]: http(),
         [optimism.id]: http(),
         [avalanche.id]: http(),

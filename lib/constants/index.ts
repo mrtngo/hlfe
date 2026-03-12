@@ -29,3 +29,14 @@ export {
     HYPERUNIT_DEPOSIT_INFO,
     USDC_ABI,
 } from './bridge';
+
+export {
+    POLYGON_CHAIN_ID,
+    POLYMARKET_API,
+    POLYMARKET_WS,
+    POLYMARKET_CONTRACTS,
+    POLYMARKET_CATEGORIES,
+    POLYMARKET_MIN_ORDER,
+    POLYGON_USDC_ABI,
+    PROXY_INIT_CODE_HASH,
+} from './polymarket';
