@@ -61,6 +61,7 @@ export interface PolymarketContextType {
     selectedEvent: PolymarketEvent | null;
     selectedMarket: PolymarketMarket | null;
     orderBook: PolymarketOrderBook | null;
+    orderBooks: Record<string, PolymarketOrderBook>;
     loading: boolean;
     error: string | null;
 
@@ -87,6 +88,8 @@ export interface PolymarketContextType {
     switchToPolygon: () => Promise<void>;
     depositToPolymarket: (amount: string) => Promise<{ success: boolean; message: string; txHash?: string }>;
     eoaUsdcBalance: number;
+    buy: (tokenId: string, side: 'BUY' | 'SELL', price: number) => Promise<void>;
+    pending: string | null;
 }
 
 const PolymarketContext = createContext<PolymarketContextType | null>(null);
@@ -104,12 +107,14 @@ export function PolymarketProvider({ children }: { children: React.ReactNode }) 
     const [selectedEvent, setSelectedEvent] = useState<PolymarketEvent | null>(null);
     const [selectedMarket, setSelectedMarket] = useState<PolymarketMarket | null>(null);
     const [orderBook, setOrderBook] = useState<PolymarketOrderBook | null>(null);
+    const [orderBooks, setOrderBooks] = useState<Record<string, PolymarketOrderBook>>({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [accountState, setAccountState] = useState<PolymarketAccountState>(DEFAULT_POLYMARKET_ACCOUNT_STATE);
     const [apiCredentials, setApiCredentials] = useState<PolymarketApiCredentials | null>(null);
     const [prices, setPrices] = useState<Record<string, number>>({});
     const [isOnPolygon, setIsOnPolygon] = useState(false);
+    const [pending, setPending] = useState<string | null>(null);
 
     const address = authenticated ? (user?.wallet?.address || wallets?.[0]?.address || null) : null;
     const proxyWalletAddress = address ? deriveProxyWalletAddress(address) : null;
@@ -144,6 +149,12 @@ export function PolymarketProvider({ children }: { children: React.ReactNode }) 
                 if (orderBook?.tokenId === tokenId) {
                     setOrderBook(prev => prev ? { ...prev, bids, asks } : null);
                 }
+                setOrderBooks(prev => {
+                    if (prev[tokenId]) {
+                        return { ...prev, [tokenId]: { ...prev[tokenId], bids, asks } };
+                    }
+                    return prev;
+                });
             },
         });
 
@@ -255,6 +266,7 @@ export function PolymarketProvider({ children }: { children: React.ReactNode }) 
         try {
             const book = await fetchOrderBook(tokenId);
             setOrderBook(book);
+            setOrderBooks(prev => ({ ...prev, [tokenId]: book }));
             // Subscribe to real-time updates
             polymarketWsManager.subscribeToMarket([tokenId]);
         } catch (err: any) {
@@ -376,6 +388,25 @@ export function PolymarketProvider({ children }: { children: React.ReactNode }) 
         await refreshPositions();
     }, [refreshPositions]);
 
+    const buy = useCallback(async (tokenId: string, side: 'BUY' | 'SELL', price: number) => {
+        if (!apiCredentials || !tokenId) return;
+        const key = tokenId + side;
+        setPending(key);
+        try {
+            await placeOrder({
+                tokenId,
+                side,
+                price,
+                size: 1, // minimum size for quick buy
+                orderType: 'FOK',
+            });
+        } catch (err: any) {
+            console.error('Quick buy failed:', err);
+        } finally {
+            setPending(null);
+        }
+    }, [apiCredentials, placeOrder]);
+
     const depositToPolymarket = useCallback(async (amount: string): Promise<{ success: boolean; message: string; txHash?: string }> => {
         if (!address || !proxyWalletAddress) {
             return { success: false, message: 'Wallet not connected' };
@@ -430,6 +461,7 @@ export function PolymarketProvider({ children }: { children: React.ReactNode }) 
         selectedEvent,
         selectedMarket,
         orderBook,
+        orderBooks,
         loading,
         error,
         accountState,
@@ -450,6 +482,8 @@ export function PolymarketProvider({ children }: { children: React.ReactNode }) 
         switchToPolygon,
         depositToPolymarket,
         eoaUsdcBalance,
+        buy,
+        pending,
     };
 
     return (

@@ -8,6 +8,7 @@ import PolymarketMarketCard from './PolymarketMarketCard';
 import PolymarketOrderPanel from './PolymarketOrderPanel';
 import PolymarketPositions from './PolymarketPositions';
 import PolymarketDeposit from './PolymarketDeposit';
+import PolymarketOrderBookView from './PolymarketOrderBook';
 import PolymarketChart from './PolymarketChart';
 import type { PolymarketEvent, PolymarketMarket } from '@/types/polymarket';
 import { POLYMARKET_CATEGORIES } from '@/lib/constants/polymarket';
@@ -110,6 +111,7 @@ export default function PolymarketPanel() {
         loadOrderBook,
         accountState,
         isConnected,
+        orderBooks,
         buy,
         pending
     } = usePolymarket();
@@ -319,6 +321,13 @@ export default function PolymarketPanel() {
                                         />
                                         {isExpanded && (
                                             <div className="mt-1 rounded-xl overflow-hidden" style={{ border: `1px solid ${color}33` }}>
+                                                {/* Order book */}
+                                                <div className="p-3" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
+                                                    <p className="text-[10px] font-semibold mb-2" style={{ color: 'var(--color-text-tertiary)' }}>
+                                                        Order Book
+                                                    </p>
+                                                    <PolymarketOrderBookView book={orderBooks[yesTokenId]} accentColor={color} />
+                                                </div>
                                                 <PolymarketOrderPanel market={m} />
                                             </div>
                                         )}

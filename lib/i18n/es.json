@@ -533,7 +533,9 @@
     "bridgeInfo": "Bridge USDC de otras cadenas a tu billetera de Polygon. Una vez en Polygon, transfiere a tu billetera de trading.",
     "bridgeToPolygon": "Bridge a Polygon",
     "bridgeToPolygonSuccess": "USDC se está bridgeando a Polygon. Esto puede tomar 1-3 minutos.",
-    "bridgeNote": "Después del bridge, ve a la pestaña \"Polygon → Polymarket\" para transferir fondos a tu billetera de trading. El bridge toma ~1-3 min."
+    "bridgeNote": "Después del bridge, ve a la pestaña \"Polygon → Polymarket\" para transferir fondos a tu billetera de trading. El bridge toma ~1-3 min.",
+    "buyYes": "Comprar Sí",
+    "buyNo": "Comprar No"
   },
   "errors": {
     "walletNotConnected": "Billetera no conectada",

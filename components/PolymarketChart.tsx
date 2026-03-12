@@ -71,7 +71,10 @@ export default function PolymarketChart({ tokens }: PolymarketChartProps) {
         return () => ro.disconnect();
     }, []);
 
-    // Fetch all token series when resolution or tokens change
+    // Stable key from token IDs only — live prices don't affect the fetch
+    const tokenIdsKey = useMemo(() => tokens.map(t => t.tokenId).join(','), [tokens]);
+
+    // Fetch all token series when resolution or token IDs change
     useEffect(() => {
         if (tokens.length === 0) return;
         let cancelled = false;
@@ -90,7 +93,8 @@ export default function PolymarketChart({ tokens }: PolymarketChartProps) {
             .catch(() => { if (!cancelled) setLoading(false); });
 
         return () => { cancelled = true; };
-    }, [tokens, res]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tokenIdsKey, res]);
 
     // Build SVG paths
     const chart = useMemo(() => {
