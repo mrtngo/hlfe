@@ -24,13 +24,35 @@ export default function PolymarketOrderBook({ book, accentColor }: PolymarketOrd
     const bids = [...book.bids].sort((a, b) => parseFloat(b.price) - parseFloat(a.price)).slice(0, 5);
     const asks = [...book.asks].sort((a, b) => parseFloat(a.price) - parseFloat(b.price)).slice(0, 5);
 
+    // Compute actual best bid/ask and spread
+    const bestBidPrice = bids.length > 0 ? parseFloat(bids[0].price) : 0;
+    const bestAskPrice = asks.length > 0 ? parseFloat(asks[0].price) : 1;
+    const spreadVal = bestAskPrice - bestBidPrice;
+    const spreadCents = spreadVal * 100;
+
+    // Low liquidity: spread > 50¢ means the book is essentially empty
+    const isLowLiquidity = spreadCents > 50;
+
     // Find max size for bar width
     const allSizes = [...bids, ...asks].map(l => parseFloat(l.size || '0'));
     const maxSize = Math.max(...allSizes, 1);
 
-    const spread = book.bestBid && book.bestAsk
-        ? (parseFloat(book.bestAsk) - parseFloat(book.bestBid)) * 100
-        : null;
+    if (isLowLiquidity) {
+        return (
+            <div className="space-y-1">
+                <div className="py-3 text-center">
+                    <p className="text-[11px] font-mono" style={{ color: 'var(--color-text-tertiary)' }}>
+                        Low liquidity — spread {spreadCents.toFixed(0)}¢
+                    </p>
+                    <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
+                        {bids.length > 0 && `Best bid: ${(bestBidPrice * 100).toFixed(1)}¢`}
+                        {bids.length > 0 && asks.length > 0 && ' · '}
+                        {asks.length > 0 && `Best ask: ${(bestAskPrice * 100).toFixed(1)}¢`}
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-1">
@@ -67,14 +89,12 @@ export default function PolymarketOrderBook({ book, accentColor }: PolymarketOrd
             </div>
 
             {/* Spread */}
-            {spread !== null && (
-                <div
-                    className="flex items-center justify-center py-1 text-[10px] font-mono"
-                    style={{ color: 'var(--color-text-tertiary)', borderTop: '1px solid var(--color-border-subtle)', borderBottom: '1px solid var(--color-border-subtle)' }}
-                >
-                    Spread: {spread.toFixed(1)}¢
-                </div>
-            )}
+            <div
+                className="flex items-center justify-center py-1 text-[10px] font-mono"
+                style={{ color: 'var(--color-text-tertiary)', borderTop: '1px solid var(--color-border-subtle)', borderBottom: '1px solid var(--color-border-subtle)' }}
+            >
+                Spread: {spreadCents.toFixed(1)}¢
+            </div>
 
             {/* Bids (buys) */}
             <div className="space-y-0.5">

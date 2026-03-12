@@ -126,13 +126,19 @@ export async function fetchOrderBook(tokenId: string): Promise<PolymarketOrderBo
     if (cached) return cached;
 
     const book = await proxyFetch('CLOB', '/book', { token_id: tokenId });
+    const bids = book.bids || [];
+    const asks = book.asks || [];
+    // Compute actual best bid (highest) and best ask (lowest)
+    const bestBid = bids.length > 0 ? String(Math.max(...bids.map((b: any) => parseFloat(b.price || '0')))) : undefined;
+    const bestAsk = asks.length > 0 ? String(Math.min(...asks.map((a: any) => parseFloat(a.price || '1')))) : undefined;
+    const spread = bestBid && bestAsk ? String(parseFloat(bestAsk) - parseFloat(bestBid)) : undefined;
     const result: PolymarketOrderBook = {
         tokenId,
-        bids: book.bids || [],
-        asks: book.asks || [],
-        bestBid: book.bids?.[0]?.price,
-        bestAsk: book.asks?.[0]?.price,
-        spread: book.spread,
+        bids,
+        asks,
+        bestBid,
+        bestAsk,
+        spread,
     };
 
     setCache(cacheKey, result, POLYMARKET_CACHE.BOOK);

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { fetchPriceHistory } from '@/lib/polymarket/client';
 
 // Palette for multi-outcome lines
 const OUTCOME_COLORS = [
@@ -13,13 +12,13 @@ const OUTCOME_COLORS = [
     '#F472B6', // pink
 ];
 
-type Resolution = { label: string; fidelity: number; windowSec: number };
+type Resolution = { label: string; interval: string };
 const RESOLUTIONS: Resolution[] = [
-    { label: '1H', fidelity: 1,    windowSec: 60 * 60 },
-    { label: '1D', fidelity: 1,    windowSec: 24 * 60 * 60 },
-    { label: '1W', fidelity: 60,   windowSec: 7 * 24 * 60 * 60 },
-    { label: '1M', fidelity: 60,   windowSec: 30 * 24 * 60 * 60 },
-    { label: 'MAX', fidelity: 1440, windowSec: 365 * 24 * 60 * 60 },
+    { label: '1H', interval: '1h' },
+    { label: '1D', interval: '1d' },
+    { label: '1W', interval: '1w' },
+    { label: '1M', interval: '1m' },
+    { label: 'MAX', interval: 'max' },
 ];
 
 interface TokenSeries {
@@ -35,13 +34,13 @@ interface PolymarketChartProps {
 
 const seriesCache = new Map<string, { pts: { t: number; p: number }[]; at: number }>();
 
-async function loadSeries(tokenId: string, fidelity: number, startTs: number, endTs: number) {
-    const key = `${tokenId}:${fidelity}:${startTs}`;
+async function loadSeries(tokenId: string, interval: string) {
+    const key = `${tokenId}:${interval}`;
     const cached = seriesCache.get(key);
     if (cached && Date.now() - cached.at < 60_000) return cached.pts;
 
     const res = await fetch(
-        `/api/polymarket?target=CLOB&path=/prices-history&market=${tokenId}&fidelity=${fidelity}&startTs=${startTs}&endTs=${endTs}`
+        `/api/polymarket?target=CLOB&path=/prices-history&market=${tokenId}&interval=${interval}`
     );
     if (!res.ok) return [];
     const data = await res.json();
@@ -80,10 +79,7 @@ export default function PolymarketChart({ tokens }: PolymarketChartProps) {
         let cancelled = false;
         setLoading(true);
 
-        const now = Math.floor(Date.now() / 1000);
-        const startTs = now - res.windowSec;
-
-        Promise.all(tokens.map(tok => loadSeries(tok.tokenId, res.fidelity, startTs, now)))
+        Promise.all(tokens.map(tok => loadSeries(tok.tokenId, res.interval)))
             .then(series => {
                 if (!cancelled) {
                     setAllSeries(series);

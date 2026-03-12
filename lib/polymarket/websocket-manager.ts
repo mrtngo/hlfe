@@ -29,6 +29,7 @@ class PolymarketWebSocketManager {
 
     connect(callbacks: PolymarketWsCallbacks) {
         if (this.ws?.readyState === WebSocket.OPEN) {
+            log.info('📡 WebSocket already connected');
             this.callbacks = { ...this.callbacks, ...callbacks };
             return;
         }
@@ -56,14 +57,14 @@ class PolymarketWebSocketManager {
             };
 
             this.ws.onmessage = (event) => {
-                // Ignore PONG heartbeat responses
-                if (event.data === 'PONG') return;
+                // Ignore non-JSON text responses (PONG, INVALID OPERATION, etc.)
+                if (typeof event.data === 'string' && !event.data.startsWith('{') && !event.data.startsWith('[')) return;
 
                 try {
                     const data = JSON.parse(event.data);
                     this.handleMessage(data);
                 } catch (err) {
-                    log.error('❌ Polymarket WS parse error:', err);
+                    log.warn('⚠️ Polymarket WS non-JSON message:', event.data);
                 }
             };
 
@@ -104,12 +105,15 @@ class PolymarketWebSocketManager {
                 if (assetId && msg.bids && msg.asks) {
                     this.callbacks.onBookUpdate?.(assetId, msg.bids, msg.asks);
                 }
-                // Extract best bid/ask for price update
-                if (assetId) {
-                    const bestBid = msg.bids?.[0]?.price;
-                    const bestAsk = msg.asks?.[0]?.price;
-                    if (bestBid && bestAsk) {
-                        const mid = (parseFloat(bestBid) + parseFloat(bestAsk)) / 2;
+                // Extract best bid/ask for price update — only if spread is tight
+                if (assetId && msg.bids?.length && msg.asks?.length) {
+                    // Find actual best bid (highest) and best ask (lowest)
+                    const bestBid = Math.max(...msg.bids.map((b: any) => parseFloat(b.price || '0')));
+                    const bestAsk = Math.min(...msg.asks.map((a: any) => parseFloat(a.price || '1')));
+                    const spread = bestAsk - bestBid;
+                    // Only use book mid when spread < 20% — otherwise it's meaningless
+                    if (spread > 0 && spread < 0.20) {
+                        const mid = (bestBid + bestAsk) / 2;
                         this.callbacks.onPriceUpdate?.(assetId, mid);
                     }
                 }
