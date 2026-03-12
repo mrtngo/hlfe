@@ -3,11 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePolymarket } from '@/hooks/usePolymarket';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Search, TrendingUp, ArrowLeft, X } from 'lucide-react';
+import { Search, TrendingUp, ArrowLeft, X, ChevronDown } from 'lucide-react';
 import PolymarketMarketCard from './PolymarketMarketCard';
 import PolymarketOrderPanel from './PolymarketOrderPanel';
 import PolymarketPositions from './PolymarketPositions';
 import PolymarketDeposit from './PolymarketDeposit';
+import PolymarketChart from './PolymarketChart';
 import type { PolymarketEvent, PolymarketMarket } from '@/types/polymarket';
 import { POLYMARKET_CATEGORIES } from '@/lib/constants/polymarket';
 
@@ -18,6 +19,77 @@ function safeParseArray(val: any, fallback: any[] = []): any[] {
         try { return JSON.parse(val); } catch { return fallback; }
     }
     return fallback;
+}
+
+const OUTCOME_COLORS = [
+    '#3b82f6', // blue-500
+    '#ef4444', // red-500
+    '#22c55e', // green-500
+    '#eab308', // yellow-500
+    '#a855f7', // purple-500
+    '#f97316', // orange-500
+];
+
+function OutcomeCard({
+    image, label, pct, vol, yesCents, noCents, color, onBuyYes, onBuyNo, pendingYes, pendingNo, isConnected, expanded, onToggle
+}: {
+    image?: string; label: string; pct: string; vol: string; yesCents: number; noCents: number;
+    color: string; onBuyYes: () => void; onBuyNo: () => void; pendingYes: boolean; pendingNo: boolean; isConnected: boolean;
+    expanded?: boolean; onToggle?: () => void;
+}) {
+    const { t } = useLanguage();
+    return (
+        <div
+            className="flex flex-col gap-3 rounded-xl p-3 cursor-pointer transition-all"
+            style={{ backgroundColor: 'var(--color-bg-secondary)', border: `1px solid ${expanded ? color : 'var(--color-border-subtle)'}` }}
+            onClick={onToggle}
+        >
+            <div className="flex items-center gap-3">
+                {image ? (
+                    <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 32, height: 32, minWidth: 32, maxWidth: 32 }}>
+                        <img src={image} alt="" width={32} height={32} className="w-full h-full object-cover" />
+                    </div>
+                ) : (
+                    <div className="flex-shrink-0 rounded-lg" style={{ width: 32, height: 32, minWidth: 32, backgroundColor: color }} />
+                )}
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold leading-tight line-clamp-1" style={{ color: 'var(--color-text-primary)' }}>{label}</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-tertiary)' }}>{vol} Vol.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="text-right">
+                        <p className="text-lg font-mono font-bold" style={{ color: 'var(--color-text-primary)' }}>{pct}%</p>
+                    </div>
+                    {onToggle && (
+                        <ChevronDown
+                            className="w-4 h-4 flex-shrink-0 transition-transform"
+                            style={{ color: 'var(--color-text-tertiary)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                        />
+                    )}
+                </div>
+            </div>
+            {isConnected && (
+                <div className="flex gap-2">
+                    <button
+                        onClick={onBuyYes}
+                        disabled={pendingYes || pendingNo}
+                        className="flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all active:scale-[0.98] disabled:opacity-50"
+                        style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', color: 'var(--color-positive)' }}
+                    >
+                        {pendingYes ? <div className="spinner w-3 h-3 border-2" style={{ borderTopColor: 'var(--color-positive)' }} /> : <span>{t.polymarket?.buyYes || 'Buy Yes'} {yesCents}¢</span>}
+                    </button>
+                    <button
+                        onClick={onBuyNo}
+                        disabled={pendingYes || pendingNo}
+                        className="flex-1 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all active:scale-[0.98] disabled:opacity-50"
+                        style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-negative)' }}
+                    >
+                        {pendingNo ? <div className="spinner w-3 h-3 border-2" style={{ borderTopColor: 'var(--color-negative)' }} /> : <span>{t.polymarket?.buyNo || 'Buy No'} {noCents}¢</span>}
+                    </button>
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default function PolymarketPanel() {
@@ -38,6 +110,8 @@ export default function PolymarketPanel() {
         loadOrderBook,
         accountState,
         isConnected,
+        buy,
+        pending
     } = usePolymarket();
 
     const [tab, setTab] = useState<'browse' | 'positions' | 'deposit'>('browse');
@@ -45,6 +119,7 @@ export default function PolymarketPanel() {
     const [searchResults, setSearchResults] = useState<PolymarketEvent[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [expandedOutcomeId, setExpandedOutcomeId] = useState<string | null>(null);
 
     // Load data on mount
     useEffect(() => {
@@ -98,132 +173,189 @@ export default function PolymarketPanel() {
 
     // Detail view for a selected event
     if (selectedEvent && selectedMarket) {
+        const event = selectedEvent;
+        const market = selectedMarket;
+
+        const isMultiOutcome = (event.markets?.length ?? 0) > 2;
+
+        let chartTokens: { tokenId: string; label: string; livePrice?: number; color: string }[] = [];
+
+        if (isMultiOutcome) {
+            const withPrices = (event.markets ?? []).map((m, i) => {
+                const ids = safeParseArray(m.clobTokenIds);
+                const prices0 = safeParseArray(m.outcomePrices, ['0.5']).map((p: any) => parseFloat(p));
+                const livePrice = ids[0] && prices[ids[0]] !== undefined ? prices[ids[0]] : prices0[0] ?? 0.5;
+                const label = m.groupItemTitle || m.question || '';
+                const volume = parseFloat(m.volume || '0');
+                return { m, ids, livePrice, label, volume };
+            })
+                .filter(({ ids, label, volume }) => ids[0] && label.trim() !== '' && volume > 0 && !/^\s*person/i.test(label))  // skip no-token, blank, or placeholder
+                .sort((a, b) => b.livePrice - a.livePrice);                  // high → low
+
+            chartTokens = withPrices.slice(0, 6).map(({ ids, livePrice, label }, i) => ({
+                tokenId: ids[0] ?? '',
+                label,
+                livePrice,
+                color: OUTCOME_COLORS[i % OUTCOME_COLORS.length],
+            })).filter(t => t.tokenId);
+        } else {
+            const ids = safeParseArray(market.clobTokenIds);
+            const rawPrices = safeParseArray(market.outcomePrices, ['0.5', '0.5']).map((p: any) => parseFloat(p));
+            const outcomes = safeParseArray(market.outcomes, ['Yes', 'No']);
+            chartTokens = ids.slice(0, 2).map((id: string, i: number) => ({
+                tokenId: id,
+                label: outcomes[i] ?? (i === 0 ? 'Yes' : 'No'),
+                livePrice: prices[id] !== undefined ? prices[id] : rawPrices[i],
+                color: OUTCOME_COLORS[i],
+            }));
+        }
+
+        // Volume formatted
+        const volume = parseFloat(market.volume || String(event.volume ?? 0));
+        const fmtVol = (v: number) => v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M`
+            : v >= 1_000 ? `$${(v / 1_000).toFixed(0)}K` : `$${v.toFixed(0)}`;
+
+        // Category breadcrumb
+        const breadcrumb = [market.category, (event.tags as any)?.[0]?.label].filter(Boolean).join(' · ');
+
         return (
-            <div className="space-y-4">
-                {/* Back button */}
-                <button
-                    onClick={handleBack}
-                    className="flex items-center gap-2 text-sm transition-all"
-                    style={{ color: 'var(--color-text-secondary)' }}
-                >
+            <div className="space-y-4 pb-6">
+                {/* Back */}
+                <button onClick={handleBack} className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--color-text-secondary)' }}>
                     <ArrowLeft className="w-4 h-4" />
                     {t.polymarket?.backToMarkets || 'Back to Markets'}
                 </button>
 
-                {/* Event header */}
-                <div className="rounded-xl p-4" style={{ backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-border-subtle)' }}>
-                    <div className="flex gap-3">
-                        {(selectedEvent.image || selectedMarket.image) && (
-                            <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--color-bg-tertiary)', minWidth: 48, maxWidth: 48, minHeight: 48, maxHeight: 48 }}>
-                                <img
-                                    src={selectedEvent.image || selectedMarket.image}
-                                    alt=""
-                                    width={48}
-                                    height={48}
-                                    className="w-12 h-12 object-cover"
-                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                />
-                            </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-base font-semibold leading-tight mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                                {selectedEvent.title || selectedMarket.question}
-                            </h2>
-                            <p className="text-xs line-clamp-2" style={{ color: 'var(--color-text-tertiary)' }}>
-                                {selectedMarket.description || selectedEvent.description}
-                            </p>
-
-                            {/* Stats */}
-                            <div className="flex gap-4 mt-2 text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                                <span className="font-mono">
-                                    Vol: ${Number(parseFloat(selectedMarket.volume || '0') >= 1000000
-                                        ? (parseFloat(selectedMarket.volume) / 1000000).toFixed(1) + 'M'
-                                        : parseFloat(selectedMarket.volume) >= 1000
-                                            ? (parseFloat(selectedMarket.volume) / 1000).toFixed(0) + 'K'
-                                            : parseFloat(selectedMarket.volume || '0').toFixed(0)
-                                    )}
-                                </span>
-                                <span className="font-mono">
-                                    Liq: ${Number(parseFloat(selectedMarket.liquidity || '0') >= 1000
-                                        ? (parseFloat(selectedMarket.liquidity) / 1000).toFixed(0) + 'K'
-                                        : parseFloat(selectedMarket.liquidity || '0').toFixed(0)
-                                    )}
-                                </span>
-                                {selectedMarket.category && (
-                                    <span className="px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--color-bg-tertiary)' }}>
-                                        {selectedMarket.category}
-                                    </span>
-                                )}
-                            </div>
+                {/* Header */}
+                <div className="flex gap-3 items-start">
+                    {(event.image || market.image) && (
+                        <div className="flex-shrink-0 w-12 h-12 rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--color-bg-tertiary)', minWidth: 48 }}>
+                            <img src={event.image || market.image} alt="" width={48} height={48} className="w-12 h-12 object-cover"
+                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                         </div>
-                    </div>
-
-                    {/* Outcome probabilities - large display */}
-                    <div className="flex gap-3 mt-4">
-                        {safeParseArray(selectedMarket.outcomes, ['Yes', 'No']).map((outcome: string, i: number) => {
-                            const rawPrice = safeParseArray(selectedMarket.outcomePrices, ['0.5', '0.5']).map((p: any) => parseFloat(p));
-                            const tokenId = safeParseArray(selectedMarket.clobTokenIds)[i];
-                            const price = tokenId && prices[tokenId] !== undefined
-                                ? prices[tokenId]
-                                : rawPrice[i] || 0.5;
-                            const isYes = outcome.toLowerCase() === 'yes' || i === 0;
-
-                            return (
-                                <div
-                                    key={outcome}
-                                    className="flex-1 rounded-xl p-3 text-center"
-                                    style={{
-                                        backgroundColor: isYes ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                        border: `1px solid ${isYes ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                                    }}
-                                >
-                                    <p className="text-xs font-medium mb-1" style={{ color: isYes ? 'var(--color-positive)' : 'var(--color-negative)' }}>
-                                        {outcome}
-                                    </p>
-                                    <p className="text-2xl font-mono font-bold" style={{ color: isYes ? 'var(--color-positive)' : 'var(--color-negative)' }}>
-                                        {(price * 100).toFixed(0)}¢
-                                    </p>
-                                </div>
-                            );
-                        })}
+                    )}
+                    <div className="flex-1 min-w-0">
+                        {breadcrumb && (
+                            <p className="text-[11px] mb-0.5" style={{ color: 'var(--color-text-tertiary)' }}>{breadcrumb}</p>
+                        )}
+                        <h2 className="text-base font-bold leading-snug" style={{ color: 'var(--color-text-primary)' }}>
+                            {event.title || market.question}
+                        </h2>
                     </div>
                 </div>
 
-                {/* Multi-outcome market selector (if more than 1 market in event) */}
-                {selectedEvent.markets && selectedEvent.markets.length > 1 && (
-                    <div className="space-y-2">
-                        <p className="text-xs font-medium" style={{ color: 'var(--color-text-tertiary)' }}>
-                            {t.polymarket?.selectOutcome || 'Select Outcome'}
-                        </p>
-                        <div className="space-y-1.5">
-                            {selectedEvent.markets.map((m) => {
-                                const isSelected = m.id === selectedMarket.id;
-                                const mPrice = safeParseArray(m.outcomePrices).map((p: any) => parseFloat(p));
+                {/* Outcome legend (dot + name + %) */}
+                <div className="space-y-1.5">
+                    {chartTokens.map((tok, i) => {
+                        const pct = tok.livePrice !== undefined ? (tok.livePrice * 100).toFixed(1) : '—';
+                        return (
+                            <div key={tok.tokenId} className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: tok.color }} />
+                                <span className="text-xs flex-1 line-clamp-1" style={{ color: 'var(--color-text-secondary)' }}>{tok.label}</span>
+                                <span className="text-xs font-mono font-bold" style={{ color: tok.color }}>{pct}%</span>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Chart */}
+                <div
+                    className="rounded-2xl p-4"
+                    style={{ backgroundColor: 'var(--color-bg-secondary)', border: '1px solid var(--color-border-subtle)', paddingRight: 36 }}
+                >
+                    {chartTokens.length > 0 && <PolymarketChart tokens={chartTokens} />}
+
+                    {/* Volume */}
+                    <p className="text-[11px] mt-3" style={{ color: 'var(--color-text-tertiary)' }}>
+                        🏆 {fmtVol(volume)} Vol.
+                    </p>
+                </div>
+
+                {/* Outcome cards */}
+                <div className="space-y-3">
+                    {isMultiOutcome ? (
+                        // Multi-outcome: one card per market, sorted high→low, no blank labels
+                        (() => {
+                            const sorted = (event.markets ?? [])
+                                .map((m) => {
+                                    const ids = safeParseArray(m.clobTokenIds);
+                                    const rawP = safeParseArray(m.outcomePrices, ['0.5', '0.5']).map((p: any) => parseFloat(p));
+                                    const yesTokenId = ids[0] ?? '';
+                                    const noTokenId = ids[1] ?? '';
+                                    const yesPrice = yesTokenId && prices[yesTokenId] !== undefined ? prices[yesTokenId] : rawP[0] ?? 0.5;
+                                    const noPrice = noTokenId && prices[noTokenId] !== undefined ? prices[noTokenId] : rawP[1] ?? 0.5;
+                                    const label = m.groupItemTitle || m.question || '';
+                                    const volume = parseFloat(m.volume || '0');
+                                    return { m, yesTokenId, noTokenId, yesPrice, noPrice, label, volume };
+                                })
+                                .filter(({ yesTokenId, label, volume }) => yesTokenId && label.trim() !== '' && volume > 0 && !/^\s*person/i.test(label))
+                                .sort((a, b) => b.yesPrice - a.yesPrice);
+
+                            return sorted.map(({ m, yesTokenId, noTokenId, yesPrice, noPrice, label }, i) => {
+                                const vol = parseFloat(m.volume || '0');
+                                const color = OUTCOME_COLORS[i % OUTCOME_COLORS.length];
+                                const isExpanded = expandedOutcomeId === m.id;
                                 return (
-                                    <button
-                                        key={m.id}
-                                        onClick={() => {
-                                            setSelectedMarket(m);
-                                            const mTokenIds = safeParseArray(m.clobTokenIds);
-                                            if (mTokenIds[0]) loadOrderBook(mTokenIds[0]);
-                                        }}
-                                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all"
-                                        style={{
-                                            backgroundColor: isSelected ? 'var(--color-brand-primary-muted)' : 'var(--color-bg-tertiary)',
-                                            border: isSelected ? '1px solid var(--color-brand-primary)' : '1px solid transparent',
-                                            color: 'var(--color-text-primary)',
-                                        }}
-                                    >
-                                        <span className="text-xs">{m.groupItemTitle || m.question}</span>
-                                        <span className="font-mono text-xs" style={{ color: 'var(--color-positive)' }}>
-                                            {(mPrice[0] * 100).toFixed(0)}¢
-                                        </span>
-                                    </button>
+                                    <div key={m.id}>
+                                        <OutcomeCard
+                                            image={m.image}
+                                            label={label}
+                                            pct={(yesPrice * 100).toFixed(0)}
+                                            vol={fmtVol(vol)}
+                                            yesCents={Math.round(yesPrice * 100)}
+                                            noCents={Math.round(noPrice * 100)}
+                                            color={color}
+                                            onBuyYes={() => buy(yesTokenId, 'BUY', yesPrice)}
+                                            onBuyNo={() => buy(noTokenId, 'BUY', noPrice)}
+                                            pendingYes={pending === yesTokenId + 'BUY'}
+                                            pendingNo={pending === noTokenId + 'BUY'}
+                                            isConnected={isConnected}
+                                            expanded={isExpanded}
+                                            onToggle={() => {
+                                                setExpandedOutcomeId(isExpanded ? null : m.id);
+                                                const tokenIds = safeParseArray(m.clobTokenIds).filter(Boolean);
+                                                if (!isExpanded && tokenIds.length > 0) loadOrderBook(tokenIds[0]);
+                                            }}
+                                        />
+                                        {isExpanded && (
+                                            <div className="mt-1 rounded-xl overflow-hidden" style={{ border: `1px solid ${color}33` }}>
+                                                <PolymarketOrderPanel market={m} />
+                                            </div>
+                                        )}
+                                    </div>
                                 );
-                            })}
-                        </div>
-                    </div>
-                )}
+                            });
+                        })()
+                    ) : (
+                        // Binary: YES card + NO card as a single combined card
+                        (() => {
+                            const ids = safeParseArray(market.clobTokenIds);
+                            const rawP = safeParseArray(market.outcomePrices, ['0.5', '0.5']).map((p: any) => parseFloat(p));
+                            const yesTokenId = ids[0] ?? '';
+                            const noTokenId = ids[1] ?? '';
+                            const yesPrice = yesTokenId && prices[yesTokenId] !== undefined ? prices[yesTokenId] : rawP[0] ?? 0.5;
+                            const noPrice = noTokenId && prices[noTokenId] !== undefined ? prices[noTokenId] : rawP[1] ?? 0.5;
+                            const vol = parseFloat(market.volume || '0');
+
+                            return (
+                                <OutcomeCard
+                                    image={market.image || event.image}
+                                    label={market.question || event.title || ''}
+                                    pct={(yesPrice * 100).toFixed(0)}
+                                    vol={fmtVol(vol)}
+                                    yesCents={Math.round(yesPrice * 100)}
+                                    noCents={Math.round(noPrice * 100)}
+                                    color={OUTCOME_COLORS[0]}
+                                    onBuyYes={() => buy(yesTokenId, 'BUY', yesPrice)}
+                                    onBuyNo={() => buy(noTokenId, 'BUY', noPrice)}
+                                    pendingYes={pending === yesTokenId + 'BUY'}
+                                    pendingNo={pending === noTokenId + 'BUY'}
+                                    isConnected={isConnected}
+                                />
+                            );
+                        })()
+                    )}
+                </div>
 
                 {/* Order panel */}
                 <PolymarketOrderPanel market={selectedMarket} />
@@ -421,3 +553,4 @@ export default function PolymarketPanel() {
         </div>
     );
 }
+

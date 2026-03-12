@@ -24,21 +24,19 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
             showProgress: true,
             animate: true,
             allowClose: true,
-            doneBtnText: 'Done',
-            nextBtnText: 'Next',
-            prevBtnText: 'Previous',
+            doneBtnText: 'Listo',
+            nextBtnText: 'Siguiente',
+            prevBtnText: 'Anterior',
             onDestroyStarted: () => {
-                if (!driverObj.current.hasNextStep()) {
-                    driverObj.current.destroy();
-                    localStorage.setItem('onboarding_seen', 'true');
-                }
+                driverObj.current.destroy();
+                localStorage.setItem('onboarding_seen', 'true');
             },
             steps: [
                 {
                     element: '#home-market-list',
                     popover: {
-                        title: 'Watchlist & Markets',
-                        description: 'Here you can see your watchlist and trending markets. Click on any token to start trading.',
+                        title: 'Mercados y Watchlist',
+                        description: 'Aquí puedes ver tu watchlist y los mercados más activos. Toca cualquier token para empezar a operar.',
                         side: 'bottom',
                         align: 'start'
                     }
@@ -46,14 +44,12 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
                 {
                     element: '#nav-trade-tab',
                     popover: {
-                        title: 'Trading Tab',
-                        description: 'Navigate to the Trading view to access charts and place orders.',
+                        title: 'Pestaña de Trading',
+                        description: 'Accede a la vista de Trading para ver gráficos y colocar órdenes.',
                         side: 'top',
                         align: 'center',
                         onNextClick: () => {
                             setView('trading');
-
-                            // Small delay to allow view transition before moving to next step
                             setTimeout(() => {
                                 driverObj.current.moveNext();
                             }, 300);
@@ -63,8 +59,8 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
                 {
                     element: '#trading-market-selector',
                     popover: {
-                        title: 'Select Market',
-                        description: 'Click here to switch between different markets and assets.',
+                        title: 'Seleccionar Mercado',
+                        description: 'Toca aquí para cambiar entre distintos mercados y activos.',
                         side: 'bottom',
                         align: 'start'
                     }
@@ -72,8 +68,8 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
                 {
                     element: '#trading-chart',
                     popover: {
-                        title: 'Price Chart',
-                        description: 'Analyze price movements and trends with the interactive chart.',
+                        title: 'Gráfico de Precio',
+                        description: 'Analizá movimientos y tendencias de precio con el gráfico interactivo.',
                         side: 'left',
                         align: 'start'
                     }
@@ -81,8 +77,8 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
                 {
                     element: '#trading-order-panel',
                     popover: {
-                        title: 'Place Orders',
-                        description: 'Set your leverage and place Long or Short orders here.',
+                        title: 'Colocar Órdenes',
+                        description: 'Configurá tu apalancamiento y colocá órdenes Long o Short desde aquí.',
                         side: 'left',
                         align: 'start'
                     }
@@ -90,8 +86,8 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
                 {
                     element: '#trading-positions-panel',
                     popover: {
-                        title: 'Manage Positions',
-                        description: 'Track your open positions and unrealized PnL in real-time.',
+                        title: 'Gestionar Posiciones',
+                        description: 'Seguí tus posiciones abiertas y el PnL no realizado en tiempo real.',
                         side: 'right',
                         align: 'start'
                     }
@@ -99,8 +95,8 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
                 {
                     element: '#nav-profile-tab',
                     popover: {
-                        title: 'Your Profile',
-                        description: 'View your account stats, deposit funds, and manage settings.',
+                        title: 'Tu Perfil',
+                        description: 'Mirá tus estadísticas, depositá fondos y gestioná tu cuenta.',
                         side: 'top',
                         align: 'center'
                     }

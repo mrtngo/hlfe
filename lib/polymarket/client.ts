@@ -242,6 +242,44 @@ export async function fetchTrendingMarkets(limit = 20): Promise<PolymarketEvent[
 }
 
 /**
+ * Fetch price history for a token from CLOB API.
+ * fidelity: 1 (1min), 60 (1h), 1440 (1day)
+ */
+export async function fetchPriceHistory(
+    tokenId: string,
+    fidelity: number = 60,
+): Promise<{ t: number; p: number }[]> {
+    const cacheKey = `price_history:${tokenId}:${fidelity}`;
+    const cached = getCached<{ t: number; p: number }[]>(cacheKey);
+    if (cached) return cached;
+
+    const now = Math.floor(Date.now() / 1000);
+    // endTs = now, startTs depends on fidelity
+    const windowSeconds: Record<number, number> = {
+        1: 3 * 60 * 60,          // 1min fidelity → 3h window
+        60: 7 * 24 * 60 * 60,    // 1h fidelity → 7d window
+        1440: 90 * 24 * 60 * 60, // 1d fidelity → 90d window
+    };
+    const startTs = now - (windowSeconds[fidelity] ?? 7 * 24 * 60 * 60);
+
+    const data = await proxyFetch('CLOB', '/prices-history', {
+        market: tokenId,
+        fidelity: String(fidelity),
+        startTs: String(startTs),
+        endTs: String(now),
+    });
+
+    const points: { t: number; p: number }[] = (data.history || []).map((pt: any) => ({
+        t: pt.t,
+        p: parseFloat(pt.p),
+    }));
+
+    const ttl = fidelity >= 1440 ? 5 * 60_000 : 60_000;
+    setCache(cacheKey, points, ttl);
+    return points;
+}
+
+/**
  * Clear all cached data
  */
 export function clearPolymarketCache() {
