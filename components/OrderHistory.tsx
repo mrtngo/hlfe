@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { TrendingUp, TrendingDown } from 'lucide-react';
@@ -22,13 +22,30 @@ export default function OrderHistory() {
     const { address, fills, userDataLoading, positions } = useHyperliquid();
     const history = (t as any).history || {}; // Fallback for type safety
 
-    // Build a leverage map from current positions
-    const leverageBySymbol = useMemo(() => {
-        const map: Record<string, number> = {};
+    // Persist leverage per symbol in localStorage so it's available for historical fills
+    const LEVERAGE_STORAGE_KEY = 'rayo_leverage_by_symbol';
+    const leverageBySymbol = useRef<Record<string, number>>({});
+    const initialized = useRef(false);
+
+    if (!initialized.current && typeof window !== 'undefined') {
+        try {
+            leverageBySymbol.current = JSON.parse(localStorage.getItem(LEVERAGE_STORAGE_KEY) || '{}');
+        } catch { /* ignore */ }
+        initialized.current = true;
+    }
+
+    useEffect(() => {
+        if (positions.length === 0) return;
+        let updated = false;
         for (const pos of positions) {
-            map[pos.symbol] = pos.leverage;
+            if (pos.leverage && leverageBySymbol.current[pos.symbol] !== pos.leverage) {
+                leverageBySymbol.current[pos.symbol] = pos.leverage;
+                updated = true;
+            }
         }
-        return map;
+        if (updated) {
+            localStorage.setItem(LEVERAGE_STORAGE_KEY, JSON.stringify(leverageBySymbol.current));
+        }
     }, [positions]);
 
     // Process fills into order history entries - memoized for performance
@@ -55,11 +72,11 @@ export default function OrderHistory() {
                     pnl: closedPnl,
                     size,
                     time: fill.time || Date.now(),
-                    leverage: leverageBySymbol[symbol],
+                    leverage: leverageBySymbol.current[symbol],
                 } as OrderHistoryEntry;
             })
             .sort((a, b) => b.time - a.time);
-    }, [fills, leverageBySymbol]);
+    }, [fills, positions]);
 
     if (!address) {
         return (
