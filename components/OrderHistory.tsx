@@ -14,12 +14,22 @@ interface OrderHistoryEntry {
     pnl: number;
     size: number;
     time: number;
+    leverage?: number;
 }
 
 export default function OrderHistory() {
     const { t, formatCurrency, language } = useLanguage();
-    const { address, fills, userDataLoading } = useHyperliquid();
+    const { address, fills, userDataLoading, positions } = useHyperliquid();
     const history = (t as any).history || {}; // Fallback for type safety
+
+    // Build a leverage map from current positions
+    const leverageBySymbol = useMemo(() => {
+        const map: Record<string, number> = {};
+        for (const pos of positions) {
+            map[pos.symbol] = pos.leverage;
+        }
+        return map;
+    }, [positions]);
 
     // Process fills into order history entries - memoized for performance
     const orderHistory = useMemo<OrderHistoryEntry[]>(() => {
@@ -45,10 +55,11 @@ export default function OrderHistory() {
                     pnl: closedPnl,
                     size,
                     time: fill.time || Date.now(),
+                    leverage: leverageBySymbol[symbol],
                 } as OrderHistoryEntry;
             })
             .sort((a, b) => b.time - a.time);
-    }, [fills]);
+    }, [fills, leverageBySymbol]);
 
     if (!address) {
         return (
@@ -113,6 +124,11 @@ export default function OrderHistory() {
                                         <span className="font-semibold text-white">
                                             {isLong ? t.history.long : t.history.short} {order.symbol.replace('-USD', '')}
                                         </span>
+                                        {order.leverage && (
+                                            <span className="text-[10px] font-bold tracking-wide bg-bg-secondary px-1.5 py-0.5 rounded-full border border-white/10 text-coffee-medium font-mono">
+                                                {order.leverage}X
+                                            </span>
+                                        )}
                                     </div>
                                     <span className="text-xs text-coffee-medium">
                                         {dateStr} {timeStr}
