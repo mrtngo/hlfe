@@ -7,11 +7,12 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { db, User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
-import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Share2, RefreshCw, TrendingUp, ArrowLeftRight, Bell, Book, ExternalLink, MessageSquare } from 'lucide-react';
+import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Share2, RefreshCw, TrendingUp, ArrowLeftRight, Bell, Book, ExternalLink, MessageSquare, HelpCircle, Scale, Repeat } from 'lucide-react';
 import { DOCS_URL } from '@/lib/constants';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import TransferModal from './TransferModal';
 import Trollbox from './Trollbox';
+import DcaSchedulesList from './DcaSchedulesList';
 
 export default function Profile() {
     const { t, language, setLanguage } = useLanguage();
@@ -19,7 +20,6 @@ export default function Profile() {
     const { logout, exportWallet, user: privyUser } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
     const pushNotifications = usePushNotifications();
-
 
     const [copied, setCopied] = useState(false);
     const [referralCopied, setReferralCopied] = useState(false);
@@ -45,7 +45,6 @@ export default function Profile() {
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
-    // Calculate total volume from fills (sum of price * size for each fill)
     const totalVolume = useMemo(() => {
         if (!fills || fills.length === 0) return 0;
         return fills.reduce((sum, fill) => {
@@ -55,13 +54,7 @@ export default function Profile() {
         }, 0);
     }, [fills]);
 
-    // Calculate referral rewards: 10% of builder fees from referred users' volume
-    // Builder fee is 0.03% (30 tenths of basis points), referral gets 10% of that = 0.003%
-    const referralRewards = useMemo(() => {
-        // totalEarnings from db already tracks this, but we can also estimate from referred users
-        // For now, use the existing totalEarnings which should be populated by the backend
-        return totalEarnings;
-    }, [totalEarnings]);
+    const referralRewards = useMemo(() => totalEarnings, [totalEarnings]);
 
     const referralLink = user?.referral_code
         ? `${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${user.referral_code}`
@@ -173,152 +166,119 @@ export default function Profile() {
     const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
     const displayName = user?.username || user?.display_name || (address ? formatAddress(address) : 'User');
 
+    const formatVolume = (vol: number) => {
+        if (vol >= 1000000) return '$' + (vol / 1000000).toFixed(2) + 'M';
+        if (vol >= 1000) return '$' + (vol / 1000).toFixed(1) + 'K';
+        return '$' + vol.toFixed(2);
+    };
+
     return (
-        <div className="max-w-md mx-auto px-4 pb-8 space-y-4">
-            {/* ===== HERO CARD ===== */}
-            <div className="premium-card mesh-gradient-header rounded-[32px] p-8 border border-white/10 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-brand/5 rounded-full blur-[100px] pointer-events-none" />
-
-                {/* Avatar with Glow */}
-                <div className="relative w-24 h-24 mx-auto mb-6">
-                    <div className="absolute inset-0 bg-brand/20 rounded-full blur-xl animate-pulse" />
-                    <div className="relative w-full h-full rounded-full border-2 border-brand/50 flex items-center justify-center bg-black/40 backdrop-blur-md shadow-2xl">
-                        {userLoading ? (
-                            <Loader2 className="w-10 h-10 text-brand animate-spin" />
-                        ) : (
-                            <UserIcon className="w-12 h-12 text-brand" />
-                        )}
-                    </div>
-                </div>
-
-                {/* Username */}
-                {isEditingUsername ? (
-                    <div className="space-y-4 mb-6">
-                        <input
-                            type="text"
-                            value={tempUsername}
-                            onChange={(e) => {
-                                setTempUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''));
-                                setError(null);
-                            }}
-                            placeholder="username"
-                            className="w-full max-w-[240px] mx-auto block text-center text-2xl font-black bg-black/40 border border-white/20 rounded-2xl px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-brand lowercase transition-all"
-                            maxLength={20}
-                            autoFocus
-                        />
-                        <div className="flex items-center justify-center gap-3">
-                            <button
-                                onClick={saveUsername}
-                                disabled={saving || tempUsername.length < 3}
-                                className="px-6 py-2.5 bg-brand text-white rounded-full text-sm font-black disabled:opacity-50 active:scale-95 transition-all"
-                            >
-                                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : t.common.save}
-                            </button>
-                            <button
-                                onClick={() => { setIsEditingUsername(false); setError(null); }}
-                                className="px-6 py-2.5 bg-white/10 text-white rounded-full text-sm font-black active:scale-95 transition-all"
-                            >
-                                {t.common.cancel}
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="mb-6">
-                        <h1
-                            className="text-3xl font-black text-white text-center cursor-pointer hover:text-brand transition-all flex items-center justify-center gap-2 group"
-                            onClick={() => { setTempUsername(user?.username || ''); setIsEditingUsername(true); }}
-                        >
-                            @{displayName}
-                            <div className="w-5 h-5 rounded-full bg-brand/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
-                                <RefreshCw className="w-3 h-3 text-brand" />
-                            </div>
-                        </h1>
-
-                        {address && (
-                            <div className="flex items-center justify-center gap-2 mt-2">
-                                <div className="px-3 py-1 bg-white/5 rounded-full border border-white/10 flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
-                                    <span className="text-white/40 text-[10px] font-mono font-bold tracking-widest">{formatAddress(address)}</span>
+        <div className="max-w-2xl mx-auto px-4 pb-8 space-y-6">
+            {/* ===== BENTO GRID: IDENTITY + PORTFOLIO ===== */}
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Identity Card */}
+                <div
+                    className="p-8 rounded-xl flex flex-col justify-between min-h-[180px] border border-white/5"
+                    style={{ background: 'linear-gradient(135deg, rgba(26,26,26,0.8) 0%, rgba(14,14,14,0.9) 100%)', backdropFilter: 'blur(12px)' }}
+                >
+                    <div>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2 block">
+                            {t.profile.account}
+                        </span>
+                        {isEditingUsername ? (
+                            <div className="space-y-3">
+                                <input
+                                    type="text"
+                                    value={tempUsername}
+                                    onChange={(e) => {
+                                        setTempUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+                                        setError(null);
+                                    }}
+                                    placeholder="username"
+                                    className="w-full text-2xl font-extrabold bg-black/40 border border-white/20 rounded-xl px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-brand lowercase"
+                                    maxLength={20}
+                                    autoFocus
+                                />
+                                <div className="flex items-center gap-2">
                                     <button
-                                        onClick={copyAddress}
-                                        className="w-6 h-6 rounded-md border border-brand/35 bg-black/60 text-brand flex items-center justify-center hover:bg-brand hover:text-black transition-all appearance-none"
+                                        onClick={saveUsername}
+                                        disabled={saving || tempUsername.length < 3}
+                                        className="px-4 py-2 bg-brand text-black rounded-lg text-xs font-bold disabled:opacity-50 active:scale-95 transition-all"
                                     >
-                                        {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                                        {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : t.common.save}
+                                    </button>
+                                    <button
+                                        onClick={() => { setIsEditingUsername(false); setError(null); }}
+                                        className="px-4 py-2 bg-white/10 text-white rounded-lg text-xs font-bold active:scale-95 transition-all"
+                                    >
+                                        {t.common.cancel}
                                     </button>
                                 </div>
                             </div>
+                        ) : (
+                            <>
+                                <h2
+                                    className="text-2xl font-extrabold text-white leading-tight cursor-pointer hover:text-brand transition-colors"
+                                    onClick={() => { setTempUsername(user?.username || ''); setIsEditingUsername(true); }}
+                                >
+                                    {displayName}
+                                </h2>
+                                {address && (
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <p className="text-sm text-[var(--color-text-tertiary)] font-medium font-mono">{formatAddress(address)}</p>
+                                        <button
+                                            onClick={copyAddress}
+                                            className="text-brand hover:bg-white/10 p-1 rounded-md transition-colors"
+                                        >
+                                            {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
-                )}
+                </div>
 
-                {error && (
-                    <div className="flex items-center justify-center gap-2 text-red-400 text-xs mb-4 bg-red-400/10 py-2 rounded-xl border border-red-400/20">
-                        <AlertCircle className="w-3 h-3" /> {error}
-                    </div>
-                )}
-                {success && (
-                    <div className="flex items-center justify-center gap-2 text-brand text-xs mb-4 bg-brand/10 py-2 rounded-xl border border-brand/20">
-                        <Check className="w-3 h-3" /> {success}
-                    </div>
-                )}
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
-                        <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
+                {/* Portfolio Summary Card */}
+                <div className="bg-brand p-8 rounded-xl flex flex-col justify-between min-h-[180px] relative overflow-hidden group">
+                    <div className="z-10">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-black/60 mb-2 block">
                             {t.profile.equity}
-                        </div>
-                        <div className="text-xl font-black text-white font-mono">
+                        </span>
+                        <div className="text-3xl font-extrabold text-black tracking-tighter font-mono">
                             ${account.equity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
-                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5 text-center">
-                        <div className="text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
-                            {t.profile.available}
-                        </div>
-                        <div className="text-xl font-black text-white font-mono">
-                            ${account.availableMargin.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
+                    <div className="z-10 flex items-center gap-1 text-black mt-4">
+                        <TrendingUp className="w-4 h-4" />
+                        <span className="text-xs font-bold font-mono">{t.profile.volume}: {formatVolume(totalVolume)}</span>
                     </div>
+                    <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/30 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-700" />
                 </div>
+            </section>
 
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                    <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
-                            <TrendingUp className="w-3 h-3" />
-                            {t.profile.volume}
-                        </div>
-                        <div className="text-lg font-black text-white font-mono">
-                            ${totalVolume >= 1000000
-                                ? (totalVolume / 1000000).toFixed(2) + 'M'
-                                : totalVolume >= 1000
-                                    ? (totalVolume / 1000).toFixed(1) + 'K'
-                                    : totalVolume.toFixed(2)
-                            }
-                        </div>
-                    </div>
-                    <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-white/40 text-[10px] uppercase font-black tracking-[0.2em] mb-1">
-                            <Gift className="w-3 h-3" />
-                            {t.profile.rewards}
-                        </div>
-                        <div className="text-lg font-black text-brand font-mono">
-                            ${referralRewards.toFixed(2)}
-                        </div>
-                    </div>
+            {/* DCA — Mis compras programadas */}
+            <section className="space-y-3">
+                <div className="flex items-center gap-2">
+                    <Repeat className="w-4 h-4 text-brand" />
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-white/90">
+                        {t.dca.manageTitle}
+                    </h2>
                 </div>
+                <DcaSchedulesList />
+            </section>
 
-                {/* Transfer Button - Premium */}
-                <button
-                    onClick={() => setShowTransferModal(true)}
-                    className="btn-premium w-full py-4 flex items-center justify-center gap-2"
-                >
-                    <ArrowLeftRight className="w-5 h-5" />
-                    <span className="uppercase tracking-[0.1em] text-xs font-black">
-                        {t.profile.transferFunds}
-                    </span>
-                </button>
-            </div>
+            {/* Error/Success Messages */}
+            {error && (
+                <div className="flex items-center justify-center gap-2 text-red-400 text-xs bg-red-400/10 py-2.5 px-4 rounded-xl border border-red-400/20">
+                    <AlertCircle className="w-3 h-3" /> {error}
+                </div>
+            )}
+            {success && (
+                <div className="flex items-center justify-center gap-2 text-brand text-xs bg-brand/10 py-2.5 px-4 rounded-xl border border-brand/20">
+                    <Check className="w-3 h-3" /> {success}
+                </div>
+            )}
 
             {/* Transfer Modal */}
             <TransferModal
@@ -326,293 +286,302 @@ export default function Profile() {
                 onClose={() => setShowTransferModal(false)}
             />
 
-            {/* ===== INVITE FRIENDS ===== */}
-            <div className="premium-card rounded-[24px] p-6 border border-white/5">
-                <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-brand/10 flex items-center justify-center">
-                            <Gift className="w-5 h-5 text-brand" />
+            {/* ===== INVITE FRIENDS SECTION ===== */}
+            <section className="bg-[var(--color-bg-secondary)] rounded-xl border border-white/10 overflow-hidden">
+                <div className="p-5 border-b border-white/5 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <Gift className="w-5 h-5 text-brand" />
+                        <h3 className="text-xl font-extrabold text-white tracking-tight">{t.profile.inviteFriends}</h3>
+                    </div>
+                    <span className="text-[10px] font-bold text-brand bg-brand/10 px-2 py-0.5 rounded uppercase">10% BACK</span>
+                </div>
+                <div className="p-5 space-y-4">
+                    <div className="bg-black/40 border border-white/10 rounded-lg p-3 flex items-center justify-between group">
+                        <span className="text-brand text-sm font-mono truncate mr-2">
+                            {referralLink || t.profile.loading}
+                        </span>
+                        <button
+                            onClick={copyReferralLink}
+                            className="text-brand hover:bg-white/10 p-1.5 rounded-md transition-colors"
+                        >
+                            {referralCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 pt-4">
+                        <div className="text-center">
+                            <div className="text-[10px] font-bold uppercase text-[var(--color-text-tertiary)] tracking-widest">{t.profile.referrals}</div>
+                            <div className="text-xl font-bold text-white">{loadingReferrals ? '...' : referredUsers.length}</div>
                         </div>
-                        <h2 className="text-lg font-black text-white tracking-tight">{t.profile.inviteFriends}</h2>
-                    </div>
-                    <div className="bg-brand/20 text-brand px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-brand/30">
-                        10% Back
-                    </div>
-                </div>
-
-                <div className="bg-black/40 border border-white/10 rounded-2xl p-4 flex items-center gap-3 mb-6 group hover:border-brand/40 transition-all">
-                    <code className="flex-1 text-xs text-brand font-mono font-bold truncate">
-                        {referralLink || t.profile.loading}
-                    </code>
-                    <button
-                        onClick={copyReferralLink}
-                        className="p-3 rounded-xl border border-brand/40 bg-black/60 text-brand hover:bg-brand hover:text-black transition-all active:scale-95 appearance-none"
-                    >
-                        {referralCopied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center bg-white/5 py-4 rounded-2xl border border-white/5">
-                        <div className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">{t.profile.referrals}</div>
-                        <div className="text-2xl font-black text-white">{loadingReferrals ? '...' : referredUsers.length}</div>
-                    </div>
-                    <div className="text-center bg-white/5 py-4 rounded-2xl border border-white/5">
-                        <div className="text-white/40 text-[10px] uppercase font-black tracking-widest mb-1">{t.profile.earned}</div>
-                        <div className="text-2xl font-black text-brand font-mono">${loadingReferrals ? '...' : totalEarnings.toFixed(2)}</div>
+                        <div className="text-center">
+                            <div className="text-[10px] font-bold uppercase text-[var(--color-text-tertiary)] tracking-widest">{t.profile.earned}</div>
+                            <div className="text-xl font-bold text-brand font-mono">${loadingReferrals ? '...' : totalEarnings.toFixed(2)}</div>
+                        </div>
                     </div>
                 </div>
-
-                {/* ===== TROLLBOX BUTTON ===== */}
+                {/* Trollbox Button */}
                 <button
                     onClick={() => setIsTrollboxOpen(true)}
-                    className="w-full premium-card rounded-[24px] p-6 border border-brand/30 hover:border-brand/50 transition-all flex items-center justify-between group"
+                    className="w-full bg-black/20 p-4 border-t border-white/5 flex items-center justify-between hover:bg-white/5 transition-colors cursor-pointer"
                 >
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-brand/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <MessageSquare className="w-6 h-6 text-brand" />
-                        </div>
+                    <div className="flex items-center gap-3">
+                        <MessageSquare className="w-5 h-5 text-brand" />
                         <div className="text-left">
-                            <div className="text-lg font-black text-white">{t.profile.trollbox.title}</div>
-                            <div className="text-xs text-white/40 font-bold">{t.profile.trollbox.desc}</div>
+                            <div className="text-xs font-bold text-white">{t.profile.trollbox.title}</div>
+                            <div className="text-[10px] text-[var(--color-text-tertiary)]">{t.profile.trollbox.desc}</div>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-green-400 font-bold uppercase tracking-wider">{t.profile.trollbox.live}</span>
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest">{t.profile.trollbox.live}</span>
                     </div>
                 </button>
-
-                {/* Trollbox Modal */}
                 <Trollbox isOpen={isTrollboxOpen} onClose={() => setIsTrollboxOpen(false)} />
-            </div>
+            </section>
 
-            {/* ===== SETTINGS ===== */}
-            <div className="premium-card rounded-[24px] p-5 md:p-6 border border-white/5 space-y-6">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                        <span className="text-xl">⚙️</span>
-                    </div>
-                    <h2 className="text-lg font-black text-white tracking-tight">{t.settings.title}</h2>
-                </div>
+            {/* ===== SETTINGS SECTION ===== */}
+            <section className="space-y-4">
+                <h3 className="text-lg font-semibold text-white px-2">{t.settings.title}</h3>
 
-                <div className="space-y-5">
-                    {/* Language Toggle */}
-                    <div className="bg-[rgba(0,0,0,0.4)] rounded-2xl border border-[rgba(255,255,255,0.08)] p-3 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between">
+                {/* Language Toggle */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-white/5 overflow-hidden">
+                    <div className="p-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                            <Globe className="w-5 h-5 text-white/40" />
-                            <span className="text-white/85 text-sm font-semibold">{t.settings.language}</span>
+                            <Globe className="w-5 h-5 text-[var(--color-text-tertiary)]" />
+                            <span className="text-white text-sm font-semibold">{t.settings.language}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                        <div className="flex gap-2">
                             <button
                                 onClick={() => setLanguage('en')}
-                                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all w-full appearance-none ${language === 'en'
-                                    ? 'bg-brand text-black border border-brand shadow-lg shadow-brand/20'
-                                    : 'bg-black/50 text-brand border border-brand/35 hover:bg-brand/15'
-                                    }`}
+                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all appearance-none ${language === 'en'
+                                    ? 'bg-brand text-black'
+                                    : 'bg-black/50 text-brand border border-brand/30 hover:bg-brand/15'
+                                }`}
                             >
                                 {t.settings.english}
                             </button>
                             <button
                                 onClick={() => setLanguage('es')}
-                                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all w-full appearance-none ${language === 'es'
-                                    ? 'bg-brand text-black border border-brand shadow-lg shadow-brand/20'
-                                    : 'bg-black/50 text-brand border border-brand/35 hover:bg-brand/15'
-                                    }`}
+                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all appearance-none ${language === 'es'
+                                    ? 'bg-brand text-black'
+                                    : 'bg-black/50 text-brand border border-brand/30 hover:bg-brand/15'
+                                }`}
                             >
                                 {t.settings.spanish}
                             </button>
                         </div>
                     </div>
+                </div>
 
-                    {/* Notifications Toggle */}
-                    <div className="p-5 bg-[rgba(0,0,0,0.4)] rounded-2xl border border-[rgba(255,255,255,0.08)] space-y-4">
-                        {/* Main row with toggle */}
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <Bell className="w-5 h-5 text-white/40" />
-                                <div>
-                                    <div className="text-white text-sm font-semibold">{t.settings.notifications}</div>
-                                    <div className="text-xs text-white/50">
-                                        {pushNotifications.isLoading ? t.profile.loading : pushNotifications.isSubscribed ? t.profile.enabled : t.profile.disabled}
-                                    </div>
+                {/* Notifications */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-white/5 overflow-hidden">
+                    <div className="p-4 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <Bell className="w-5 h-5 text-[var(--color-text-tertiary)]" />
+                            <div>
+                                <div className="text-white text-sm font-semibold">{t.settings.notifications}</div>
+                                <div className="text-xs text-[var(--color-text-tertiary)]">
+                                    {pushNotifications.isLoading ? t.profile.loading : pushNotifications.isSubscribed ? t.profile.enabled : t.profile.disabled}
                                 </div>
                             </div>
-
-                            {/* Toggle Switch */}
-                            <button
-                                onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe(user?.id || address || undefined)}
-                                disabled={pushNotifications.isLoading || !pushNotifications.isSecureContext}
-                                style={{
-                                    width: '64px',
-                                    height: '36px',
-                                    borderRadius: '18px',
-                                    backgroundColor: pushNotifications.isSubscribed ? '#22c55e' : '#4b5563',
-                                    border: '2px solid',
-                                    borderColor: pushNotifications.isSubscribed ? '#16a34a' : '#374151',
-                                    position: 'relative',
-                                    cursor: pushNotifications.isLoading ? 'wait' : 'pointer',
-                                    opacity: (pushNotifications.isLoading || !pushNotifications.isSecureContext) ? 0.5 : 1
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        width: '26px',
-                                        height: '26px',
-                                        borderRadius: '13px',
-                                        backgroundColor: 'white',
-                                        position: 'absolute',
-                                        top: '3px',
-                                        left: pushNotifications.isSubscribed ? '33px' : '3px',
-                                        transition: 'left 0.2s ease',
-                                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                                    }}
-                                />
-                            </button>
                         </div>
-
-                        {/* Insecure Context Warning */}
-                        {!pushNotifications.isSecureContext && (
-                            <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
-                                ⚠️ {t.profile.insecureContext}
-                            </div>
-                        )}
-
-                        {/* Error Display */}
-                        {pushNotifications.error && (
-                            <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
-                                ⚠️ {pushNotifications.error}
-                            </div>
-                        )}
-
-                        {/* Test Notification Button (only when subscribed) */}
-                        {pushNotifications.isSubscribed && (
+                        <button
+                            onClick={() => pushNotifications.isSubscribed ? pushNotifications.unsubscribe() : pushNotifications.subscribe(user?.id || address || undefined)}
+                            disabled={pushNotifications.isLoading || !pushNotifications.isSecureContext}
+                            style={{
+                                width: '56px',
+                                height: '32px',
+                                borderRadius: '16px',
+                                backgroundColor: pushNotifications.isSubscribed ? '#22c55e' : '#4b5563',
+                                border: '2px solid',
+                                borderColor: pushNotifications.isSubscribed ? '#16a34a' : '#374151',
+                                position: 'relative',
+                                cursor: pushNotifications.isLoading ? 'wait' : 'pointer',
+                                opacity: (pushNotifications.isLoading || !pushNotifications.isSecureContext) ? 0.5 : 1,
+                                flexShrink: 0,
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: '22px',
+                                    height: '22px',
+                                    borderRadius: '11px',
+                                    backgroundColor: 'white',
+                                    position: 'absolute',
+                                    top: '3px',
+                                    left: pushNotifications.isSubscribed ? '28px' : '3px',
+                                    transition: 'left 0.2s ease',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                                }}
+                            />
+                        </button>
+                    </div>
+                    {!pushNotifications.isSecureContext && (
+                        <div className="mx-4 mb-4 text-xs text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                            {t.profile.insecureContext}
+                        </div>
+                    )}
+                    {pushNotifications.error && (
+                        <div className="mx-4 mb-4 text-xs text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                            {pushNotifications.error}
+                        </div>
+                    )}
+                    {pushNotifications.isSubscribed && (
+                        <div className="px-4 pb-4">
                             <button
                                 onClick={() => pushNotifications.sendTestNotification()}
-                                className="w-full py-3.5 btn-premium rounded-2xl text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2 appearance-none"
+                                className="w-full py-3 bg-brand/10 border border-brand/20 rounded-lg text-brand text-xs font-bold hover:bg-brand/20 transition-colors appearance-none"
                             >
-                                <Bell className="w-4 h-4" />
+                                <Bell className="w-3 h-3 inline mr-1" />
                                 {t.settings.testNotification || 'Send Test'}
                             </button>
-                        )}
-                    </div>
+                        </div>
+                    )}
+                </div>
 
-                    {/* Agent Wallet Toggle */}
-                    <div className="flex items-center justify-between gap-3 p-4 bg-[rgba(0,0,0,0.4)] rounded-2xl border border-[rgba(255,255,255,0.08)]">
+                {/* Agent Wallet */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl border border-white/5 overflow-hidden">
+                    <div className="p-4 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                             <Zap className="w-5 h-5 text-brand" />
                             <div>
                                 <div className="text-white text-sm font-semibold">{t.profile.agentWallet}</div>
-                                <div className="text-xs text-white/50">{t.profile.agentWalletDesc}</div>
+                                <div className="text-xs text-[var(--color-text-tertiary)]">{t.profile.agentWalletDesc}</div>
                             </div>
                         </div>
                         <button
                             onClick={agentWalletEnabled ? handleDisableAgentWallet : handleSetupAgentWallet}
                             disabled={settingUpAgent}
-                            className={`w-16 h-9 rounded-full transition-all relative flex-shrink-0 ${agentWalletEnabled ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
+                            className={`w-14 h-8 rounded-full transition-all relative flex-shrink-0 ${agentWalletEnabled ? 'bg-brand border-2 border-brand/50' : 'bg-white/10 border-2 border-white/20'}`}
                         >
                             <div
-                                className={`w-6 h-6 rounded-full shadow-xl absolute top-1 transition-all duration-300 ${agentWalletEnabled ? 'right-1 bg-black' : 'left-1 bg-white/40'}`}
+                                className={`w-5 h-5 rounded-full shadow-xl absolute top-1 transition-all duration-300 ${agentWalletEnabled ? 'right-1 bg-black' : 'left-1 bg-white/40'}`}
                             />
                             {settingUpAgent && (
-                                <Loader2 className="w-4 h-4 animate-spin absolute inset-0 m-auto text-white" />
+                                <Loader2 className="w-3.5 h-3.5 animate-spin absolute inset-0 m-auto text-white" />
                             )}
                         </button>
                     </div>
                     {agentSetupError && (
-                        <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+                        <div className="mx-4 mb-4 text-xs text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
                             {agentSetupError}
                         </div>
                     )}
-
-                    {/* Action Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {/* Builder Fee */}
-                        <div className="flex flex-col gap-3">
-                            {builderFeeApproved ? (
-                                <div className="flex items-center justify-center gap-2 py-3.5 bg-brand/15 border border-[var(--color-brand-primary-border)] rounded-2xl text-brand font-bold text-sm">
-                                    <Check className="w-4 h-4" /> {t.profile.approved}
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={handleApproveBuilderFee}
-                                    disabled={approvingFee}
-                                    className="btn-premium py-3.5 text-sm tracking-wide font-bold"
-                                >
-                                    {approvingFee ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t.profile.approveFee}
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Sync Trades */}
-                        <button
-                            onClick={handleSyncTrades}
-                            disabled={syncing}
-                            className="bg-bg-elevated border border-[var(--color-brand-primary-border)] hover:bg-brand/10 py-3.5 rounded-2xl text-brand font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-2 disabled:opacity-60 appearance-none"
-                        >
-                            {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                            {syncResult || t.profile.sync}
-                        </button>
-                    </div>
-                    {feeError && (
-                        <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
-                            {feeError}
-                        </div>
-                    )}
-                    {/* Stock & Export Row */}
-                    <div className={`grid ${hasEmbeddedWallet ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-3`}>
-                        {/* Stock Trading */}
-                        <button
-                            onClick={async () => {
-                                const result = await enableDexAbstraction();
-                                if (!result.success) setError(result.message);
-                                else { setSuccess(result.message); setTimeout(() => setSuccess(null), 3000); }
-                            }}
-                            disabled={dexAbstractionLoading}
-                            className={`py-3.5 rounded-2xl text-sm font-bold tracking-wide transition-all flex items-center justify-center gap-2 border disabled:opacity-60 appearance-none ${dexAbstractionEnabled
-                                ? 'btn-premium text-black border-[var(--color-brand-primary)]'
-                                : 'bg-bg-elevated text-brand border-[var(--color-brand-primary-border)] hover:bg-brand/10'
-                                }`}
-                        >
-                            {dexAbstractionEnabled ? <Check className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
-                            {t.markets.stocks}
-                        </button>
-
-                        {/* Export Wallet */}
-                        {hasEmbeddedWallet && (
-                            <button
-                                onClick={exportWallet}
-                                className="bg-bg-elevated border border-[var(--color-brand-primary-border)] text-brand py-3.5 rounded-2xl text-sm font-bold tracking-wide hover:bg-brand/10 transition-all flex items-center justify-center gap-2 appearance-none"
-                            >
-                                <Share2 className="w-4 h-4" />
-                                {t.profile.export}
-                            </button>
-                        )}
-                    </div>
                 </div>
 
-                {/* Documentation Link */}
+                {/* Action Buttons */}
+                <div className="bg-[var(--color-bg-secondary)] rounded-xl overflow-hidden border border-white/5 divide-y divide-white/5">
+                    {/* Approve / Approved */}
+                    {builderFeeApproved ? (
+                        <div className="w-full flex items-center justify-center gap-3 py-4 text-brand">
+                            <Check className="w-5 h-5" />
+                            <span className="font-bold tracking-tight">{t.profile.approved}</span>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={handleApproveBuilderFee}
+                            disabled={approvingFee}
+                            className="w-full flex items-center justify-center gap-3 py-4 text-brand hover:bg-[var(--color-bg-elevated)] transition-colors active:scale-[0.98]"
+                        >
+                            {approvingFee ? <Loader2 className="w-5 h-5 animate-spin" /> : <Check className="w-5 h-5" />}
+                            <span className="font-bold tracking-tight">{t.profile.approveFee}</span>
+                        </button>
+                    )}
+
+                    {/* Sync */}
+                    <button
+                        onClick={handleSyncTrades}
+                        disabled={syncing}
+                        className="w-full flex items-center justify-center gap-3 py-4 text-brand hover:bg-[var(--color-bg-elevated)] transition-colors active:scale-[0.98] disabled:opacity-60"
+                    >
+                        {syncing ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
+                        <span className="font-bold tracking-tight">{syncResult || t.profile.sync}</span>
+                    </button>
+
+                    {/* Stocks/Dex Abstraction */}
+                    <button
+                        onClick={async () => {
+                            const result = await enableDexAbstraction();
+                            if (!result.success) setError(result.message);
+                            else { setSuccess(result.message); setTimeout(() => setSuccess(null), 3000); }
+                        }}
+                        disabled={dexAbstractionLoading}
+                        className="w-full flex items-center justify-center gap-3 py-4 text-brand hover:bg-[var(--color-bg-elevated)] transition-colors active:scale-[0.98] disabled:opacity-60"
+                    >
+                        {dexAbstractionEnabled ? <Check className="w-5 h-5" /> : <Zap className="w-5 h-5" />}
+                        <span className="font-bold tracking-tight">{t.markets.stocks}</span>
+                    </button>
+
+                    {/* Export Wallet */}
+                    {hasEmbeddedWallet && (
+                        <button
+                            onClick={exportWallet}
+                            className="w-full flex items-center justify-center gap-3 py-4 text-brand hover:bg-[var(--color-bg-elevated)] transition-colors active:scale-[0.98]"
+                        >
+                            <Share2 className="w-5 h-5" />
+                            <span className="font-bold tracking-tight">{t.profile.export}</span>
+                        </button>
+                    )}
+
+                    {/* Transfer */}
+                    <button
+                        onClick={() => setShowTransferModal(true)}
+                        className="w-full flex items-center justify-center gap-3 py-4 text-brand hover:bg-[var(--color-bg-elevated)] transition-colors active:scale-[0.98]"
+                    >
+                        <ArrowLeftRight className="w-5 h-5" />
+                        <span className="font-bold tracking-tight">{t.profile.transferFunds}</span>
+                    </button>
+                </div>
+                {feeError && (
+                    <div className="text-xs text-red-400 bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+                        {feeError}
+                    </div>
+                )}
+
+                {/* Documentation Button */}
                 <a
                     href={DOCS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-4 btn-premium rounded-2xl text-black font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 rounded-xl bg-brand text-black font-extrabold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+                    style={{ boxShadow: '0 0 20px rgba(250,204,21,0.1)' }}
                 >
                     <Book className="w-4 h-4" />
-                    {t.common.documentation}
-                    <ExternalLink className="w-3 h-3 opacity-50" />
+                    <span className="uppercase tracking-widest text-sm">{t.common.documentation}</span>
+                    <ExternalLink className="w-3.5 h-3.5 opacity-50" />
                 </a>
-            </div>
+            </section>
+
+            {/* ===== SUPPORT & LEGAL BENTO ===== */}
+            <section className="grid grid-cols-2 gap-4">
+                <a
+                    href="https://t.me/rayotrade"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-[var(--color-bg-secondary)] p-6 rounded-xl border border-white/5 hover:bg-[var(--color-bg-elevated)] transition-colors cursor-pointer block"
+                >
+                    <HelpCircle className="w-6 h-6 text-brand mb-4" />
+                    <div className="font-bold text-white">{t.profile.support}</div>
+                    <div className="text-xs text-[var(--color-text-tertiary)] mt-1">Telegram</div>
+                </a>
+                <a
+                    href={DOCS_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-[var(--color-bg-secondary)] p-6 rounded-xl border border-white/5 hover:bg-[var(--color-bg-elevated)] transition-colors cursor-pointer block"
+                >
+                    <Scale className="w-6 h-6 text-brand mb-4" />
+                    <div className="font-bold text-white">Legal</div>
+                    <div className="text-xs text-[var(--color-text-tertiary)] mt-1">Privacy & Terms</div>
+                </a>
+            </section>
 
             {/* ===== DISCONNECT BUTTON ===== */}
             <button
                 onClick={logout}
-                className="w-full py-5 bg-[rgba(239,68,68,0.16)] hover:bg-[rgba(239,68,68,0.24)] border border-[rgba(248,113,113,0.38)] hover:border-[rgba(248,113,113,0.5)] transition-all text-red-300 font-black uppercase tracking-[0.18em] text-xs rounded-[24px] appearance-none"
+                className="w-full py-5 rounded-full bg-[var(--color-bg-secondary)] border border-red-500/30 text-red-400 font-bold tracking-widest uppercase text-xs active:scale-95 transition-all hover:bg-red-500/10 flex items-center justify-center gap-2 appearance-none"
             >
-                <div className="flex items-center justify-center gap-2">
-                    <LogOut className="w-4 h-4" />
-                    <span>{t.wallet.disconnect}</span>
-                </div>
+                <LogOut className="w-4 h-4" />
+                {t.wallet.disconnect}
             </button>
         </div>
     );

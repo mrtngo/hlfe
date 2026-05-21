@@ -129,6 +129,43 @@ export interface Asset {
     updated_at: string;
 }
 
+export type DcaFrequency = 'daily' | 'weekly' | 'monthly';
+
+export interface DcaSchedule {
+    id: string;
+    user_id: string;
+    wallet_address: string;
+    symbol: string;
+    market_symbol: string;
+    amount_usd: number;
+    frequency: DcaFrequency;
+    day_of_week: number | null;
+    day_of_month: number | null;
+    hour_utc: number;
+    next_run_at: string;
+    last_run_at: string | null;
+    last_run_status: 'success' | 'failed' | 'skipped' | null;
+    last_run_error: string | null;
+    total_runs: number;
+    total_spent_usd: number;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface DcaScheduleInput {
+    user_id: string;
+    wallet_address: string;
+    symbol: string;
+    market_symbol: string;
+    amount_usd: number;
+    frequency: DcaFrequency;
+    day_of_week?: number | null;
+    day_of_month?: number | null;
+    hour_utc: number;
+    next_run_at: string;
+}
+
 // Helper functions for common operations
 export const db = {
     // User operations
@@ -776,6 +813,65 @@ export const db = {
 
             if (error) {
                 console.error('Error deleting price alert:', error);
+                return false;
+            }
+            return true;
+        },
+    },
+
+    dcaSchedules: {
+        async listByWallet(walletAddress: string): Promise<DcaSchedule[]> {
+            const { data, error } = await supabase
+                .from('dca_schedules')
+                .select('*')
+                .eq('wallet_address', walletAddress.toLowerCase())
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching DCA schedules:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async create(input: DcaScheduleInput): Promise<DcaSchedule | null> {
+            const { data, error } = await supabase
+                .from('dca_schedules')
+                .insert({
+                    ...input,
+                    wallet_address: input.wallet_address.toLowerCase(),
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error creating DCA schedule:', error);
+                return null;
+            }
+            return data;
+        },
+
+        async setActive(scheduleId: string, isActive: boolean): Promise<boolean> {
+            const { error } = await supabase
+                .from('dca_schedules')
+                .update({ is_active: isActive })
+                .eq('id', scheduleId);
+
+            if (error) {
+                console.error('Error toggling DCA schedule:', error);
+                return false;
+            }
+            return true;
+        },
+
+        async delete(scheduleId: string): Promise<boolean> {
+            const { error } = await supabase
+                .from('dca_schedules')
+                .delete()
+                .eq('id', scheduleId);
+
+            if (error) {
+                console.error('Error deleting DCA schedule:', error);
                 return false;
             }
             return true;
