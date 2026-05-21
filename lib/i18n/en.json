@@ -503,6 +503,88 @@
     "saveOnFees": "Discover how much you save trading on Rayo",
     "buyAndSell": "Buy & sell BTC, ETH, HYPE, SOL"
   },
+  "homeRedesign": {
+    "greet": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "totalValue": "Total value",
+    "today": "Today",
+    "thirtyDays": "30 days",
+    "available": "Available",
+    "inPosition": "In position",
+    "equity": "Equity",
+    "quote": {
+      "great": "Your portfolio is {pct} this season — your best month in a while.",
+      "steady": "You're {pct} in 30 days. Quiet rhythm.",
+      "down": "You're {pct} this month. Patience — this happens.",
+      "empty": "No open positions. Today's a good day to start.",
+      "small": "You're just getting started. Add $25 and we'll see."
+    },
+    "section": {
+      "comprar": "buy",
+      "tenencias": "holdings",
+      "mirando": "watching"
+    },
+    "cta": {
+      "comprar": {
+        "eyebrow": "◆ TODAY'S PICK",
+        "word": "Buy.",
+        "desc": "Crypto in pesos or dollars.",
+        "descHighlight": "From $25."
+      },
+      "programar": {
+        "word": "Schedule.",
+        "desc": "Auto buy every week."
+      }
+    },
+    "holdings": {
+      "active": "{count} active"
+    },
+    "watch": {
+      "add": "ADD",
+      "empty": "Tap add to track tokens"
+    },
+    "position": {
+      "enteredAt": "entered {price}"
+    },
+    "fx": {
+      "ar": {
+        "headline": "Blue dollar closed at",
+        "sub": "Your portfolio is worth"
+      }
+    },
+    "footer": {
+      "end": "— end —",
+      "tagline": "RAYO · {city}"
+    },
+    "pro": {
+      "eyebrow": "RAYO//TERMINAL · LIVE",
+      "session": "SESSION OPEN",
+      "nav": "PORTFOLIO · NAV",
+      "delta24h": "24H Δ",
+      "equity": "EQUITY",
+      "avail": "AVAIL",
+      "margin": "MARGIN",
+      "pnl30d": "30D PNL",
+      "comprar": "BUY",
+      "vender": "SELL",
+      "depositar": "DEPOSIT",
+      "positions": "POSITIONS",
+      "watchlist": "WATCHLIST",
+      "sectors": "// SECTORS",
+      "groups": "{count} GROUPS",
+      "live": "LIVE ●",
+      "table": {
+        "symbol": "SYMBOL",
+        "side": "SIDE",
+        "mark": "MARK",
+        "pnl": "PNL"
+      },
+      "symbols": "{count} symbols"
+    }
+  },
   "setupWizard": {
     "title": "Trading Setup",
     "letsGo": "Let's Go! ⚡",

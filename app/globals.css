@@ -950,6 +950,65 @@ h6 {
   color: rgba(255,255,255,0.2);
 }
 
+/* === Home redesign atmosphere & terminal === */
+
+.atmosphere-warm {
+  background-color: #0A0907;
+  background-image:
+    radial-gradient(120% 70% at 30% 0%, rgba(250, 180, 80, 0.10) 0%, transparent 55%),
+    radial-gradient(80% 60% at 100% 30%, rgba(220, 90, 60, 0.05) 0%, transparent 60%),
+    radial-gradient(70% 60% at 50% 100%, rgba(80, 80, 140, 0.04) 0%, transparent 60%);
+}
+
+.atmosphere-grid {
+  background-color: #050505;
+  position: relative;
+}
+.atmosphere-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(120% 80% at 50% 0%, #000 0%, transparent 70%);
+          mask-image: radial-gradient(120% 80% at 50% 0%, #000 0%, transparent 70%);
+}
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.ticker-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: ticker-scroll 40s linear infinite;
+  will-change: transform;
+}
+
+.dot-live-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-positive);
+  box-shadow: 0 0 8px var(--color-positive);
+  display: inline-block;
+  animation: live-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pro-knob {
+  from { transform: translateX(0); }
+  to { transform: translateX(10px); }
+}
+
 /* Horizontal snap rail (for asset picker) */
 .snap-rail {
   display: flex;
