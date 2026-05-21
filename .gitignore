@@ -44,3 +44,9 @@ next-env.d.ts
 _api_temp/
 ios/App/App/public/
 ios/App/Pods/
+
+# Local/AI files
+.claude/
+task.md
+design_handoff_inicio_redesign/
+handoff_2/

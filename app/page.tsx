@@ -21,6 +21,9 @@ import SpotTradingPanel from '@/components/SpotTradingPanel';
 import PolymarketPanel from '@/components/PolymarketPanel';
 import AdvancedMenu from '@/components/AdvancedMenu';
 import ComprarScreen from '@/components/ComprarScreen';
+import MarketsScreen from '@/components/MarketsScreen';
+import TokenDetail from '@/components/TokenDetail';
+import PortfolioScreen from '@/components/PortfolioScreen';
 import Trollbox from '@/components/Trollbox';
 import { ShoppingCart, History, User, Sliders } from 'lucide-react';
 
@@ -39,7 +42,8 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotAdvanced' | 'predictions' | 'advanced'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotAdvanced' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
+    const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
@@ -154,6 +158,38 @@ export default function Home() {
                                     onSelectPerps={() => setView('trading')}
                                     onSelectPredictions={() => setView('predictions')}
                                     onSelectLeaderboard={() => setView('leaderboard')}
+                                />
+                            </div>
+                        ) : view === 'markets' ? (
+                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <MarketsScreen
+                                    onBack={() => setView('home')}
+                                    onTokenClick={(symbol) => {
+                                        setSelectedMarket(symbol);
+                                        setDetailSymbol(symbol);
+                                        setView('tokenDetail');
+                                    }}
+                                />
+                            </div>
+                        ) : view === 'tokenDetail' ? (
+                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <TokenDetail
+                                    symbol={detailSymbol || selectedMarket || 'BTC'}
+                                    onBack={() => setView('markets')}
+                                    onBuy={() => setView('spot')}
+                                    onTrade={() => setView('trading')}
+                                />
+                            </div>
+                        ) : view === 'portfolio' ? (
+                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <PortfolioScreen
+                                    onBack={() => setView('profile')}
+                                    onBuyClick={() => setView('spot')}
+                                    onTokenClick={(symbol) => {
+                                        setSelectedMarket(symbol);
+                                        setDetailSymbol(symbol);
+                                        setView('tokenDetail');
+                                    }}
                                 />
                             </div>
                         ) : (

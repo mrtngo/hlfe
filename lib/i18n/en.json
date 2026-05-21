@@ -585,6 +585,262 @@
       "symbols": "{count} symbols"
     }
   },
+  "screens": {
+    "mercados": {
+      "title": "Markets.",
+      "eyebrow": "EXPLORE",
+      "searchPlaceholder": "Search markets...",
+      "kbdHint": "⌘K",
+      "all": "All",
+      "favorites": "Favorites",
+      "hot": "hot · today",
+      "section": "all markets",
+      "sort": {
+        "volume": "Volume",
+        "change": "Change",
+        "price": "Price"
+      },
+      "empty": {
+        "title": "No results",
+        "body": "We couldn't find any markets matching that name.",
+        "cta": "View all markets"
+      },
+      "error": {
+        "title": "We couldn't load markets",
+        "body": "Check your connection and try again.",
+        "retry": "Retry"
+      },
+      "pro": {
+        "title": "MARKETS",
+        "table": {
+          "symbol": "SYMBOL",
+          "price": "PRICE",
+          "change": "24H",
+          "vol": "VOL",
+          "fund": "FUND"
+        }
+      }
+    },
+    "tradear": {
+      "buy": "Buy",
+      "sell": "Sell",
+      "section": "buy or sell",
+      "amountLabel": "Amount · USD",
+      "max": "Max",
+      "leverage": "Leverage",
+      "summary": {
+        "size": "Position size",
+        "fee": "Est. fee",
+        "liq": "Liquidation price"
+      },
+      "cta": {
+        "buy": "Buy {symbol} · {amount}",
+        "sell": "Sell {symbol} · {amount}"
+      },
+      "stats": {
+        "vol24h": "Vol 24h",
+        "high24h": "High 24h",
+        "low24h": "Low 24h"
+      },
+      "empty": {
+        "title": "Pick a market",
+        "body": "Search for an asset to start trading."
+      },
+      "error": {
+        "title": "Connection lost",
+        "body": "Reconnecting…",
+        "retry": "Retry now"
+      }
+    },
+    "tokenDetail": {
+      "yourPosition": "your position",
+      "stats": "stats",
+      "about": "about {name}",
+      "news": "what's being said",
+      "actions": {
+        "add": "Add",
+        "tp": "Take profit",
+        "close": "Close"
+      },
+      "cta": {
+        "buy": "Buy {symbol}",
+        "sell": "Sell"
+      }
+    },
+    "comprar": {
+      "step1": "Amount",
+      "step2": "How",
+      "step3": "Review",
+      "amountHint": "You'll receive",
+      "next": "Next",
+      "review": "Review order",
+      "confirm": "Confirm purchase · {amount}",
+      "method": "Method",
+      "fee": "Fee",
+      "price": "{symbol} price",
+      "arrivesIn": "Arrives in",
+      "instant": "instant",
+      "youPay": "You pay",
+      "youReceive": "You'll receive",
+      "edit": "Edit",
+      "buying": "Buying",
+      "finePrint": "Trade processed by Rayo. Conversion uses the market price at confirmation time.",
+      "success": {
+        "title": "Done.",
+        "received": "You got {amount} {symbol}",
+        "newBalance": "New balance",
+        "txId": "Transaction ID",
+        "share": "Share",
+        "home": "Go home"
+      },
+      "error": {
+        "title": "Your card declined the payment",
+        "body": "Try another method or check your card details."
+      }
+    },
+    "portafolio": {
+      "title": "Portfolio.",
+      "totalEquity": "Total equity",
+      "distribution": "distribution",
+      "open": "open",
+      "assets": "{count} ASSETS",
+      "stats": {
+        "unrealizedPnl": "Unrealized PnL",
+        "marginUsed": "Margin used",
+        "available": "Available"
+      },
+      "positionStats": {
+        "entry": "Entry",
+        "mark": "Mark",
+        "liq": "Liq.",
+        "notional": "Notional"
+      },
+      "empty": {
+        "title": "No positions yet",
+        "body": "When you buy crypto, you'll see it here.",
+        "cta": "Buy crypto"
+      }
+    },
+    "historial": {
+      "title": "History.",
+      "summary": "Realized PnL · 30d",
+      "wins": "{wins}/{total} wins",
+      "stats": {
+        "trades": "Trades",
+        "winRate": "Win rate",
+        "fees": "Fees"
+      },
+      "tabs": {
+        "all": "All",
+        "closed": "Closed",
+        "open": "Open",
+        "deposits": "Deposits"
+      },
+      "groups": {
+        "today": "Today",
+        "yesterday": "Yesterday · {date}"
+      },
+      "row": {
+        "closed": "Closed {symbol}",
+        "opened": "Opened {symbol}",
+        "deposit": "USDC deposit",
+        "open": "OPEN"
+      },
+      "empty": {
+        "title": "Nothing here yet",
+        "body": "When you make your first buy, it'll show up here.",
+        "cta": "Buy"
+      }
+    },
+    "perfil": {
+      "verified": "VERIFIED",
+      "pro": "PRO",
+      "section": {
+        "stats": "your numbers",
+        "achievements": "achievements",
+        "referrals": "invite friends"
+      },
+      "stats": {
+        "trades": "Trades",
+        "winRate": "Win rate",
+        "totalPnl": "Total PnL",
+        "bestTrade": "Best trade",
+        "activeDays": "Active days",
+        "volume": "Volume"
+      },
+      "referral": {
+        "headline": "Invite friends",
+        "sub": "Earn $10 each",
+        "code": "Your code",
+        "copy": "Copy",
+        "copied": "Copied",
+        "summary": "{count} friends · ${earned} earned"
+      }
+    },
+    "ajustes": {
+      "title": "Settings.",
+      "section": {
+        "account": "account",
+        "trading": "trading",
+        "security": "security",
+        "preferences": "preferences",
+        "help": "help"
+      },
+      "account": {
+        "profile": "Profile",
+        "wallet": "Wallet",
+        "language": "Language",
+        "currency": "Currency"
+      },
+      "trading": {
+        "proMode": "Pro Mode",
+        "proModeSub": "Terminal view on Home, Markets and Trade",
+        "priceAlerts": "Price alerts",
+        "dca": "Recurring buys",
+        "sltp": "SL / TP",
+        "slippage": "Slippage"
+      },
+      "security": {
+        "lock": "Lock",
+        "twoFa": "2FA",
+        "twoFaWarn": "No 2FA",
+        "backupPhrase": "Backup phrase",
+        "sessions": "Active sessions"
+      },
+      "preferences": {
+        "theme": "Theme",
+        "themeAuto": "AUTO",
+        "notifications": "Notifications",
+        "dolarBlue": "Blue dollar"
+      },
+      "help": {
+        "tutorial": "Tutorial",
+        "center": "Help center",
+        "twitter": "Twitter",
+        "feedback": "Suggest a feature"
+      },
+      "logout": "Sign out",
+      "version": "v{version} · {city}"
+    },
+    "leaderboard": {
+      "title": "Board.",
+      "tabs": {
+        "day": "24h",
+        "week": "7 days",
+        "month": "30 days",
+        "all": "All time"
+      },
+      "podiumLabel": "PNL {tf}",
+      "yourRank": "Your spot #{rank} of {total}",
+      "topPct": "top {pct}% in {flag}",
+      "section": "the rest",
+      "you": "You"
+    },
+    "common": {
+      "viewAll": "View all",
+      "search": "Search"
+    }
+  },
   "setupWizard": {
     "title": "Trading Setup",
     "letsGo": "Let's Go! ⚡",

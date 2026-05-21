@@ -1009,6 +1009,11 @@ h6 {
   to { transform: translateX(10px); }
 }
 
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Horizontal snap rail (for asset picker) */
 .snap-rail {
   display: flex;
