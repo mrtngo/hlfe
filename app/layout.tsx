@@ -11,6 +11,8 @@ import { CurrencyProvider } from '@/context/CurrencyContext';
 import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
+// Fraunces — editorial serif with optical sizing & soft axes (for display moments)
+import "@fontsource-variable/fraunces";
 
 export const metadata: Metadata = {
     title: 'Rayo - Trade at the Speed of Light',
@@ -61,6 +63,7 @@ export default function RootLayout({
             '--font-plus-jakarta': '"Plus Jakarta Sans Variable", sans-serif',
             '--font-inter': '"Inter Variable", sans-serif',
             '--font-jetbrains': '"JetBrains Mono Variable", monospace',
+            '--font-display': '"Fraunces Variable", "Plus Jakarta Sans Variable", serif',
         } as React.CSSProperties}>
             <body className="min-h-screen bg-background font-sans antialiased font-inter">
                 <PrivyProvider>
