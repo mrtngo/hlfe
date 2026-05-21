@@ -4,7 +4,7 @@ import 'driver.js/dist/driver.css';
 
 interface UseOnboardingProps {
     enabled?: boolean;
-    setView: (view: 'home' | 'trading' | 'history' | 'profile' | 'leaderboard') => void;
+    setView: (view: 'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotAdvanced' | 'predictions' | 'advanced') => void;
     currentView: string;
 }
 
@@ -42,54 +42,21 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
                     }
                 },
                 {
-                    element: '#nav-trade-tab',
+                    element: '#nav-buy-tab',
                     popover: {
-                        title: 'Pestaña de Trading',
-                        description: 'Accede a la vista de Trading para ver gráficos y colocar órdenes.',
+                        title: 'Comprar Cripto',
+                        description: 'Acá comprás cripto al precio de mercado. Simple, sin apalancamiento. Ideal para empezar.',
                         side: 'top',
-                        align: 'center',
-                        onNextClick: () => {
-                            setView('trading');
-                            setTimeout(() => {
-                                driverObj.current.moveNext();
-                            }, 300);
-                        }
+                        align: 'center'
                     }
                 },
                 {
-                    element: '#trading-market-selector',
+                    element: '#nav-advanced-tab',
                     popover: {
-                        title: 'Seleccionar Mercado',
-                        description: 'Toca aquí para cambiar entre distintos mercados y activos.',
-                        side: 'bottom',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#trading-chart',
-                    popover: {
-                        title: 'Gráfico de Precio',
-                        description: 'Analizá movimientos y tendencias de precio con el gráfico interactivo.',
-                        side: 'left',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#trading-order-panel',
-                    popover: {
-                        title: 'Colocar Órdenes',
-                        description: 'Configurá tu apalancamiento y colocá órdenes Long o Short desde aquí.',
-                        side: 'left',
-                        align: 'start'
-                    }
-                },
-                {
-                    element: '#trading-positions-panel',
-                    popover: {
-                        title: 'Gestionar Posiciones',
-                        description: 'Seguí tus posiciones abiertas y el PnL no realizado en tiempo real.',
-                        side: 'right',
-                        align: 'start'
+                        title: 'Modo Avanzado',
+                        description: 'Cuando estés listo, acá encontrás perpetuos, predicciones y herramientas para traders experimentados.',
+                        side: 'top',
+                        align: 'center'
                     }
                 },
                 {

@@ -7,11 +7,12 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { Plus, X, ArrowUpRight, LogIn, CreditCard, TrendingUp, TrendingDown, ChevronDown, DollarSign, Clock } from 'lucide-react';
+import { Plus, X, ArrowUpRight, LogIn, CreditCard, TrendingUp, ChevronDown, Clock, ShoppingCart, Repeat } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
-import FeeCalculatorModal from '@/components/FeeCalculatorModal';
 import PortfolioChart from '@/components/PortfolioChart';
+import DcaSchedulesList from '@/components/DcaSchedulesList';
+import { useDcaSchedules } from '@/hooks/useDcaSchedules';
 import DepositModal from '@/components/DepositModal';
 import ShareModal from '@/components/ShareModal';
 import PositionCard from '@/components/PositionCard';
@@ -27,14 +28,16 @@ const WATCHLIST_STORAGE_KEY = STORAGE_KEYS.WATCHLIST;
 interface HomeScreenProps {
     onTokenClick?: (symbol: string) => void;
     onTradeClick?: () => void;
+    onBuyClick?: () => void;
 }
 
-export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
+export default function HomeScreen({ onTokenClick, onBuyClick }: HomeScreenProps = {}) {
     const { t } = useLanguage();
     const { currency, toggleCurrency, formatCurrency } = useCurrency();
     const { account, positions, markets, setSelectedMarket, address, thirtyDayPnl, openOrders } = useHyperliquid();
-    const { ready, authenticated, login } = usePrivy();
+    const { ready, authenticated, login, user: privyUser } = usePrivy();
     const { user } = useUser();
+    const { schedules: dcaSchedules } = useDcaSchedules();
     const [watchlist, setWatchlist] = useState<string[]>(() => {
         if (typeof window === 'undefined') return [];
         const saved = localStorage.getItem(WATCHLIST_STORAGE_KEY);
@@ -50,7 +53,6 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
     const [showAddDropdown, setShowAddDropdown] = useState(false);
     const [sharePosition, setSharePosition] = useState<Position | null>(null);
     const [showDepositModal, setShowDepositModal] = useState(false);
-    const [showFeeCalculator, setShowFeeCalculator] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<TokenCategory>('l1');
     const [isPositionsExpanded, setIsPositionsExpanded] = useState(false);
 
@@ -91,12 +93,16 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
     );
     const portfolioValue = account.equity || account.balance;
 
-    // Format username from address or use saved username
+    // Friendly username — prefer profile / email / google name, never show wallet address
     const getUsername = () => {
         if (user?.username) return `@${user.username}`;
         if (user?.display_name) return user.display_name;
-        if (!address) return '';
-        return `${address.slice(0, 4)}...${address.slice(-4)}`;
+        // Privy identity: email local-part or Google name
+        const email = privyUser?.email?.address;
+        if (email) return email.split('@')[0];
+        const googleName = privyUser?.google?.name;
+        if (googleName) return googleName.split(' ')[0];
+        return '';
     };
 
     // 30-day PnL now comes from the provider (cached)
@@ -105,30 +111,12 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
         return account.equity > 0 ? ((thirtyDayPnl / account.equity) * 100) : 0;
     }, [account.equity, thirtyDayPnl]);
 
-    // Calculate top gainers and losers
-    const { cryptoGainers, cryptoLosers, stockGainers, stockLosers } = useMemo(() => {
-        const cryptoMarkets = (markets || []).filter(m => !m.isStock && m.change24h !== undefined);
-        const stockMarkets = (markets || []).filter(m => m.isStock && m.change24h !== undefined);
-
-        const cGainers = [...cryptoMarkets]
+    // Top crypto gainers (beginners care about up-only, not what's tanking)
+    const cryptoGainers = useMemo(() => {
+        return (markets || [])
+            .filter(m => !m.isStock && m.change24h !== undefined && (m.change24h || 0) > 0)
             .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
             .slice(0, 5);
-        const cLosers = [...cryptoMarkets]
-            .sort((a, b) => (a.change24h || 0) - (b.change24h || 0))
-            .slice(0, 5);
-        const sGainers = [...stockMarkets]
-            .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
-            .slice(0, 5);
-        const sLosers = [...stockMarkets]
-            .sort((a, b) => (a.change24h || 0) - (b.change24h || 0))
-            .slice(0, 5);
-
-        return {
-            cryptoGainers: cGainers,
-            cryptoLosers: cLosers,
-            stockGainers: sGainers,
-            stockLosers: sLosers
-        };
     }, [markets]);
 
     if (!mounted) {
@@ -139,28 +127,158 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
         );
     }
 
-    // Show login prompt if not authenticated
+    // Show login prompt if not authenticated — beginner-first, no wallet language
     if (ready && !authenticated) {
+        const btc = (markets || []).find(m => m.name === 'BTC');
+        const eth = (markets || []).find(m => m.name === 'ETH');
+        const sol = (markets || []).find(m => m.name === 'SOL');
+        const previewAssets = [btc, eth, sol].filter(Boolean);
+
         return (
-            <div className="max-w-2xl mx-auto">
-                <div className="glass-card p-8 relative overflow-hidden text-center">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -mr-48 -mt-48 pointer-events-none" />
-                    <div className="relative z-10">
-                        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
-                            <LogIn className="w-10 h-10 text-primary" />
+            <div className="relative pb-12">
+                {/* Atmospheric gradient mesh */}
+                <div
+                    aria-hidden
+                    className="pointer-events-none fixed inset-0 -z-10"
+                    style={{
+                        background:
+                            'radial-gradient(80% 60% at 50% 0%, rgba(250,204,21,0.1) 0%, transparent 55%), radial-gradient(50% 40% at 100% 70%, rgba(34, 197, 94, 0.05) 0%, transparent 50%), radial-gradient(50% 40% at 0% 70%, rgba(124, 58, 237, 0.05) 0%, transparent 50%), #000',
+                    }}
+                />
+
+                <div className="max-w-xl mx-auto px-5 pt-8 pb-6">
+                    {/* Hero — editorial welcome */}
+                    <div className="mb-8">
+                        <div
+                            className="text-[10px] uppercase tracking-[0.22em] font-bold mb-3 flex items-center gap-1.5"
+                            style={{ color: 'var(--color-text-tertiary)' }}
+                        >
+                            <span className="dot-live" />
+                            Rayo · LATAM
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                            {t.home.welcome}
+                        <h1
+                            className="font-display mb-3"
+                            style={{
+                                fontSize: '2.75rem',
+                                lineHeight: 1,
+                                color: 'var(--color-text-primary)',
+                                fontVariationSettings: '"opsz" 144, "SOFT" 40, "wght" 600',
+                                letterSpacing: '-0.035em',
+                            }}
+                        >
+                            Comprá{' '}
+                            <span
+                                className="font-display-italic"
+                                style={{
+                                    fontVariationSettings: '"opsz" 144, "SOFT" 100, "wght" 500',
+                                    color: 'var(--color-brand-primary)',
+                                }}
+                            >
+                                cripto
+                            </span>
+                            <br />
+                            como{' '}
+                            <span
+                                className="font-display-italic"
+                                style={{
+                                    fontVariationSettings: '"opsz" 144, "SOFT" 100, "wght" 500',
+                                    color: 'var(--color-text-secondary)',
+                                }}
+                            >
+                                tomás un café
+                            </span>
                         </h1>
-                        <p className="text-[var(--color-text-secondary)] mb-8 max-w-md mx-auto">
+                        <p
+                            className="text-[14px] max-w-md"
+                            style={{ color: 'var(--color-text-secondary)', lineHeight: 1.55 }}
+                        >
                             {t.home.welcomeDescription}
                         </p>
-                        <button
-                            onClick={login}
-                            className="btn btn-primary px-8 py-4 text-lg font-semibold"
+                    </div>
+
+                    {/* Live market preview — shows social proof and life */}
+                    {previewAssets.length > 0 && (
+                        <div className="surface-soft grain rounded-2xl mb-8 overflow-hidden">
+                            <div
+                                className="px-4 py-2.5 flex items-center justify-between"
+                                style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                            >
+                                <span
+                                    className="text-[10px] uppercase tracking-[0.18em] font-bold"
+                                    style={{ color: 'var(--color-text-tertiary)' }}
+                                >
+                                    Precios en vivo
+                                </span>
+                                <span className="dot-live" />
+                            </div>
+                            {previewAssets.map((m, idx) => {
+                                if (!m) return null;
+                                const ch = m.change24h || 0;
+                                const isUp = ch >= 0;
+                                return (
+                                    <div
+                                        key={m.symbol}
+                                        className="flex items-center gap-3 px-4 py-3"
+                                        style={{
+                                            borderBottom: idx < previewAssets.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                                        }}
+                                    >
+                                        <TokenLogo symbol={m.name} size={32} />
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-bold text-[14px]" style={{ color: 'var(--color-text-primary)' }}>
+                                                {m.name}
+                                            </div>
+                                            <div
+                                                className="tabular-mono text-[11px]"
+                                                style={{ color: 'var(--color-text-tertiary)' }}
+                                            >
+                                                ${(m.price ?? 0) < 1
+                                                    ? (m.price ?? 0).toFixed(4)
+                                                    : (m.price ?? 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                                            </div>
+                                        </div>
+                                        <div style={{ width: 70, height: 26 }} className="flex-shrink-0">
+                                            <MiniChart symbol={m.symbol} isStock={false} />
+                                        </div>
+                                        <span
+                                            className="tabular-mono text-[12px] font-bold w-14 text-right"
+                                            style={{ color: isUp ? 'var(--color-positive)' : 'var(--color-negative)' }}
+                                        >
+                                            {isUp ? '+' : ''}{ch.toFixed(2)}%
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* CTA + trust */}
+                    <button
+                        onClick={login}
+                        className="cta-brand w-full py-4 rounded-2xl text-[15px] font-bold tracking-tight flex items-center justify-center gap-2 mb-3"
+                    >
+                        {t.home.signInToContinue}
+                        <ArrowUpRight className="w-4 h-4" strokeWidth={2.5} />
+                    </button>
+
+                    <div className="flex items-center justify-center gap-1.5 text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
+                        <span
+                            className="font-display-italic"
+                            style={{
+                                fontVariationSettings: '"opsz" 24, "SOFT" 100, "wght" 400',
+                            }}
                         >
-                            {t.home.signInToContinue}
-                        </button>
+                            ✦
+                        </span>
+                        <span>{t.home.trustSignal}</span>
+                        <span
+                            className="font-display-italic"
+                            style={{
+                                fontVariationSettings: '"opsz" 24, "SOFT" 100, "wght" 400',
+                            }}
+                        >
+                            ✦
+                        </span>
                     </div>
                 </div>
             </div>
@@ -206,13 +324,126 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                 </div>
             </div>
 
-            {/* Deposit Button */}
+            {/* Primary action: Comprar — split card with live BTC preview */}
+            {onBuyClick && (() => {
+                const btc = (markets || []).find(m => m.name === 'BTC');
+                const btcChange = btc?.change24h || 0;
+                const btcUp = btcChange >= 0;
+                return (
+                    <button
+                        onClick={onBuyClick}
+                        className="w-full rounded-3xl overflow-hidden border-none outline-none text-left grain relative"
+                        style={{
+                            background: 'linear-gradient(135deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                            boxShadow:
+                                '0 1px 0 0 rgba(255,255,255,0.4) inset, 0 -1px 0 0 rgba(0,0,0,0.15) inset, 0 18px 48px -12px rgba(250, 204, 21, 0.5), 0 6px 18px -6px rgba(250, 204, 21, 0.3)',
+                        }}
+                    >
+                        {/* shimmer overlay */}
+                        <div
+                            aria-hidden
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                pointerEvents: 'none',
+                                background:
+                                    'radial-gradient(60% 80% at 100% 0%, rgba(255,255,255,0.22) 0%, transparent 55%)',
+                            }}
+                        />
+
+                        <div className="relative flex items-stretch">
+                            {/* Left: action */}
+                            <div className="flex-1 p-5 pr-2">
+                                <div
+                                    className="text-[10px] uppercase tracking-[0.22em] font-bold mb-2 flex items-center gap-1.5"
+                                    style={{ color: 'rgba(26,19,4,0.55)' }}
+                                >
+                                    <ShoppingCart className="w-3 h-3" strokeWidth={2.5} />
+                                    Tocá para empezar
+                                </div>
+                                <div
+                                    className="font-display"
+                                    style={{
+                                        fontSize: '1.5rem',
+                                        lineHeight: 1.05,
+                                        color: '#1A1304',
+                                        fontVariationSettings: '"opsz" 144, "SOFT" 40, "wght" 600',
+                                        letterSpacing: '-0.025em',
+                                    }}
+                                >
+                                    Comprar
+                                    <br />
+                                    <span
+                                        className="font-display-italic"
+                                        style={{
+                                            fontVariationSettings: '"opsz" 144, "SOFT" 100, "wght" 500',
+                                            color: 'rgba(26,19,4,0.65)',
+                                        }}
+                                    >
+                                        cripto hoy
+                                    </span>
+                                </div>
+                                <div
+                                    className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-bold"
+                                    style={{ color: '#1A1304' }}
+                                >
+                                    Empezá con $25
+                                    <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                </div>
+                            </div>
+
+                            {/* Right: live BTC mini preview pinned in dark glass */}
+                            {btc && (
+                                <div
+                                    className="w-[120px] m-3 ml-1 p-3 rounded-2xl flex-shrink-0 flex flex-col justify-between relative"
+                                    style={{
+                                        background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.92) 100%)',
+                                        border: '1px solid rgba(0,0,0,0.4)',
+                                        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.05)',
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <TokenLogo symbol="BTC" size={22} />
+                                        <span
+                                            className="tabular-mono text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                                            style={{
+                                                backgroundColor: btcUp ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                                                color: btcUp ? 'var(--color-positive)' : 'var(--color-negative)',
+                                            }}
+                                        >
+                                            {btcUp ? '+' : ''}{btcChange.toFixed(1)}%
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div
+                                            className="tabular-mono font-bold text-[13px] mb-0.5"
+                                            style={{ color: '#fff' }}
+                                        >
+                                            ${(btc.price || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                                        </div>
+                                        <div style={{ height: 22 }} className="opacity-80">
+                                            <MiniChart symbol={btc.symbol} isStock={false} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </button>
+                );
+            })()}
+
+            {/* Deposit Button (secondary, refined) */}
             <button
                 onClick={() => setShowDepositModal(true)}
-                className="btn btn-primary w-full rounded-2xl text-lg"
+                className="w-full rounded-2xl text-[14px] flex items-center justify-center gap-2 py-3.5 transition-colors border-none outline-none font-semibold"
+                style={{
+                    backgroundColor: 'rgba(255,255,255,0.025)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                    color: 'var(--color-text-primary)',
+                }}
             >
-                <CreditCard className="w-5 h-5" />
-                {t.common.deposit}
+                <CreditCard className="w-4 h-4" style={{ color: 'var(--color-text-secondary)' }} />
+                <span style={{ color: 'var(--color-text-secondary)' }}>{t.common.deposit}</span>
             </button>
 
             {/* Open Positions */}
@@ -235,7 +466,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                 <TrendingUp className="w-5 h-5 text-brand" />
                             </div>
                             <div className="text-left">
-                                <h2 className="text-lg font-bold text-white">{t.home.openPositions}</h2>
+                                <h2 className="text-lg font-bold text-white">{t.home.yourHoldings}</h2>
                                 <p className="text-xs text-[var(--color-text-tertiary)]">
                                     {positions.length === 1 ? t.positions.activePositions.replace('{{count}}', positions.length.toString()) : t.positions.activePositionsPlural.replace('{{count}}', positions.length.toString())}
                                 </p>
@@ -259,6 +490,22 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                             ))}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* DCA / Compras Programadas */}
+            {dcaSchedules.length > 0 && (
+                <div className="glass-card rounded-2xl p-5">
+                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
+                        <div className="w-9 h-9 rounded-xl bg-[var(--color-brand-primary-muted)] flex items-center justify-center">
+                            <Repeat className="w-5 h-5 text-brand" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-white">{t.dca.title}</h2>
+                            <p className="text-xs text-[var(--color-text-tertiary)]">{t.dca.subtitle}</p>
+                        </div>
+                    </div>
+                    <DcaSchedulesList compact />
                 </div>
             )}
 
@@ -341,7 +588,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                 </div>
             )}
 
-            {/* Top Movers - Crypto */}
+            {/* Top Crypto Gainers (beginner-friendly: gainers only) */}
             {cryptoGainers.length > 0 && (
                 <div className="glass-card rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
@@ -351,12 +598,7 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                         </div>
                         <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-brand-primary-muted)] text-brand font-semibold">24h</span>
                     </div>
-                    {/* Gainers */}
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <TrendingUp className="w-4 h-4 text-positive" />
-                        <span className="text-sm font-bold text-positive">{t.home.gainers}</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {cryptoGainers.map((market) => {
                             const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
                             const tokenName = getTokenFullName(ticker);
@@ -382,43 +624,6 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                                     </div>
                                     <div className="text-right w-[104px] shrink-0">
                                         <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                        <div className="text-positive font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</div>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                    {/* Losers */}
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <TrendingDown className="w-4 h-4 text-negative" />
-                        <span className="text-sm font-bold text-negative">{t.home.losers}</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {cryptoLosers.map((market) => {
-                            const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
-                            const tokenName = getTokenFullName(ticker);
-                            return (
-                                <button
-                                    key={market.name}
-                                    onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
-                                    style={{ paddingTop: '20px', paddingBottom: '20px' }}
-                                >
-                                    <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
-                                    <div className="text-left min-w-0 w-[80px]">
-                                        <div className="font-bold text-white text-base">{ticker}</div>
-                                        <div className="text-xs text-[var(--color-text-secondary)] truncate">{tokenName}</div>
-                                    </div>
-                                    <div className="flex-1 h-[34px] opacity-90 flex items-center justify-center">
-                                        <MiniChart
-                                            symbol={market.symbol}
-                                            isStock={market.isStock === true}
-                                            width={88}
-                                            height={34}
-                                        />
-                                    </div>
-                                    <div className="text-right w-[104px] shrink-0">
-                                        <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
                                         <div className="text-negative font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</div>
                                     </div>
                                 </button>
@@ -427,116 +632,6 @@ export default function HomeScreen({ onTokenClick }: HomeScreenProps = {}) {
                     </div>
                 </div>
             )}
-
-            {/* Top Movers - Stocks */}
-            {stockGainers.length > 0 && (
-                <div className="glass-card rounded-2xl p-6">
-                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--color-border-default)]">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl">📈</span>
-                            <h2 className="text-lg font-bold text-white">{t.home.hotStocks}</h2>
-                        </div>
-                        <span className="text-xs px-2 py-1 rounded-full bg-[var(--color-brand-primary-muted)] text-brand font-semibold">24h</span>
-                    </div>
-                    {/* Gainers */}
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <TrendingUp className="w-4 h-4 text-positive" />
-                        <span className="text-sm font-bold text-positive">{t.home.gainers}</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-                        {stockGainers.map((market) => {
-                            const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
-                            const tokenName = getTokenFullName(ticker);
-                            return (
-                                <button
-                                    key={market.name}
-                                    onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
-                                    style={{ paddingTop: '20px', paddingBottom: '20px' }}
-                                >
-                                    <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
-                                    <div className="text-left min-w-0 w-[80px]">
-                                        <div className="font-bold text-white text-base">{ticker}</div>
-                                        <div className="text-xs text-[var(--color-text-secondary)] truncate">{tokenName}</div>
-                                    </div>
-                                    <div className="flex-1 h-[34px] opacity-90 flex items-center justify-center">
-                                        <MiniChart
-                                            symbol={market.symbol}
-                                            isStock={market.isStock === true}
-                                            width={88}
-                                            height={34}
-                                        />
-                                    </div>
-                                    <div className="text-right w-[104px] shrink-0">
-                                        <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                        <div className="text-positive font-bold font-mono text-sm">+{(market.change24h || 0).toFixed(2)}%</div>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                    {/* Losers */}
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <TrendingDown className="w-4 h-4 text-negative" />
-                        <span className="text-sm font-bold text-negative">{t.home.losers}</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {stockLosers.map((market) => {
-                            const ticker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
-                            const tokenName = getTokenFullName(ticker);
-                            return (
-                                <button
-                                    key={market.name}
-                                    onClick={() => { setSelectedMarket(market.symbol); if (onTokenClick) onTokenClick(market.symbol); }}
-                                    className="w-full flex items-center gap-3 bg-transparent border-none hover:opacity-70 transition-all active:scale-[0.98]"
-                                    style={{ paddingTop: '20px', paddingBottom: '20px' }}
-                                >
-                                    <TokenLogo symbol={market.symbol} size={40} className="rounded-full shrink-0" />
-                                    <div className="text-left min-w-0 w-[80px]">
-                                        <div className="font-bold text-white text-base">{ticker}</div>
-                                        <div className="text-xs text-[var(--color-text-secondary)] truncate">{tokenName}</div>
-                                    </div>
-                                    <div className="flex-1 h-[34px] opacity-90 flex items-center justify-center">
-                                        <MiniChart
-                                            symbol={market.symbol}
-                                            isStock={market.isStock === true}
-                                            width={88}
-                                            height={34}
-                                        />
-                                    </div>
-                                    <div className="text-right w-[104px] shrink-0">
-                                        <div className="text-white font-bold font-mono text-base">{market.price ? formatCurrency(market.price) : '0'}</div>
-                                        <div className="text-negative font-bold font-mono text-sm">{(market.change24h || 0).toFixed(2)}%</div>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Fee Calculator Banner */}
-            <button
-                onClick={() => setShowFeeCalculator(true)}
-                className="w-full p-4 flex items-center justify-between group transition-all active:scale-[0.98] rounded-2xl glass-card border-[var(--color-brand-primary-border)]"
-            >
-                <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-[var(--color-brand-primary)] flex items-center justify-center shrink-0">
-                        <DollarSign className="w-6 h-6 text-black" strokeWidth={2.5} />
-                    </div>
-                    <div className="text-left">
-                        <h3 className="font-bold text-white text-base">{t.home.compareFees}</h3>
-                        <p className="text-sm text-brand">{t.home.saveOnFees}</p>
-                    </div>
-                </div>
-                <ArrowUpRight className="w-5 h-5 text-brand shrink-0" strokeWidth={2.5} />
-            </button>
-
-            {/* Fee Calculator Modal */}
-            <FeeCalculatorModal
-                isOpen={showFeeCalculator}
-                onClose={() => setShowFeeCalculator(false)}
-            />
 
             {/* Categories Section */}
             <div className="glass-card rounded-2xl p-5">

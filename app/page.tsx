@@ -19,8 +19,10 @@ import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotTradingPanel from '@/components/SpotTradingPanel';
 import PolymarketPanel from '@/components/PolymarketPanel';
+import AdvancedMenu from '@/components/AdvancedMenu';
+import ComprarScreen from '@/components/ComprarScreen';
 import Trollbox from '@/components/Trollbox';
-import { BarChart3, History, User, Trophy, Target } from 'lucide-react';
+import { ShoppingCart, History, User, Sliders } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
@@ -37,7 +39,7 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'predictions'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotAdvanced' | 'predictions' | 'advanced'>('home');
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
@@ -116,9 +118,10 @@ export default function Home() {
                                 <HomeScreen
                                     onTokenClick={(symbol) => {
                                         setSelectedMarket(symbol);
-                                        setView('trading');
+                                        setView('spot');
                                     }}
                                     onTradeClick={() => setView('trading')}
+                                    onBuyClick={() => setView('spot')}
                                 />
                             </div>
                         ) : view === 'history' ? (
@@ -134,12 +137,24 @@ export default function Home() {
                                 <Leaderboard />
                             </div>
                         ) : view === 'spot' ? (
+                            <div className="mt-6" style={{ paddingBottom: '100px' }}>
+                                <ComprarScreen onOpenAdvanced={() => setView('trading')} />
+                            </div>
+                        ) : view === 'spotAdvanced' ? (
                             <div className="max-w-4xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
                                 <SpotTradingPanel />
                             </div>
                         ) : view === 'predictions' ? (
                             <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <PolymarketPanel />
+                            </div>
+                        ) : view === 'advanced' ? (
+                            <div className="mt-6" style={{ paddingBottom: '100px' }}>
+                                <AdvancedMenu
+                                    onSelectPerps={() => setView('trading')}
+                                    onSelectPredictions={() => setView('predictions')}
+                                    onSelectLeaderboard={() => setView('leaderboard')}
+                                />
                             </div>
                         ) : (
                             <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
@@ -221,20 +236,20 @@ export default function Home() {
                         <span className="text-[11px] font-semibold">{t.nav.home}</span>
                     </button>
 
-                    {/* Trading */}
+                    {/* Buy (Spot) */}
                     <button
-                        onClick={() => setView('trading')}
-                        id="nav-trade-tab"
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'trading' ? 'scale-110' : ''}`}
+                        onClick={() => setView('spot')}
+                        id="nav-buy-tab"
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'spot' || view === 'spotAdvanced' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
-                            filter: view === 'trading' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: view === 'trading' ? 1 : 0.6
+                            filter: (view === 'spot' || view === 'spotAdvanced') ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: (view === 'spot' || view === 'spotAdvanced') ? 1 : 0.6
                         }}
                     >
-                        <BarChart3 className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">{t.nav.trade}</span>
+                        <ShoppingCart className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">{t.nav.buy}</span>
                     </button>
 
                     {/* History */}
@@ -252,19 +267,20 @@ export default function Home() {
                         <span className="text-[11px] font-semibold">{t.nav.history}</span>
                     </button>
 
-                    {/* Predictions (Polymarket) */}
+                    {/* Advanced (Perps + Predictions + Leaderboard) */}
                     <button
-                        onClick={() => setView('predictions')}
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'predictions' ? 'scale-110' : ''}`}
+                        onClick={() => setView('advanced')}
+                        id="nav-advanced-tab"
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'advanced' || view === 'trading' || view === 'predictions' || view === 'leaderboard' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
-                            filter: view === 'predictions' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: view === 'predictions' ? 1 : 0.6
+                            filter: (view === 'advanced' || view === 'trading' || view === 'predictions' || view === 'leaderboard') ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: (view === 'advanced' || view === 'trading' || view === 'predictions' || view === 'leaderboard') ? 1 : 0.6
                         }}
                     >
-                        <Target className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">{t.polymarket?.navTitle || 'Predict'}</span>
+                        <Sliders className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">{t.nav.advanced}</span>
                     </button>
 
                     {/* Profile/Account */}
