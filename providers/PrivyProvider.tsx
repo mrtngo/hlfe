@@ -25,30 +25,27 @@ const wagmiConfig = createConfig({
 
 
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
-    // Check if we're on HTTPS (embedded wallets require HTTPS)
-    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
-
-    // Only enable embedded wallets on HTTPS
-    // On localhost HTTP, users can connect external wallets (MetaMask, etc.)
+    // Beginner-first login: email + Google only.
+    // Privy auto-creates an embedded wallet under the hood — the user never sees the word "wallet".
+    // External wallet connect (MetaMask etc.) is intentionally hidden for the LATAM hodler/DCA audience.
     const config: any = {
-        loginMethods: ['wallet', 'email'], // Wallet first for localhost
+        loginMethods: ['email', 'google'],
         appearance: {
             theme: 'dark',
-            accentColor: '#3b82f6',
+            accentColor: '#FACC15', // Rayo brand yellow
+            logo: '/logo.svg',
+            walletList: [], // hide all wallet connectors
+            showWalletLoginFirst: false,
+        },
+        embeddedWallets: {
+            ethereum: {
+                createOnLogin: 'users-without-wallets',
+                noPromptOnSignature: false,
+            },
         },
         defaultChain: arbitrum,
         supportedChains: [arbitrum, mainnet, polygon, base, optimism, avalanche, bsc, arbitrumSepolia],
     };
-
-    // Only add embeddedWallets config if on HTTPS
-    if (isHttps) {
-        config.embeddedWallets = {
-            ethereum: {
-                createOnLogin: 'users-without-wallets',
-                noPromptOnSignature: false, // Set to true to reduce prompts, but less secure
-            },
-        };
-    }
 
     return (
         <PrivyAuth
