@@ -7,7 +7,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { getTokenFullName, STORAGE_KEYS } from '@/lib/constants';
 import TokenLogo from '@/components/TokenLogo';
-import TradingChart from '@/components/TradingChart';
+import TokenCandleChart from '@/components/TokenCandleChart';
 import ScreenHeader from '@/components/ScreenHeader';
 import HairlineSection from '@/components/HairlineSection';
 
@@ -158,19 +158,11 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
 
             {/* Chart */}
             <div style={{ padding: '20px 6px 0' }}>
-                <div
-                    style={{
-                        border: '1px solid rgba(255,255,255,0.07)',
-                        borderRadius: 18,
-                        overflow: 'hidden',
-                        background: 'linear-gradient(165deg, #16120D 0%, #0B0907 100%)',
-                        padding: '8px 4px 0',
-                    }}
-                >
-                    <div style={{ height: 280 }}>
-                        <TradingChart symbol={market.symbol} />
-                    </div>
-                </div>
+                <TokenCandleChart
+                    symbol={market.symbol}
+                    isStock={market.isStock === true}
+                    height={240}
+                />
             </div>
 
             {/* Position */}
