@@ -19,12 +19,14 @@ interface AdvancedMenuProps {
     onSelectPerps: () => void;
     onSelectPredictions: () => void;
     onSelectLeaderboard: () => void;
+    onSelectMarkets?: () => void;
 }
 
 export default function AdvancedMenu({
     onSelectPerps,
     onSelectPredictions,
     onSelectLeaderboard,
+    onSelectMarkets,
 }: AdvancedMenuProps) {
     const { t } = useLanguage();
     const { markets } = useHyperliquid();
@@ -432,6 +434,54 @@ export default function AdvancedMenu({
                         </div>
                     </div>
                 </motion.button>
+
+                {/* MERCADOS — explore all markets */}
+                {onSelectMarkets && (
+                    <motion.button
+                        whileTap={{ scale: 0.985 }}
+                        onClick={onSelectMarkets}
+                        className="surface-soft grain text-left rounded-2xl border-none outline-none w-full mb-5 overflow-hidden"
+                        style={{ position: 'relative' }}
+                    >
+                        <div className="relative p-5 flex items-center gap-4">
+                            <div
+                                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{
+                                    backgroundColor: 'rgba(250,204,21,0.1)',
+                                    border: '1px solid rgba(250,204,21,0.22)',
+                                    color: 'var(--color-brand-primary)',
+                                }}
+                            >
+                                <BarChart3 className="w-5 h-5" strokeWidth={1.75} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div
+                                    className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5"
+                                    style={{ color: 'var(--color-brand-primary)' }}
+                                >
+                                    Explorar · todos los activos
+                                </div>
+                                <div
+                                    className="font-display"
+                                    style={{
+                                        fontSize: '1.25rem',
+                                        color: 'var(--color-text-primary)',
+                                        fontVariationSettings: '"opsz" 36, "SOFT" 50, "wght" 600',
+                                        letterSpacing: '-0.02em',
+                                        lineHeight: 1,
+                                    }}
+                                >
+                                    Mercados
+                                </div>
+                            </div>
+                            <ArrowUpRight
+                                className="w-5 h-5"
+                                style={{ color: 'var(--color-text-tertiary)' }}
+                                strokeWidth={1.75}
+                            />
+                        </div>
+                    </motion.button>
+                )}
 
                 {/* Risk notice — refined */}
                 <div

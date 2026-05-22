@@ -13,7 +13,8 @@ import MarketSelector from '@/components/MarketSelector';
 import MarketStats from '@/components/MarketStats';
 import OrderHistory from '@/components/OrderHistory';
 import Leaderboard from '@/components/Leaderboard';
-import Profile from '@/components/Profile';
+import ProfileScreen from '@/components/ProfileScreen';
+import AjustesScreen from '@/components/AjustesScreen';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
@@ -122,7 +123,8 @@ export default function Home() {
                                 <HomeScreen
                                     onTokenClick={(symbol) => {
                                         setSelectedMarket(symbol);
-                                        setView('spot');
+                                        setDetailSymbol(symbol);
+                                        setView('tokenDetail');
                                     }}
                                     onTradeClick={() => setView('trading')}
                                     onBuyClick={() => setView('spot')}
@@ -133,8 +135,17 @@ export default function Home() {
                                 <OrderHistory />
                             </div>
                         ) : view === 'profile' ? (
-                            <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                                <Profile />
+                            <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <ProfileScreen
+                                    onOpenSettings={() => setView('settings')}
+                                    onOpenPortfolio={() => setView('portfolio')}
+                                    onOpenHistory={() => setView('history')}
+                                    onOpenLeaderboard={() => setView('leaderboard')}
+                                />
+                            </div>
+                        ) : view === 'settings' ? (
+                            <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <AjustesScreen onBack={() => setView('profile')} />
                             </div>
                         ) : view === 'leaderboard' ? (
                             <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
@@ -158,6 +169,7 @@ export default function Home() {
                                     onSelectPerps={() => setView('trading')}
                                     onSelectPredictions={() => setView('predictions')}
                                     onSelectLeaderboard={() => setView('leaderboard')}
+                                    onSelectMarkets={() => setView('markets')}
                                 />
                             </div>
                         ) : view === 'markets' ? (
