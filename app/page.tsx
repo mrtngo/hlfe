@@ -5,12 +5,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { usePrivy } from '@privy-io/react-auth';
-import OrderPanel from '@/components/OrderPanel';
-import PositionsPanel from '@/components/PositionsPanel';
 import HomeScreen from '@/components/HomeScreen';
-import TradingChart from '@/components/TradingChart';
-import MarketSelector from '@/components/MarketSelector';
-import MarketStats from '@/components/MarketStats';
 import OrderHistory from '@/components/OrderHistory';
 import Leaderboard from '@/components/Leaderboard';
 import ProfileScreen from '@/components/ProfileScreen';
@@ -21,7 +16,8 @@ import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotTradingPanel from '@/components/SpotTradingPanel';
 import PolymarketPanel from '@/components/PolymarketPanel';
 import AdvancedMenu from '@/components/AdvancedMenu';
-import ComprarScreen from '@/components/ComprarScreen';
+import ComprarFlow from '@/components/ComprarFlow';
+import TradearScreen from '@/components/TradearScreen';
 import MarketsScreen from '@/components/MarketsScreen';
 import TokenDetail from '@/components/TokenDetail';
 import PortfolioScreen from '@/components/PortfolioScreen';
@@ -152,8 +148,11 @@ export default function Home() {
                                 <Leaderboard />
                             </div>
                         ) : view === 'spot' ? (
-                            <div className="mt-6" style={{ paddingBottom: '100px' }}>
-                                <ComprarScreen onOpenAdvanced={() => setView('trading')} />
+                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <ComprarFlow
+                                    onOpenAdvanced={() => setView('trading')}
+                                    onClose={() => setView('home')}
+                                />
                             </div>
                         ) : view === 'spotAdvanced' ? (
                             <div className="max-w-4xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
@@ -205,30 +204,8 @@ export default function Home() {
                                 />
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-4 min-h-[calc(100vh-200px)]" style={{ paddingBottom: '100px' }}>
-                                {/* Market Selector */}
-                                <div className="px-4 pt-4 mb-24" id="trading-market-selector">
-                                    <MarketSelector />
-                                    <MarketStats />
-                                </div>
-
-                                {/* Chart Section - Full Width with padding */}
-                                <div className="flex-1 min-h-0 mt-14 px-4">
-                                    <TradingChart />
-                                </div>
-
-                                {/* Bottom Grid - Positions, Orders */}
-                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 flex-1 min-h-0 px-4">
-                                    {/* Left - Positions */}
-                                    <div className="h-full overflow-hidden">
-                                        <PositionsPanel />
-                                    </div>
-
-                                    {/* Right - Order Panel */}
-                                    <div className="h-full overflow-hidden">
-                                        <OrderPanel />
-                                    </div>
-                                </div>
+                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <TradearScreen onBack={() => setView('advanced')} />
                             </div>
                         )}
                     </div>
