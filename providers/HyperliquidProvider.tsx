@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode, startTransition, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode, startTransition, useRef } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useMarketData, Market } from '@/lib/hyperliquid/market-data';
 import { createHyperliquidClient, API_URL, IS_TESTNET, BUILDER_CONFIG } from '@/lib/hyperliquid/client';
@@ -169,33 +169,8 @@ const HyperliquidContext = createContext<HyperliquidContextType | undefined>(und
 export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const { t, formatCurrency } = useLanguage();
     const { ready, authenticated } = usePrivy();
-    const { wallets: privyWallets } = useWallets();
+    const { wallets } = useWallets();
     const { data: walletClient } = useWalletClient();
-
-    // In BYPASS_AUTH mode we synthesize a wallet entry that looks like a Privy
-    // embedded wallet but is backed by NEXT_PUBLIC_TEST_PRIVATE_KEY. This lets
-    // every existing signing path keep working without per-call changes.
-    const wallets = useMemo(() => {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { BYPASS_AUTH, TEST_WALLET_PRIVATE_KEY, TEST_WALLET_ADDRESS } =
-            require('@/lib/dev-config') as {
-                BYPASS_AUTH: boolean;
-                TEST_WALLET_PRIVATE_KEY: string | null;
-                TEST_WALLET_ADDRESS: string;
-            };
-        if (!BYPASS_AUTH || !TEST_WALLET_PRIVATE_KEY) return privyWallets;
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { makeLocalKeyProvider } = require('@/lib/local-key-provider') as {
-            makeLocalKeyProvider: (pk: string) => any;
-        };
-        const provider = makeLocalKeyProvider(TEST_WALLET_PRIVATE_KEY);
-        const fake = {
-            address: TEST_WALLET_ADDRESS.toLowerCase(),
-            walletClientType: 'privy' as const,
-            getEthereumProvider: async () => provider,
-        };
-        return [fake] as unknown as typeof privyWallets;
-    }, [privyWallets]);
 
     // Wallet state
     const [address, setAddress] = useState<string | null>(null);
@@ -295,24 +270,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
 
 
-    // Get wallet address from Privy (embedded or external wallet).
-    // In BYPASS_AUTH mode (test branch), use the NEXT_PUBLIC_TEST_WALLET so the
-    // UI past the login wall renders without going through Privy.
+    // Get wallet address from Privy (embedded or external wallet)
     useEffect(() => {
-        // Lazy-load dev config to avoid bundling test-mode logic into production checks.
-        // Defaults to false / zero-address when env vars are unset (mainnet behaviour).
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { BYPASS_AUTH, TEST_WALLET_ADDRESS } = require('@/lib/dev-config') as {
-            BYPASS_AUTH: boolean;
-            TEST_WALLET_ADDRESS: string;
-        };
-
-        if (BYPASS_AUTH) {
-            setAddress(TEST_WALLET_ADDRESS.toLowerCase());
-            setIsConnected(true);
-            return;
-        }
-
         if (authenticated && wallets.length > 0) {
             const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
             const connectedWallet = embeddedWallet || wallets[0];
@@ -483,36 +442,17 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [address, wallets]);
 
-    // Check and initialize agent wallet.
-    // In BYPASS_AUTH mode with a test PK, auto-set up the agent on first mount
-    // so trades sign without any user clicks.
+    // Check and initialize agent wallet
     useEffect(() => {
-        if (!address) return;
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { BYPASS_AUTH, TEST_WALLET_PRIVATE_KEY } = require('@/lib/dev-config') as {
-            BYPASS_AUTH: boolean;
-            TEST_WALLET_PRIVATE_KEY: string | null;
-        };
-
-        const checkWallet = async () => {
-            const agent = await getAgentWallet(address);
-            const approved = isAgentApproved(address);
-            if (approved && agent) {
-                setAgentWalletEnabled(true);
-                return;
-            }
-
-            if (BYPASS_AUTH && TEST_WALLET_PRIVATE_KEY) {
-                try {
-                    console.log('[bypass] auto-approving agent wallet for test mode…');
-                    await setupAgentWallet();
-                } catch (e) {
-                    console.warn('[bypass] auto-agent setup failed:', e);
-                }
-            }
-        };
-        checkWallet();
-    }, [address, setupAgentWallet]);
+        if (address) {
+            const checkWallet = async () => {
+                const agent = await getAgentWallet(address);
+                const approved = isAgentApproved(address);
+                setAgentWalletEnabled(approved && !!agent);
+            };
+            checkWallet();
+        }
+    }, [address]);
 
     // Check builder fee approval status
     const checkBuilderFeeApproval = useCallback(async (): Promise<boolean> => {
@@ -677,35 +617,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             setBuilderFeeLoading(false);
         }
     }, [address, wallets, checkBuilderFeeApproval]);
-
-    // Auto-approve builder fee in bypass mode (mirrors agent auto-setup above).
-    useEffect(() => {
-        if (!address) return;
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { BYPASS_AUTH, TEST_WALLET_PRIVATE_KEY } = require('@/lib/dev-config') as {
-            BYPASS_AUTH: boolean;
-            TEST_WALLET_PRIVATE_KEY: string | null;
-        };
-        if (!BYPASS_AUTH || !TEST_WALLET_PRIVATE_KEY) return;
-        if (!BUILDER_CONFIG.enabled) return;
-
-        let cancelled = false;
-        (async () => {
-            const alreadyApproved = await checkBuilderFeeApproval();
-            if (cancelled || alreadyApproved) return;
-            try {
-                console.log('[bypass] auto-approving builder fee…');
-                const result = await approveBuilderFee();
-                if (!result.success) {
-                    console.warn('[bypass] builder fee approval returned not-ok:', result.message);
-                }
-            } catch (e) {
-                console.warn('[bypass] builder fee auto-approval failed:', e);
-            }
-        })();
-
-        return () => { cancelled = true; };
-    }, [address, checkBuilderFeeApproval, approveBuilderFee]);
 
     // Enable DEX abstraction for Trade.xyz stocks (one-time setup)
     const enableDexAbstraction = useCallback(async (): Promise<{ success: boolean; message: string }> => {

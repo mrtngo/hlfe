@@ -6,7 +6,6 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { usePreferences } from '@/hooks/usePreferences';
-import { BYPASS_AUTH } from '@/lib/dev-config';
 import { ArrowUpRight } from 'lucide-react';
 import MiniChart from '@/components/MiniChart';
 import TokenLogo from '@/components/TokenLogo';
@@ -38,8 +37,8 @@ export default function HomeScreen({ onTokenClick, onBuyClick }: HomeScreenProps
         );
     }
 
-    // Logged-out hero — UNCHANGED in production. Skipped when BYPASS_AUTH is on.
-    if (!BYPASS_AUTH && ready && !authenticated) {
+    // Logged-out hero — UNCHANGED
+    if (ready && !authenticated) {
         const btc = (markets || []).find((m) => m.name === 'BTC');
         const eth = (markets || []).find((m) => m.name === 'ETH');
         const sol = (markets || []).find((m) => m.name === 'SOL');
