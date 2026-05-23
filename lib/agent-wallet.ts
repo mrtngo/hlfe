@@ -129,17 +129,30 @@ export async function getAgentWallet(userAddress?: string): Promise<AgentWallet 
             }
 
             const encryptedWallet = parsed as EncryptedAgentWallet;
-            const privateKey = await decryptPrivateKey(
-                encryptedWallet.encryptedPrivateKey,
-                encryptedWallet.iv,
-                userAddress
-            );
+            try {
+                const privateKey = await decryptPrivateKey(
+                    encryptedWallet.encryptedPrivateKey,
+                    encryptedWallet.iv,
+                    userAddress
+                );
 
-            return {
-                address: encryptedWallet.address,
-                privateKey,
-                name: encryptedWallet.name,
-            };
+                return {
+                    address: encryptedWallet.address,
+                    privateKey,
+                    name: encryptedWallet.name,
+                };
+            } catch (decryptErr) {
+                // Stored agent was encrypted for a different user address (or got
+                // corrupted). Clear it so setupAgentWallet can start fresh instead
+                // of repeatedly failing.
+                console.warn(
+                    'Stored agent wallet could not be decrypted for this user — clearing.',
+                    decryptErr,
+                );
+                try { localStorage.removeItem(AGENT_WALLET_KEY); } catch { /* ignore */ }
+                try { localStorage.removeItem(AGENT_APPROVAL_KEY); } catch { /* ignore */ }
+                return null;
+            }
         }
 
         // Legacy unencrypted format - migrate it if userAddress is provided
