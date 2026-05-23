@@ -6,7 +6,6 @@ import {
     ArrowDownLeft,
     Bell,
     ChevronDown,
-    ChevronRight,
     Plus,
     Repeat,
     X,
@@ -119,7 +118,7 @@ function HomeNormal({ onTokenClick, onBuyClick, onToggleProMode }: HomeNormalPro
 
     const cityLabel = user?.display_name && user.display_name.toLowerCase().includes('city')
         ? user.display_name
-        : 'Buenos Aires';
+        : 'Bogotá';
 
     const firstName = useMemo(() => {
         if (user?.username) return user.username;
@@ -802,11 +801,6 @@ function HomeNormal({ onTokenClick, onBuyClick, onToggleProMode }: HomeNormalPro
                 </div>
             </div>
 
-            {/* Dólar blue — only Spanish/AR users for now */}
-            {language === 'es' && (
-                <DolarBlueCard portfolioValue={portfolioValue} headlineLabel={t.homeRedesign.fx.ar.headline} subLabel={t.homeRedesign.fx.ar.sub} />
-            )}
-
             {/* Footer */}
             <div style={{ marginTop: 32, padding: '0 6px' }}>
                 <div
@@ -1149,101 +1143,3 @@ function WatchRow({
     );
 }
 
-function DolarBlueCard({
-    portfolioValue,
-    headlineLabel,
-    subLabel,
-}: {
-    portfolioValue: number;
-    headlineLabel: string;
-    subLabel: string;
-}) {
-    const [rate, setRate] = useState<number | null>(null);
-
-    useEffect(() => {
-        let alive = true;
-        async function fetchRate() {
-            try {
-                const res = await fetch('https://api.bluelytics.com.ar/v2/latest', {
-                    cache: 'force-cache',
-                });
-                if (!res.ok) return;
-                const data = await res.json();
-                const blue = data?.blue?.value_sell || data?.blue?.value_avg;
-                if (alive && typeof blue === 'number') setRate(blue);
-            } catch {
-                // ignore — hide card on failure
-            }
-        }
-        fetchRate();
-        return () => {
-            alive = false;
-        };
-    }, []);
-
-    if (rate == null) return null;
-
-    return (
-        <div style={{ padding: '28px 6px 0' }}>
-            <div
-                style={{
-                    padding: '16px 18px',
-                    borderRadius: 18,
-                    background:
-                        'linear-gradient(160deg, rgba(250,204,21,0.06), rgba(250,204,21,0.015))',
-                    border: '1px solid rgba(250,204,21,0.18)',
-                    display: 'flex',
-                    gap: 14,
-                    alignItems: 'center',
-                }}
-            >
-                <div style={{ fontSize: 28 }}>🇦🇷</div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                        className="font-display"
-                        style={{
-                            fontSize: 15,
-                            fontWeight: 600,
-                            lineHeight: 1.25,
-                            fontVariationSettings: '"opsz" 36, "SOFT" 40',
-                        }}
-                    >
-                        {headlineLabel}{' '}
-                        <span
-                            className="tabular-mono"
-                            style={{
-                                color: 'var(--color-brand-primary)',
-                                fontWeight: 700,
-                                fontSize: 14,
-                            }}
-                        >
-                            ${rate.toLocaleString('es-AR', { maximumFractionDigits: 0 })}
-                        </span>
-                    </div>
-                    <div
-                        style={{
-                            fontSize: 11,
-                            color: 'rgba(255,255,255,0.5)',
-                            marginTop: 3,
-                        }}
-                    >
-                        {subLabel}{' '}
-                        <span
-                            className="tabular-mono"
-                            style={{
-                                color: 'rgba(255,255,255,0.75)',
-                                fontWeight: 600,
-                            }}
-                        >
-                            ${(portfolioValue * rate).toLocaleString('es-AR', {
-                                maximumFractionDigits: 0,
-                            })}{' '}
-                            ARS
-                        </span>
-                    </div>
-                </div>
-                <ChevronRight size={18} color="rgba(255,255,255,0.4)" />
-            </div>
-        </div>
-    );
-}

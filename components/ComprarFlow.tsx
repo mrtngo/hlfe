@@ -60,16 +60,19 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
         builderFeeApproved,
     } = useHyperliquid();
 
+    // Only pre-select the asset if the user explicitly came from a token
+    // detail / row tap. Cold-entering Comprar from the bottom nav should
+    // prompt the user to choose what they want to buy.
     const initialSymbol = useMemo(() => {
-        if (!globalSelectedMarket) return 'BTC';
+        if (!globalSelectedMarket) return '';
         const name = globalSelectedMarket.replace(/-USD$/, '').replace(/-PERP$/, '');
-        return name || 'BTC';
+        return name || '';
     }, [globalSelectedMarket]);
 
     const [step, setStep] = useState<Step>(1);
     const [symbol, setSymbol] = useState<string>(initialSymbol);
     const [amount, setAmount] = useState<string>('');
-    const [showPicker, setShowPicker] = useState(false);
+    const [showPicker, setShowPicker] = useState<boolean>(!initialSymbol);
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -116,7 +119,7 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
         {
             id: 'transfer',
             name: 'Transferencia bancaria',
-            sub: 'CBU / CVU',
+            sub: 'PSE / Bancolombia',
             fee: '$0',
             feeFree: true,
             eta: '~1 hr',
@@ -126,7 +129,7 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
         {
             id: 'cash',
             name: 'Pago en efectivo',
-            sub: 'Pago Fácil / Rapipago',
+            sub: 'Efecty / Baloto',
             fee: '1.5%',
             eta: '24 hrs',
             icon: Banknote,
@@ -247,6 +250,7 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
                     market={market}
                     symbol={symbol}
                     amount={amount}
+                    setAmount={setAmount}
                     amountNum={amountNum}
                     tokenAmount={tokenAmount}
                     availableUsd={availableUsd}
@@ -254,7 +258,7 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
                     onPad={handleNumberPad}
                     onQuick={setQuick}
                     onNext={() => setStep(2)}
-                    valid={isAmountValid}
+                    valid={isAmountValid && !!symbol && !!market}
                     t={t}
                     formatCurrency={formatCurrency}
                 />
@@ -357,6 +361,7 @@ function StepAmount({
     market,
     symbol,
     amount,
+    setAmount,
     amountNum,
     tokenAmount,
     availableUsd,
@@ -371,6 +376,7 @@ function StepAmount({
     market: any;
     symbol: string;
     amount: string;
+    setAmount: (v: string) => void;
     amountNum: number;
     tokenAmount: number;
     availableUsd: number;
@@ -382,7 +388,24 @@ function StepAmount({
     t: any;
     formatCurrency: (v: number, dp?: number) => string;
 }) {
-    const ticker = (market?.name || symbol).replace(/-USD$/, '').replace(/-PERP$/, '');
+    const ticker = (market?.name || symbol || '?').replace(/-USD$/, '').replace(/-PERP$/, '');
+    const hasSymbol = !!market;
+
+    // Normalize typed input — allow only digits and a single dot, clamp length.
+    const handleType = (v: string) => {
+        let cleaned = v.replace(/[^0-9.]/g, '');
+        const firstDot = cleaned.indexOf('.');
+        if (firstDot >= 0) {
+            cleaned =
+                cleaned.slice(0, firstDot + 1) +
+                cleaned.slice(firstDot + 1).replace(/\./g, '');
+        }
+        if (cleaned.startsWith('.')) cleaned = '0' + cleaned;
+        // Strip leading zeros except "0" or "0.xxx"
+        cleaned = cleaned.replace(/^0+(?=\d)/, '');
+        if (cleaned.length > 12) cleaned = cleaned.slice(0, 12);
+        setAmount(cleaned);
+    };
 
     return (
         <div style={{ padding: '4px 6px 0' }}>
@@ -404,55 +427,111 @@ function StepAmount({
                     fontFamily: 'inherit',
                 }}
             >
-                <TokenLogo symbol={market?.symbol || ticker} size={40} />
-                <div style={{ flex: 1, textAlign: 'left' }}>
-                    <div
-                        className="font-display"
-                        style={{
-                            fontSize: 18,
-                            fontWeight: 500,
-                            fontVariationSettings: '"opsz" 36, "SOFT" 40, "wght" 500',
-                        }}
-                    >
-                        {getTokenFullName(ticker)}
+                {hasSymbol ? (
+                    <>
+                        <TokenLogo symbol={market.symbol} size={40} />
+                        <div style={{ flex: 1, textAlign: 'left' }}>
+                            <div
+                                className="font-display"
+                                style={{
+                                    fontSize: 18,
+                                    fontWeight: 500,
+                                    fontVariationSettings: '"opsz" 36, "SOFT" 40, "wght" 500',
+                                }}
+                            >
+                                {getTokenFullName(ticker)}
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: 10,
+                                    color: 'var(--color-text-tertiary)',
+                                    letterSpacing: '0.16em',
+                                    textTransform: 'uppercase',
+                                    fontWeight: 700,
+                                    marginTop: 1,
+                                }}
+                            >
+                                {ticker}
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <div style={{ flex: 1, textAlign: 'left' }}>
+                        <div
+                            className="font-display"
+                            style={{
+                                fontSize: 18,
+                                fontWeight: 500,
+                                fontStyle: 'italic',
+                                fontVariationSettings:
+                                    '"opsz" 36, "SOFT" 100, "wght" 500',
+                                color: 'var(--color-brand-primary)',
+                            }}
+                        >
+                            Elige un activo
+                        </div>
+                        <div
+                            style={{
+                                fontSize: 11,
+                                color: 'var(--color-text-tertiary)',
+                                marginTop: 2,
+                            }}
+                        >
+                            BTC, ETH, SOL y más
+                        </div>
                     </div>
-                    <div
-                        style={{
-                            fontSize: 10,
-                            color: 'var(--color-text-tertiary)',
-                            letterSpacing: '0.16em',
-                            textTransform: 'uppercase',
-                            fontWeight: 700,
-                            marginTop: 1,
-                        }}
-                    >
-                        {ticker}
-                    </div>
-                </div>
+                )}
                 <ChevronRight size={18} color="var(--color-text-tertiary)" />
             </button>
 
-            {/* Amount display */}
+            {/* Amount input — typeable on desktop, tappable via pad on mobile */}
             <div
                 style={{
                     padding: '40px 0 16px',
                     textAlign: 'center',
                 }}
             >
-                <div
+                <label
                     className="font-display tabular-mono"
                     style={{
+                        display: 'inline-flex',
+                        alignItems: 'baseline',
+                        justifyContent: 'center',
                         fontSize: 64,
                         lineHeight: 1,
                         fontWeight: 500,
                         fontVariationSettings: '"opsz" 144, "SOFT" 40, "wght" 500',
                         letterSpacing: '-0.04em',
                         color: amountNum > 0 ? '#fff' : 'rgba(255,255,255,0.2)',
+                        cursor: 'text',
                     }}
                 >
-                    <span style={{ opacity: 0.4 }}>$</span>
-                    {amount === '' ? '0' : amount}
-                </div>
+                    <span style={{ opacity: 0.4, marginRight: 4 }}>$</span>
+                    <input
+                        type="text"
+                        inputMode="decimal"
+                        autoComplete="off"
+                        spellCheck={false}
+                        value={amount}
+                        onChange={(e) => handleType(e.target.value)}
+                        placeholder="0"
+                        style={{
+                            background: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            color: 'inherit',
+                            font: 'inherit',
+                            fontVariationSettings: 'inherit',
+                            letterSpacing: 'inherit',
+                            textAlign: 'center',
+                            padding: 0,
+                            margin: 0,
+                            // Auto-size to typed value (rounded up so digits don't clip)
+                            width: `${Math.max(1, (amount || '0').length) + 0.5}ch`,
+                            caretColor: 'var(--color-brand-primary)',
+                        }}
+                    />
+                </label>
                 {amountNum > 0 && market && (
                     <div
                         className="tabular-mono"

@@ -45,22 +45,22 @@
   },
   "advanced": {
     "title": "Modo Avanzado",
-    "subtitle": "Herramientas para traders experimentados. Si recién empezás, andá tranquilo por Comprar.",
+    "subtitle": "Herramientas para traders experimentados. Si apenas empiezas, ve tranquilo por Comprar.",
     "perpsTitle": "Trading de Perpetuos",
     "perpsDescription": "Apalancamiento, posiciones long/short y órdenes avanzadas",
     "predictionsTitle": "Mercados de Predicción",
-    "predictionsDescription": "Apostá sobre eventos del mundo real con Polymarket",
+    "predictionsDescription": "Apuesta sobre eventos del mundo real con Polymarket",
     "leaderboardTitle": "Tabla de Líderes",
     "leaderboardDescription": "Los traders con mejor desempeño esta semana",
-    "riskNotice": "Estos productos pueden generar pérdidas mayores a tu depósito. Operá con cuidado."
+    "riskNotice": "Estos productos pueden generar pérdidas mayores a tu depósito. Opera con cuidado."
   },
   "buy": {
     "title": "Comprar Cripto",
-    "subtitle": "Comprá al precio de mercado. Simple, sin apalancamiento.",
+    "subtitle": "Compra al precio de mercado. Simple, sin apalancamiento.",
     "available": "Disponible",
-    "amountLabel": "¿Cuánto querés invertir?",
+    "amountLabel": "¿Cuánto quieres invertir?",
     "youReceive": "Vas a recibir",
-    "selectAsset": "Elegí un activo",
+    "selectAsset": "Elige un activo",
     "viewAll": "Ver todos",
     "buyAction": "Comprar",
     "connectWallet": "Iniciar sesión para empezar",
@@ -71,18 +71,18 @@
     "loading": "Procesando...",
     "successMessage": "¡Compra realizada!",
     "errorGeneric": "No pudimos completar la compra",
-    "advancedLink": "¿Buscás gráficos y órdenes límite?",
+    "advancedLink": "¿Buscas gráficos y órdenes límite?",
     "advancedLinkCta": "Abrir modo avanzado",
     "priceLabel": "Precio actual",
-    "depositFirst": "Necesitás USDC en tu cuenta para comprar."
+    "depositFirst": "Necesitas USDC en tu cuenta para comprar."
   },
   "dca": {
     "title": "Compras Programadas",
-    "subtitle": "Comprá automáticamente sin pensarlo",
+    "subtitle": "Compra automáticamente sin pensarlo",
     "makeRecurring": "Hacer compra recurrente",
     "recurringActive": "Compra recurrente activa",
     "createTitle": "Crear compra recurrente",
-    "createSubtitle": "Elegí cada cuánto querés comprar {{symbol}}",
+    "createSubtitle": "Elige cada cuánto quieres comprar {{symbol}}",
     "frequencyLabel": "Frecuencia",
     "frequencyDaily": "Diaria",
     "frequencyWeekly": "Semanal",
@@ -97,8 +97,8 @@
     "totalSpentLabel": "Total invertido",
     "createCta": "Crear compra recurrente",
     "cancel": "Cancelar",
-    "noSchedules": "No tenés compras programadas todavía",
-    "noSchedulesCta": "Volvé a Comprar y elegí 'Hacer compra recurrente'",
+    "noSchedules": "No tienes compras programadas todavía",
+    "noSchedulesCta": "Vuelve a Comprar y elige 'Hacer compra recurrente'",
     "manageTitle": "Mis compras programadas",
     "pause": "Pausar",
     "resume": "Reactivar",
@@ -118,7 +118,7 @@
     "checkConsole": "Ver consola para detalles",
     "copyAddress": "Copiar dirección",
     "connecting": "Conectando...",
-    "connectFirst": "Iniciá sesión primero"
+    "connectFirst": "Inicia sesión primero"
   },
   "markets": {
     "title": "Mercados",
@@ -265,7 +265,7 @@
     "transfers": "Transferencias",
     "funding": "Financiamiento",
     "noHistory": "No hay historial disponible",
-    "connectWalletToView": "Iniciá sesión para ver tu historial",
+    "connectWalletToView": "Inicia sesión para ver tu historial",
     "loading": "Cargando historial...",
     "long": "Long",
     "short": "Short",
@@ -291,7 +291,7 @@
       "live": "En Vivo"
     },
     "agentWallet": "Trading 1-Tap",
-    "agentWalletDesc": "Comprá sin confirmar cada paso",
+    "agentWalletDesc": "Compra sin confirmar cada paso",
     "approved": "Aprobado",
     "approveFee": "Aprobar Tarifa",
     "sync": "Sincronizar",
@@ -336,7 +336,7 @@
     "notificationsBlockedDesc": "Activa las notificaciones en los ajustes de tu navegador/dispositivo",
     "notSupported": "Las notificaciones push no son compatibles con este navegador",
     "agentWallet": "Trading 1-Tap",
-    "agentWalletDesc": "Comprá sin confirmar cada paso",
+    "agentWalletDesc": "Compra sin confirmar cada paso",
     "active": "Activo",
     "settingUp": "Configurando...",
     "resetAgent": "Resetear datos local del agente",
@@ -364,7 +364,7 @@
     "title": "Depositar USDC",
     "instruction": "Envía USDC desde la Red Rayo a esta dirección.",
     "walletAddressLabel": "Tu dirección de depósito",
-    "connectWallet": "Iniciá sesión para ver tu dirección",
+    "connectWallet": "Inicia sesión para ver tu dirección",
     "warningTitle": "Importante: Solo USDC",
     "warningText": "Solo envía USDC en la red Rayo. El envío de cualquier otro activo o a través de otra red resultará en una pérdida permanente.",
     "copyAddress": "Copiar Dirección de Depósito",
@@ -388,9 +388,9 @@
     "fromArbitrum": "Depositar desde Arbitrum",
     "sendUsdcFromArbitrum": "Envía USDC desde Arbitrum directamente a Rayo.",
     "minDeposit": "Depósito mín: 10 USDC",
-    "connectToBridge": "Iniciá sesión para usar el puente",
+    "connectToBridge": "Inicia sesión para usar el puente",
     "switchToArbitrum": "Cambiar a Arbitrum",
-    "switchToArbitrumDesc": "El puente solo funciona en la red Arbitrum. Cambiá la red para continuar.",
+    "switchToArbitrumDesc": "El puente solo funciona en la red Arbitrum. Cambia la red para continuar.",
     "switching": "Cambiando...",
     "balance": "Balance",
     "minRequired": "Se requiere un mínimo de 10 USDC",
@@ -410,8 +410,8 @@
     "tryAgain": "Intentar de Nuevo",
     "switchingNetwork": "Cambiando de Red...",
     "bridgingFunds": "Puenteando Fondos...",
-    "confirmNetworkSwitch": "Confirmá el cambio de red",
-    "confirmTransaction": "Confirmá la transacción",
+    "confirmNetworkSwitch": "Confirma el cambio de red",
+    "confirmTransaction": "Confirma la transacción",
     "crossChainBridge": "Puente Multi-Cadena",
     "crossChainDesc": "Pasa USDC de otras redes a Rayo (Hyperliquid).",
     "fromChain": "Desde la Red",
@@ -473,7 +473,7 @@
   },
   "home": {
     "welcome": "Bienvenido a Rayo",
-    "welcomeDescription": "Comprá cripto en segundos. Sin descargar nada, sin claves raras.",
+    "welcomeDescription": "Compra cripto en segundos. Sin descargar nada, sin claves raras.",
     "signInToContinue": "Continuar",
     "signInWithEmail": "Continuar con email",
     "signInWithGoogle": "Continuar con Google",
@@ -483,7 +483,7 @@
     "openPositions": "Posiciones Abiertas",
     "yourHoldings": "Tus Tenencias",
     "buyCryptoTitle": "Comprar Cripto",
-    "buyCryptoDescription": "Comprá BTC, ETH y más al precio de mercado",
+    "buyCryptoDescription": "Compra BTC, ETH y más al precio de mercado",
     "watchlist": "Lista de Seguimiento",
     "addToWatchlist": "Añadir a la Lista",
     "noTokensInWatchlist": "No hay tokens en tu lista",
@@ -519,7 +519,7 @@
       "steady": "Estás {pct} en 30 días. Ritmo tranquilo.",
       "down": "Estás {pct} este mes. Paciencia — esto pasa.",
       "empty": "Cero posiciones abiertas. Hoy es un buen día para empezar.",
-      "small": "Recién empezás. Cargá $25 y vemos."
+      "small": "Apenas empiezas. Carga $25 y vemos."
     },
     "section": {
       "comprar": "comprar",
@@ -529,13 +529,13 @@
     "cta": {
       "comprar": {
         "eyebrow": "◆ PIEZA DE HOY",
-        "word": "Comprá.",
+        "word": "Compra.",
         "desc": "Cripto en pesos o dólares.",
         "descHighlight": "Desde $25."
       },
       "programar": {
-        "word": "Programá.",
-        "desc": "Comprá automático cada semana."
+        "word": "Programa.",
+        "desc": "Compra automático cada semana."
       }
     },
     "holdings": {
@@ -543,7 +543,7 @@
     },
     "watch": {
       "add": "AGREGAR",
-      "empty": "Tocá agregar para sumar tokens"
+      "empty": "Toca agregar para sumar tokens"
     },
     "position": {
       "enteredAt": "entró {price}"
@@ -642,8 +642,8 @@
         "low24h": "Mín 24h"
       },
       "empty": {
-        "title": "Elegí un mercado",
-        "body": "Buscá un activo para empezar a operar."
+        "title": "Elige un mercado",
+        "body": "Busca un activo para empezar a operar."
       },
       "error": {
         "title": "Se cayó la conexión",
@@ -694,7 +694,7 @@
       },
       "error": {
         "title": "Tu tarjeta rechazó el pago",
-        "body": "Probá con otro método o revisá los datos de tu tarjeta."
+        "body": "Prueba con otro método o revisa los datos de tu tarjeta."
       }
     },
     "portafolio": {
@@ -715,7 +715,7 @@
         "notional": "Notional"
       },
       "empty": {
-        "title": "Aún no tenés posiciones",
+        "title": "Aún no tienes posiciones",
         "body": "Cuando compres cripto, vas a verla acá.",
         "cta": "Comprar cripto"
       }
@@ -847,7 +847,7 @@
     "signatureNotePlural": "Tendrás que firmar {{count}} transacciones (una sola vez)",
     "agent": {
       "title": "Billetera Agente (Un Clic)",
-      "description": "Operá sin confirmar cada paso, de forma segura.",
+      "description": "Opera sin confirmar cada paso, de forma segura.",
       "longDescription": "Firma una vez para activar el trading automático. ¡No más ventanas emergentes por cada orden!",
       "approve": "Activar Un Clic",
       "waiting": "Esperando firma...",
@@ -889,7 +889,7 @@
     "onlyTraders": "Solo los traders de Rayo pueden enviar mensajes",
     "newMessages": "Nuevos mensajes",
     "initializingProfile": "⏳ Inicializando perfil...",
-    "connectWalletChat": "🔒 Iniciá sesión para unirte al chat"
+    "connectWalletChat": "🔒 Inicia sesión para unirte al chat"
   },
   "orderBook": {
     "title": "Libro de Órdenes",

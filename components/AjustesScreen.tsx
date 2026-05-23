@@ -255,7 +255,7 @@ export default function AjustesScreen({ onBack }: AjustesScreenProps) {
                 >
                     {t.screens.ajustes.version
                         .replace('{version}', '1.0.0')
-                        .replace('{city}', 'Buenos Aires')}
+                        .replace('{city}', 'Bogotá')}
                 </div>
             </div>
         </div>
