@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useHyperliquid } from '@/hooks/useHyperliquid';
 import {
     User as UserIcon,
     Wallet,
@@ -23,6 +24,8 @@ import {
     MessageSquareWarning,
     ChevronRight,
     LogOut,
+    Copy,
+    Check,
     type LucideIcon,
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -45,7 +48,19 @@ export default function AjustesScreen({ onBack }: AjustesScreenProps) {
     const { user } = useUser();
     const { proMode, toggleProMode } = usePreferences();
     const pushNotifications = usePushNotifications();
+    const { address } = useHyperliquid();
     const [dolarBlueOn, setDolarBlueOn] = useState(language === 'es');
+    const [walletCopied, setWalletCopied] = useState(false);
+
+    const copyWallet = () => {
+        if (!address) return;
+        navigator.clipboard.writeText(address);
+        setWalletCopied(true);
+        setTimeout(() => setWalletCopied(false), 1500);
+    };
+    const truncatedAddr = address
+        ? `${address.slice(0, 6)}…${address.slice(-4)}`
+        : '';
 
     return (
         <div className="atmosphere-warm grain" style={{ minHeight: '100%', color: '#fff' }}>
@@ -54,7 +69,37 @@ export default function AjustesScreen({ onBack }: AjustesScreenProps) {
             {/* cuenta */}
             <SettingGroup label={t.screens.ajustes.section.account}>
                 <Row icon={UserIcon} label={t.screens.ajustes.account.profile} sub={user?.display_name || ''} right={<ChevronIcon />} />
-                <Row icon={Wallet} label={t.screens.ajustes.account.wallet} right={<ChevronIcon />} />
+                <Row
+                    icon={Wallet}
+                    label={t.screens.ajustes.account.wallet}
+                    sub={address ? undefined : 'No conectada'}
+                    right={
+                        address ? (
+                            <button
+                                type="button"
+                                onClick={copyWallet}
+                                style={{
+                                    ...pillStyle,
+                                    color: walletCopied
+                                        ? 'var(--color-positive)'
+                                        : 'var(--color-text-secondary)',
+                                    background: walletCopied
+                                        ? 'rgba(34,197,94,0.12)'
+                                        : 'rgba(255,255,255,0.02)',
+                                    fontFamily: 'var(--font-jetbrains)',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                }}
+                            >
+                                {truncatedAddr}
+                                {walletCopied ? <Check size={11} /> : <Copy size={11} />}
+                            </button>
+                        ) : (
+                            <ChevronIcon />
+                        )
+                    }
+                />
                 <Row
                     icon={Globe}
                     label={t.screens.ajustes.account.language}

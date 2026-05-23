@@ -30,8 +30,16 @@ export default function ProfileScreen({
     const { user } = useUser();
     const { user: privyUser, logout } = usePrivy();
     const [copied, setCopied] = useState(false);
+    const [addressCopied, setAddressCopied] = useState(false);
     const [referredCount, setReferredCount] = useState(0);
     const [referralEarnings, setReferralEarnings] = useState(0);
+
+    const copyAddress = () => {
+        if (!address) return;
+        navigator.clipboard.writeText(address);
+        setAddressCopied(true);
+        setTimeout(() => setAddressCopied(false), 1500);
+    };
 
     useEffect(() => {
         let alive = true;
@@ -175,17 +183,41 @@ export default function ProfileScreen({
                 >
                     {displayName}
                 </div>
-                <div
+                <button
+                    type="button"
+                    onClick={copyAddress}
+                    aria-label="Copiar dirección"
                     className="tabular-mono"
                     style={{
-                        fontSize: 11,
-                        color: 'var(--color-text-tertiary)',
                         marginTop: 4,
+                        padding: '4px 10px',
+                        borderRadius: 99,
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        background: addressCopied
+                            ? 'rgba(34,197,94,0.12)'
+                            : 'rgba(255,255,255,0.025)',
+                        color: addressCopied
+                            ? 'var(--color-positive)'
+                            : 'var(--color-text-tertiary)',
+                        fontSize: 11,
                         letterSpacing: '0.04em',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontFamily: 'var(--font-jetbrains)',
+                        transition: 'background 150ms, color 150ms',
                     }}
                 >
-                    {handle && `${handle} · `}{truncated}
-                </div>
+                    {handle && (
+                        <span style={{ color: 'var(--color-text-secondary)' }}>
+                            {handle} ·
+                        </span>
+                    )}
+                    {truncated}
+                    {addressCopied ? <Check size={11} /> : <Copy size={11} />}
+                </button>
                 <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
                     <Badge label={t.screens.perfil.verified} />
                 </div>
