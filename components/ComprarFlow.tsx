@@ -20,6 +20,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { MIN_NOTIONAL_VALUE, getTokenFullName } from '@/lib/constants';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import { BYPASS_AUTH } from '@/lib/dev-config';
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
 import MarketSelectModal from '@/components/MarketSelectModal';
@@ -160,11 +161,12 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
             setStep('error');
             return;
         }
-        if (!ready || !authenticated) {
+        // In bypass mode Privy isn't used — agent setup runs on mount instead.
+        if (!BYPASS_AUTH && (!ready || !authenticated)) {
             login();
             return;
         }
-        if (!setupComplete) {
+        if (!BYPASS_AUTH && !setupComplete) {
             setShowSetupWizard(true);
             return;
         }
