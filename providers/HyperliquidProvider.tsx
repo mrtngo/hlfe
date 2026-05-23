@@ -678,6 +678,35 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [address, wallets, checkBuilderFeeApproval]);
 
+    // Auto-approve builder fee in bypass mode (mirrors agent auto-setup above).
+    useEffect(() => {
+        if (!address) return;
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { BYPASS_AUTH, TEST_WALLET_PRIVATE_KEY } = require('@/lib/dev-config') as {
+            BYPASS_AUTH: boolean;
+            TEST_WALLET_PRIVATE_KEY: string | null;
+        };
+        if (!BYPASS_AUTH || !TEST_WALLET_PRIVATE_KEY) return;
+        if (!BUILDER_CONFIG.enabled) return;
+
+        let cancelled = false;
+        (async () => {
+            const alreadyApproved = await checkBuilderFeeApproval();
+            if (cancelled || alreadyApproved) return;
+            try {
+                console.log('[bypass] auto-approving builder fee…');
+                const result = await approveBuilderFee();
+                if (!result.success) {
+                    console.warn('[bypass] builder fee approval returned not-ok:', result.message);
+                }
+            } catch (e) {
+                console.warn('[bypass] builder fee auto-approval failed:', e);
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [address, checkBuilderFeeApproval, approveBuilderFee]);
+
     // Enable DEX abstraction for Trade.xyz stocks (one-time setup)
     const enableDexAbstraction = useCallback(async (): Promise<{ success: boolean; message: string }> => {
         if (!address) {
