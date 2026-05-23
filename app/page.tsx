@@ -22,7 +22,7 @@ import MarketsScreen from '@/components/MarketsScreen';
 import TokenDetail from '@/components/TokenDetail';
 import PortfolioScreen from '@/components/PortfolioScreen';
 import Trollbox from '@/components/Trollbox';
-import { ShoppingCart, History, User, Sliders } from 'lucide-react';
+import { BarChart3, History, User, Sliders } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
@@ -261,20 +261,20 @@ export default function Home() {
                         <span className="text-[11px] font-semibold">{t.nav.home}</span>
                     </button>
 
-                    {/* Buy (Spot) */}
+                    {/* Markets */}
                     <button
-                        onClick={() => setView('spot')}
-                        id="nav-buy-tab"
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'spot' || view === 'spotAdvanced' ? 'scale-110' : ''}`}
+                        onClick={() => setView('markets')}
+                        id="nav-markets-tab"
+                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'markets' || view === 'tokenDetail' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
-                            filter: (view === 'spot' || view === 'spotAdvanced') ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: (view === 'spot' || view === 'spotAdvanced') ? 1 : 0.6
+                            filter: (view === 'markets' || view === 'tokenDetail') ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: (view === 'markets' || view === 'tokenDetail') ? 1 : 0.6
                         }}
                     >
-                        <ShoppingCart className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">{t.nav.buy}</span>
+                        <BarChart3 className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">{t.nav.markets}</span>
                     </button>
 
                     {/* History */}
