@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { copyToClipboard } from '@/lib/clipboard';
 import {
     User as UserIcon,
     Wallet,
@@ -52,11 +53,13 @@ export default function AjustesScreen({ onBack }: AjustesScreenProps) {
     const [dolarBlueOn, setDolarBlueOn] = useState(language === 'es');
     const [walletCopied, setWalletCopied] = useState(false);
 
-    const copyWallet = () => {
+    const copyWallet = async () => {
         if (!address) return;
-        navigator.clipboard.writeText(address);
-        setWalletCopied(true);
-        setTimeout(() => setWalletCopied(false), 1500);
+        const ok = await copyToClipboard(address);
+        if (ok) {
+            setWalletCopied(true);
+            setTimeout(() => setWalletCopied(false), 1500);
+        }
     };
     const truncatedAddr = address
         ? `${address.slice(0, 6)}…${address.slice(-4)}`

@@ -8,6 +8,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { db } from '@/lib/supabase/client';
+import { copyToClipboard } from '@/lib/clipboard';
 import ScreenHeader from '@/components/ScreenHeader';
 import HairlineSection from '@/components/HairlineSection';
 
@@ -34,11 +35,13 @@ export default function ProfileScreen({
     const [referredCount, setReferredCount] = useState(0);
     const [referralEarnings, setReferralEarnings] = useState(0);
 
-    const copyAddress = () => {
+    const copyAddress = async () => {
         if (!address) return;
-        navigator.clipboard.writeText(address);
-        setAddressCopied(true);
-        setTimeout(() => setAddressCopied(false), 1500);
+        const ok = await copyToClipboard(address);
+        if (ok) {
+            setAddressCopied(true);
+            setTimeout(() => setAddressCopied(false), 1500);
+        }
     };
 
     useEffect(() => {
@@ -107,11 +110,13 @@ export default function ProfileScreen({
 
     const referralCode = user?.referral_code || '';
 
-    const copyCode = () => {
+    const copyCode = async () => {
         if (!referralCode) return;
-        navigator.clipboard.writeText(referralCode);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
+        const ok = await copyToClipboard(referralCode);
+        if (ok) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        }
     };
 
     return (
