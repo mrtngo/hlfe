@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "dev:test": "NEXT_PUBLIC_USE_TESTNET=1 NEXT_PUBLIC_BYPASS_AUTH=1 NEXT_PUBLIC_TEST_WALLET=${TEST_WALLET:-0x0000000000000000000000000000000000000001} next dev --webpack",
+    "dev:test": "NEXT_PUBLIC_USE_TESTNET=1 NEXT_PUBLIC_BYPASS_AUTH=1 next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
