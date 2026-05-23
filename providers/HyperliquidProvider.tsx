@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode, startTransition, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode, startTransition, useRef } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useMarketData, Market } from '@/lib/hyperliquid/market-data';
 import { createHyperliquidClient, API_URL, IS_TESTNET, BUILDER_CONFIG } from '@/lib/hyperliquid/client';
@@ -169,8 +169,33 @@ const HyperliquidContext = createContext<HyperliquidContextType | undefined>(und
 export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const { t, formatCurrency } = useLanguage();
     const { ready, authenticated } = usePrivy();
-    const { wallets } = useWallets();
+    const { wallets: privyWallets } = useWallets();
     const { data: walletClient } = useWalletClient();
+
+    // In BYPASS_AUTH mode we synthesize a wallet entry that looks like a Privy
+    // embedded wallet but is backed by NEXT_PUBLIC_TEST_PRIVATE_KEY. This lets
+    // every existing signing path keep working without per-call changes.
+    const wallets = useMemo(() => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { BYPASS_AUTH, TEST_WALLET_PRIVATE_KEY, TEST_WALLET_ADDRESS } =
+            require('@/lib/dev-config') as {
+                BYPASS_AUTH: boolean;
+                TEST_WALLET_PRIVATE_KEY: string | null;
+                TEST_WALLET_ADDRESS: string;
+            };
+        if (!BYPASS_AUTH || !TEST_WALLET_PRIVATE_KEY) return privyWallets;
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { makeLocalKeyProvider } = require('@/lib/local-key-provider') as {
+            makeLocalKeyProvider: (pk: string) => any;
+        };
+        const provider = makeLocalKeyProvider(TEST_WALLET_PRIVATE_KEY);
+        const fake = {
+            address: TEST_WALLET_ADDRESS.toLowerCase(),
+            walletClientType: 'privy' as const,
+            getEthereumProvider: async () => provider,
+        };
+        return [fake] as unknown as typeof privyWallets;
+    }, [privyWallets]);
 
     // Wallet state
     const [address, setAddress] = useState<string | null>(null);
@@ -458,17 +483,36 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [address, wallets]);
 
-    // Check and initialize agent wallet
+    // Check and initialize agent wallet.
+    // In BYPASS_AUTH mode with a test PK, auto-set up the agent on first mount
+    // so trades sign without any user clicks.
     useEffect(() => {
-        if (address) {
-            const checkWallet = async () => {
-                const agent = await getAgentWallet(address);
-                const approved = isAgentApproved(address);
-                setAgentWalletEnabled(approved && !!agent);
-            };
-            checkWallet();
-        }
-    }, [address]);
+        if (!address) return;
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { BYPASS_AUTH, TEST_WALLET_PRIVATE_KEY } = require('@/lib/dev-config') as {
+            BYPASS_AUTH: boolean;
+            TEST_WALLET_PRIVATE_KEY: string | null;
+        };
+
+        const checkWallet = async () => {
+            const agent = await getAgentWallet(address);
+            const approved = isAgentApproved(address);
+            if (approved && agent) {
+                setAgentWalletEnabled(true);
+                return;
+            }
+
+            if (BYPASS_AUTH && TEST_WALLET_PRIVATE_KEY) {
+                try {
+                    console.log('[bypass] auto-approving agent wallet for test mode…');
+                    await setupAgentWallet();
+                } catch (e) {
+                    console.warn('[bypass] auto-agent setup failed:', e);
+                }
+            }
+        };
+        checkWallet();
+    }, [address, setupAgentWallet]);
 
     // Check builder fee approval status
     const checkBuilderFeeApproval = useCallback(async (): Promise<boolean> => {

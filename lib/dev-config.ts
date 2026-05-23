@@ -21,3 +21,9 @@ export const BYPASS_AUTH = process.env.NEXT_PUBLIC_BYPASS_AUTH === '1';
 export const TEST_WALLET_ADDRESS =
     process.env.NEXT_PUBLIC_TEST_WALLET ||
     '0x0000000000000000000000000000000000000001';
+
+// Private key for the test wallet — only needed when you want trades to
+// actually sign in bypass mode. Without it, the UI renders but placeOrder
+// has nothing to sign with. Set NEXT_PUBLIC_TEST_PRIVATE_KEY in .env.local.
+export const TEST_WALLET_PRIVATE_KEY: string | null =
+    process.env.NEXT_PUBLIC_TEST_PRIVATE_KEY || null;
