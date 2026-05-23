@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Zap, Shield, DollarSign, Check, ChevronRight, X, Loader2, Info } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -367,6 +368,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
         </div>
     );
 
-    // Return content directly instead of using portal - the fixed positioning will work fine
-    return content;
+    // Portal to body so the fixed overlay can't be trapped by a transformed
+    // ancestor (e.g. framer-motion's motion.div on screen wrappers).
+    if (typeof document === 'undefined') return null;
+    return createPortal(content, document.body);
 }
