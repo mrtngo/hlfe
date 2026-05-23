@@ -151,17 +151,39 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
     if (!isOpen || !mounted) return null;
 
     const content = (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" style={{ minHeight: '100dvh' }}>
+        <div
+            className="flex items-center justify-center p-4"
+            style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
+                zIndex: 99999,
+                minHeight: '100dvh',
+            }}
+        >
             {/* Backdrop - Stronger blur for better focus */}
             <div
-                className="absolute inset-0 bg-black/85 backdrop-blur-md"
+                className="bg-black/85 backdrop-blur-md"
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                }}
                 onClick={handleClose}
             />
 
             {/* Modal Container - Centered on all devices including mobile */}
             <div
-                className="relative w-full max-w-md z-10"
-                style={{ maxHeight: 'calc(100dvh - 2rem)' }}
+                className="w-full max-w-md"
+                style={{
+                    position: 'relative',
+                    zIndex: 10,
+                    maxHeight: 'calc(100dvh - 2rem)',
+                }}
             >
                 <div
                     className="relative bg-[#0D0D0D] border border-white/10 rounded-3xl p-6 w-full shadow-2xl overflow-y-auto"
