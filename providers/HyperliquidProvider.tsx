@@ -270,15 +270,29 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
 
 
-    // Get wallet address from Privy (embedded or external wallet)
+    // Get wallet address from Privy (embedded or external wallet).
+    // In BYPASS_AUTH mode (test branch), use the NEXT_PUBLIC_TEST_WALLET so the
+    // UI past the login wall renders without going through Privy.
     useEffect(() => {
+        // Lazy-load dev config to avoid bundling test-mode logic into production checks.
+        // Defaults to false / zero-address when env vars are unset (mainnet behaviour).
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { BYPASS_AUTH, TEST_WALLET_ADDRESS } = require('@/lib/dev-config') as {
+            BYPASS_AUTH: boolean;
+            TEST_WALLET_ADDRESS: string;
+        };
+
+        if (BYPASS_AUTH) {
+            setAddress(TEST_WALLET_ADDRESS.toLowerCase());
+            setIsConnected(true);
+            return;
+        }
+
         if (authenticated && wallets.length > 0) {
-            // Try embedded wallet first, then any connected wallet
             const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
             const connectedWallet = embeddedWallet || wallets[0];
 
             if (connectedWallet && connectedWallet.address) {
-                // Docs say to lowercase addresses before signing and sending
                 const lowercasedAddress = connectedWallet.address.toLowerCase();
                 setAddress(lowercasedAddress);
                 setIsConnected(true);

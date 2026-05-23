@@ -8,8 +8,9 @@ export const HYPERLIQUID_TESTNET_URL = 'https://api.hyperliquid-testnet.xyz';
 export const HYPERLIQUID_MAINNET_WS = 'wss://api.hyperliquid.xyz/ws';
 export const HYPERLIQUID_TESTNET_WS = 'wss://api.hyperliquid-testnet.xyz/ws';
 
-// Network configuration - set to false for mainnet
-export const IS_TESTNET = false;
+// Network configuration — defaults to mainnet.
+// Override with NEXT_PUBLIC_USE_TESTNET=1 (e.g. via .env.local on a test branch).
+export const IS_TESTNET = process.env.NEXT_PUBLIC_USE_TESTNET === '1';
 export const API_URL = IS_TESTNET ? HYPERLIQUID_TESTNET_URL : HYPERLIQUID_MAINNET_URL;
 export const WS_URL = IS_TESTNET ? HYPERLIQUID_TESTNET_WS : HYPERLIQUID_MAINNET_WS;
 

@@ -32,6 +32,13 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# Exceptions:
+#  - .env.example is checked in as a template for new contributors.
+#  - .env.development.local is committed ONLY on the `test` branch (gives it
+#    testnet + bypass auth automatically via `npm run dev`). Safe on main
+#    because the file does not exist there.
+!.env.example
+!.env.development.local
 
 # vercel
 .vercel
