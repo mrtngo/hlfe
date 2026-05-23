@@ -1014,6 +1014,39 @@ h6 {
   100% { background-position: -200% 0; }
 }
 
+/* Glowing yellow thumb for the leverage slider in Tradear Normal mode */
+.leverage-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #FACC15;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+  margin-top: -6px;
+}
+.leverage-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #FACC15;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+}
+.leverage-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 99px;
+  background: transparent;
+}
+.leverage-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 99px;
+  background: transparent;
+}
+
 /* Horizontal snap rail (for asset picker) */
 .snap-rail {
   display: flex;

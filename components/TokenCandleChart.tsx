@@ -24,14 +24,24 @@ interface TokenCandleChartProps {
     symbol: string;
     isStock?: boolean;
     height?: number;
+    /** Hide the built-in 7-button TF strip (use when the parent owns TF state) */
+    hideTimeframes?: boolean;
+    /** External TF key (one of TF_OPTIONS.key) — only used when hideTimeframes */
+    tfKey?: string;
 }
+
+export const TRADEAR_TF_KEYS = ['5m', '1h', '4h', '1d', '1w', '1m'] as const;
 
 export default function TokenCandleChart({
     symbol,
     isStock = false,
     height = 220,
+    hideTimeframes = false,
+    tfKey: externalTfKey,
 }: TokenCandleChartProps) {
-    const [tfKey, setTfKey] = useState<string>('1d');
+    const [internalTfKey, setInternalTfKey] = useState<string>('1d');
+    const tfKey = hideTimeframes ? (externalTfKey || '1d') : internalTfKey;
+    const setTfKey = setInternalTfKey;
     const tf = useMemo(() => TF_OPTIONS.find((o) => o.key === tfKey) || TF_OPTIONS[3], [tfKey]);
     const { candles, loading } = useCandleData(symbol, tf.interval, isStock, tf.days);
 
@@ -110,6 +120,7 @@ export default function TokenCandleChart({
                 )}
             </div>
 
+            {!hideTimeframes && (
             <div
                 style={{
                     padding: '12px 0 0',
@@ -149,6 +160,7 @@ export default function TokenCandleChart({
                     );
                 })}
             </div>
+            )}
         </div>
     );
 }
