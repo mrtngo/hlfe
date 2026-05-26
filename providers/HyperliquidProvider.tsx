@@ -2663,7 +2663,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 };
                 if (BUILDER_CONFIG.enabled) {
                     action.builder = {
-                        b: BUILDER_CONFIG.address,
+                        b: BUILDER_CONFIG.address.toLowerCase(),
                         f: BUILDER_CONFIG.fee,
                     };
                 }
