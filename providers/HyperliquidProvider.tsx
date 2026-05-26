@@ -2689,6 +2689,23 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const result = await response.json();
 
                 const status = result?.response?.data?.statuses?.[0];
+                const errorMsg = status?.error || (typeof result?.response === 'string' ? result.response : JSON.stringify(result?.response || '')) || '';
+
+                if (errorMsg.includes('does not exist') || errorMsg.includes('API Wallet')) {
+                    console.warn('⚠️ Agent wallet not registered with Hyperliquid (HIP-4). Disabling agent wallet.');
+                    setAgentWalletEnabled(false);
+                    if (typeof window !== 'undefined') {
+                        localStorage.removeItem('hyperliquid_agent_approved');
+                        localStorage.removeItem('hyperliquid_agent_wallet');
+                    }
+                    return {
+                        filled: false,
+                        filledSize: 0,
+                        filledPrice: 0,
+                        error: 'Agent wallet not approved. Please approve your agent wallet and try again.',
+                    };
+                }
+
                 if (result?.status === 'ok' && status?.filled) {
                     setTimeout(() => refreshAccountData(), 500);
                     return {
@@ -2712,7 +2729,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     filledPrice: 0,
                     error:
                         status?.error ||
-                        result?.response ||
+                        (typeof result?.response === 'string' ? result.response : JSON.stringify(result?.response)) ||
                         'Outcome order rejected',
                 };
             } catch (err: unknown) {
