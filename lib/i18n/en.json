@@ -299,7 +299,10 @@
     "outcomeIdLabel": "Market ID",
     "zeroFee": "0% opening fee",
     "noActiveBets": "No open bets",
-    "yourBets": "Your bets"
+    "yourBets": "Your bets",
+    "tabTrade": "Trade",
+    "tabChart": "Chart",
+    "tabBook": "Order Book"
   },
   "buy": {
     "title": "Buy Crypto",

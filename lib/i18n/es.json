@@ -299,7 +299,10 @@
     "outcomeIdLabel": "ID del mercado",
     "zeroFee": "0% comisión apertura",
     "noActiveBets": "Sin apuestas abiertas",
-    "yourBets": "Tus apuestas"
+    "yourBets": "Tus apuestas",
+    "tabTrade": "Operar",
+    "tabChart": "Gráfico",
+    "tabBook": "Libro de Órdenes"
   },
   "buy": {
     "title": "Comprar Cripto",

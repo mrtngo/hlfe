@@ -148,9 +148,12 @@ export function useCandleData(
 
         const { wsManager } = require('@/lib/hyperliquid/websocket-manager');
         const baseCoin = symbol.split('-')[0];
+        const isOutcome = baseCoin.startsWith('#');
         const assetName = isStock 
             ? `xyz:${baseCoin}` 
-            : (require('@/lib/hyperliquid/client').IS_TESTNET ? `${baseCoin}-PERP` : baseCoin);
+            : isOutcome
+                ? baseCoin
+                : (require('@/lib/hyperliquid/client').IS_TESTNET ? `${baseCoin}-PERP` : baseCoin);
         const interval = TIMEFRAME_MAP[timeframe];
 
         const handleCandleUpdate = (coin: string, candleInterval: string, candleData: any) => {

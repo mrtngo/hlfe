@@ -35,6 +35,8 @@ import {
 } from '@/lib/hyperliquid/outcome';
 import { ModalSheet, ModalHeader } from '@/components/ModalSheet';
 import ApproveAgentModal from '@/components/ApproveAgentModal';
+import TokenCandleChart from '@/components/TokenCandleChart';
+import OrderBook from '@/components/OrderBook';
 
 // Side palette — green for the "positive" side (Yes / Change / first side),
 // red for the "negative" (No / No-Change / second side). Polymarket-style.
@@ -67,6 +69,7 @@ export default function OutcomeMarketsScreen() {
     }>({ kind: 'idle' });
     /** When set, ApproveAgentModal pops; success retries the bet. */
     const [needsAgent, setNeedsAgent] = useState(false);
+    const [activeTab, setActiveTab] = useState<'trade' | 'chart' | 'book'>('trade');
 
     // No auto-select — we open the sheet on user tap. Removing the prior
     // auto-select-first-market behavior so the sheet doesn't pop on mount.
@@ -275,6 +278,7 @@ export default function OutcomeMarketsScreen() {
                                 setSelectedSideIdx(0);
                                 setContracts('1');
                                 setResult({ kind: 'idle' });
+                                setActiveTab('trade');
                             }}
                             position={pos0 || pos1 || null}
                         />
@@ -289,6 +293,7 @@ export default function OutcomeMarketsScreen() {
                 onClose={() => {
                     setSelectedId(null);
                     setResult({ kind: 'idle' });
+                    setActiveTab('trade');
                 }}
             >
                 {selected && selectedSide && (
@@ -299,6 +304,7 @@ export default function OutcomeMarketsScreen() {
                             onClose={() => {
                                 setSelectedId(null);
                                 setResult({ kind: 'idle' });
+                                setActiveTab('trade');
                             }}
                         />
                         <div style={{ padding: '4px 18px 28px' }}>
@@ -378,179 +384,235 @@ export default function OutcomeMarketsScreen() {
                         })}
                     </div>
 
-                    {/* Contracts input */}
-                    <div style={{ marginBottom: 14 }}>
-                        <div
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                fontSize: 'var(--text-xs)',
-                                color: 'var(--color-text-tertiary)',
-                                marginBottom: 6,
-                            }}
-                        >
-                            <span>{t.outcomeMarkets.amountLabel}</span>
-                            <span className="font-mono">
-                                {selected.quoteToken}: {formatCurrency(quoteBalance, 2)}
-                            </span>
-                        </div>
-                        <input
-                            type="number"
-                            min={1}
-                            step={1}
-                            value={contracts}
-                            onChange={(e) =>
-                                setContracts(e.target.value.replace(/[^0-9]/g, ''))
-                            }
-                            className="font-mono"
-                            style={{
-                                width: '100%',
-                                padding: '12px 14px',
-                                background: 'var(--color-bg-tertiary)',
-                                border: '1px solid var(--color-border-subtle)',
-                                borderRadius: 'var(--radius-md)',
-                                color: 'var(--color-text-primary)',
-                                fontSize: 'var(--text-xl)',
-                                fontWeight: 700,
-                                outline: 'none',
-                            }}
-                        />
-                    </div>
-
-                    {/* Preview */}
+                    {/* Tab Selector */}
                     <div
+                        className="flex rounded-xl p-1 gap-1"
                         style={{
-                            background: 'var(--color-bg-tertiary)',
-                            border: '1px solid var(--color-border-subtle)',
-                            borderRadius: 'var(--radius-md)',
-                            padding: '12px 14px',
-                            marginBottom: 14,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 6,
+                            backgroundColor: 'var(--color-bg-tertiary)',
+                            marginBottom: 16,
                         }}
                     >
-                        <PreviewRow
-                            label={t.outcomeMarkets.totalCost}
-                            value={`${formatCurrency(totalCost, 2)} ${selected.quoteToken}`}
-                        />
-                        <PreviewRow
-                            label={t.outcomeMarkets.potentialPayout}
-                            value={`${formatCurrency(potentialPayout, 2)} ${selected.quoteToken}`}
-                        />
-                        <PreviewRow
-                            label={t.outcomeMarkets.potentialProfit}
-                            value={`${potentialProfit >= 0 ? '+' : ''}${formatCurrency(potentialProfit, 2)}`}
-                            color={
-                                potentialProfit >= 0
-                                    ? 'var(--color-positive)'
-                                    : 'var(--color-negative)'
-                            }
-                        />
+                        {([
+                            { key: 'trade', label: t.outcomeMarkets.tabTrade || 'Trade' },
+                            { key: 'chart', label: t.outcomeMarkets.tabChart || 'Chart' },
+                            { key: 'book', label: t.outcomeMarkets.tabBook || 'Order Book' },
+                        ] as const).map((tab) => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setActiveTab(tab.key)}
+                                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all"
+                                style={{
+                                    backgroundColor: activeTab === tab.key ? 'var(--color-bg-elevated)' : 'transparent',
+                                    color: activeTab === tab.key ? 'var(--color-text-primary)' : 'var(--color-text-tertiary)',
+                                    boxShadow: activeTab === tab.key ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit',
+                                }}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
                     </div>
 
-                    {validationError && contractsNum > 0 && (
-                        <div
-                            style={{
-                                display: 'flex',
-                                gap: 6,
-                                alignItems: 'center',
-                                fontSize: 'var(--text-xs)',
-                                color: 'var(--color-negative)',
-                                marginBottom: 10,
-                            }}
-                        >
-                            <AlertCircle style={{ width: 12, height: 12 }} />
-                            {validationError}
-                        </div>
-                    )}
-
-                    {/* USDH onramp for USDH-quoted markets when balance is 0 */}
-                    {selected.quoteToken === 'USDH' && quoteBalance < 10 && (
-                        <UsdhOnramp
-                            buyUsdh={buyUsdh}
-                            needed={Math.max(20, Math.ceil(totalCost) + 5)}
-                        />
-                    )}
-
-                    {result.kind === 'success' && (
-                        <div
-                            style={{
-                                background: 'rgba(34,197,94,0.1)',
-                                border: '1px solid rgba(34,197,94,0.3)',
-                                borderRadius: 'var(--radius-md)',
-                                padding: '10px 12px',
-                                fontSize: 'var(--text-sm)',
-                                color: 'var(--color-positive)',
-                                display: 'flex',
-                                gap: 8,
-                                alignItems: 'center',
-                                marginBottom: 10,
-                            }}
-                        >
-                            <Check style={{ width: 14, height: 14 }} />
-                            {t.outcomeMarkets.successBet}
-                        </div>
-                    )}
-                    {result.kind === 'error' && (
-                        <div
-                            style={{
-                                background: 'rgba(239,68,68,0.1)',
-                                border: '1px solid rgba(239,68,68,0.3)',
-                                borderRadius: 'var(--radius-md)',
-                                padding: '10px 12px',
-                                fontSize: 'var(--text-sm)',
-                                color: 'var(--color-negative)',
-                                marginBottom: 10,
-                            }}
-                        >
-                            {result.message}
-                        </div>
-                    )}
-
-                    {/* CTA */}
-                    <button
-                        onClick={handleBet}
-                        disabled={!canSubmit}
-                        style={{
-                            width: '100%',
-                            padding: '14px',
-                            background: canSubmit
-                                ? (SIDE_COLOR[selectedSideIdx as 0 | 1] || SIDE_COLOR[0])
-                                      .color
-                                : 'var(--color-bg-tertiary)',
-                            border: 'none',
-                            borderRadius: 'var(--radius-full)',
-                            color: canSubmit
-                                ? '#fff'
-                                : 'var(--color-text-tertiary)',
-                            fontWeight: 800,
-                            fontSize: 'var(--text-sm)',
-                            cursor: canSubmit ? 'pointer' : 'not-allowed',
-                            fontFamily: 'inherit',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 6,
-                        }}
-                    >
-                        {submitting ? (
-                            <>
-                                <Loader2
-                                    className="animate-spin"
-                                    style={{ width: 14, height: 14 }}
+                    {activeTab === 'trade' && (
+                        <>
+                            {/* Contracts input */}
+                            <div style={{ marginBottom: 14 }}>
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        fontSize: 'var(--text-xs)',
+                                        color: 'var(--color-text-tertiary)',
+                                        marginBottom: 6,
+                                    }}
+                                >
+                                    <span>{t.outcomeMarkets.amountLabel}</span>
+                                    <span className="font-mono">
+                                        {selected.quoteToken}: {formatCurrency(quoteBalance, 2)}
+                                    </span>
+                                </div>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    step={1}
+                                    value={contracts}
+                                    onChange={(e) =>
+                                        setContracts(e.target.value.replace(/[^0-9]/g, ''))
+                                    }
+                                    className="font-mono"
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px 14px',
+                                        background: 'var(--color-bg-tertiary)',
+                                        border: '1px solid var(--color-border-subtle)',
+                                        borderRadius: 'var(--radius-md)',
+                                        color: 'var(--color-text-primary)',
+                                        fontSize: 'var(--text-xl)',
+                                        fontWeight: 700,
+                                        outline: 'none',
+                                    }}
                                 />
-                                {t.outcomeMarkets.betting}
-                            </>
-                        ) : (
-                            t.outcomeMarkets.placeBetCta
-                                .replace(
-                                    '{amount}',
-                                    `${contractsNum || '?'} ${t.outcomeMarkets.contracts}`,
-                                )
-                                .replace('{side}', selectedSide.name)
-                        )}
-                    </button>
+                            </div>
+
+                            {/* Preview */}
+                            <div
+                                style={{
+                                    background: 'var(--color-bg-tertiary)',
+                                    border: '1px solid var(--color-border-subtle)',
+                                    borderRadius: 'var(--radius-md)',
+                                    padding: '12px 14px',
+                                    marginBottom: 14,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 6,
+                                }}
+                            >
+                                <PreviewRow
+                                    label={t.outcomeMarkets.totalCost}
+                                    value={`${formatCurrency(totalCost, 2)} ${selected.quoteToken}`}
+                                />
+                                <PreviewRow
+                                    label={t.outcomeMarkets.potentialPayout}
+                                    value={`${formatCurrency(potentialPayout, 2)} ${selected.quoteToken}`}
+                                />
+                                <PreviewRow
+                                    label={t.outcomeMarkets.potentialProfit}
+                                    value={`${potentialProfit >= 0 ? '+' : ''}${formatCurrency(potentialProfit, 2)}`}
+                                    color={
+                                        potentialProfit >= 0
+                                            ? 'var(--color-positive)'
+                                            : 'var(--color-negative)'
+                                    }
+                                />
+                            </div>
+
+                            {validationError && contractsNum > 0 && (
+                                <div
+                                    style={{
+                                        display: 'flex',
+                                        gap: 6,
+                                        alignItems: 'center',
+                                        fontSize: 'var(--text-xs)',
+                                        color: 'var(--color-negative)',
+                                        marginBottom: 10,
+                                    }}
+                                >
+                                    <AlertCircle style={{ width: 12, height: 12 }} />
+                                    {validationError}
+                                </div>
+                            )}
+
+                            {/* USDH onramp for USDH-quoted markets when balance is 0 */}
+                            {selected.quoteToken === 'USDH' && quoteBalance < 10 && (
+                                <UsdhOnramp
+                                    buyUsdh={buyUsdh}
+                                    needed={Math.max(20, Math.ceil(totalCost) + 5)}
+                                />
+                            )}
+
+                            {result.kind === 'success' && (
+                                <div
+                                    style={{
+                                        background: 'rgba(34,197,94,0.1)',
+                                        border: '1px solid rgba(34,197,94,0.3)',
+                                        borderRadius: 'var(--radius-md)',
+                                        padding: '10px 12px',
+                                        fontSize: 'var(--text-sm)',
+                                        color: 'var(--color-positive)',
+                                        display: 'flex',
+                                        gap: 8,
+                                        alignItems: 'center',
+                                        marginBottom: 10,
+                                    }}
+                                >
+                                    <Check style={{ width: 14, height: 14 }} />
+                                    {t.outcomeMarkets.successBet}
+                                </div>
+                            )}
+                            {result.kind === 'error' && (
+                                <div
+                                    style={{
+                                        background: 'rgba(239,68,68,0.1)',
+                                        border: '1px solid rgba(239,68,68,0.3)',
+                                        borderRadius: 'var(--radius-md)',
+                                        padding: '10px 12px',
+                                        fontSize: 'var(--text-sm)',
+                                        color: 'var(--color-negative)',
+                                        marginBottom: 10,
+                                    }}
+                                >
+                                    {result.message}
+                                </div>
+                            )}
+
+                            {/* CTA */}
+                            <button
+                                onClick={handleBet}
+                                disabled={!canSubmit}
+                                style={{
+                                    width: '100%',
+                                    padding: '14px',
+                                    background: canSubmit
+                                        ? (SIDE_COLOR[selectedSideIdx as 0 | 1] || SIDE_COLOR[0])
+                                              .color
+                                        : 'var(--color-bg-tertiary)',
+                                    border: 'none',
+                                    borderRadius: 'var(--radius-full)',
+                                    color: canSubmit
+                                        ? '#fff'
+                                        : 'var(--color-text-tertiary)',
+                                    fontWeight: 800,
+                                    fontSize: 'var(--text-sm)',
+                                    cursor: canSubmit ? 'pointer' : 'not-allowed',
+                                    fontFamily: 'inherit',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 6,
+                                }}
+                            >
+                                {submitting ? (
+                                    <>
+                                        <Loader2
+                                            className="animate-spin"
+                                            style={{ width: 14, height: 14 }}
+                                        />
+                                        {t.outcomeMarkets.betting}
+                                    </>
+                                ) : (
+                                    t.outcomeMarkets.placeBetCta
+                                        .replace(
+                                            '{amount}',
+                                            `${contractsNum || '?'} ${t.outcomeMarkets.contracts}`,
+                                        )
+                                        .replace('{side}', selectedSide.name)
+                                )}
+                            </button>
+                        </>
+                    )}
+
+                    {activeTab === 'chart' && (
+                        <div style={{ marginTop: 4 }}>
+                            <TokenCandleChart symbol={selectedSide.coinRef} height={220} />
+                        </div>
+                    )}
+
+                    {activeTab === 'book' && (
+                        <div
+                            style={{
+                                height: 280,
+                                borderRadius: 'var(--radius-lg)',
+                                overflow: 'hidden',
+                                border: '1px solid var(--color-border-subtle)',
+                                backgroundColor: 'var(--color-bg-secondary)',
+                                marginTop: 4,
+                            }}
+                        >
+                            <OrderBook symbol={selectedSide.coinRef} levels={5} />
+                        </div>
+                    )}
                         </div>
                     </>
                 )}

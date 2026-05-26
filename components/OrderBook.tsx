@@ -163,11 +163,17 @@ export default function OrderBook({
 
     // Use the global formatCurrency for consistent 1-digit asset precision
     const formatPrice = (price: number) => {
+        if (coin.startsWith('#')) {
+            return `${(price * 100).toFixed(1)}¢`;
+        }
         return formatCurrency(price).replace('$', '').trim();
     };
 
     // Format size
     const formatSize = (size: number) => {
+        if (coin.startsWith('#')) {
+            return size.toFixed(0);
+        }
         if (size >= 1000) return (size / 1000).toFixed(2) + 'K';
         if (size >= 1) return size.toFixed(3);
         return size.toFixed(4);
