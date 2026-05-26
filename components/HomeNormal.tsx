@@ -27,14 +27,42 @@ const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep'
 
 interface HomeNormalProps {
     onTokenClick?: (symbol: string) => void;
+    /** Spot-only holdings click — perp TokenDetail says "no market data" for
+     *  tokens without a perp counterpart (UFART, PURR, native HL tokens).
+     *  Route those clicks to SpotScreen with the coin preselected. */
+    onSpotHoldingClick?: (coin: string) => void;
     onBuyClick?: () => void;
     onToggleProMode: () => void;
 }
 
-function HomeNormal({ onTokenClick, onBuyClick, onToggleProMode }: HomeNormalProps) {
+function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onToggleProMode }: HomeNormalProps) {
     const { t, language } = useLanguage();
     const { formatCurrency } = useCurrency();
-    const { account, positions, markets, thirtyDayPnl, setSelectedMarket } = useHyperliquid();
+    const { account, positions, markets, thirtyDayPnl, setSelectedMarket, spotBalances, spotPrices } = useHyperliquid();
+
+    // Spot holdings to render (excluding USDC, which is counted as cash).
+    // Anything with a known spot price OR a perp price gets a value; rows
+    // without any price get hidden — beats showing "$NaN" or $0.
+    const spotHoldings = useMemo(() => {
+        return (spotBalances || [])
+            .filter((b) => b.coin !== 'USDC' && b.coin !== 'USDT')
+            .map((b) => {
+                const amount = parseFloat(b.total);
+                if (amount <= 0) return null;
+                const spotPx = spotPrices?.[b.coin] || 0;
+                const perpPx = markets.find((m) => m.name === b.coin)?.price || 0;
+                const price = spotPx || perpPx;
+                if (price <= 0) return null;
+                return {
+                    coin: b.coin,
+                    amount,
+                    price,
+                    valueUsd: amount * price,
+                };
+            })
+            .filter((x): x is NonNullable<typeof x> => x !== null)
+            .sort((a, b) => b.valueUsd - a.valueUsd);
+    }, [spotBalances, spotPrices, markets]);
     const { user: privyUser } = usePrivy();
     const { user } = useUser();
     const [now, setNow] = useState<Date | null>(null);
@@ -739,6 +767,124 @@ function HomeNormal({ onTokenClick, onBuyClick, onToggleProMode }: HomeNormalPro
                                 </div>
                             );
                         })}
+                    </div>
+                </div>
+            )}
+
+            {/* Spot holdings — rendered separately from perp positions so
+                the user can tell at a glance which side they own. */}
+            {spotHoldings.length > 0 && (
+                <div style={{ padding: '36px 6px 0' }}>
+                    <SectionRule
+                        label={t.spot.homeSectionTitle}
+                        right={
+                            <span
+                                className="tabular-mono"
+                                style={{
+                                    fontSize: 10,
+                                    color: 'var(--color-text-tertiary)',
+                                    letterSpacing: '0.05em',
+                                }}
+                            >
+                                {spotHoldings.length}
+                            </span>
+                        }
+                    />
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 10,
+                            marginTop: 16,
+                        }}
+                    >
+                        {spotHoldings.map((h) => (
+                            <div
+                                key={h.coin}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => onSpotHoldingClick?.(h.coin)}
+                                onKeyDown={(e) =>
+                                    e.key === 'Enter' && onSpotHoldingClick?.(h.coin)
+                                }
+                                style={{
+                                    padding: 14,
+                                    borderRadius: 18,
+                                    background:
+                                        'linear-gradient(140deg, rgba(56,189,248,0.06) 0%, rgba(255,255,255,0.015) 60%)',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    boxShadow:
+                                        'inset 0 1px 0 rgba(255,255,255,0.04)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 12,
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                <TokenLogo symbol={h.coin} size={42} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'baseline',
+                                            gap: 8,
+                                        }}
+                                    >
+                                        <div
+                                            className="font-display"
+                                            style={{
+                                                fontSize: 18,
+                                                fontWeight: 500,
+                                                fontVariationSettings:
+                                                    '"opsz" 36, "SOFT" 40, "wght" 500',
+                                                letterSpacing: '-0.015em',
+                                            }}
+                                        >
+                                            {getTokenFullName(h.coin)}
+                                        </div>
+                                        <span
+                                            style={{
+                                                fontSize: 9,
+                                                padding: '2px 6px',
+                                                borderRadius: 4,
+                                                fontWeight: 800,
+                                                letterSpacing: '0.08em',
+                                                background: 'rgba(56,189,248,0.16)',
+                                                color: '#38BDF8',
+                                            }}
+                                        >
+                                            SPOT
+                                        </span>
+                                    </div>
+                                    <div
+                                        className="tabular-mono"
+                                        style={{
+                                            fontSize: 10.5,
+                                            color: 'rgba(255,255,255,0.5)',
+                                            marginTop: 3,
+                                            letterSpacing: '0.02em',
+                                        }}
+                                    >
+                                        {h.amount.toLocaleString('en-US', {
+                                            maximumFractionDigits: 6,
+                                        })}{' '}
+                                        {h.coin} · {formatCurrency(h.price)}
+                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'right', minWidth: 62 }}>
+                                    <div
+                                        className="tabular-mono"
+                                        style={{
+                                            fontSize: 14,
+                                            fontWeight: 800,
+                                            color: 'var(--color-text-primary)',
+                                        }}
+                                    >
+                                        {formatCurrency(h.valueUsd)}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

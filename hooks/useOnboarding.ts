@@ -4,7 +4,7 @@ import 'driver.js/dist/driver.css';
 
 interface UseOnboardingProps {
     enabled?: boolean;
-    setView: (view: 'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotAdvanced' | 'predictions' | 'advanced') => void;
+    setView: (view: 'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'bolsillos' | 'predictions' | 'advanced') => void;
     currentView: string;
 }
 

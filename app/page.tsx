@@ -12,17 +12,22 @@ import ProfileScreen from '@/components/ProfileScreen';
 import AjustesScreen from '@/components/AjustesScreen';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
+import ApproveAgentModal from '@/components/ApproveAgentModal';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
-import SpotTradingPanel from '@/components/SpotTradingPanel';
+import SpotScreen from '@/components/SpotScreen';
 import PolymarketPanel from '@/components/PolymarketPanel';
+import PredictionsHub from '@/components/PredictionsHub';
 import AdvancedMenu from '@/components/AdvancedMenu';
 import ComprarFlow from '@/components/ComprarFlow';
 import TradearScreen from '@/components/TradearScreen';
 import MarketsScreen from '@/components/MarketsScreen';
 import TokenDetail from '@/components/TokenDetail';
 import PortfolioScreen from '@/components/PortfolioScreen';
+import BolsillosScreen from '@/components/BolsillosScreen';
+import DepositModal from '@/components/DepositModal';
+import BridgeModal from '@/components/BridgeModal';
 import Trollbox from '@/components/Trollbox';
-import { BarChart3, History, User, Sliders } from 'lucide-react';
+import { BarChart3, Coins, History, User, Sliders } from 'lucide-react';
 
 export default function Home() {
     const { t } = useLanguage();
@@ -39,9 +44,14 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotAdvanced' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
+    /** Base ticker to preselect when navigating into Spot from a holdings row. */
+    const [selectedSpotBase, setSelectedSpotBase] = useState<string | undefined>(undefined);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
+    const [showAgentModal, setShowAgentModal] = useState(false);
+    const [showBolsillosDeposit, setShowBolsillosDeposit] = useState(false);
+    const [showBridgeModal, setShowBridgeModal] = useState(false);
     const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
     // Initialize onboarding tour
@@ -69,7 +79,15 @@ export default function Home() {
             const dismissed = sessionStorage.getItem('setup_wizard_dismissed');
 
             if (setupNeeded && !dismissed) {
-                setShowSetupWizard(true);
+                // Prefer the new editorial ApproveAgentModal when agent
+                // setup is the missing piece. Once agent is approved, if
+                // builder fee is still needed, the legacy TradingSetupWizard
+                // takes over (its own initial-step logic auto-skips agent).
+                if (needsAgentWallet) {
+                    setShowAgentModal(true);
+                } else {
+                    setShowSetupWizard(true);
+                }
             }
         }
     }, [view, authenticated, agentWalletEnabled, builderFeeApproved, builderFeeChecked]);
@@ -122,6 +140,10 @@ export default function Home() {
                                         setDetailSymbol(symbol);
                                         setView('tokenDetail');
                                     }}
+                                    onSpotHoldingClick={(coin) => {
+                                        setSelectedSpotBase(coin);
+                                        setView('spotReal');
+                                    }}
                                     onTradeClick={() => setView('trading')}
                                     onBuyClick={() => setView('spot')}
                                 />
@@ -154,13 +176,26 @@ export default function Home() {
                                     onClose={() => setView('home')}
                                 />
                             </div>
-                        ) : view === 'spotAdvanced' ? (
-                            <div className="max-w-4xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
-                                <SpotTradingPanel />
+                        ) : view === 'spotReal' ? (
+                            <div className="mt-6 max-w-2xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
+                                <SpotScreen
+                                    initialBase={selectedSpotBase}
+                                    onClose={() => {
+                                        setSelectedSpotBase(undefined);
+                                        setView('home');
+                                    }}
+                                />
+                            </div>
+                        ) : view === 'bolsillos' ? (
+                            <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <BolsillosScreen
+                                    onBack={() => setView('home')}
+                                    onDeposit={() => setShowBridgeModal(true)}
+                                />
                             </div>
                         ) : view === 'predictions' ? (
                             <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                                <PolymarketPanel />
+                                <PredictionsHub />
                             </div>
                         ) : view === 'advanced' ? (
                             <div className="mt-6" style={{ paddingBottom: '100px' }}>
@@ -168,6 +203,8 @@ export default function Home() {
                                     onSelectPerps={() => setView('trading')}
                                     onSelectPredictions={() => setView('predictions')}
                                     onSelectLeaderboard={() => setView('leaderboard')}
+                                    onSelectSpot={() => setView('spotReal')}
+                                    onSelectBolsillos={() => setView('bolsillos')}
                                     onSelectMarkets={() => setView('markets')}
                                 />
                             </div>
@@ -244,7 +281,7 @@ export default function Home() {
                     {/* Home */}
                     <button
                         onClick={() => setView('home')}
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'home' ? 'scale-110' : ''}`}
+                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'home' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
@@ -265,7 +302,7 @@ export default function Home() {
                     <button
                         onClick={() => setView('markets')}
                         id="nav-markets-tab"
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'markets' || view === 'tokenDetail' ? 'scale-110' : ''}`}
+                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'markets' || view === 'tokenDetail' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
@@ -277,10 +314,26 @@ export default function Home() {
                         <span className="text-[11px] font-semibold">{t.nav.markets}</span>
                     </button>
 
+                    {/* Spot — real token ownership (HYPE, PURR, etc.) */}
+                    <button
+                        onClick={() => setView('spotReal')}
+                        id="nav-spot-tab"
+                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'spotReal' ? 'scale-110' : ''}`}
+                        style={{
+                            color: '#FFFF00',
+                            background: 'transparent',
+                            filter: view === 'spotReal' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
+                            opacity: view === 'spotReal' ? 1 : 0.6,
+                        }}
+                    >
+                        <Coins className="w-7 h-7" strokeWidth={2} />
+                        <span className="text-[11px] font-semibold">{t.nav.spot}</span>
+                    </button>
+
                     {/* History */}
                     <button
                         onClick={() => setView('history')}
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'history' ? 'scale-110' : ''}`}
+                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'history' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
@@ -296,7 +349,7 @@ export default function Home() {
                     <button
                         onClick={() => setView('advanced')}
                         id="nav-advanced-tab"
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'advanced' || view === 'trading' || view === 'predictions' || view === 'leaderboard' ? 'scale-110' : ''}`}
+                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'advanced' || view === 'trading' || view === 'predictions' || view === 'leaderboard' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
@@ -313,7 +366,7 @@ export default function Home() {
                         onClick={handleProfileClick}
                         disabled={!ready}
                         id="nav-profile-tab"
-                        className={`flex flex-col items-center gap-1 px-4 py-3 transition-all border-none outline-none ${view === 'profile' ? 'scale-110' : ''}`}
+                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'profile' ? 'scale-110' : ''}`}
                         style={{
                             color: '#FFFF00',
                             background: 'transparent',
@@ -341,12 +394,45 @@ export default function Home() {
             {/* Trollbox Component */}
             <Trollbox isOpen={isTrollboxOpen} onClose={() => setIsTrollboxOpen(false)} />
 
+            {/* Bolsillos empty-state deposit shortcut (legacy modal) */}
+            <DepositModal
+                isOpen={showBolsillosDeposit}
+                onClose={() => setShowBolsillosDeposit(false)}
+            />
+
+            {/* New editorial Bridge modal — Rhino flow with the redesigned shell */}
+            <BridgeModal
+                open={showBridgeModal}
+                onClose={() => setShowBridgeModal(false)}
+                onComplete={() => {
+                    /* The modal handles its own success state; nothing extra here. */
+                }}
+            />
 
 
-            {/* Trading Setup Wizard - Auto-prompt */}
+
+            {/* Trading Setup Wizard - legacy modal kept for the builder-fee step */}
             <TradingSetupWizard
                 isOpen={showSetupWizard}
                 onClose={handleWizardClose}
+            />
+
+            {/* New editorial Approve Agent modal — replaces the agent step
+                visually. On success, if a builder-fee step is still needed
+                the legacy wizard takes over automatically. */}
+            <ApproveAgentModal
+                open={showAgentModal}
+                onClose={() => {
+                    setShowAgentModal(false);
+                    sessionStorage.setItem('setup_wizard_dismissed', 'true');
+                }}
+                onSuccess={() => {
+                    setShowAgentModal(false);
+                    // If builder fee still missing, chain into legacy wizard.
+                    if (BUILDER_CONFIG.enabled && !builderFeeApproved) {
+                        setShowSetupWizard(true);
+                    }
+                }}
             />
         </div>
     );

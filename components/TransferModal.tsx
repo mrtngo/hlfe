@@ -7,14 +7,23 @@ import { useWallets } from '@privy-io/react-auth';
 import { X, ArrowLeftRight, Loader2, AlertCircle } from 'lucide-react';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useLanguage } from '@/hooks/useLanguage';
-import { API_URL } from '@/lib/hyperliquid/client';
+import { API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
 
 interface TransferModalProps {
     isOpen: boolean;
     onClose: () => void;
+    /**
+     * Initial direction. true = Spot → Perp (default), false = Perp → Spot.
+     * Reset to this value every time the modal opens.
+     */
+    defaultToPerp?: boolean;
 }
 
-export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
+export default function TransferModal({
+    isOpen,
+    onClose,
+    defaultToPerp = true,
+}: TransferModalProps) {
     const { wallets } = useWallets();
     const { address, account } = useHyperliquid();
     const { t } = useLanguage();
@@ -22,7 +31,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
     const activeWallet = wallets?.[0];
 
     const [amount, setAmount] = useState('');
-    const [toPerp, setToPerp] = useState(true); // true = Spot → Perp, false = Perp → Spot
+    const [toPerp, setToPerp] = useState(defaultToPerp); // true = Spot → Perp, false = Perp → Spot
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -32,14 +41,18 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
         setMounted(true);
     }, []);
 
-    // Reset state when modal opens/closes
+    // Reset state when modal opens/closes — including direction, so callers
+    // can preset toPerp via `defaultToPerp` (e.g. "Move USDC from Perp → Spot"
+    // CTA in the spot screen).
     useEffect(() => {
         if (!isOpen) {
             setAmount('');
             setError('');
             setSuccess(false);
+        } else {
+            setToPerp(defaultToPerp);
         }
-    }, [isOpen]);
+    }, [isOpen, defaultToPerp]);
 
     if (!isOpen || !mounted) return null;
 
@@ -60,10 +73,15 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
             const provider = await activeWallet.getEthereumProvider();
             const nonce = Date.now();
 
+            // HL signs against `Mainnet` on prod, `Testnet` on testnet.
+            // Was hardcoded to 'Mainnet' which silently fails on testnet
+            // with a "Transfer failed" generic error.
+            const hyperliquidChain = IS_TESTNET ? 'Testnet' : 'Mainnet';
+
             // Prepare the transfer action - CORRECT FORMAT
             const transferAction = {
                 type: 'usdClassTransfer',
-                hyperliquidChain: 'Mainnet',
+                hyperliquidChain,
                 signatureChainId: '0xa4b1',
                 amount: amount,
                 toPerp: toPerp,
@@ -101,7 +119,7 @@ export default function TransferModal({ isOpen, onClose }: TransferModalProps) {
                         },
                         primaryType: 'HyperliquidTransaction:UsdClassTransfer',
                         message: {
-                            hyperliquidChain: 'Mainnet',
+                            hyperliquidChain,
                             amount: amount,
                             toPerp: toPerp,
                             nonce: nonce,

@@ -14,11 +14,12 @@ import HomePro from '@/components/HomePro';
 
 interface HomeScreenProps {
     onTokenClick?: (symbol: string) => void;
+    onSpotHoldingClick?: (coin: string) => void;
     onTradeClick?: () => void;
     onBuyClick?: () => void;
 }
 
-export default function HomeScreen({ onTokenClick, onBuyClick }: HomeScreenProps = {}) {
+export default function HomeScreen({ onTokenClick, onSpotHoldingClick, onBuyClick }: HomeScreenProps = {}) {
     const { t } = useLanguage();
     const { markets } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
@@ -222,6 +223,7 @@ export default function HomeScreen({ onTokenClick, onBuyClick }: HomeScreenProps
             ) : (
                 <HomeNormal
                     onTokenClick={onTokenClick}
+                    onSpotHoldingClick={onSpotHoldingClick}
                     onBuyClick={onBuyClick}
                     onToggleProMode={toggleProMode}
                 />

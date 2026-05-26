@@ -530,7 +530,7 @@ function BridgeDeposit() {
 }
 
 // --- Spot <-> Perp Transfer Tab ---
-import { API_URL } from '@/lib/hyperliquid/client';
+import { API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
 
 function SpotPerpTransfer() {
     const { t } = useLanguage();
@@ -559,10 +559,14 @@ function SpotPerpTransfer() {
             const provider = await activeWallet.getEthereumProvider();
             const nonce = Date.now();
 
+            // HL signs against 'Mainnet' on prod, 'Testnet' on testnet —
+            // mismatch silently fails with a generic error.
+            const hyperliquidChain = IS_TESTNET ? 'Testnet' : 'Mainnet';
+
             // Prepare the transfer action
             const transferAction = {
                 type: 'usdClassTransfer',
-                hyperliquidChain: 'Mainnet',
+                hyperliquidChain,
                 signatureChainId: '0xa4b1',
                 amount: amount,
                 toPerp: toPerp,
@@ -600,7 +604,7 @@ function SpotPerpTransfer() {
                         },
                         primaryType: 'HyperliquidTransaction:UsdClassTransfer',
                         message: {
-                            hyperliquidChain: 'Mainnet',
+                            hyperliquidChain,
                             amount: amount,
                             toPerp: toPerp,
                             nonce: nonce,

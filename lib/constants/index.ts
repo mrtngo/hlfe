@@ -40,3 +40,8 @@ export {
     POLYGON_USDC_ABI,
     PROXY_INIT_CODE_HASH,
 } from './polymarket';
+
+export {
+    SPOT_PICKER_TOP_N,
+    SPOT_LOW_LIQUIDITY_THRESHOLD_USD,
+} from './spot-tokens';

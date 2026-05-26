@@ -11,6 +11,7 @@ import {
     Trophy,
     AlertTriangle,
     ArrowUpRight,
+    Coins,
     Zap,
     TrendingUp,
 } from 'lucide-react';
@@ -19,6 +20,8 @@ interface AdvancedMenuProps {
     onSelectPerps: () => void;
     onSelectPredictions: () => void;
     onSelectLeaderboard: () => void;
+    onSelectSpot: () => void;
+    onSelectBolsillos?: () => void;
     onSelectMarkets?: () => void;
 }
 
@@ -26,6 +29,8 @@ export default function AdvancedMenu({
     onSelectPerps,
     onSelectPredictions,
     onSelectLeaderboard,
+    onSelectSpot,
+    onSelectBolsillos,
     onSelectMarkets,
 }: AdvancedMenuProps) {
     const { t } = useLanguage();
@@ -215,6 +220,162 @@ export default function AdvancedMenu({
                             style={{ color: 'var(--color-text-secondary)', lineHeight: 1.5 }}
                         >
                             {t.advanced.perpsDescription}
+                        </p>
+                    </div>
+                </motion.button>
+
+                {/* BOLSILLOS — gold-tinted, the new "where's my money" hub */}
+                {onSelectBolsillos && (
+                    <motion.button
+                        whileTap={{ scale: 0.985 }}
+                        onClick={onSelectBolsillos}
+                        className="surface-soft grain text-left rounded-2xl border-none outline-none w-full mb-3 overflow-hidden"
+                        style={{ position: 'relative' }}
+                    >
+                        <div
+                            aria-hidden
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                pointerEvents: 'none',
+                                background:
+                                    'radial-gradient(70% 50% at 100% 0%, rgba(250,204,21,0.08) 0%, transparent 55%)',
+                            }}
+                        />
+                        <div className="relative p-5">
+                            <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div
+                                        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                        style={{
+                                            backgroundColor: 'rgba(250,204,21,0.1)',
+                                            border: '1px solid rgba(250,204,21,0.25)',
+                                            color: 'var(--color-brand-primary)',
+                                        }}
+                                    >
+                                        <Coins className="w-5 h-5" strokeWidth={1.75} />
+                                    </div>
+                                    <div>
+                                        <div
+                                            className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5"
+                                            style={{ color: 'var(--color-brand-primary)' }}
+                                        >
+                                            Bolsillos · Perps + Spot
+                                        </div>
+                                        <div
+                                            className="font-display"
+                                            style={{
+                                                fontSize: '1.25rem',
+                                                color: 'var(--color-text-primary)',
+                                                fontVariationSettings:
+                                                    '"opsz" 36, "SOFT" 50, "wght" 600',
+                                                letterSpacing: '-0.02em',
+                                                lineHeight: 1,
+                                            }}
+                                        >
+                                            Tu plata,{' '}
+                                            <span
+                                                className="font-display-italic"
+                                                style={{
+                                                    fontVariationSettings:
+                                                        '"opsz" 36, "SOFT" 100, "wght" 500',
+                                                    color: 'var(--color-text-secondary)',
+                                                }}
+                                            >
+                                                por uso
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <ArrowUpRight
+                                    className="w-5 h-5"
+                                    style={{ color: 'var(--color-text-tertiary)' }}
+                                    strokeWidth={1.75}
+                                />
+                            </div>
+                            <p
+                                className="text-[12px]"
+                                style={{ color: 'var(--color-text-secondary)', lineHeight: 1.5 }}
+                            >
+                                Separá tu plata de trading apalancado de tu cripto en propiedad.
+                                Movés entre los dos bolsillos al instante, sin comisión.
+                            </p>
+                        </div>
+                    </motion.button>
+                )}
+
+                {/* SPOT — cyan-themed card, real token ownership */}
+                <motion.button
+                    whileTap={{ scale: 0.985 }}
+                    onClick={onSelectSpot}
+                    className="surface-soft grain text-left rounded-2xl border-none outline-none w-full mb-3 overflow-hidden"
+                    style={{ position: 'relative' }}
+                >
+                    <div
+                        aria-hidden
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            pointerEvents: 'none',
+                            background: 'radial-gradient(70% 50% at 100% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 55%)',
+                        }}
+                    />
+
+                    <div className="relative p-5">
+                        <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                                <div
+                                    className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                    style={{
+                                        backgroundColor: 'rgba(56, 189, 248, 0.12)',
+                                        border: '1px solid rgba(56, 189, 248, 0.3)',
+                                        color: '#38BDF8',
+                                    }}
+                                >
+                                    <Coins className="w-5 h-5" strokeWidth={1.75} />
+                                </div>
+                                <div>
+                                    <div
+                                        className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5"
+                                        style={{ color: '#38BDF8' }}
+                                    >
+                                        Spot · Posees el token
+                                    </div>
+                                    <div
+                                        className="font-display"
+                                        style={{
+                                            fontSize: '1.25rem',
+                                            color: 'var(--color-text-primary)',
+                                            fontVariationSettings: '"opsz" 36, "SOFT" 50, "wght" 600',
+                                            letterSpacing: '-0.02em',
+                                            lineHeight: 1,
+                                        }}
+                                    >
+                                        Comprar{' '}
+                                        <span
+                                            className="font-display-italic"
+                                            style={{
+                                                fontVariationSettings: '"opsz" 36, "SOFT" 100, "wght" 500',
+                                                color: 'var(--color-text-secondary)',
+                                            }}
+                                        >
+                                            HYPE, PURR…
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <ArrowUpRight
+                                className="w-5 h-5"
+                                style={{ color: 'var(--color-text-tertiary)' }}
+                                strokeWidth={1.75}
+                            />
+                        </div>
+
+                        <p
+                            className="text-[12px]"
+                            style={{ color: 'var(--color-text-secondary)', lineHeight: 1.5 }}
+                        >
+                            {t.advanced.spotDescription}
                         </p>
                     </div>
                 </motion.button>

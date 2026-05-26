@@ -9,8 +9,29 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { createHyperliquidClient, API_URL } from '@/lib/hyperliquid/client';
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
+import { cachedFetch } from '@/lib/api-cache';
 import type { Position, Order, AccountState, Market } from '@/types';
 import { DEFAULT_ACCOUNT_STATE } from '@/types';
+
+/** Cached fetch for spotMetaAndAssetCtxs. The universe is near-static and
+ *  prices are good enough for NAV between refreshes; hammering /info on
+ *  every account refresh caused 429s on testnet that cascaded into perp
+ *  `getMeta()` failures (and the `e.split is not a function` unhandled SDK
+ *  error downstream). 30s TTL is the sweet spot. */
+function fetchSpotMetaCached(): Promise<any> {
+    return cachedFetch(
+        'spotMetaAndAssetCtxs',
+        async () => {
+            const res = await fetch(`${API_URL}/info`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'spotMetaAndAssetCtxs' }),
+            });
+            return res.ok ? res.json() : null;
+        },
+        30_000,
+    ).catch(() => null);
+}
 
 interface SpotBalance {
     coin: string;
@@ -25,6 +46,14 @@ interface AccountHookState {
     orders: Order[];
     openOrders: any[]; // Active limit orders (non-trigger)
     spotBalances: SpotBalance[];
+    /**
+     * Coin name → current spot mark price in USDC. Populated from
+     * `spotMetaAndAssetCtxs`. USDC is implicitly $1 (not stored here).
+     * Used to value spot holdings in NAV and the holdings list — perp
+     * prices are wrong for wrapped tokens (UBTC perp doesn't exist, BTC
+     * perp price ≠ UBTC spot price).
+     */
+    spotPrices: Record<string, number>;
     loading: boolean;
     rateLimited: boolean;
     lastUpdated: number;
@@ -142,6 +171,7 @@ export function useHyperliquidAccount(
     const [triggerOrders, setTriggerOrders] = useState<any[]>([]);
     const triggerOrdersRef = useRef<any[]>([]);
     const [spotBalances, setSpotBalances] = useState<SpotBalance[]>([]);
+    const [spotPrices, setSpotPrices] = useState<Record<string, number>>({});
     const [retryAfter, setRetryAfter] = useState<number | null>(null);
     const initialFetchDone = useRef(false);
     const fetchingAccount = useRef(false);
@@ -209,8 +239,11 @@ export function useHyperliquidAccount(
             const client = createHyperliquidClient();
             await client.connect();
 
-            // Fetch main, DEX (xyz), Spot states, and open orders in parallel for speed & aggregation
-            const [userState, dexStateData, spotStateResponse, openOrdersResponse, xyzOpenOrdersResponse] = await Promise.all([
+            // Fetch main, DEX (xyz), Spot states, spot prices, and open orders in parallel.
+            // The spotMetaAndAssetCtxs fetch is what lets us value spot holdings
+            // correctly in NAV — perp prices don't work for wrapped tokens
+            // (UBTC perp doesn't exist, BTC perp price ≠ UBTC spot price).
+            const [userState, dexStateData, spotStateResponse, spotMetaResponse, openOrdersResponse, xyzOpenOrdersResponse] = await Promise.all([
                 client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -229,6 +262,7 @@ export function useHyperliquidAccount(
                         user: normalizedAddress,
                     }),
                 }).catch(() => null),
+                fetchSpotMetaCached(),
                 // Fetch open orders including trigger orders (TP/SL)
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -343,6 +377,32 @@ export function useHyperliquidAccount(
                     console.log('✅ Fetched Spot balances:', spotState.balances.length);
                 }
             }
+
+            // 4. Spot prices — coin name → markPx. Used for NAV + holdings UI.
+            if (Array.isArray(spotMetaResponse) && spotMetaResponse.length === 2) {
+                const [spotMeta, spotCtxs] = spotMetaResponse;
+                const prices: Record<string, number> = {};
+                spotMeta?.universe?.forEach((pair: any, idx: number) => {
+                    const baseTok = spotMeta.tokens.find((t: any) => t.index === pair.tokens[0]);
+                    const markPx = spotCtxs[idx]?.markPx;
+                    if (baseTok?.name && markPx) {
+                        const px = parseFloat(markPx);
+                        // Keep the highest-volume quote if a base has multiple
+                        // pairs — same dedup intent as useSpotMarkets.
+                        const existingVol = prices[`__vol_${baseTok.name}`] || 0;
+                        const curVol = parseFloat(spotCtxs[idx]?.dayNtlVlm || '0');
+                        if (curVol >= existingVol) {
+                            prices[baseTok.name] = px;
+                            prices[`__vol_${baseTok.name}`] = curVol;
+                        }
+                    }
+                });
+                // Strip the volume keys before publishing.
+                Object.keys(prices).forEach((k) => {
+                    if (k.startsWith('__vol_')) delete prices[k];
+                });
+                setSpotPrices(prices);
+            }
         } catch (err: any) {
             console.error('❌ Error fetching account data:', err);
 
@@ -375,8 +435,9 @@ export function useHyperliquidAccount(
             const client = createHyperliquidClient();
             await client.connect();
 
-            // Fetch states in parallel
-            const [userState, dexStateData, spotStateResponse, openOrdersResponse, xyzOpenOrdersResponse] = await Promise.all([
+            // Fetch states in parallel — includes spotMetaAndAssetCtxs so
+            // refresh updates NAV correctly after a spot buy/sell.
+            const [userState, dexStateData, spotStateResponse, spotMetaResponse, openOrdersResponse, xyzOpenOrdersResponse] = await Promise.all([
                 client.info.perpetuals.getClearinghouseState(normalizedAddress, false),
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -395,6 +456,7 @@ export function useHyperliquidAccount(
                         user: normalizedAddress,
                     }),
                 }).catch(() => null),
+                fetchSpotMetaCached(),
                 // Fetch open orders including trigger orders (TP/SL)
                 fetch(`${API_URL}/info`, {
                     method: 'POST',
@@ -485,6 +547,24 @@ export function useHyperliquidAccount(
                 if (spotState?.balances) {
                     setSpotBalances(spotState.balances);
                 }
+            }
+
+            // 4. Refresh spot prices for NAV.
+            if (Array.isArray(spotMetaResponse) && spotMetaResponse.length === 2) {
+                const [spotMeta, spotCtxs] = spotMetaResponse;
+                const prices: Record<string, number> = {};
+                const vols: Record<string, number> = {};
+                spotMeta?.universe?.forEach((pair: any, idx: number) => {
+                    const baseTok = spotMeta.tokens.find((t: any) => t.index === pair.tokens[0]);
+                    const markPx = spotCtxs[idx]?.markPx;
+                    if (!baseTok?.name || !markPx) return;
+                    const curVol = parseFloat(spotCtxs[idx]?.dayNtlVlm || '0');
+                    if (curVol >= (vols[baseTok.name] || 0)) {
+                        prices[baseTok.name] = parseFloat(markPx);
+                        vols[baseTok.name] = curVol;
+                    }
+                });
+                setSpotPrices(prices);
             }
         } catch (error) {
             console.error('❌ [REFRESH] Failed to refresh account data:', error);
@@ -662,11 +742,25 @@ export function useHyperliquidAccount(
         const perpCash = perpState.account.equity - (perpState.account.unrealizedPnl || 0);
         const dexCash = dexState.account.equity - (dexState.account.unrealizedPnl || 0);
 
-        // Sum all spot assets using market prices where available, otherwise 1.0 for stables or skip
+        // Sum all spot assets. Price priority:
+        //   1. Stables (USDC/USDT) → $1
+        //   2. Spot mark price from spotMetaAndAssetCtxs (the correct source —
+        //      handles UBTC, UETH, HYPE, PURR, native HL tokens)
+        //   3. Perp mark price as last-resort fallback (rare: a token that
+        //      has a perp but not a spot pair)
+        // If all three miss, the position contributes 0 — better than valuing
+        // an unknown wrapped token at the wrong asset's price.
         const spotCash = spotBalances.reduce((sum, b) => {
             const coin = b.coin;
-            const market = markets.find(m => m.name === coin);
-            const price = market?.price || (coin === 'USDC' || coin === 'USDT' || coin === 'PURR' ? 1 : 0);
+            let price = 0;
+            if (coin === 'USDC' || coin === 'USDT') {
+                price = 1;
+            } else if (spotPrices[coin] && spotPrices[coin] > 0) {
+                price = spotPrices[coin];
+            } else {
+                const perpMarket = markets.find(m => m.name === coin);
+                price = perpMarket?.price || 0;
+            }
 
             if (price > 0) {
                 return sum + (parseFloat(b.total) * price);
@@ -694,7 +788,7 @@ export function useHyperliquidAccount(
             },
             mergedPositions: positionsWithRealtimePnl
         };
-    }, [perpState, dexState, markets, spotBalances]);
+    }, [perpState, dexState, markets, spotBalances, spotPrices]);
 
     return {
         account: mergedAccount,
@@ -702,6 +796,7 @@ export function useHyperliquidAccount(
         orders,
         openOrders,
         spotBalances,
+        spotPrices,
         loading,
         rateLimited,
         lastUpdated,

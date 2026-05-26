@@ -17,6 +17,7 @@ import {
     checkExistingAgent
 } from '@/lib/agent-wallet';
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
+import { outcomeWireAsset } from '@/lib/hyperliquid/outcome';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useWalletClient } from 'wagmi';
 import { apiCache } from '@/lib/api-cache';
@@ -25,6 +26,14 @@ import { useUserData } from '@/hooks/useUserData';
 import { useHyperliquidAccount } from '@/hooks/useHyperliquidAccount';
 
 export type { Market };
+
+/** Spot balance entry returned by Hyperliquid's spotClearinghouseState. */
+export interface SpotBalance {
+    coin: string;
+    token: number;
+    hold: string;
+    total: string;
+}
 
 // Define types (copied from useHyperliquid.tsx to ensure compatibility)
 export interface Position {
@@ -115,7 +124,8 @@ interface HyperliquidContextType {
         size: number,
         price?: number,
         leverage?: number,
-        reduceOnly?: boolean
+        reduceOnly?: boolean,
+        marketSlippagePct?: number,
     ) => Promise<any>;
     placeTriggerOrder: (
         symbol: string,
@@ -131,7 +141,9 @@ interface HyperliquidContextType {
     positions: Position[];
     orders: Order[];
     openOrders: any[]; // Active limit orders
-    spotBalances: any[];
+    spotBalances: SpotBalance[];
+    /** Coin → spot mark price in USDC. Empty until first fetch returns. */
+    spotPrices: Record<string, number>;
 
     // User Data (cached)
     fills: Fill[];
@@ -146,9 +158,55 @@ interface HyperliquidContextType {
     // Account actions
     withdraw: (amount: string, destination: string) => Promise<any>;
 
+    /**
+     * Move USDC between the user's perp and spot sub-accounts on
+     * Hyperliquid via `usdClassTransfer`. Requires the user's wallet
+     * (not the agent wallet) for signing.
+     */
+    transferBetweenPockets: (params: {
+        amount: number;
+        direction: 'perp-to-spot' | 'spot-to-perp';
+        note?: string;
+    }) => Promise<{ ok: boolean; txHash?: string; error?: string }>;
+
+    /**
+     * Buy USDH (HL native stablecoin) with USDC on spot pair USDH/USDC.
+     * Required for HIP-4 outcome-market trading on USDH-quoted markets.
+     * `usdcAmount` is the USDC notional the user wants to spend.
+     */
+    buyUsdh: (usdcAmount: number) => Promise<{
+        filled: boolean;
+        filledSize: number;
+        filledPrice: number;
+        error?: string;
+    }>;
+
+    /**
+     * Place a HIP-4 outcome-market order. Wire asset index =
+     * outcomeId * 10 + sideIdx. Sizes are whole contracts (szDecimals=0).
+     * Min notional = 10 USDH. Same signing path as spot orders.
+     */
+    placeOutcomeOrder: (params: {
+        outcomeId: number;
+        sideIdx: number;
+        side: 'buy' | 'sell';
+        type: 'market' | 'limit';
+        /** Whole contracts (szDecimals=0). Will be Math.floor'd defensively. */
+        size: number;
+        /** Limit price for `type: 'limit'`. Ignored on market orders. */
+        price?: number;
+        /** Max slippage cushion for market (IOC) orders, fractional (e.g. 0.05). */
+        marketSlippagePct?: number;
+    }) => Promise<{
+        filled: boolean;
+        filledSize: number;
+        filledPrice: number;
+        error?: string;
+    }>;
+
     // User Data (cached)
     agentWalletEnabled: boolean;
-    setupAgentWallet: () => Promise<{ success: boolean; message: string }>;
+    setupAgentWallet: () => Promise<{ success: boolean; message: string; agentAddress?: string }>;
 
     // Builder Fee (Rayo trading fees on mainnet)
     builderFeeApproved: boolean;
@@ -225,6 +283,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         orders,
         openOrders,
         spotBalances,
+        spotPrices,
         loading: accountLoading,
         lastUpdated,
         refreshAccountData: refreshAccountData,
@@ -404,7 +463,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                 if (approved) {
                     setAgentWalletEnabled(true);
-                    return { success: true, message: 'Agent wallet approved! You can now trade without signing each transaction.' };
+                    return {
+                        success: true,
+                        message: 'Agent wallet approved! You can now trade without signing each transaction.',
+                        agentAddress: agent.address,
+                    };
                 } else {
                     throw new Error('Failed to approve agent wallet');
                 }
@@ -712,7 +775,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         size: number,
         price?: number,
         leverage?: number,
-        reduceOnly?: boolean
+        reduceOnly?: boolean,
+        /**
+         * Override the IOC slippage cushion for market orders, in
+         * fractional form (e.g. 0.05 = 5%). Callers that know their
+         * venue is thin (testnet spot, meme coins) pass a wider value;
+         * deep perps default to 0.5%. Ignored for limit orders.
+         */
+        marketSlippagePct?: number,
     ): Promise<{
         filled: boolean;
         filledSize: number;
@@ -769,18 +839,85 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                 const [spotMeta, spotContexts] = await spotMetaResponse.json();
                 assetName = baseCoin;
+                // Make `meta` available to shared code below (line 1047
+                // reads meta.universe[assetIndex]) so the spot path doesn't
+                // crash with "Cannot read properties of undefined".
+                meta = spotMeta;
 
-                // Find pair index in universe
-                const pairIndex = spotMeta.universe.findIndex((p: any) => p.name === symbol || (p.tokens[0] === spotMeta.tokens.find((t: any) => t.name === baseCoin)?.index));
+                // Find pair index in universe.
+                //
+                // Testnet has multiple tokens sharing a display `name` (e.g.
+                // two distinct token indices both named "ADADAA"). Each
+                // token has its OWN balance ledger and its OWN set of
+                // pairs. If the user owns token X but we route the order
+                // to a pair whose base is token Y (different index, same
+                // name), HL rejects: "Insufficient spot balance asset=N".
+                //
+                // The user's spotBalance entry tells us EXACTLY which
+                // token they hold (`b.token`). When that's available, it's
+                // the source of truth — we ignore the symbol's literal
+                // name and find a pair where tokens[0] === b.token. We
+                // prefer USDC-quoted pairs (matching what the picker
+                // surfaces) and fall back to any pair if needed.
+                const ownedBalance = spotBalances.find((b: any) => b.coin === baseCoin);
+                let pairIndex: number;
+
+                if (ownedBalance) {
+                    // Owned coin: route to a pair containing THIS specific
+                    // token index. USDC-quoted preferred.
+                    pairIndex = spotMeta.universe.findIndex((p: any) => {
+                        if (p.tokens[0] !== ownedBalance.token) return false;
+                        const quoteTok = spotMeta.tokens.find(
+                            (t: any) => t.index === p.tokens[1],
+                        );
+                        return quoteTok?.name === 'USDC';
+                    });
+                    if (pairIndex === -1) {
+                        // No USDC pair for this token — take any pair with
+                        // it as base. Better than failing entirely.
+                        pairIndex = spotMeta.universe.findIndex(
+                            (p: any) => p.tokens[0] === ownedBalance.token,
+                        );
+                    }
+                } else {
+                    // Fresh buy with no existing balance — fall back to
+                    // name-based lookup. Literal pair name match first,
+                    // then token-name resolution.
+                    const nameIndex = spotMeta.tokens.find(
+                        (t: any) => t.name === baseCoin,
+                    )?.index;
+                    pairIndex = spotMeta.universe.findIndex(
+                        (p: any) =>
+                            p.name === symbol ||
+                            (nameIndex !== undefined && p.tokens[0] === nameIndex),
+                    );
+                }
+
                 if (pairIndex === -1) {
                     throw new Error(`Spot pair not found for ${symbol}`);
                 }
-
-                assetIndex = pairIndex;
+                // CRITICAL: HL's wire format uses the pair's CANONICAL
+                // `index` field (a stable id), NOT the array offset in
+                // `universe`. For canonical pairs (PURR/USDC etc.) they
+                // coincide, which masked this bug. For non-canonical
+                // @N-named pairs (most testnet tokens, plenty of mainnet
+                // meme spot), they diverge:
+                //
+                //   universe[889] = { tokens: [1082, 0], name: '@1014', index: 1014 }
+                //
+                // Wire asset = 10000 + pair.index. If we send array
+                // offset (889 -> 10889) HL looks up the wrong asset and
+                // rejects with "Insufficient spot balance asset=10889"
+                // even when the user clearly holds the underlying token.
+                const resolvedPair = spotMeta.universe[pairIndex];
+                assetIndex = resolvedPair.index;
                 const spotCtx = spotContexts[pairIndex];
                 referencePrice = spotCtx?.markPx ? parseFloat(spotCtx.markPx) : null;
                 actualSzDecimals = spotMeta.tokens.find((t: any) => t.name === baseCoin)?.szDecimals;
 
+                console.log(
+                    `🔎 Spot pair resolution: baseCoin=${baseCoin}, ownedTokenIndex=${ownedBalance?.token ?? '(none)'}, arrayIdx=${pairIndex}, canonicalIndex=${assetIndex}, pairName=${resolvedPair.name}`,
+                );
                 console.log(`✅ Found spot asset at index ${assetIndex}: ${assetName}, price: ${referencePrice}`);
             } else if (isTradeXyzAsset) {
                 // For Trade.xyz assets, fetch meta and asset contexts from DEX endpoint
@@ -856,8 +993,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             // 2. Update leverage if specified (MUST be done BEFORE placing order)
             // Hyperliquid has default leverage per asset (e.g., 20x for BTC/ETH)
-            // If we don't explicitly set leverage, the order uses the default
+            // If we don't explicitly set leverage, the order uses the default.
+            //
+            // Spot orders have no leverage — sending updateLeverage with a
+            // spot asset index returns "User or API Wallet does not exist"
+            // and pollutes the console. Skip entirely for spot.
             const targetLeverage = leverage || 1;
+            if (isSpot) {
+                console.log(`⏭️  Skipping leverage update for spot asset ${assetName}`);
+            } else {
             console.log(`📊 Setting leverage to ${targetLeverage}x for ${assetName}`);
 
             try {
@@ -947,6 +1091,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Don't block the order if leverage update fails
                 console.warn(`⚠️ Could not update leverage: ${leverageError}. Using exchange default.`);
             }
+            } // end of !isSpot leverage block
 
             // 3. Construct order wire
             const isBuy = side === 'buy';
@@ -956,8 +1101,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // For limit orders, use the provided price
             let finalPx: number;
             if (type === 'market') {
-                // For Trade.xyz assets, prefer reference price if available
-                const currentPrice = (isTradeXyzAsset && referencePrice) ? referencePrice : (market?.price || price || 0);
+                // Spot + Trade.xyz fetched their own reference price above
+                // (line 789 / 824). The perp `market` lookup doesn't return
+                // anything for spot symbols like "UETH/USDC", so for spot we
+                // MUST use referencePrice — falling back to `market?.price`
+                // would yield 0 and abort the order.
+                const currentPrice =
+                    ((isSpot || isTradeXyzAsset) && referencePrice)
+                        ? referencePrice
+                        : (market?.price || price || 0);
 
                 if (currentPrice <= 0) {
                     throw new Error('Invalid price: Market price must be greater than 0');
@@ -990,11 +1142,22 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         note: 'IOC fills at best price, this is just the max you\'ll pay'
                     });
                 } else {
-                    // For regular assets, use 0.5% slippage for market orders
-                    // IOC orders fill at the BEST available price up to your limit
-                    // This is a safety ceiling to ensure execution against resting orders
-                    // The actual fill will be at the best available market price
-                    const slippagePercent = 0.005; // 0.5% max slippage (balanced between execution and price protection)
+                    // Slippage cushion for IOC market orders.
+                    //
+                    // Caller-supplied `marketSlippagePct` wins if set —
+                    // SpotScreen exposes a slider for this. Otherwise
+                    // fall back to venue defaults: perps have deep books
+                    // (0.5% plenty), spot books — especially on testnet
+                    // and for non-canonical/meme tokens on mainnet — are
+                    // often much thinner so we default wider (5%).
+                    //
+                    // IOC fills at best available up to the limit, so
+                    // widening only sets the worst-case price; it doesn't
+                    // move what you actually pay/receive on a healthy book.
+                    const slippagePercent =
+                        typeof marketSlippagePct === 'number' && marketSlippagePct > 0
+                            ? marketSlippagePct
+                            : isSpot ? 0.05 : 0.005;
 
                     if (isBuy) {
                         finalPx = currentPrice * (1 + slippagePercent);
@@ -1003,11 +1166,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     }
 
                     const slippageDollars = Math.abs(finalPx - currentPrice);
-                    console.log('💰 Market order with 0.5% max slippage:', {
+                    console.log(`💰 Market order with ${(slippagePercent * 100).toFixed(1)}% max slippage:`, {
                         currentPrice,
                         limitPrice: finalPx,
                         slippagePercent: (slippagePercent * 100).toFixed(1) + '%',
                         maxSlippageDollars: '$' + slippageDollars.toFixed(2),
+                        venue: isSpot ? 'spot' : 'perp',
                         note: 'IOC fills at best available price, this is just max slippage'
                     });
                 }
@@ -1673,7 +1837,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, [isConnected, address, markets, t]);
+    }, [isConnected, address, markets, spotBalances, t]);
 
     // Place trigger order (Stop Loss or Take Profit)
     const placeTriggerOrder = useCallback(async (
@@ -1982,10 +2146,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 });
                 if (response.ok) {
                     const [spotMeta] = await response.json();
-                    // Match by universe name
+                    // Match by universe name. Wire asset = 10000 + pair's
+                    // canonical `index` field, NOT the array offset — they
+                    // diverge for non-canonical (@N-named) pairs and HL
+                    // rejects orders against the wrong asset id.
                     const universeName = market?.symbol || symbol;
                     const pairIndex = spotMeta.universe.findIndex((p: any) => p.name === universeName);
-                    if (pairIndex !== -1) assetIndex = 10000 + pairIndex;
+                    if (pairIndex !== -1) {
+                        assetIndex = 10000 + spotMeta.universe[pairIndex].index;
+                    }
                 }
             } else if (isTradeXyzAsset) {
                 const response = await fetch(`${API_URL}/info`, {
@@ -2137,6 +2306,423 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         return markets.find(m => m.symbol === symbol);
     }, [markets]);
 
+    /**
+     * Move USDC between the user's perp and spot Hyperliquid sub-accounts.
+     * Signs `usdClassTransfer` with the EOA (NOT the agent wallet — HL
+     * disallows agent-signed class transfers).
+     *
+     * Mirrors the working TransferModal flow but exposed via the provider
+     * so the new Bolsillos Mover screen, the old TransferModal, and any
+     * future entry point share one path.
+     */
+    const transferBetweenPockets = useCallback(
+        async ({
+            amount,
+            direction,
+        }: {
+            amount: number;
+            direction: 'perp-to-spot' | 'spot-to-perp';
+            note?: string;
+        }): Promise<{ ok: boolean; txHash?: string; error?: string }> => {
+            if (!isConnected || !address) {
+                return { ok: false, error: 'Wallet not connected' };
+            }
+            const activeWallet = wallets?.[0];
+            if (!activeWallet) {
+                return { ok: false, error: 'No active wallet' };
+            }
+            if (amount <= 0) {
+                return { ok: false, error: 'Amount must be > 0' };
+            }
+            try {
+                const provider = await activeWallet.getEthereumProvider();
+                const nonce = Date.now();
+                const hyperliquidChain = IS_TESTNET ? 'Testnet' : 'Mainnet';
+                const toPerp = direction === 'spot-to-perp';
+                const amountStr = amount.toFixed(2);
+
+                const action = {
+                    type: 'usdClassTransfer',
+                    hyperliquidChain,
+                    signatureChainId: '0xa4b1',
+                    amount: amountStr,
+                    toPerp,
+                    nonce,
+                };
+
+                const domain = {
+                    name: 'HyperliquidSignTransaction',
+                    version: '1',
+                    chainId: 42161,
+                    verifyingContract: '0x0000000000000000000000000000000000000000',
+                };
+
+                const signature = await provider.request({
+                    method: 'eth_signTypedData_v4',
+                    params: [
+                        address,
+                        JSON.stringify({
+                            domain,
+                            types: {
+                                EIP712Domain: [
+                                    { name: 'name', type: 'string' },
+                                    { name: 'version', type: 'string' },
+                                    { name: 'chainId', type: 'uint256' },
+                                    { name: 'verifyingContract', type: 'address' },
+                                ],
+                                'HyperliquidTransaction:UsdClassTransfer': [
+                                    { name: 'hyperliquidChain', type: 'string' },
+                                    { name: 'amount', type: 'string' },
+                                    { name: 'toPerp', type: 'bool' },
+                                    { name: 'nonce', type: 'uint64' },
+                                ],
+                            },
+                            primaryType: 'HyperliquidTransaction:UsdClassTransfer',
+                            message: {
+                                hyperliquidChain,
+                                amount: amountStr,
+                                toPerp,
+                                nonce,
+                            },
+                        }),
+                    ],
+                });
+
+                const sig = (signature as string).slice(2);
+                const r = '0x' + sig.slice(0, 64);
+                const s = '0x' + sig.slice(64, 128);
+                const v = parseInt(sig.slice(128, 130), 16);
+
+                const response = await fetch(`${API_URL}/exchange`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action,
+                        nonce,
+                        signature: { r, s, v },
+                    }),
+                });
+
+                const result = await response.json();
+                if (result.status === 'ok' || result.response?.type === 'default') {
+                    // Settle, then refresh balances so the new pocket
+                    // values appear immediately in the UI.
+                    setTimeout(() => refreshAccountData(), 500);
+                    setTimeout(() => refreshAccountData(), 2500);
+                    return { ok: true, txHash: result.response?.data?.hash };
+                }
+                return {
+                    ok: false,
+                    error: result.response?.data || result.error || 'Transfer failed',
+                };
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                return { ok: false, error: msg || 'Transfer failed' };
+            }
+        },
+        [isConnected, address, wallets, refreshAccountData],
+    );
+
+    /**
+     * Buy USDH against USDC on spot pair USDH/USDC. USDH is HL's native
+     * stablecoin used as collateral for HIP-4 outcome markets. Since USDH
+     * pegs to ~$1, the user-facing input is just "how much USDC to spend"
+     * and we derive the USDH size from the current mid.
+     */
+    const buyUsdh = useCallback(
+        async (
+            usdcAmount: number,
+        ): Promise<{
+            filled: boolean;
+            filledSize: number;
+            filledPrice: number;
+            error?: string;
+        }> => {
+            if (usdcAmount <= 0) {
+                return { filled: false, filledSize: 0, filledPrice: 0, error: 'Amount must be > 0' };
+            }
+            try {
+                // Fetch the USDH/USDC mid via spotMetaAndAssetCtxs so we can
+                // size correctly. Provider's placeOrder will refetch this
+                // for its own price calc; the duplicate fetch is cheap and
+                // gives us a clean conversion here.
+                const res = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'spotMetaAndAssetCtxs' }),
+                });
+                const [spotMeta, spotCtxs] = await res.json();
+                const usdhTok = spotMeta.tokens.find((t: any) => t.name === 'USDH');
+                if (!usdhTok) {
+                    return { filled: false, filledSize: 0, filledPrice: 0, error: 'USDH not on this network' };
+                }
+                const pairIdx = spotMeta.universe.findIndex(
+                    (p: any) => p.tokens[0] === usdhTok.index,
+                );
+                const mid = parseFloat(spotCtxs[pairIdx]?.markPx || '1') || 1;
+                const usdhSize = Math.floor((usdcAmount / mid) * 100) / 100;
+                if (usdhSize <= 0) {
+                    return { filled: false, filledSize: 0, filledPrice: 0, error: 'Computed USDH size is 0' };
+                }
+                // Reuse the existing spot placeOrder with a 0.5% slippage
+                // cushion — USDH/USDC books are deep enough that this is plenty.
+                const result = await placeOrder(
+                    'USDH/USDC',
+                    'buy',
+                    'market',
+                    usdhSize,
+                    undefined,
+                    undefined,
+                    false,
+                    0.005,
+                );
+                return {
+                    filled: !!result.filled,
+                    filledSize: result.filledSize || 0,
+                    filledPrice: result.filledPrice || mid,
+                };
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                return { filled: false, filledSize: 0, filledPrice: 0, error: msg };
+            }
+        },
+        [placeOrder],
+    );
+
+    /**
+     * Place a HIP-4 outcome-market order.
+     *
+     * HIP-4 assets live in their own wire-asset range:
+     *   asset = 100_000_000 + (10*outcomeId + sideIdx)
+     *
+     * (Without the 100M offset HL parses the order as a spot order and
+     * rejects with "Invalid spot".)
+     *
+     * szDecimals is always 0 (whole contracts); min notional is 10 USDH.
+     * Same signing path as spot — `signL1Action` with the agent wallet
+     * if approved, otherwise the user's wallet directly.
+     */
+    const placeOutcomeOrder = useCallback(
+        async ({
+            outcomeId,
+            sideIdx,
+            side,
+            type,
+            size,
+            price,
+            marketSlippagePct,
+        }: {
+            outcomeId: number;
+            sideIdx: number;
+            side: 'buy' | 'sell';
+            type: 'market' | 'limit';
+            size: number;
+            price?: number;
+            marketSlippagePct?: number;
+        }): Promise<{
+            filled: boolean;
+            filledSize: number;
+            filledPrice: number;
+            error?: string;
+        }> => {
+            if (!isConnected || !address) {
+                return { filled: false, filledSize: 0, filledPrice: 0, error: 'Wallet not connected' };
+            }
+            const wholeSize = Math.floor(size);
+            if (wholeSize <= 0) {
+                return { filled: false, filledSize: 0, filledPrice: 0, error: 'Size must be ≥ 1' };
+            }
+
+            try {
+                const wireAsset = outcomeWireAsset(outcomeId, sideIdx);
+                // The /info `coin` reference is still the un-offset N
+                // (e.g. "#102170"); the offset only applies to wire orders.
+                const coinRef = `#${outcomeId * 10 + sideIdx}`;
+
+                // Fetch the side's mid for the slippage cushion calc
+                const midsRes = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'allMids' }),
+                });
+                const allMids = await midsRes.json();
+                const mid = parseFloat(allMids[coinRef] || '0');
+                if (mid <= 0) {
+                    return {
+                        filled: false,
+                        filledSize: 0,
+                        filledPrice: 0,
+                        error: `No live mid for ${coinRef}`,
+                    };
+                }
+
+                // Compute limit price. Outcome prices live in (0, 1).
+                const slippage =
+                    typeof marketSlippagePct === 'number' && marketSlippagePct > 0
+                        ? marketSlippagePct
+                        : 0.03;
+                let finalPx: number;
+                if (type === 'market') {
+                    finalPx =
+                        side === 'buy' ? mid * (1 + slippage) : mid * (1 - slippage);
+                } else {
+                    if (!price || price <= 0) {
+                        return {
+                            filled: false,
+                            filledSize: 0,
+                            filledPrice: 0,
+                            error: 'Limit order requires price',
+                        };
+                    }
+                    finalPx = price;
+                }
+                // HIP-4 prices are 0.001–0.999. Round to 4 dp (matches
+                // the order-book tick we saw on testnet).
+                finalPx = Math.min(0.999, Math.max(0.001, finalPx));
+                finalPx = Math.round(finalPx * 10000) / 10000;
+
+                // Import SDK helpers + signing wallet selection (mirror
+                // the spot-order path).
+                const hyperliquidSDK = await import('@/lib/vendor/hyperliquid/index.mjs');
+                const { orderToWire, signL1Action } = hyperliquidSDK;
+
+                // Use the AGENT wallet for outcome orders, same as spot/perp.
+                //
+                // The user's locally-stored agent wallet has its own stable
+                // EOA address (e.g. 0x9a98...) and is approved on-chain via
+                // `approveAgent`. Approved agents work across all asset
+                // classes — spot, perp, and HIP-4 outcomes — so we don't
+                // need a separate approval flow.
+                //
+                // Falling back to the Privy embedded wallet doesn't work
+                // here: Privy routes `eth_signTypedData_v4` through ephemeral
+                // session keys whose addresses change on every call. HL sees
+                // those as unknown wallets ("User or API Wallet 0x... does
+                // not exist") and rejects the order. The agent path bypasses
+                // Privy entirely and signs directly with the saved key.
+                let signingWallet: any = null;
+                const agent = await getAgentWallet(address);
+                const agentSigner = agent ? getAgentSigner(agent) : null;
+                const isApproved = isAgentApproved(address);
+                console.log('🪙 HIP-4 agent check:', {
+                    agentWalletEnabled,
+                    hasAgent: !!agent,
+                    agentAddr: agent?.address,
+                    hasSigner: !!agentSigner,
+                    isApproved,
+                });
+                // Don't gate on agentWalletEnabled (provider state that can
+                // lag the localStorage source of truth). If the saved agent
+                // is marked approved in localStorage, use it.
+                if (agent && agentSigner && isApproved) {
+                    signingWallet = {
+                        address: agent.address,
+                        getAddress: async () => agent.address.toLowerCase(),
+                        signTypedData: async (
+                            domain: any,
+                            types: any,
+                            value: any,
+                        ) => {
+                            const { EIP712Domain, ...restTypes } = types;
+                            return await agentSigner.signTypedData(
+                                domain,
+                                restTypes,
+                                value,
+                            );
+                        },
+                    };
+                    console.log(
+                        `🪙 HIP-4 signing as agent ${agent.address}`,
+                    );
+                } else {
+                    return {
+                        filled: false,
+                        filledSize: 0,
+                        filledPrice: 0,
+                        error:
+                            'Agent wallet not approved. Place a spot or perp trade first to set it up.',
+                    };
+                }
+
+                const orderRequest = {
+                    coin: coinRef,
+                    is_buy: side === 'buy',
+                    sz: wholeSize,
+                    limit_px: finalPx,
+                    order_type:
+                        type === 'market'
+                            ? ({ limit: { tif: 'Ioc' } } as const)
+                            : ({ limit: { tif: 'Gtc' } } as const),
+                    reduce_only: false,
+                };
+                const wireOrder = orderToWire(orderRequest, wireAsset);
+                const action: any = {
+                    type: 'order',
+                    orders: [wireOrder],
+                    grouping: 'na',
+                };
+                if (BUILDER_CONFIG.enabled) {
+                    action.builder = {
+                        b: BUILDER_CONFIG.address,
+                        f: BUILDER_CONFIG.fee,
+                    };
+                }
+                const nonce = Date.now();
+                const signature = await signL1Action(
+                    signingWallet,
+                    action,
+                    null,
+                    nonce,
+                    !IS_TESTNET,
+                );
+
+                const response = await fetch(`${API_URL}/exchange`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action,
+                        nonce,
+                        signature,
+                        vaultAddress: null,
+                    }),
+                });
+                const result = await response.json();
+
+                const status = result?.response?.data?.statuses?.[0];
+                if (result?.status === 'ok' && status?.filled) {
+                    setTimeout(() => refreshAccountData(), 500);
+                    return {
+                        filled: true,
+                        filledSize: parseFloat(status.filled.totalSz) || wholeSize,
+                        filledPrice:
+                            parseFloat(status.filled.avgPx) || finalPx,
+                    };
+                }
+                if (result?.status === 'ok' && status?.resting) {
+                    // Limit order rested — return non-filled but successful
+                    return {
+                        filled: false,
+                        filledSize: 0,
+                        filledPrice: finalPx,
+                    };
+                }
+                return {
+                    filled: false,
+                    filledSize: 0,
+                    filledPrice: 0,
+                    error:
+                        status?.error ||
+                        result?.response ||
+                        'Outcome order rejected',
+                };
+            } catch (err: unknown) {
+                const msg = err instanceof Error ? err.message : String(err);
+                return { filled: false, filledSize: 0, filledPrice: 0, error: msg };
+            }
+        },
+        [isConnected, address, agentWalletEnabled, wallets, refreshAccountData],
+    );
+
     // Withdrawal logic
     const withdraw = useCallback(async (amount: string, destination: string) => {
         if (!isConnected || !address) throw new Error('Not connected');
@@ -2259,11 +2845,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         cancelOrder,
         closePosition,
         withdraw,
+        transferBetweenPockets,
+        buyUsdh,
+        placeOutcomeOrder,
         account,
         positions,
         orders,
         openOrders,
         spotBalances,
+        spotPrices,
         // Cached user data
         fills,
         funding,
