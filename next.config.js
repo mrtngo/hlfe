@@ -111,6 +111,39 @@ const nextConfig = {
           },
         ],
       },
+      {
+        // CORS for the API route handlers. When this same app is deployed as
+        // the standalone API host (api.rayotrade.xyz) consumed by the iOS
+        // Capacitor bundle, the WKWebView makes cross-origin requests from its
+        // app scheme (capacitor://localhost, or rayo://localhost if a custom
+        // iosScheme is set). These proxy endpoints take no cookies/credentials,
+        // so a wildcard origin is safe and robust to the scheme in use.
+        //
+        // NOTE: `headers()` is ignored by `output: 'export'` (the iOS build),
+        // which is fine — API routes are stripped there anyway. This config
+        // only takes effect on the server-rendered API/web deployment. A
+        // `middleware.ts` would be cleaner for conditional origins but
+        // `output: 'export'` forbids middleware and would break `build:ios`.
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400',
+          },
+        ],
+      },
     ];
   },
 
