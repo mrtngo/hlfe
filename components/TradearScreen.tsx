@@ -18,6 +18,8 @@ import TradingSetupWizard from '@/components/TradingSetupWizard';
 import HairlineSection from '@/components/HairlineSection';
 import ProToggle from '@/components/ProToggle';
 import EmptyState from '@/components/EmptyState';
+import TradeConfirmSheet from '@/components/TradeConfirmSheet';
+import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 
 interface TradearScreenProps {
     onBack?: () => void;
@@ -44,6 +46,7 @@ export default function TradearScreen({ onBack }: TradearScreenProps) {
         placeOrder,
         agentWalletEnabled,
         builderFeeApproved,
+        refreshAccountData,
     } = useHyperliquid();
     const [showPicker, setShowPicker] = useState(false);
 
@@ -97,8 +100,10 @@ export default function TradearScreen({ onBack }: TradearScreenProps) {
             markets={markets}
             setSelectedMarket={setSelectedMarket}
             availableUsd={account?.availableMargin || 0}
+            equity={account?.equity || 0}
             placeOrder={placeOrder}
             setupComplete={agentWalletEnabled && (!BUILDER_CONFIG.enabled || builderFeeApproved)}
+            refreshAccountData={refreshAccountData}
             formatCurrency={formatCurrency}
         />
     );
@@ -121,8 +126,10 @@ function NormalMode({
     markets,
     setSelectedMarket,
     availableUsd,
+    equity,
     placeOrder,
     setupComplete,
+    refreshAccountData,
     formatCurrency,
 }: {
     market: any;
@@ -137,8 +144,10 @@ function NormalMode({
     markets: any[];
     setSelectedMarket: (s: string) => void;
     availableUsd: number;
+    equity: number;
     placeOrder: any;
     setupComplete: boolean;
+    refreshAccountData: () => void;
     formatCurrency: (v: number, dp?: number) => string;
 }) {
     const [side, setSide] = useState<'buy' | 'sell'>('buy');
@@ -148,19 +157,34 @@ function NormalMode({
     const [submitting, setSubmitting] = useState(false);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [error, setError] = useState('');
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [filledTokenAmount, setFilledTokenAmount] = useState(0);
+    const [filledUsdAmount, setFilledUsdAmount] = useState(0);
+    const [filledAvgPrice, setFilledAvgPrice] = useState(0);
+    const [filledSide, setFilledSide] = useState<'buy' | 'sell'>('buy');
+    // Easy = market order (default). Pro = limit order at the user's price.
+    const [orderMode, setOrderMode] = useState<'easy' | 'pro'>('easy');
+    const [limitPrice, setLimitPrice] = useState<string>('');
+    const [filledResting, setFilledResting] = useState(false);
 
     const tf = TF_OPTIONS[tfIdx];
     const amountNum = parseFloat(amount || '0') || 0;
     const price = market.price || 0;
+    const limitPriceNum = parseFloat(limitPrice || '0') || 0;
+    // Pro mode enters at the user's limit price; Easy mode at the live market price.
+    const effectivePrice = orderMode === 'pro' ? limitPriceNum : price;
     const positionSize = amountNum * leverage;
-    const tokenSize = price > 0 ? positionSize / price : 0;
+    const tokenSize = effectivePrice > 0 ? positionSize / effectivePrice : 0;
     const fee = positionSize * 0.0003; // 3bps approx
     const liqMul = 1 / leverage - 0.05;
     const liqPrice = side === 'buy' ? price * (1 - liqMul) : price * (1 + liqMul);
 
     const sideColor = side === 'buy' ? 'var(--color-positive)' : 'var(--color-negative)';
     const sideColorRaw = side === 'buy' ? '#22C55E' : '#EF4444';
-    const canSubmit = amountNum >= MIN_NOTIONAL_VALUE && amountNum <= availableUsd && !submitting;
+    const isPriceValid = orderMode === 'easy' || limitPriceNum > 0;
+    const canSubmit =
+        amountNum >= MIN_NOTIONAL_VALUE && amountNum <= availableUsd && isPriceValid && !submitting;
 
     const handleType = (v: string) => {
         let cleaned = v.replace(/[^0-9.]/g, '');
@@ -172,27 +196,44 @@ function NormalMode({
         setAmount(cleaned);
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (!canSubmit) return;
         if (!setupComplete) {
             setShowSetupWizard(true);
             return;
         }
+        setError('');
+        setShowConfirm(true);
+    };
+
+    const handleConfirm = async () => {
+        const isLimit = orderMode === 'pro';
         setSubmitting(true);
         setError('');
         try {
             const result = await placeOrder(
                 market.symbol,
                 side,
-                'market',
+                isLimit ? 'limit' : 'market',
                 tokenSize,
-                undefined,
+                isLimit ? limitPriceNum : undefined,
                 leverage,
             );
-            if (!result.filled) {
+            // A limit order that doesn't fill immediately is resting, not a
+            // failure — placeOrder throws on real errors. Market must fill.
+            const ok = isLimit ? true : result.filled;
+            if (!ok) {
                 setError(result.error || 'No se pudo completar la operación');
             } else {
+                setFilledSide(side);
+                setFilledTokenAmount(tokenSize);
+                setFilledUsdAmount(positionSize);
+                setFilledAvgPrice(effectivePrice);
+                setFilledResting(isLimit && !result.filled);
                 setAmount('');
+                setShowConfirm(false);
+                setShowSuccess(true);
+                setTimeout(() => refreshAccountData(), 500);
             }
         } catch (e: any) {
             setError(e?.message || 'No se pudo completar la operación');
@@ -474,6 +515,65 @@ function NormalMode({
                     })}
                 </div>
 
+                {/* Order mode — Fácil = market, Pro = limit at your price */}
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 6,
+                        marginTop: 10,
+                        padding: 4,
+                        borderRadius: 14,
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                    }}
+                >
+                    {([
+                        ['easy', 'Fácil', 'Mercado'],
+                        ['pro', 'Pro', 'Límite'],
+                    ] as const).map(([m, label, tag]) => {
+                        const on = orderMode === m;
+                        return (
+                            <button
+                                key={m}
+                                type="button"
+                                onClick={() => {
+                                    setOrderMode(m);
+                                    if (m === 'pro' && !limitPrice && price > 0) {
+                                        setLimitPrice(String(price));
+                                    }
+                                }}
+                                style={{
+                                    padding: '9px 0',
+                                    borderRadius: 10,
+                                    border: 'none',
+                                    background: on ? 'var(--color-brand-primary)' : 'transparent',
+                                    color: on ? '#1A1304' : 'rgba(255,255,255,0.5)',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                }}
+                            >
+                                <span style={{ fontSize: 13, fontWeight: 800 }}>{label}</span>
+                                <span
+                                    style={{
+                                        fontSize: 9,
+                                        fontWeight: 700,
+                                        letterSpacing: '0.1em',
+                                        textTransform: 'uppercase',
+                                        opacity: on ? 0.65 : 0.45,
+                                    }}
+                                >
+                                    {tag}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
                 {/* Amount card */}
                 <div
                     style={{
@@ -610,6 +710,72 @@ function NormalMode({
                         </button>
                     </div>
                 </div>
+
+                {/* Limit price — Pro mode only */}
+                {orderMode === 'pro' && (
+                    <div
+                        style={{
+                            marginTop: 12,
+                            padding: '14px 16px',
+                            borderRadius: 14,
+                            background: 'rgba(255,255,255,0.025)',
+                            border: '1px solid rgba(250,204,21,0.18)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            gap: 12,
+                        }}
+                    >
+                        <div
+                            style={{
+                                fontSize: 10,
+                                color: 'rgba(255,255,255,0.5)',
+                                letterSpacing: '0.16em',
+                                textTransform: 'uppercase',
+                                fontWeight: 700,
+                            }}
+                        >
+                            Precio límite · USD
+                        </div>
+                        <label
+                            className="tabular-mono"
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'baseline',
+                                gap: 2,
+                                cursor: 'text',
+                            }}
+                        >
+                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15 }}>$</span>
+                            <input
+                                type="text"
+                                inputMode="decimal"
+                                value={limitPrice}
+                                onChange={(e) => {
+                                    let c = e.target.value.replace(/[^0-9.]/g, '');
+                                    const d = c.indexOf('.');
+                                    if (d >= 0)
+                                        c = c.slice(0, d + 1) + c.slice(d + 1).replace(/\./g, '');
+                                    setLimitPrice(c);
+                                }}
+                                placeholder={price ? String(price) : '0'}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    outline: 'none',
+                                    color: '#fff',
+                                    fontSize: 18,
+                                    fontWeight: 700,
+                                    textAlign: 'right',
+                                    width: '9ch',
+                                    fontFamily: 'var(--font-jetbrains)',
+                                    caretColor: 'var(--color-brand-primary)',
+                                    padding: 0,
+                                }}
+                            />
+                        </label>
+                    </div>
+                )}
 
                 {/* Leverage */}
                 <div
@@ -779,6 +945,41 @@ function NormalMode({
             <TradingSetupWizard
                 isOpen={showSetupWizard}
                 onClose={() => setShowSetupWizard(false)}
+            />
+
+            <TradeConfirmSheet
+                open={showConfirm}
+                onClose={() => {
+                    if (!submitting) setShowConfirm(false);
+                }}
+                onConfirm={handleConfirm}
+                submitting={submitting}
+                side={side}
+                symbol={market.symbol}
+                ticker={ticker}
+                price={effectivePrice}
+                usdAmount={amountNum}
+                tokenAmount={tokenSize}
+                leverage={leverage}
+                fee={fee}
+                liqPrice={liqPrice}
+                orderType={orderMode === 'pro' ? 'limit' : 'market'}
+                venueLabel="Perp"
+                error={error}
+            />
+
+            <TradeSuccessSheet
+                open={showSuccess}
+                onClose={() => setShowSuccess(false)}
+                side={filledSide}
+                symbol={market.symbol}
+                ticker={ticker}
+                tokenAmount={filledTokenAmount}
+                usdAmount={filledUsdAmount}
+                avgPrice={filledAvgPrice}
+                newBalance={equity}
+                resting={filledResting}
+                formatCurrency={formatCurrency}
             />
         </div>
     );

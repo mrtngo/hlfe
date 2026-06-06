@@ -72,6 +72,10 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
     const [step, setStep] = useState<Step>(1);
     const [symbol, setSymbol] = useState<string>(initialSymbol);
     const [amount, setAmount] = useState<string>('');
+    // Easy = market order (default, instant). Pro = limit order at the user's price.
+    const [mode, setMode] = useState<'easy' | 'pro'>('easy');
+    const [limitPrice, setLimitPrice] = useState<string>('');
+    const [orderResting, setOrderResting] = useState<boolean>(false);
     const [showPicker, setShowPicker] = useState<boolean>(!initialSymbol);
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
@@ -87,8 +91,12 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
     );
     const price = market?.price || 0;
     const amountNum = parseFloat(amount || '0') || 0;
-    const tokenAmount = price > 0 ? amountNum / price : 0;
+    const limitPriceNum = parseFloat(limitPrice || '0') || 0;
+    // Pro mode fills at the user's limit price; Easy mode at the live market price.
+    const effectivePrice = mode === 'pro' ? limitPriceNum : price;
+    const tokenAmount = effectivePrice > 0 ? amountNum / effectivePrice : 0;
     const availableUsd = account?.availableMargin ?? 0;
+    const isPriceValid = mode === 'easy' || limitPriceNum > 0;
     const isAmountValid = amountNum >= MIN_NOTIONAL_VALUE && amountNum <= availableUsd;
     const setupComplete = agentWalletEnabled && (!BUILDER_CONFIG.enabled || builderFeeApproved);
 
@@ -181,26 +189,36 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
             setStep('error');
             return;
         }
+        const isLimit = mode === 'pro';
+        if (isLimit && limitPriceNum <= 0) {
+            setErrorMessage(t.screens.comprar.limitPrice);
+            setStep('error');
+            return;
+        }
         setSubmitting(true);
         setErrorMessage('');
         try {
             const result = await placeOrder(
                 market.symbol,
                 'buy',
-                'market',
+                isLimit ? 'limit' : 'market',
                 tokenAmount,
-                undefined,
+                isLimit ? limitPriceNum : undefined,
                 1,
             );
-            if (result.filled) {
+            // A limit order that doesn't fill immediately is *resting*, not a
+            // failure — placeOrder throws on real errors. Market orders must fill.
+            const ok = isLimit ? true : result.filled;
+            if (ok) {
                 setFilledAmount(tokenAmount);
+                setOrderResting(isLimit && !result.filled);
                 setTxId(
                     `${Date.now().toString(16).slice(0, 6)}${Math.floor(Math.random() * 1e6).toString(16)}`,
                 );
                 setTimeout(() => refreshAccountData(), 500);
                 setStep('success');
             } else {
-                setErrorMessage(result.error || t.buy.errorGeneric);
+                setErrorMessage((result as any).error || t.buy.errorGeneric);
                 setStep('error');
             }
         } catch (e: any) {
@@ -254,11 +272,16 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
                     amountNum={amountNum}
                     tokenAmount={tokenAmount}
                     availableUsd={availableUsd}
+                    mode={mode}
+                    setMode={setMode}
+                    limitPrice={limitPrice}
+                    setLimitPrice={setLimitPrice}
+                    marketPrice={price}
                     onOpenPicker={() => setShowPicker(true)}
                     onPad={handleNumberPad}
                     onQuick={setQuick}
                     onNext={() => setStep(2)}
-                    valid={isAmountValid && !!symbol && !!market}
+                    valid={isAmountValid && isPriceValid && !!symbol && !!market}
                     t={t}
                     formatCurrency={formatCurrency}
                 />
@@ -286,6 +309,8 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
                     method={selectedMethod}
                     submitting={submitting}
                     onConfirm={handleConfirm}
+                    mode={mode}
+                    unitPrice={effectivePrice}
                     t={t}
                     formatCurrency={formatCurrency}
                 />
@@ -297,6 +322,8 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
                     symbol={market?.name || symbol}
                     newBalance={account?.equity || 0}
                     txId={txId}
+                    resting={orderResting}
+                    unitPrice={effectivePrice}
                     onHome={onClose || (() => setStep(1))}
                     t={t}
                     formatCurrency={formatCurrency}
@@ -365,6 +392,11 @@ function StepAmount({
     amountNum,
     tokenAmount,
     availableUsd,
+    mode,
+    setMode,
+    limitPrice,
+    setLimitPrice,
+    marketPrice,
     onOpenPicker,
     onPad,
     onQuick,
@@ -380,6 +412,11 @@ function StepAmount({
     amountNum: number;
     tokenAmount: number;
     availableUsd: number;
+    mode: 'easy' | 'pro';
+    setMode: (m: 'easy' | 'pro') => void;
+    limitPrice: string;
+    setLimitPrice: (v: string) => void;
+    marketPrice: number;
     onOpenPicker: () => void;
     onPad: (k: string) => void;
     onQuick: (v: number) => void;
@@ -484,6 +521,66 @@ function StepAmount({
                 <ChevronRight size={18} color="var(--color-text-tertiary)" />
             </button>
 
+            {/* Easy / Pro order mode — Easy = market, Pro = limit at your price */}
+            <div
+                style={{
+                    display: 'flex',
+                    gap: 4,
+                    marginTop: 10,
+                    padding: 4,
+                    background: 'rgba(255,255,255,0.03)',
+                    borderRadius: 14,
+                    border: '1px solid rgba(255,255,255,0.06)',
+                }}
+            >
+                {([
+                    ['easy', t.screens.comprar.easy, t.screens.comprar.easyTag],
+                    ['pro', t.screens.comprar.pro, t.screens.comprar.proTag],
+                ] as const).map(([m, label, tag]) => {
+                    const on = mode === m;
+                    return (
+                        <button
+                            key={m}
+                            type="button"
+                            onClick={() => {
+                                setMode(m);
+                                if (m === 'pro' && !limitPrice && marketPrice > 0) {
+                                    setLimitPrice(String(marketPrice));
+                                }
+                            }}
+                            style={{
+                                flex: 1,
+                                padding: '9px 8px',
+                                borderRadius: 11,
+                                border: 'none',
+                                background: on ? 'var(--color-brand-primary)' : 'transparent',
+                                color: on ? '#1A1304' : 'var(--color-text-secondary)',
+                                cursor: 'pointer',
+                                fontFamily: 'inherit',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: 1,
+                                transition: 'background 160ms',
+                            }}
+                        >
+                            <span style={{ fontSize: 13, fontWeight: 800 }}>{label}</span>
+                            <span
+                                style={{
+                                    fontSize: 9,
+                                    fontWeight: 700,
+                                    letterSpacing: '0.1em',
+                                    textTransform: 'uppercase',
+                                    opacity: on ? 0.65 : 0.45,
+                                }}
+                            >
+                                {tag}
+                            </span>
+                        </button>
+                    );
+                })}
+            </div>
+
             {/* Amount input — typeable on desktop, tappable via pad on mobile */}
             <div
                 style={{
@@ -548,6 +645,62 @@ function StepAmount({
                     </div>
                 )}
             </div>
+
+            {/* Limit price — only in Pro mode */}
+            {mode === 'pro' && (
+                <div
+                    style={{
+                        marginBottom: 4,
+                        padding: '12px 14px',
+                        borderRadius: 14,
+                        background: 'rgba(255,255,255,0.025)',
+                        border: '1px solid rgba(250,204,21,0.18)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                    }}
+                >
+                    <span
+                        style={{
+                            fontSize: 12,
+                            color: 'var(--color-text-secondary)',
+                            fontWeight: 600,
+                        }}
+                    >
+                        {t.screens.comprar.limitPrice}
+                    </span>
+                    <div style={{ display: 'inline-flex', alignItems: 'baseline', gap: 2 }}>
+                        <span style={{ color: 'var(--color-text-tertiary)', fontSize: 15 }}>$</span>
+                        <input
+                            type="text"
+                            inputMode="decimal"
+                            value={limitPrice}
+                            onChange={(e) => {
+                                let c = e.target.value.replace(/[^0-9.]/g, '');
+                                const d = c.indexOf('.');
+                                if (d >= 0) c = c.slice(0, d + 1) + c.slice(d + 1).replace(/\./g, '');
+                                setLimitPrice(c);
+                            }}
+                            placeholder={marketPrice ? String(marketPrice) : '0'}
+                            className="tabular-mono"
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                outline: 'none',
+                                color: '#fff',
+                                fontSize: 18,
+                                fontWeight: 700,
+                                textAlign: 'right',
+                                width: '8ch',
+                                fontFamily: 'var(--font-jetbrains)',
+                                caretColor: 'var(--color-brand-primary)',
+                                padding: 0,
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Quick chips */}
             <div
@@ -898,6 +1051,8 @@ function StepReview({
     method,
     submitting,
     onConfirm,
+    mode,
+    unitPrice,
     t,
     formatCurrency,
 }: {
@@ -907,6 +1062,8 @@ function StepReview({
     method: PaymentMethod;
     submitting: boolean;
     onConfirm: () => void;
+    mode: 'easy' | 'pro';
+    unitPrice: number;
     t: any;
     formatCurrency: (v: number, dp?: number) => string;
 }) {
@@ -967,6 +1124,11 @@ function StepReview({
 
             {/* Line items */}
             <div style={{ marginTop: 20 }}>
+                <Line
+                    label={t.screens.comprar.orderType}
+                    value={mode === 'pro' ? t.screens.comprar.limitLabel : t.screens.comprar.easyTag}
+                    valueColor={mode === 'pro' ? 'var(--color-brand-primary)' : '#fff'}
+                />
                 <Line label={t.screens.comprar.youPay} value={`$${amount.toFixed(2)}`} />
                 <Line label={t.screens.comprar.method} value={method.name} sub={method.sub} />
                 <Line
@@ -975,8 +1137,10 @@ function StepReview({
                     valueColor={method.feeFree ? 'var(--color-positive)' : '#fff'}
                 />
                 <Line
-                    label={t.screens.comprar.price.replace('{symbol}', ticker)}
-                    value={`$${(market?.price || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`}
+                    label={mode === 'pro'
+                        ? t.screens.comprar.limitPrice
+                        : t.screens.comprar.price.replace('{symbol}', ticker)}
+                    value={`$${(unitPrice || market?.price || 0).toLocaleString('en-US', { maximumFractionDigits: 2 })}`}
                 />
                 <Line
                     label={t.screens.comprar.arrivesIn}
@@ -1133,6 +1297,8 @@ function SuccessView({
     symbol,
     newBalance,
     txId,
+    resting,
+    unitPrice,
     onHome,
     t,
     formatCurrency,
@@ -1141,6 +1307,8 @@ function SuccessView({
     symbol: string;
     newBalance: number;
     txId: string;
+    resting?: boolean;
+    unitPrice?: number;
     onHome: () => void;
     t: any;
     formatCurrency: (v: number, dp?: number) => string;
@@ -1177,7 +1345,9 @@ function SuccessView({
                     letterSpacing: '-0.03em',
                 }}
             >
-                {t.screens.comprar.success.title}
+                {resting
+                    ? t.screens.comprar.success.placedTitle
+                    : t.screens.comprar.success.title}
             </div>
             <div
                 className="tabular-mono"
@@ -1188,9 +1358,19 @@ function SuccessView({
                     fontWeight: 600,
                 }}
             >
-                {t.screens.comprar.success.received
-                    .replace('{amount}', amount.toFixed(6))
-                    .replace('{symbol}', ticker)}
+                {resting
+                    ? t.screens.comprar.success.placed
+                          .replace('{amount}', amount.toFixed(6))
+                          .replace('{symbol}', ticker)
+                          .replace(
+                              '{price}',
+                              (unitPrice || 0).toLocaleString('en-US', {
+                                  maximumFractionDigits: 2,
+                              }),
+                          )
+                    : t.screens.comprar.success.received
+                          .replace('{amount}', amount.toFixed(6))
+                          .replace('{symbol}', ticker)}
             </div>
 
             <div

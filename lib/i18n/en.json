@@ -770,7 +770,7 @@
       "steady": "You're {pct} in 30 days. Quiet rhythm.",
       "down": "You're {pct} this month. Patience — this happens.",
       "empty": "No open positions. Today's a good day to start.",
-      "small": "You're just getting started. Add $25 and we'll see."
+      "small": "You're just getting started. Add funds and we'll see."
     },
     "section": {
       "comprar": "buy",
@@ -782,7 +782,7 @@
         "eyebrow": "◆ TODAY'S PICK",
         "word": "Buy.",
         "desc": "Crypto in pesos or dollars.",
-        "descHighlight": "From $25."
+        "descHighlight": "In seconds."
       },
       "programar": {
         "word": "Schedule.",
@@ -934,10 +934,19 @@
       "youReceive": "You'll receive",
       "edit": "Edit",
       "buying": "Buying",
+      "easy": "Easy",
+      "pro": "Pro",
+      "easyTag": "Market",
+      "proTag": "Limit",
+      "limitPrice": "Limit price (USD)",
+      "orderType": "Order type",
+      "limitLabel": "Limit order",
       "finePrint": "Trade processed by Rayo. Conversion uses the market price at confirmation time.",
       "success": {
         "title": "Done.",
+        "placedTitle": "Order placed.",
         "received": "You got {amount} {symbol}",
+        "placed": "Order for {amount} {symbol} at ${price} — live",
         "newBalance": "New balance",
         "txId": "Transaction ID",
         "share": "Share",

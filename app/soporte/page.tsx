@@ -67,7 +67,7 @@ export default function SoportePage() {
 
                 <p style={q}>¿Cómo empiezo?</p>
                 <p style={p}>
-                    Inicia sesión con tu correo o tu wallet, agrega fondos y puedes comprar desde $25.
+                    Inicia sesión con tu correo o tu wallet, agrega fondos y empieza a comprar.
                 </p>
 
                 <p style={q}>¿Cuáles son los riesgos?</p>

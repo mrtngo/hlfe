@@ -769,7 +769,7 @@
       "steady": "Estás {pct} en 30 días. Ritmo tranquilo.",
       "down": "Estás {pct} este mes. Paciencia — esto pasa.",
       "empty": "Cero posiciones abiertas. Hoy es un buen día para empezar.",
-      "small": "Apenas empiezas. Carga $25 y vemos."
+      "small": "Apenas empiezas. Agrega fondos y vemos."
     },
     "section": {
       "comprar": "comprar",
@@ -781,7 +781,7 @@
         "eyebrow": "◆ PIEZA DE HOY",
         "word": "Compra.",
         "desc": "Cripto en pesos o dólares.",
-        "descHighlight": "Desde $25."
+        "descHighlight": "En segundos."
       },
       "programar": {
         "word": "Programa.",
@@ -933,10 +933,19 @@
       "youReceive": "Vas a recibir",
       "edit": "Editar",
       "buying": "Comprando",
+      "easy": "Fácil",
+      "pro": "Pro",
+      "easyTag": "Mercado",
+      "proTag": "Límite",
+      "limitPrice": "Precio límite (USD)",
+      "orderType": "Tipo de orden",
+      "limitLabel": "Orden límite",
       "finePrint": "Operación procesada por Rayo. La conversión usa el precio de mercado en el momento de la confirmación.",
       "success": {
         "title": "Listo.",
+        "placedTitle": "Orden colocada.",
         "received": "Recibiste {amount} {symbol}",
+        "placed": "Orden de {amount} {symbol} a ${price} — activa",
         "newBalance": "Nuevo balance",
         "txId": "ID de transacción",
         "share": "Compartir",
