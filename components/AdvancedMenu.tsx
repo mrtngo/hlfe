@@ -11,6 +11,7 @@ import {
     Trophy,
     AlertTriangle,
     ArrowUpRight,
+    ArrowLeftRight,
     Coins,
     Zap,
     TrendingUp,
@@ -23,6 +24,7 @@ interface AdvancedMenuProps {
     onSelectSpot: () => void;
     onSelectBolsillos?: () => void;
     onSelectMarkets?: () => void;
+    onSelectCctp?: () => void;
 }
 
 export default function AdvancedMenu({
@@ -32,6 +34,7 @@ export default function AdvancedMenu({
     onSelectSpot,
     onSelectBolsillos,
     onSelectMarkets,
+    onSelectCctp,
 }: AdvancedMenuProps) {
     const { t } = useLanguage();
     const { markets } = useHyperliquid();
@@ -633,6 +636,63 @@ export default function AdvancedMenu({
                                     }}
                                 >
                                     Mercados
+                                </div>
+                            </div>
+                            <ArrowUpRight
+                                className="w-5 h-5"
+                                style={{ color: 'var(--color-text-tertiary)' }}
+                                strokeWidth={1.75}
+                            />
+                        </div>
+                    </motion.button>
+                )}
+
+                {/* CCTP — native USDC bridge Base ⇄ Arbitrum */}
+                {onSelectCctp && (
+                    <motion.button
+                        whileTap={{ scale: 0.985 }}
+                        onClick={onSelectCctp}
+                        className="surface-soft grain text-left rounded-2xl border-none outline-none w-full mb-5 overflow-hidden"
+                        style={{ position: 'relative' }}
+                    >
+                        <div className="relative p-5 flex items-center gap-4">
+                            <div
+                                className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                                style={{
+                                    backgroundColor: 'rgba(56,189,248,0.12)',
+                                    border: '1px solid rgba(56,189,248,0.3)',
+                                    color: '#38BDF8',
+                                }}
+                            >
+                                <ArrowLeftRight className="w-5 h-5" strokeWidth={1.75} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div
+                                    className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5"
+                                    style={{ color: '#38BDF8' }}
+                                >
+                                    USDC nativo · Base ⇄ Arbitrum
+                                </div>
+                                <div
+                                    className="font-display"
+                                    style={{
+                                        fontSize: '1.25rem',
+                                        color: 'var(--color-text-primary)',
+                                        fontVariationSettings: '"opsz" 36, "SOFT" 50, "wght" 600',
+                                        letterSpacing: '-0.02em',
+                                        lineHeight: 1,
+                                    }}
+                                >
+                                    Puente{' '}
+                                    <span
+                                        className="font-display-italic"
+                                        style={{
+                                            fontVariationSettings: '"opsz" 36, "SOFT" 100, "wght" 500',
+                                            color: 'var(--color-text-secondary)',
+                                        }}
+                                    >
+                                        CCTP
+                                    </span>
                                 </div>
                             </div>
                             <ArrowUpRight

@@ -16,6 +16,7 @@ import ApproveAgentModal from '@/components/ApproveAgentModal';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotScreen from '@/components/SpotScreen';
 import SpotBuyScreen from '@/components/SpotBuyScreen';
+import CctpBridge from '@/components/CctpBridge';
 import PolymarketPanel from '@/components/PolymarketPanel';
 import PredictionsHub from '@/components/PredictionsHub';
 import AdvancedMenu from '@/components/AdvancedMenu';
@@ -45,7 +46,7 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Base ticker to preselect when navigating into Spot from a holdings row. */
     const [selectedSpotBase, setSelectedSpotBase] = useState<string | undefined>(undefined);
@@ -198,6 +199,16 @@ export default function Home() {
                                     }}
                                 />
                             </div>
+                        ) : view === 'cctp' ? (
+                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                                <CctpBridge
+                                    onClose={() => setView('advanced')}
+                                    onArrivedOnArbitrum={() => {
+                                        setView('home');
+                                        setShowBridgeModal(true);
+                                    }}
+                                />
+                            </div>
                         ) : view === 'bolsillos' ? (
                             <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <BolsillosScreen
@@ -218,6 +229,7 @@ export default function Home() {
                                     onSelectSpot={() => setView('spotReal')}
                                     onSelectBolsillos={() => setView('bolsillos')}
                                     onSelectMarkets={() => setView('markets')}
+                                    onSelectCctp={() => setView('cctp')}
                                 />
                             </div>
                         ) : view === 'markets' ? (
