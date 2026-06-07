@@ -15,6 +15,7 @@ import TradingSetupWizard from '@/components/TradingSetupWizard';
 import ApproveAgentModal from '@/components/ApproveAgentModal';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotScreen from '@/components/SpotScreen';
+import SpotBuyScreen from '@/components/SpotBuyScreen';
 import PolymarketPanel from '@/components/PolymarketPanel';
 import PredictionsHub from '@/components/PredictionsHub';
 import AdvancedMenu from '@/components/AdvancedMenu';
@@ -44,7 +45,7 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Base ticker to preselect when navigating into Spot from a holdings row. */
     const [selectedSpotBase, setSelectedSpotBase] = useState<string | undefined>(undefined);
@@ -142,7 +143,7 @@ export default function Home() {
                                     }}
                                     onSpotHoldingClick={(coin) => {
                                         setSelectedSpotBase(coin);
-                                        setView('spotReal');
+                                        setView('spotManage');
                                     }}
                                     onTradeClick={() => setView('trading')}
                                     onBuyClick={() => setView('spot')}
@@ -177,12 +178,23 @@ export default function Home() {
                                 />
                             </div>
                         ) : view === 'spotReal' ? (
+                            <div className="mt-6 max-w-2xl mx-auto" id="spot-buy-panel" style={{ paddingBottom: '100px' }}>
+                                <SpotBuyScreen
+                                    initialBase={selectedSpotBase}
+                                    onClose={() => {
+                                        setSelectedSpotBase(undefined);
+                                        setView('home');
+                                    }}
+                                    onManage={() => setView('spotManage')}
+                                />
+                            </div>
+                        ) : view === 'spotManage' ? (
                             <div className="mt-6 max-w-2xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
                                 <SpotScreen
                                     initialBase={selectedSpotBase}
                                     onClose={() => {
                                         setSelectedSpotBase(undefined);
-                                        setView('home');
+                                        setView('spotReal');
                                     }}
                                 />
                             </div>
