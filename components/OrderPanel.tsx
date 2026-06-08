@@ -6,7 +6,6 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
 import { TrendingUp, TrendingDown, AlertCircle, Info, Settings2, Zap } from 'lucide-react';
 import OrderNotification, { OrderNotificationData } from '@/components/OrderNotification';
-import TradingSetupWizard from '@/components/TradingSetupWizard';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
 
@@ -16,7 +15,7 @@ type MarginMode = 'isolated' | 'cross';
 
 export default function OrderPanel() {
     const { t, formatCurrency } = useLanguage();
-    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData, agentWalletEnabled, builderFeeApproved, setupAgentWallet, approveBuilderFee } = useHyperliquid();
+    const { connected, getMarket, selectedMarket, placeOrder, account, refreshAccountData } = useHyperliquid();
 
     const [mode, setMode] = useState<OrderMode>('basic');
     const [orderSide, setOrderSide] = useState<OrderSide>('long');
@@ -38,9 +37,6 @@ export default function OrderPanel() {
     const [error, setError] = useState<string>('');
     const [success, setSuccess] = useState<string>('');
     const [orderNotification, setOrderNotification] = useState<OrderNotificationData | null>(null);
-    const [showSetupWizard, setShowSetupWizard] = useState(false);
-    const [setupLoading, setSetupLoading] = useState(false);
-    const [setupError, setSetupError] = useState<string>('');
 
     const market = getMarket(selectedMarket);
     const displaySymbol = selectedMarket?.replace(/-(USD|PERP)$/i, '') || selectedMarket;
@@ -151,11 +147,8 @@ export default function OrderPanel() {
             return;
         }
 
-        // Check if setup is needed
-        if (!agentWalletEnabled || (BUILDER_CONFIG.enabled && !builderFeeApproved)) {
-            setShowSetupWizard(true);
-            return;
-        }
+        // Agent + builder-fee provisioning happens silently inside placeOrder
+        // (first trade sets it up behind the spinner) — no setup wizard.
 
         if (tokenSize <= 0) {
             setError(t.order.invalidAmount);
@@ -868,7 +861,7 @@ export default function OrderPanel() {
                 {/* Place Order Button - Rayo Style - Taller & Squared */}
                 <button
                     onClick={handlePlaceOrder}
-                    disabled={loading || (connected && agentWalletEnabled && (tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE))}
+                    disabled={loading || (connected && (tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE))}
                     className={`w-full rounded-[30px] text-xl font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${orderSide === 'long'
                         ? 'bg-[#34C759] hover:bg-[#2DB34F] text-white shadow-[0_0_20px_rgba(52,199,89,0.3)]'
                         : 'bg-[#FF4444] hover:bg-[#FF5555] text-white shadow-[0_0_20px_rgba(255,68,68,0.3)]'
@@ -888,65 +881,12 @@ export default function OrderPanel() {
                             : `${t.order.placeOrder} ${orderSide === 'long' ? t.positions.long : t.positions.short}`
                     )}
                 </button>
-
-                {/* Inline Setup Prompt - Shows when agent wallet or builder fee not approved */}
-                {connected && (!agentWalletEnabled || (BUILDER_CONFIG.enabled && !builderFeeApproved)) && (
-                    <div className="mt-4 p-4 bg-brand/10 border border-[#FFFF00]/30 rounded-xl">
-                        <p className="text-sm text-brand font-semibold mb-3">
-                            ⚡ {t.setup.title}
-                        </p>
-                        <p className="text-xs text-white/70 mb-3">
-                            {!agentWalletEnabled
-                                ? t.setup.agentDesc
-                                : t.setup.feeDesc}
-                        </p>
-                        {setupError && (
-                            <p className="text-xs text-red-400 mb-3">{setupError}</p>
-                        )}
-                        <button
-                            onClick={async () => {
-                                setSetupLoading(true);
-                                setSetupError('');
-                                try {
-                                    if (!agentWalletEnabled) {
-                                        await setupAgentWallet();
-                                    } else if (BUILDER_CONFIG.enabled && !builderFeeApproved) {
-                                        await approveBuilderFee();
-                                    }
-                                } catch (err) {
-                                    setSetupError(err instanceof Error ? err.message : 'Error al configurar');
-                                } finally {
-                                    setSetupLoading(false);
-                                }
-                            }}
-                            disabled={setupLoading}
-                            className="w-full py-3 bg-brand text-black rounded-lg font-bold text-sm hover:bg-brand-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                            {setupLoading ? (
-                                <>
-                                    <div className="spinner" style={{ borderTopColor: '#000' }} />
-                                    {t.setup.processing}
-                                </>
-                            ) : !agentWalletEnabled ? (
-                                t.setup.enableAgent
-                            ) : (
-                                t.setup.approveFee
-                            )}
-                        </button>
-                    </div>
-                )}
             </div>
 
             {/* Order Notification */}
             <OrderNotification
                 order={orderNotification}
                 onClose={() => setOrderNotification(null)}
-            />
-
-            {/* Trading Setup Wizard */}
-            <TradingSetupWizard
-                isOpen={showSetupWizard}
-                onClose={() => setShowSetupWizard(false)}
             />
         </div>
     );

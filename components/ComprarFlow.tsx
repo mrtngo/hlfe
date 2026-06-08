@@ -19,7 +19,6 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { MIN_NOTIONAL_VALUE, getTokenFullName } from '@/lib/constants';
-import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
 import MarketSelectModal from '@/components/MarketSelectModal';
@@ -56,8 +55,6 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
         refreshAccountData,
         selectedMarket: globalSelectedMarket,
         setSelectedMarket,
-        agentWalletEnabled,
-        builderFeeApproved,
     } = useHyperliquid();
 
     // Only pre-select the asset if the user explicitly came from a token
@@ -98,7 +95,6 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
     const availableUsd = account?.availableMargin ?? 0;
     const isPriceValid = mode === 'easy' || limitPriceNum > 0;
     const isAmountValid = amountNum >= MIN_NOTIONAL_VALUE && amountNum <= availableUsd;
-    const setupComplete = agentWalletEnabled && (!BUILDER_CONFIG.enabled || builderFeeApproved);
 
     useEffect(() => {
         if (market) setSelectedMarket(market.symbol);
@@ -175,10 +171,7 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
             login();
             return;
         }
-        if (!setupComplete) {
-            setShowSetupWizard(true);
-            return;
-        }
+        // Agent + builder-fee provisioning happens silently inside placeOrder.
         if (amountNum < MIN_NOTIONAL_VALUE) {
             setErrorMessage(t.buy.minAmount);
             setStep('error');

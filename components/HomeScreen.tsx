@@ -17,9 +17,10 @@ interface HomeScreenProps {
     onSpotHoldingClick?: (coin: string) => void;
     onTradeClick?: () => void;
     onBuyClick?: () => void;
+    onDeposit?: () => void;
 }
 
-export default function HomeScreen({ onTokenClick, onSpotHoldingClick, onBuyClick }: HomeScreenProps = {}) {
+export default function HomeScreen({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit }: HomeScreenProps = {}) {
     const { t } = useLanguage();
     const { markets } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
@@ -225,6 +226,7 @@ export default function HomeScreen({ onTokenClick, onSpotHoldingClick, onBuyClic
                     onTokenClick={onTokenClick}
                     onSpotHoldingClick={onSpotHoldingClick}
                     onBuyClick={onBuyClick}
+                    onDeposit={onDeposit}
                     onToggleProMode={toggleProMode}
                 />
             )}

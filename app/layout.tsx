@@ -6,6 +6,7 @@ import { PolymarketProvider } from '@/providers/PolymarketProvider';
 import { PrivyProvider } from '@/providers/PrivyProvider';
 import { UserProvider } from '@/hooks/useUser';
 import { CurrencyProvider } from '@/context/CurrencyContext';
+import CapacitorInit from '@/components/CapacitorInit';
 
 // Rayo Typography System - Variable Fonts
 import "@fontsource-variable/plus-jakarta-sans";
@@ -66,6 +67,7 @@ export default function RootLayout({
             '--font-display': '"Fraunces Variable", "Plus Jakarta Sans Variable", serif',
         } as React.CSSProperties}>
             <body className="min-h-screen bg-background font-sans antialiased font-inter">
+                <CapacitorInit />
                 <PrivyProvider>
                     <LanguageProvider>
                         <CurrencyProvider>

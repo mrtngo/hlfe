@@ -1,6 +1,22 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { apiUrl } from '@/lib/api-base';
+
+/**
+ * Web Push (Service Worker + PushManager) does not work inside Capacitor's
+ * WKWebView shell on iOS. The shell has no service worker registry, and
+ * Apple's APNs can't be reached via Web Push regardless.
+ *
+ * Detected by `Capacitor.isNativePlatform()`. When true, this hook returns
+ * a fully-disabled state — UI surfaces that depend on it (notification
+ * settings, price alerts) should fall back to a "Push not supported on
+ * this device" message. Future work: replace with @capacitor/push-
+ * notifications + APNs for a real native experience.
+ */
+const IS_CAPACITOR_NATIVE: boolean =
+    typeof window !== 'undefined' && Capacitor.isNativePlatform();
 
 // VAPID public key - you'll need to generate this and set up a backend
 // Generate with: npx web-push generate-vapid-keys
@@ -47,6 +63,10 @@ function checkIsIOS(): boolean {
 // Check if push notifications are supported
 function checkPushSupport(): boolean {
   if (typeof window === 'undefined') return false;
+
+  // Capacitor's WKWebView has no SW / PushManager — short-circuit so we
+  // don't try to register a service worker that doesn't exist.
+  if (IS_CAPACITOR_NATIVE) return false;
 
   const hasServiceWorker = 'serviceWorker' in navigator;
   const hasPushManager = 'PushManager' in window;
@@ -325,7 +345,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 // Helper function to send subscription to backend
 async function sendSubscriptionToBackend(subscription: PushSubscription, userId?: string): Promise<void> {
   try {
-    const response = await fetch('/api/push/subscribe', {
+    const response = await fetch(apiUrl('/api/push/subscribe'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -350,7 +370,7 @@ async function sendSubscriptionToBackend(subscription: PushSubscription, userId?
 // Helper function to remove subscription from backend
 async function removeSubscriptionFromBackend(subscription: PushSubscription): Promise<void> {
   try {
-    const response = await fetch('/api/push/unsubscribe', {
+    const response = await fetch(apiUrl('/api/push/unsubscribe'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

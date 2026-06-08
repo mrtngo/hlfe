@@ -33,6 +33,7 @@ import {
     type Chain,
 } from 'viem';
 import { USDC_ADDRESSES, USDC_ABI } from '@/lib/constants/bridge';
+import { apiUrl } from '@/lib/api-base';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { ModalSheet, ModalHeader, ModalSticky } from '@/components/ModalSheet';
@@ -219,7 +220,7 @@ export default function BridgeModal({
             await activeWallet.switchChain(chainCfg.viemChain.id);
             setStep('progress');
 
-            const response = await fetch('/api/bridge/execute', {
+            const response = await fetch(apiUrl('/api/bridge/execute'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

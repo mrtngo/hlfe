@@ -207,6 +207,8 @@ interface HyperliquidContextType {
     // User Data (cached)
     agentWalletEnabled: boolean;
     setupAgentWallet: () => Promise<{ success: boolean; message: string; agentAddress?: string }>;
+    /** Bumped when silent agent provisioning fails mid-trade; app root watches it to open the recovery modal. */
+    agentSetupNonce: number;
 
     // Builder Fee (Rayo trading fees on mainnet)
     builderFeeApproved: boolean;
@@ -297,6 +299,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
     const [retryAfter, setRetryAfter] = useState<number | null>(null);
     const [fetchingAccount, setFetchingAccount] = useState(false);
     const [agentWalletEnabled, setAgentWalletEnabled] = useState(false);
+    // Bumped when silent agent provisioning fails during a trade, so the app
+    // root can pop the ApproveAgentModal recovery flow. A counter (not a bool)
+    // so repeated failures re-trigger it even after the user dismisses once.
+    const [agentSetupNonce, setAgentSetupNonce] = useState(0);
 
     // Builder fee state (for mainnet trading fees)
     const [builderFeeApproved, setBuilderFeeApproved] = useState(false);
@@ -681,6 +687,65 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         }
     }, [address, wallets, checkBuilderFeeApproval]);
 
+    /**
+     * Silently provision everything a trade needs, the first time it's needed.
+     *
+     * This is the backbone of the "invisible wallet" UX: the user taps Buy and
+     * we set up the gasless agent wallet + builder-fee approval under the hood
+     * (no popups, thanks to `showWalletUIs: false`) instead of making them walk
+     * a setup wizard. Idempotent — after the first trade it's a couple of cheap
+     * localStorage/API checks and returns immediately.
+     *
+     * Throws if provisioning genuinely can't complete (e.g. an on-chain agent
+     * conflict with no local key), so callers can surface a recovery path.
+     */
+    const ensureAgentReady = useCallback(async (): Promise<void> => {
+        if (!address) {
+            throw new Error(t.errors.walletNotConnected);
+        }
+
+        // 1. Gasless signing key. If we don't have a usable, approved agent
+        //    locally, create + approve one now (one silent signature).
+        const existing = await getAgentWallet(address);
+        if (!existing || !isAgentApproved(address)) {
+            try {
+                await setupAgentWallet();
+            } catch (err) {
+                // Common conflict: a stored-but-unapproved agent address was
+                // already used on-chain. setupAgentWallet clears the bad local
+                // agent on this error, so a single retry generates a FRESH
+                // agent and approves cleanly — still fully silent.
+                const msg = err instanceof Error ? err.message.toLowerCase() : '';
+                const isConflict =
+                    msg.includes('already used') ||
+                    msg.includes('already have an agent') ||
+                    msg.includes('conflict');
+                if (isConflict) {
+                    try {
+                        await setupAgentWallet(); // fresh agent (localStorage cleared)
+                    } catch (retryErr) {
+                        // Self-heal failed too — surface the recovery modal.
+                        setAgentSetupNonce((n) => n + 1);
+                        throw retryErr;
+                    }
+                } else {
+                    setAgentSetupNonce((n) => n + 1);
+                    throw err;
+                }
+            }
+        }
+
+        // 2. Builder fee (mainnet only). Orders carry the `builder` field, which
+        //    Hyperliquid rejects unless the fee is approved — so this must
+        //    succeed before the first trade, not just be best-effort.
+        if (BUILDER_CONFIG.enabled) {
+            const fee = await approveBuilderFee();
+            if (!fee.success) {
+                throw new Error(fee.message || 'No se pudo aprobar la comisión de Rayo');
+            }
+        }
+    }, [address, t, setupAgentWallet, approveBuilderFee]);
+
     // Enable DEX abstraction for Trade.xyz stocks (one-time setup)
     const enableDexAbstraction = useCallback(async (): Promise<{ success: boolean; message: string }> => {
         if (!address) {
@@ -798,6 +863,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
         setLoading(true);
         try {
+            // 0. Make sure the gasless agent (and builder-fee approval) exist.
+            //    First trade provisions silently behind this same spinner; every
+            //    trade after is a no-op check. Keeps the user from ever seeing a
+            //    setup wizard or signature popup.
+            await ensureAgentReady();
+
             // 1. Get asset index
             console.log('placeOrder called with symbol:', symbol);
             console.log('markets array:', markets.map(m => m.symbol));
@@ -1015,7 +1086,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const agentSigner = agent ? getAgentSigner(agent) : null;
                 const isApproved = isAgentApproved(address);
 
-                if (agentWalletEnabled && agent && agentSigner && isApproved) {
+                // Gate on the localStorage source of truth, not the
+                // `agentWalletEnabled` React flag (which lags a render behind
+                // the agent we may have just provisioned in this same call).
+                if (agent && agentSigner && isApproved) {
                     // Use agent wallet for leverage update
                     signingWallet = {
                         address: agent.address,
@@ -1303,7 +1377,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const agentSigner = agent ? getAgentSigner(agent) : null;
             const isApproved = isAgentApproved(address);
 
-            if (agentWalletEnabled && agent && agentSigner && isApproved) {
+            // Gate on the localStorage source of truth, not the lagging
+            // `agentWalletEnabled` React flag (see leverage note above).
+            if (agent && agentSigner && isApproved) {
                 // Use agent wallet - no user signature needed!
                 console.log('✅ Using approved agent wallet - NO signature prompt needed!');
                 console.log('Agent address:', agent.address);
@@ -1837,7 +1913,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, [isConnected, address, markets, spotBalances, t]);
+    }, [isConnected, address, markets, spotBalances, t, ensureAgentReady]);
 
     // Place trigger order (Stop Loss or Take Profit)
     const placeTriggerOrder = useCallback(async (
@@ -2600,6 +2676,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // those as unknown wallets ("User or API Wallet 0x... does
                 // not exist") and rejects the order. The agent path bypasses
                 // Privy entirely and signs directly with the saved key.
+                // Self-provision the agent here too, so a prediction-market
+                // bet works as the user's very first action — no "place a spot
+                // trade first" dead-end.
+                await ensureAgentReady();
+
                 let signingWallet: any = null;
                 const agent = await getAgentWallet(address);
                 const agentSigner = agent ? getAgentSigner(agent) : null;
@@ -2737,7 +2818,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 return { filled: false, filledSize: 0, filledPrice: 0, error: msg };
             }
         },
-        [isConnected, address, agentWalletEnabled, wallets, refreshAccountData],
+        [isConnected, address, agentWalletEnabled, wallets, refreshAccountData, ensureAgentReady],
     );
 
     // Withdrawal logic
@@ -2856,6 +2937,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         setSelectedMarket,
         agentWalletEnabled,
         setupAgentWallet,
+        agentSetupNonce,
         getMarket,
         placeOrder,
         placeTriggerOrder,

@@ -28,6 +28,15 @@ export function encodeApprove(spender: string, amount: bigint): Hex {
     });
 }
 
+/** ERC20 transfer — used to forward freshly-minted USDC into the HL bridge. */
+export function encodeTransfer(to: string, amount: bigint): Hex {
+    return encodeFunctionData({
+        abi: ERC20_ABI,
+        functionName: 'transfer',
+        args: [to as Hex, amount],
+    });
+}
+
 export function encodeDepositForBurn(params: {
     amount: bigint;
     destinationDomain: number;

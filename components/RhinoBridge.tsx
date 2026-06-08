@@ -15,6 +15,7 @@ import { parseUnits, formatUnits, createPublicClient, http, type Address } from 
 import { tokens } from '@/lib/design-tokens';
 import { arbitrum, mainnet, polygon, base, optimism } from 'viem/chains';
 import { USDC_ADDRESSES, USDC_ABI } from '@/lib/constants/bridge';
+import { apiUrl } from '@/lib/api-base';
 import { useEffect } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 
@@ -137,7 +138,7 @@ export default function RhinoBridge({ onComplete }: RhinoBridgeProps) {
             setStep('bridging');
 
             // Call our API endpoint that uses the Rhino SDK's bridge() method with chain adapter
-            const response = await fetch('/api/bridge/execute', {
+            const response = await fetch(apiUrl('/api/bridge/execute'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

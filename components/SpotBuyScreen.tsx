@@ -8,7 +8,6 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useSpotMarkets } from '@/hooks/useSpotMarkets';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
-import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
@@ -51,8 +50,6 @@ export default function SpotBuyScreen({ onClose, onManage, initialBase }: SpotBu
         placeOrder,
         spotBalances,
         refreshAccountData,
-        agentWalletEnabled,
-        builderFeeApproved,
     } = useHyperliquid();
 
     const ownedTickers = useMemo(
@@ -119,8 +116,6 @@ export default function SpotBuyScreen({ onClose, onManage, initialBase }: SpotBu
         return roundSize(amountNum / price, market.szDecimals);
     }, [amountNum, market, price]);
 
-    const setupComplete =
-        agentWalletEnabled && (!BUILDER_CONFIG.enabled || builderFeeApproved);
     const insufficient = amountNum > spotUsdcBalance;
     const belowMin = amountNum > 0 && amountNum < MIN_NOTIONAL_VALUE;
     const canSubmit =
@@ -166,10 +161,7 @@ export default function SpotBuyScreen({ onClose, onManage, initialBase }: SpotBu
             login();
             return;
         }
-        if (!setupComplete) {
-            setShowSetupWizard(true);
-            return;
-        }
+        // Agent + builder-fee provisioning happens silently inside placeOrder.
         if (amountNum < MIN_NOTIONAL_VALUE) {
             setConfirmError(`El mínimo es $${MIN_NOTIONAL_VALUE}`);
             return;

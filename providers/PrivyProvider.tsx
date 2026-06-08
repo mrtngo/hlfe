@@ -5,8 +5,16 @@ import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { arbitrumSepolia, arbitrum, mainnet, polygon, base, optimism, avalanche, bsc } from 'viem/chains';
 import { createConfig, http } from 'wagmi';
+import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit';
 
 const queryClient = new QueryClient();
+
+// Solana mainnet RPC for the embedded Solana wallet (used by CCTP deposits).
+// Override with a paid RPC via NEXT_PUBLIC_SOLANA_RPC — and add it to the CSP
+// connect-src in next.config.js if you do.
+const SOLANA_RPC =
+    process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
+const SOLANA_WSS = SOLANA_RPC.replace(/^http/, 'ws');
 
 // Create wagmi config with all supported chains for cross-chain bridging
 const wagmiConfig = createConfig({
@@ -38,9 +46,28 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
             showWalletLoginFirst: false,
         },
         embeddedWallets: {
+            // Sign + send happen silently under the hood — no Privy confirmation
+            // modal. The beginner audience never sees "approve this signature":
+            // trades, agent approval and builder-fee approval all execute
+            // invisibly. Withdrawals keep their own in-app confirm screen.
+            // (Replaces the deprecated `noPromptOnSignature` flag in Privy v3.)
+            showWalletUIs: false,
             ethereum: {
                 createOnLogin: 'users-without-wallets',
-                noPromptOnSignature: false,
+            },
+            // Every user also gets a Solana embedded wallet — the deposit
+            // address for the Solana → Hyperliquid CCTP on-ramp.
+            solana: {
+                createOnLogin: 'users-without-wallets',
+            },
+        },
+        // RPC the embedded Solana wallet uses to fetch blockhashes / send.
+        solana: {
+            rpcs: {
+                'solana:mainnet': {
+                    rpc: createSolanaRpc(SOLANA_RPC),
+                    rpcSubscriptions: createSolanaRpcSubscriptions(SOLANA_WSS),
+                },
             },
         },
         defaultChain: arbitrum,

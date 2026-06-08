@@ -7,7 +7,6 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePreferences } from '@/hooks/usePreferences';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
-import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import TokenLogo from '@/components/TokenLogo';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import TradingChart from '@/components/TradingChart';
@@ -44,8 +43,6 @@ export default function TradearScreen({ onBack }: TradearScreenProps) {
         getMarket,
         account,
         placeOrder,
-        agentWalletEnabled,
-        builderFeeApproved,
         refreshAccountData,
     } = useHyperliquid();
     const [showPicker, setShowPicker] = useState(false);
@@ -102,7 +99,6 @@ export default function TradearScreen({ onBack }: TradearScreenProps) {
             availableUsd={account?.availableMargin || 0}
             equity={account?.equity || 0}
             placeOrder={placeOrder}
-            setupComplete={agentWalletEnabled && (!BUILDER_CONFIG.enabled || builderFeeApproved)}
             refreshAccountData={refreshAccountData}
             formatCurrency={formatCurrency}
         />
@@ -128,7 +124,6 @@ function NormalMode({
     availableUsd,
     equity,
     placeOrder,
-    setupComplete,
     refreshAccountData,
     formatCurrency,
 }: {
@@ -146,7 +141,6 @@ function NormalMode({
     availableUsd: number;
     equity: number;
     placeOrder: any;
-    setupComplete: boolean;
     refreshAccountData: () => void;
     formatCurrency: (v: number, dp?: number) => string;
 }) {
@@ -198,10 +192,7 @@ function NormalMode({
 
     const handleSubmit = () => {
         if (!canSubmit) return;
-        if (!setupComplete) {
-            setShowSetupWizard(true);
-            return;
-        }
+        // Agent + builder-fee provisioning happens silently inside placeOrder.
         setError('');
         setShowConfirm(true);
     };

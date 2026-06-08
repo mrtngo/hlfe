@@ -38,6 +38,7 @@ export default function Home() {
         setSelectedMarket,
         address,
         agentWalletEnabled,
+        agentSetupNonce,
         builderFeeApproved,
         builderFeeChecked,
         refreshAccountData,
@@ -94,6 +95,17 @@ export default function Home() {
         }
     }, [view, authenticated, agentWalletEnabled, builderFeeApproved, builderFeeChecked]);
 
+    // Recovery path: silent agent provisioning failed during a trade (e.g. an
+    // unrecoverable on-chain agent conflict). The provider bumps agentSetupNonce
+    // so we surface the ApproveAgentModal — its conflict UI + manual retry — even
+    // if the user previously dismissed the proactive setup prompt this session.
+    useEffect(() => {
+        if (agentSetupNonce > 0) {
+            sessionStorage.removeItem('setup_wizard_dismissed');
+            setShowAgentModal(true);
+        }
+    }, [agentSetupNonce]);
+
     const handleWizardClose = () => {
         setShowSetupWizard(false);
         // Mark as dismissed for this session
@@ -148,6 +160,7 @@ export default function Home() {
                                     }}
                                     onTradeClick={() => setView('trading')}
                                     onBuyClick={() => setView('spot')}
+                                    onDeposit={() => setView('cctp')}
                                 />
                             </div>
                         ) : view === 'history' ? (
@@ -204,8 +217,10 @@ export default function Home() {
                                 <CctpBridge
                                     onClose={() => setView('advanced')}
                                     onArrivedOnArbitrum={() => {
+                                        // Funds are already auto-credited to the
+                                        // perps balance — just return home.
                                         setView('home');
-                                        setShowBridgeModal(true);
+                                        refreshAccountData();
                                     }}
                                 />
                             </div>

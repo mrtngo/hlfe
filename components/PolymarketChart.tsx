@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { apiUrl } from '@/lib/api-base';
 
 // Palette for multi-outcome lines
 const OUTCOME_COLORS = [
@@ -40,7 +41,7 @@ async function loadSeries(tokenId: string, interval: string) {
     if (cached && Date.now() - cached.at < 60_000) return cached.pts;
 
     const res = await fetch(
-        `/api/polymarket?target=CLOB&path=/prices-history&market=${tokenId}&interval=${interval}`
+        apiUrl(`/api/polymarket?target=CLOB&path=/prices-history&market=${tokenId}&interval=${interval}`)
     );
     if (!res.ok) return [];
     const data = await res.json();

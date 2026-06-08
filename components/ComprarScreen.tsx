@@ -11,7 +11,6 @@ import DepositModal from '@/components/DepositModal';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import DcaScheduleSheet from '@/components/DcaScheduleSheet';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
-import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { Loader2, ArrowDown, ArrowUpRight, AlertCircle, CheckCircle2, Sliders, Repeat, ChevronRight, Zap } from 'lucide-react';
 
 interface ComprarScreenProps {
@@ -32,8 +31,6 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
         refreshAccountData,
         selectedMarket: globalSelectedMarket,
         setSelectedMarket,
-        agentWalletEnabled,
-        builderFeeApproved,
     } = useHyperliquid();
 
     const initialSymbol = useMemo(() => {
@@ -91,7 +88,6 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
     const change = selectedMarket?.change24h || 0;
     const positive = change >= 0;
 
-    const setupComplete = agentWalletEnabled && (!BUILDER_CONFIG.enabled || builderFeeApproved);
     const isAmountValid = amountNum >= MIN_NOTIONAL_VALUE && amountNum <= availableUsd;
     const canSubmit = ready && authenticated && connected && !!selectedMarket && isAmountValid && !submitting;
 
@@ -101,7 +97,7 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
 
     const handleSubmit = async () => {
         if (!canSubmit || !selectedMarket) return;
-        if (!setupComplete) { setShowSetupWizard(true); return; }
+        // Agent + builder-fee provisioning happens silently inside placeOrder.
         setSubmitting(true);
         setError('');
         setSuccess('');

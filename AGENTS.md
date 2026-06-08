@@ -1,4 +1,4 @@
-# Rayo - Claude Code Instructions
+# Rayo - Codex Instructions
 
 ## Project Overview
 

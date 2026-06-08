@@ -5,6 +5,7 @@
 
 import { createWalletClient, custom, type Address } from 'viem';
 import { arbitrum, mainnet, polygon, base, optimism } from 'viem/chains';
+import { apiUrl } from '@/lib/api-base';
 
 // Supported chains for bridging
 export const SUPPORTED_CHAINS = {
@@ -36,7 +37,7 @@ export async function getBridgeQuote(params: {
   amount: string;
   walletAddress: Address;
 }) {
-  const response = await fetch('/api/bridge/quote', {
+  const response = await fetch(apiUrl('/api/bridge/quote'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -84,7 +85,7 @@ export async function getBridgeTransaction(params: {
   });
 
   // Step 2: Commit the quote to get transaction data
-  const response = await fetch('/api/bridge/build', {
+  const response = await fetch(apiUrl('/api/bridge/build'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

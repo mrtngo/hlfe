@@ -1,48 +1,103 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ArrowDown, ArrowUpRight, Check, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowUpRight, Check, Loader2, AlertCircle } from 'lucide-react';
 import ScreenHeader from '@/components/ScreenHeader';
-import { CCTP_CHAINS, type CctpChainKey } from '@/lib/cctp/constants';
-import { useCctpTransfer, type CctpStatus } from '@/hooks/useCctpTransfer';
+import {
+    CCTP_CHAINS,
+    CCTP_DEPOSIT_SOURCES,
+    type CctpChainKey,
+} from '@/lib/cctp/constants';
+import { MIN_BRIDGE_DEPOSIT } from '@/lib/constants/bridge';
+import { useCctpTransfer } from '@/hooks/useCctpTransfer';
+import { useSolanaDeposit } from '@/hooks/useSolanaDeposit';
+
+// Solana deposit is ON by default. It's a fresh, on-chain-untested path and
+// CCTP burns are irreversible — so this stays a kill-switch: set
+// NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT=0 to pull it instantly (no redeploy of code)
+// if a live test surfaces the event-rent / sponsorship issue.
+const SOLANA_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT !== '0';
+
+type SourceKey = CctpChainKey | 'solana';
 
 interface CctpBridgeProps {
     onClose?: () => void;
-    /** Which leg to start on. Base→Arbitrum is the on-ramp default. */
+    /** Which source chain to start on. */
     defaultFrom?: CctpChainKey;
-    /** Fired after a successful transfer that lands on Arbitrum (ready for an
-     *  Hyperliquid deposit). Lets the caller chain into the deposit flow. */
+    /** Fired after the funds are credited to the Hyperliquid perps balance. */
     onArrivedOnArbitrum?: () => void;
 }
 
-const STEP_LABEL: Record<CctpStatus, string> = {
+const STEP_LABEL: Record<string, string> = {
     idle: '',
     approving: 'Aprobando USDC…',
+    building: 'Preparando…',
     burning: 'Enviando en origen…',
     attesting: 'Esperando atestación de Circle…',
-    minting: 'Acreditando en destino…',
+    minting: 'Recibiendo en Arbitrum…',
+    depositing: 'Acreditando a tu balance…',
     success: 'Listo',
     error: 'Error',
 };
 
-const ORDER: CctpStatus[] = ['approving', 'burning', 'attesting', 'minting', 'success'];
+const EVM_ORDER = ['approving', 'burning', 'attesting', 'minting', 'depositing', 'success'];
+const SOL_ORDER = ['building', 'burning', 'attesting', 'minting', 'depositing', 'success'];
+
+const SOURCE_KEYS: SourceKey[] = SOLANA_ENABLED
+    ? [...CCTP_DEPOSIT_SOURCES, 'solana']
+    : [...CCTP_DEPOSIT_SOURCES];
+
+const sourceMeta = (key: SourceKey): { label: string; explorer: string } =>
+    key === 'solana'
+        ? { label: 'Solana', explorer: 'https://solscan.io/tx/' }
+        : { label: CCTP_CHAINS[key].label, explorer: CCTP_CHAINS[key].explorer };
 
 export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnArbitrum }: CctpBridgeProps) {
-    const [fromKey, setFromKey] = useState<CctpChainKey>(defaultFrom);
-    const toKey: CctpChainKey = fromKey === 'base' ? 'arbitrum' : 'base';
+    const [fromKey, setFromKey] = useState<SourceKey>(
+        CCTP_DEPOSIT_SOURCES.includes(defaultFrom) ? defaultFrom : 'base',
+    );
     const [amount, setAmount] = useState('');
 
-    const { status, inProgress, error, burnTxHash, mintTxHash, transfer, reset } = useCctpTransfer();
+    const evm = useCctpTransfer();
+    const sol = useSolanaDeposit();
 
-    const from = CCTP_CHAINS[fromKey];
-    const to = CCTP_CHAINS[toKey];
+    const isSolana = fromKey === 'solana';
+
+    // Normalize whichever flow is active so the rest of the UI is agnostic.
+    const flow = isSolana
+        ? {
+              status: sol.status as string,
+              inProgress: sol.inProgress,
+              error: sol.error,
+              burnTx: sol.burnSig,
+              mintTx: sol.mintTxHash,
+              depositTx: sol.depositTxHash,
+              reset: sol.reset,
+              run: () => sol.deposit(amount),
+          }
+        : {
+              status: evm.status as string,
+              inProgress: evm.inProgress,
+              error: evm.error,
+              burnTx: evm.burnTxHash,
+              mintTx: evm.mintTxHash,
+              depositTx: evm.depositTxHash,
+              reset: evm.reset,
+              run: () => evm.transfer(fromKey as CctpChainKey, 'arbitrum', amount, { autoDeposit: true }),
+          };
+
+    const from = sourceMeta(fromKey);
+    const to = CCTP_CHAINS.arbitrum; // deposits always land on Arbitrum → perps
+    const order = isSolana ? SOL_ORDER : EVM_ORDER;
     const amountNum = parseFloat(amount || '0') || 0;
-    const canSubmit = amountNum > 0 && !inProgress;
+    const belowMin = amountNum > 0 && amountNum < MIN_BRIDGE_DEPOSIT;
+    const canSubmit = amountNum >= MIN_BRIDGE_DEPOSIT && !flow.inProgress;
 
-    const swap = () => {
-        if (inProgress) return;
-        setFromKey(toKey);
-        reset();
+    const pickSource = (key: SourceKey) => {
+        if (flow.inProgress) return;
+        setFromKey(key);
+        evm.reset();
+        sol.reset();
     };
 
     const handleType = (v: string) => {
@@ -53,9 +108,9 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
         setAmount(c);
     };
 
-    const currentStepIdx = useMemo(() => ORDER.indexOf(status), [status]);
+    const currentStepIdx = useMemo(() => order.indexOf(flow.status), [order, flow.status]);
 
-    if (status === 'success') {
+    if (flow.status === 'success') {
         return (
             <div className="atmosphere-warm grain" style={{ minHeight: '100%', color: '#fff' }}>
                 <ScreenHeader title="" onBack={onClose} />
@@ -87,34 +142,38 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
                             letterSpacing: '-0.03em',
                         }}
                     >
-                        ¡USDC en {to.label}!
+                        ¡USDC en tu balance!
                     </div>
                     <div className="tabular-mono" style={{ marginTop: 8, fontSize: 14, color: '#fff' }}>
-                        {amountNum.toLocaleString('en-US')} USDC · {from.label} → {to.label}
+                        {amountNum.toLocaleString('en-US')} USDC · {from.label} → Hyperliquid
+                    </div>
+                    <div style={{ marginTop: 6, fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                        Listo para operar. Se acredita en menos de un minuto.
                     </div>
 
                     <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {burnTxHash && (
-                            <TxLink label={`Burn en ${from.label}`} href={from.explorer + burnTxHash} />
+                        {flow.burnTx && (
+                            <TxLink label={`Envío en ${from.label}`} href={from.explorer + flow.burnTx} />
                         )}
-                        {mintTxHash && (
-                            <TxLink label={`Mint en ${to.label}`} href={to.explorer + mintTxHash} />
+                        {flow.mintTx && (
+                            <TxLink label={`Recibido en ${to.label}`} href={to.explorer + flow.mintTx} />
+                        )}
+                        {flow.depositTx && (
+                            <TxLink label="Depósito a Hyperliquid" href={to.explorer + flow.depositTx} />
                         )}
                     </div>
 
                     <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-                        <button type="button" onClick={reset} style={secondaryBtn}>
-                            Otra transferencia
+                        <button type="button" onClick={flow.reset} style={secondaryBtn}>
+                            Otro depósito
                         </button>
-                        {toKey === 'arbitrum' && onArrivedOnArbitrum ? (
-                            <button type="button" onClick={onArrivedOnArbitrum} style={primaryBtn}>
-                                Depositar a Hyperliquid
-                            </button>
-                        ) : (
-                            <button type="button" onClick={onClose} style={primaryBtn}>
-                                Listo
-                            </button>
-                        )}
+                        <button
+                            type="button"
+                            onClick={() => (onArrivedOnArbitrum ? onArrivedOnArbitrum() : onClose?.())}
+                            style={primaryBtn}
+                        >
+                            Empezar a operar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -123,23 +182,57 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
 
     return (
         <div className="atmosphere-warm grain" style={{ minHeight: '100%', color: '#fff' }}>
-            <ScreenHeader title="USDC nativo." onBack={onClose} large italic />
+            <ScreenHeader title="Depositar." onBack={onClose} large italic />
 
             <div style={{ padding: '4px 6px 0' }}>
                 <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5, margin: '0 0 16px' }}>
-                    Mueve USDC nativo entre {CCTP_CHAINS.base.label} y {CCTP_CHAINS.arbitrum.label} con Circle CCTP —
-                    1:1, sin slippage, en segundos.
+                    Deposita USDC desde cualquier red. Llega directo a tu balance de Hyperliquid —
+                    con Circle CCTP, 1:1 y en segundos.
                 </p>
 
-                {/* From */}
-                <ChainCard role="Desde" chainLabel={from.label}>
+                {/* Source chain picker */}
+                <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', fontWeight: 700, color: 'var(--color-text-tertiary)', marginBottom: 8 }}>
+                        Desde
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+                        {SOURCE_KEYS.map((key) => {
+                            const selected = key === fromKey;
+                            return (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    onClick={() => pickSource(key)}
+                                    disabled={flow.inProgress}
+                                    style={{
+                                        flexShrink: 0,
+                                        padding: '8px 14px',
+                                        borderRadius: 999,
+                                        border: `1px solid ${selected ? 'var(--color-brand-primary)' : 'rgba(255,255,255,0.1)'}`,
+                                        background: selected ? 'rgba(250,204,21,0.12)' : 'rgba(255,255,255,0.025)',
+                                        color: selected ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
+                                        fontSize: 13,
+                                        fontWeight: 700,
+                                        cursor: flow.inProgress ? 'not-allowed' : 'pointer',
+                                        fontFamily: 'inherit',
+                                    }}
+                                >
+                                    {sourceMeta(key).label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Amount */}
+                <ChainCard role="Monto" chainLabel={from.label}>
                     <input
                         type="text"
                         inputMode="decimal"
                         value={amount}
                         onChange={(e) => handleType(e.target.value)}
                         placeholder="0"
-                        disabled={inProgress}
+                        disabled={flow.inProgress}
                         className="font-display tabular-mono"
                         style={{
                             background: 'transparent',
@@ -155,51 +248,36 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
                     <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 700 }}>USDC</span>
                 </ChainCard>
 
-                {/* Swap */}
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '-6px 0' }}>
-                    <button
-                        type="button"
-                        onClick={swap}
-                        disabled={inProgress}
-                        aria-label="Invertir"
-                        style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '50%',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            background: 'var(--color-bg-elevated)',
-                            color: 'var(--color-brand-primary)',
-                            cursor: inProgress ? 'not-allowed' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            zIndex: 2,
-                        }}
-                    >
-                        <ArrowDown size={16} strokeWidth={2.4} />
-                    </button>
+                {/* Destination (fixed → perps) */}
+                <div style={{ marginTop: 10 }}>
+                    <ChainCard role="Hacia" chainLabel="Hyperliquid">
+                        <span className="font-display tabular-mono" style={{ fontSize: 32, fontWeight: 500, color: amountNum > 0 ? '#fff' : 'rgba(255,255,255,0.25)' }}>
+                            {amountNum > 0 ? `~${amountNum.toLocaleString('en-US')}` : '0'}
+                        </span>
+                        <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 700 }}>USDC</span>
+                    </ChainCard>
                 </div>
-
-                {/* To */}
-                <ChainCard role="Hacia" chainLabel={to.label}>
-                    <span className="font-display tabular-mono" style={{ fontSize: 32, fontWeight: 500, color: amountNum > 0 ? '#fff' : 'rgba(255,255,255,0.25)' }}>
-                        {amountNum > 0 ? `~${amountNum.toLocaleString('en-US')}` : '0'}
-                    </span>
-                    <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)', fontWeight: 700 }}>USDC</span>
-                </ChainCard>
 
                 {/* Info */}
                 <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <InfoRow label="Vía" value="Circle CCTP · USDC nativo" />
                     <InfoRow label="Tiempo" value="~segundos (Fast Transfer)" />
                     <InfoRow label="Comisión de red" value="hasta 0.1% (real ~0.01%)" />
+                    <InfoRow label="Mínimo" value={`$${MIN_BRIDGE_DEPOSIT} USDC`} />
                 </div>
 
+                {/* Below-minimum hint */}
+                {belowMin && (
+                    <div style={{ marginTop: 12, fontSize: 12, color: 'var(--color-negative)', fontWeight: 600 }}>
+                        El depósito mínimo es ${MIN_BRIDGE_DEPOSIT} USDC.
+                    </div>
+                )}
+
                 {/* Progress */}
-                {inProgress && (
+                {flow.inProgress && (
                     <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.18)' }}>
-                        {ORDER.slice(0, 4).map((s, i) => {
-                            const active = status === s;
+                        {order.slice(0, -1).map((s, i) => {
+                            const active = flow.status === s;
                             const done = currentStepIdx > i;
                             return (
                                 <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0' }}>
@@ -220,10 +298,10 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
                 )}
 
                 {/* Error */}
-                {status === 'error' && error && (
+                {flow.status === 'error' && flow.error && (
                     <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', gap: 10 }}>
                         <AlertCircle size={16} color="var(--color-negative)" style={{ flexShrink: 0, marginTop: 1 }} />
-                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>{error}</span>
+                        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5 }}>{flow.error}</span>
                     </div>
                 )}
 
@@ -231,7 +309,7 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
                 <div style={{ padding: '18px 0 6px' }}>
                     <button
                         type="button"
-                        onClick={() => transfer(fromKey, toKey, amount)}
+                        onClick={flow.run}
                         disabled={!canSubmit}
                         style={{
                             width: '100%',
@@ -252,14 +330,14 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
                             fontFamily: 'inherit',
                         }}
                     >
-                        {inProgress ? (
+                        {flow.inProgress ? (
                             <>
                                 <Loader2 size={16} className="animate-spin" />
-                                {STEP_LABEL[status]}
+                                {STEP_LABEL[flow.status]}
                             </>
                         ) : (
                             <>
-                                Transferir a {to.label}
+                                Depositar desde {from.label}
                                 <ArrowUpRight size={16} strokeWidth={2.6} />
                             </>
                         )}

@@ -21,12 +21,13 @@ import {
     SPOT_LOW_LIQUIDITY_THRESHOLD_USD,
     getTokenFullName,
 } from '@/lib/constants';
-import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import DepositModal from '@/components/DepositModal';
 import TransferModal from '@/components/TransferModal';
+import TradeConfirmSheet from '@/components/TradeConfirmSheet';
+import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 
 interface SpotScreenProps {
     onClose?: () => void;
@@ -58,8 +59,6 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
         spotBalances,
         account,
         refreshAccountData,
-        agentWalletEnabled,
-        builderFeeApproved,
     } = useHyperliquid();
     // Include user's owned spot tokens in the picker even if they aren't in
     // the curated whitelist — handles testnet artifacts and legitimate
@@ -81,6 +80,17 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
     const [amount, setAmount] = useState<string>('');
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<ResultState>({ kind: 'idle' });
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [confirmError, setConfirmError] = useState<string>('');
+    const [filledSnapshot, setFilledSnapshot] = useState<{
+        mode: Mode;
+        symbol: string;
+        ticker: string;
+        tokenAmount: number;
+        usdAmount: number;
+        avgPrice: number;
+    } | null>(null);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [transferModal, setTransferModal] = useState<{
@@ -196,9 +206,6 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
     /** USDC notional shown in the preview. */
     const notionalUsd = mode === 'buy' ? amountNum : amountNum * price;
 
-    const setupComplete =
-        agentWalletEnabled && (!BUILDER_CONFIG.enabled || builderFeeApproved);
-
     // Validation
     const errors = useMemo((): string | null => {
         if (!market) return null;
@@ -279,23 +286,28 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
     };
 
     // ─── Submit ───────────────────────────────────────────────
-    const handleConfirm = async () => {
+    /** Primary button: gate on auth/setup/validity, then open confirm sheet. */
+    const handleConfirm = () => {
         if (!market) return;
         if (!ready || !authenticated) {
             login();
             return;
         }
-        if (!setupComplete) {
-            setShowSetupWizard(true);
-            return;
-        }
+        // Agent + builder-fee provisioning happens silently inside placeOrder.
         if (errors) {
             setResult({ kind: 'error', message: errors });
             return;
         }
-
-        setSubmitting(true);
+        setConfirmError('');
         setResult({ kind: 'idle' });
+        setShowConfirm(true);
+    };
+
+    /** Called from the confirm sheet — actually place the order. */
+    const handleSubmitOrder = async () => {
+        if (!market) return;
+        setSubmitting(true);
+        setConfirmError('');
         try {
             const orderResult = await placeOrder(
                 market.symbol, // "HYPE/USDC" — the "/" triggers spot path in provider
@@ -308,26 +320,31 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
                 slippagePct / 100, // convert UI percent → fraction
             );
             if (orderResult?.filled) {
+                const filledSize = orderResult.filledSize ?? sizeBase;
+                setFilledSnapshot({
+                    mode,
+                    symbol: market.symbol,
+                    ticker: selectedBase,
+                    tokenAmount: filledSize,
+                    usdAmount: filledSize * price,
+                    avgPrice: price,
+                });
                 setResult({
                     kind: 'success',
                     mode,
                     symbol: selectedBase,
-                    filledSize: orderResult.filledSize ?? sizeBase,
+                    filledSize,
                 });
                 setAmount('');
+                setShowConfirm(false);
+                setShowSuccess(true);
                 refreshAfterOrder();
             } else {
-                setResult({
-                    kind: 'error',
-                    message: orderResult?.error || t.spot.errorGeneric,
-                });
+                setConfirmError(orderResult?.error || t.spot.errorGeneric);
             }
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            setResult({
-                kind: 'error',
-                message: msg || t.spot.errorGeneric,
-            });
+            setConfirmError(msg || t.spot.errorGeneric);
         } finally {
             setSubmitting(false);
         }
@@ -1107,6 +1124,40 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
                     // the transfer immediately.
                     refreshAccountData();
                 }}
+            />
+
+            <TradeConfirmSheet
+                open={showConfirm}
+                onClose={() => {
+                    if (!submitting) setShowConfirm(false);
+                }}
+                onConfirm={handleSubmitOrder}
+                submitting={submitting}
+                side={mode}
+                symbol={market?.symbol || selectedBase}
+                ticker={selectedBase}
+                price={price}
+                usdAmount={notionalUsd}
+                tokenAmount={sizeBase}
+                venueLabel="Spot"
+                error={confirmError}
+            />
+
+            <TradeSuccessSheet
+                open={showSuccess}
+                onClose={() => setShowSuccess(false)}
+                side={filledSnapshot?.mode || 'buy'}
+                symbol={filledSnapshot?.symbol || selectedBase}
+                ticker={filledSnapshot?.ticker || selectedBase}
+                tokenAmount={filledSnapshot?.tokenAmount || 0}
+                usdAmount={filledSnapshot?.usdAmount || 0}
+                avgPrice={filledSnapshot?.avgPrice}
+                newBalance={
+                    filledSnapshot?.mode === 'buy'
+                        ? spotUsdcBalance
+                        : spotUsdcBalance + (filledSnapshot?.usdAmount || 0)
+                }
+                formatCurrency={formatCurrency}
             />
         </div>
     );

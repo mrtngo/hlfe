@@ -32,10 +32,11 @@ interface HomeNormalProps {
      *  Route those clicks to SpotScreen with the coin preselected. */
     onSpotHoldingClick?: (coin: string) => void;
     onBuyClick?: () => void;
+    onDeposit?: () => void;
     onToggleProMode: () => void;
 }
 
-function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onToggleProMode }: HomeNormalProps) {
+function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode }: HomeNormalProps) {
     const { t, language } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, markets, thirtyDayPnl, setSelectedMarket, spotBalances, spotPrices } = useHyperliquid();
@@ -462,6 +463,52 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onToggleProM
                     </div>
                 </div>
             </div>
+
+            {/* Deposit CTA — straight to the multichain (CCTP) deposit screen */}
+            {onDeposit && (
+                <div style={{ padding: '16px 6px 0' }}>
+                    <button
+                        type="button"
+                        onClick={onDeposit}
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 12,
+                            padding: '14px 16px',
+                            borderRadius: 16,
+                            background: 'rgba(250,204,21,0.08)',
+                            border: '1px solid rgba(250,204,21,0.25)',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                        }}
+                    >
+                        <span
+                            style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: 12,
+                                background: 'rgba(250,204,21,0.15)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                            }}
+                        >
+                            <ArrowDownLeft size={18} strokeWidth={2.4} color="var(--color-brand-primary)" />
+                        </span>
+                        <span style={{ flex: 1, textAlign: 'left' }}>
+                            <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: '#fff' }}>
+                                {t.common.deposit}
+                            </span>
+                            <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                                USDC desde cualquier red
+                            </span>
+                        </span>
+                        <ArrowUpRight size={16} color="var(--color-text-tertiary)" />
+                    </button>
+                </div>
+            )}
 
             {/* Pull quote */}
             <div style={{ padding: '22px 6px 0' }}>

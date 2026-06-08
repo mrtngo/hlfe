@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { AlertCircle, Check, ChevronDown, Zap, X } from 'lucide-react';
+import TradeConfirmSheet from '@/components/TradeConfirmSheet';
+import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 
 // Order types
 type OrderType = 'market' | 'limit';
@@ -25,6 +27,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
         dexAbstractionEnabled,
         dexAbstractionLoading,
         enableDexAbstraction,
+        refreshAccountData,
     } = useHyperliquid();
     const { t } = useLanguage();
 
@@ -53,6 +56,17 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
     const [error, setError] = useState<string | null>(null);
     const [showLeverageDropdown, setShowLeverageDropdown] = useState(false);
     const [showStockApprovalModal, setShowStockApprovalModal] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [filledSnapshot, setFilledSnapshot] = useState<{
+        side: OrderSide;
+        symbol: string;
+        ticker: string;
+        tokenAmount: number;
+        usdAmount: number;
+        avgPrice: number;
+        leverage: number;
+    } | null>(null);
 
     // Check if this is a stock/XYZ asset
     const isStockAsset = market?.isStock === true || market?.onlyIsolated === true;
@@ -94,8 +108,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
     const orderValue = parseFloat(size || '0') * parseFloat(price || market?.price?.toString() || '0');
     const margin = orderValue / leverage;
 
-    // Handle order submission
-    const handleSubmit = useCallback(async () => {
+    // Primary button: validate, then open confirm sheet
+    const handleSubmit = useCallback(() => {
         if (!marketSymbol || !size || parseFloat(size) <= 0) {
             setError(t.order.invalidSize);
             return;
@@ -117,28 +131,58 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
             return;
         }
 
+        setError(null);
+        setShowConfirm(true);
+    }, [marketSymbol, size, price, orderType, connected, isStockAsset, dexAbstractionEnabled, t]);
+
+    // Called from confirm sheet — actually place the order
+    const handleConfirmOrder = useCallback(async () => {
+        if (!marketSymbol) return;
         setLoading(true);
         setError(null);
-
         try {
             const orderPrice = orderType === 'market' ? undefined : parseFloat(price);
-            await placeOrder(
+            const result = await placeOrder(
                 marketSymbol,
                 side,
                 orderType,
                 parseFloat(size),
                 orderPrice,
                 Math.min(leverage, maxLeverage),
-                reduceOnly
+                reduceOnly,
             );
-            setSize('');
-            setSizePercent(0);
+            const tokenAmount = parseFloat(size);
+            const effectivePrice =
+                orderType === 'market'
+                    ? market?.price || parseFloat(price) || 0
+                    : parseFloat(price) || 0;
+            // Treat the absence of an explicit `filled === false` as success
+            // since older callers don't read this field.
+            const filled = !result || (result as any).filled !== false;
+            if (filled) {
+                setFilledSnapshot({
+                    side,
+                    symbol: marketSymbol,
+                    ticker: coin,
+                    tokenAmount,
+                    usdAmount: tokenAmount * effectivePrice,
+                    avgPrice: effectivePrice,
+                    leverage: Math.min(leverage, maxLeverage),
+                });
+                setSize('');
+                setSizePercent(0);
+                setShowConfirm(false);
+                setShowSuccess(true);
+                setTimeout(() => refreshAccountData?.(), 500);
+            } else {
+                setError(((result as any)?.error as string) || t.order.placeFailed);
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : t.order.placeFailed);
         } finally {
             setLoading(false);
         }
-    }, [marketSymbol, size, price, orderType, side, leverage, maxLeverage, reduceOnly, connected, placeOrder, isStockAsset, dexAbstractionEnabled]);
+    }, [marketSymbol, size, price, orderType, side, leverage, maxLeverage, reduceOnly, placeOrder, market?.price, coin, refreshAccountData, t]);
 
     // Handle enabling stock trading
     const handleEnableStocks = async () => {
@@ -436,6 +480,42 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
                     `${side === 'buy' ? t.order.buyLong : t.order.sellShort} ${coin}`
                 )}
             </button>
+
+            {/* Confirm sheet */}
+            <TradeConfirmSheet
+                open={showConfirm}
+                onClose={() => {
+                    if (!loading) setShowConfirm(false);
+                }}
+                onConfirm={handleConfirmOrder}
+                submitting={loading}
+                side={side}
+                symbol={marketSymbol || coin}
+                ticker={coin}
+                price={
+                    orderType === 'market'
+                        ? market?.price || 0
+                        : parseFloat(price) || market?.price || 0
+                }
+                usdAmount={orderValue}
+                tokenAmount={parseFloat(size) || 0}
+                leverage={Math.min(leverage, maxLeverage)}
+                venueLabel={orderType === 'limit' ? 'Perp · Limit' : 'Perp'}
+                error={error || undefined}
+            />
+
+            {/* Success sheet */}
+            <TradeSuccessSheet
+                open={showSuccess}
+                onClose={() => setShowSuccess(false)}
+                side={filledSnapshot?.side || 'buy'}
+                symbol={filledSnapshot?.symbol || marketSymbol || coin}
+                ticker={filledSnapshot?.ticker || coin}
+                tokenAmount={filledSnapshot?.tokenAmount || 0}
+                usdAmount={filledSnapshot?.usdAmount || 0}
+                avgPrice={filledSnapshot?.avgPrice}
+                newBalance={account?.equity}
+            />
 
             {/* Stock Approval Modal */}
             {showStockApprovalModal && (

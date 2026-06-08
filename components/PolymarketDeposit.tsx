@@ -12,6 +12,7 @@ import {
 import { createPublicClient, http, formatUnits, type Address } from 'viem';
 import { arbitrum, mainnet, polygon, base, optimism } from 'viem/chains';
 import { USDC_ADDRESSES, USDC_ABI } from '@/lib/constants/bridge';
+import { apiUrl } from '@/lib/api-base';
 
 const BRIDGE_CHAINS = {
     ethereum: mainnet,
@@ -404,7 +405,7 @@ function BridgeToPolygon({ address, t }: { address: string; t: any }) {
         try {
             await activeWallet.switchChain(BRIDGE_CHAINS[fromChain].id);
             setStep('bridging');
-            const res = await fetch('/api/bridge/execute', {
+            const res = await fetch(apiUrl('/api/bridge/execute'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

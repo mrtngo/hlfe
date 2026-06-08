@@ -1,5 +1,6 @@
 'use client';
 
+import { apiUrl } from '@/lib/api-base';
 import { POLYMARKET_CACHE } from '@/lib/constants/polymarket';
 import type {
     PolymarketEvent,
@@ -39,7 +40,7 @@ async function proxyFetch(target: string, path: string, params?: Record<string, 
         ...params,
     });
 
-    const url = `/api/polymarket?${searchParams.toString()}`;
+    const url = apiUrl(`/api/polymarket?${searchParams.toString()}`);
     const response = await fetch(url);
 
     if (!response.ok) {

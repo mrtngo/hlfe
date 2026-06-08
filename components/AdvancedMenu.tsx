@@ -671,7 +671,7 @@ export default function AdvancedMenu({
                                     className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5"
                                     style={{ color: '#38BDF8' }}
                                 >
-                                    USDC nativo · Base ⇄ Arbitrum
+                                    USDC nativo · cualquier red
                                 </div>
                                 <div
                                     className="font-display"
@@ -683,7 +683,7 @@ export default function AdvancedMenu({
                                         lineHeight: 1,
                                     }}
                                 >
-                                    Puente{' '}
+                                    Depositar{' '}
                                     <span
                                         className="font-display-italic"
                                         style={{
@@ -691,7 +691,7 @@ export default function AdvancedMenu({
                                             color: 'var(--color-text-secondary)',
                                         }}
                                     >
-                                        CCTP
+                                        multichain
                                     </span>
                                 </div>
                             </div>
