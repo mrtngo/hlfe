@@ -1063,3 +1063,70 @@ h6 {
   scroll-snap-align: start;
   flex-shrink: 0;
 }
+
+/* ==========================================================================
+   RAYO V2 — "Serious redesign"
+   Cooler near-black, Hanken Grotesk, brand-yellow accent. Tokens mirror
+   components/V2Kit.tsx (V2 const) so CSS and inline styles stay in sync.
+   ========================================================================== */
+:root {
+  --v2-bg: #0A0C0E;
+  --v2-bg-glow: radial-gradient(120% 60% at 50% -10%, rgba(250, 204, 21, 0.06) 0%, transparent 55%);
+  --v2-card: rgba(255, 255, 255, 0.025);
+  --v2-card-solid: #111417;
+  --v2-hair: rgba(255, 255, 255, 0.07);
+  --v2-hair2: rgba(255, 255, 255, 0.12);
+  --v2-pos: #22C55E;
+  --v2-neg: #EF4444;
+  --v2-accent: #FACC15;
+  --v2-accent-soft: rgba(250, 204, 21, 0.13);
+  --v2-t1: #FFFFFF;
+  --v2-t2: rgba(255, 255, 255, 0.62);
+  --v2-t3: rgba(255, 255, 255, 0.40);
+  --v2-font-ui: "Hanken Grotesk Variable", -apple-system, system-ui, sans-serif;
+  --v2-font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+}
+
+/* Root surface for the redesigned app shell */
+.v2-app {
+  background: var(--v2-bg);
+  font-family: var(--v2-font-ui);
+  color: var(--v2-t1);
+}
+
+/* Translucent card with hairline border (the signature V2 surface) */
+.v2-card {
+  background: var(--v2-card);
+  border: 1px solid var(--v2-hair);
+  border-radius: 16px;
+}
+
+/* Hide scrollbars on horizontally scrolling rails (category tabs etc.) */
+.v2-noscroll { scrollbar-width: none; -ms-overflow-style: none; }
+.v2-noscroll::-webkit-scrollbar { display: none; }
+
+/* Trade-placed lightning effect (v2/trade-success.jsx) */
+@keyframes v2-boltflash {
+  0%   { opacity: 0;    transform: scale(0.4) rotate(var(--r)); }
+  18%  { opacity: 1;    transform: scale(1.12) rotate(var(--r)); }
+  38%  { opacity: 0.85; transform: scale(1) rotate(var(--r)); }
+  100% { opacity: 0;    transform: scale(0.9) rotate(var(--r)) translateY(14px); }
+}
+@keyframes v2-burst {
+  0%   { opacity: 0;   transform: translate(-50%, -50%) scale(0.6); }
+  30%  { opacity: 0.9; transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes v2-risein {
+  from { transform: translateY(16px); }
+  to   { transform: none; }
+}
+.v2-rise { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .v2-rise { animation: v2-risein 500ms ease-out; }
+  .v2-rise.d2 { animation-delay: 140ms; }
+  .v2-rise.d3 { animation-delay: 280ms; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .v2-bolt, .v2-burst { animation: none !important; opacity: 1 !important; transform: none !important; }
+}

@@ -14,6 +14,8 @@ import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
 // Fraunces — editorial serif with optical sizing & soft axes (for display moments)
 import "@fontsource-variable/fraunces";
+// Hanken Grotesk — V2 "serious redesign" primary UI typeface
+import "@fontsource-variable/hanken-grotesk";
 
 export const metadata: Metadata = {
     title: 'Rayo - Trade at the Speed of Light',
@@ -65,6 +67,9 @@ export default function RootLayout({
             '--font-inter': '"Inter Variable", sans-serif',
             '--font-jetbrains': '"JetBrains Mono Variable", monospace',
             '--font-display': '"Fraunces Variable", "Plus Jakarta Sans Variable", serif',
+            // V2 "serious redesign" — Hanken Grotesk UI font + JetBrains mono
+            '--font-ui': '"Hanken Grotesk Variable", -apple-system, system-ui, sans-serif',
+            '--font-mono': '"JetBrains Mono Variable", ui-monospace, monospace',
         } as React.CSSProperties}>
             <body className="min-h-screen bg-background font-sans antialiased font-inter">
                 <CapacitorInit />

@@ -1,14 +1,13 @@
 'use client';
 
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Download, History } from 'lucide-react';
+import { History } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useCurrency } from '@/context/CurrencyContext';
-import TokenLogo from '@/components/TokenLogo';
-import ScreenHeader from '@/components/ScreenHeader';
 import EmptyState from '@/components/EmptyState';
 import SkeletonRow from '@/components/SkeletonRow';
+import { ScreenV2, V2Header, IconBtn, MarketLogo, Icon, V2 } from '@/components/V2Kit';
 
 interface OrderHistoryEntry {
     id: string;
@@ -39,9 +38,7 @@ export default function OrderHistory() {
     const initialized = useRef(false);
     if (!initialized.current && typeof window !== 'undefined') {
         try {
-            leverageBySymbol.current = JSON.parse(
-                localStorage.getItem(LEVERAGE_STORAGE_KEY) || '{}',
-            );
+            leverageBySymbol.current = JSON.parse(localStorage.getItem(LEVERAGE_STORAGE_KEY) || '{}');
         } catch { /* ignore */ }
         initialized.current = true;
     }
@@ -56,10 +53,7 @@ export default function OrderHistory() {
             }
         }
         if (updated && typeof window !== 'undefined') {
-            localStorage.setItem(
-                LEVERAGE_STORAGE_KEY,
-                JSON.stringify(leverageBySymbol.current),
-            );
+            localStorage.setItem(LEVERAGE_STORAGE_KEY, JSON.stringify(leverageBySymbol.current));
         }
     }, [positions]);
 
@@ -67,10 +61,9 @@ export default function OrderHistory() {
         const fromFills = (fills || []).map((fill: any, idx: number) => {
             const coin = fill.coin?.replace('-PERP', '').replace('xyz:', '') || 'UNKNOWN';
             const symbol = `${coin}-USD`;
-            const price = parseFloat(fill.px || '0');
+            const px = parseFloat(fill.px || '0');
             const size = parseFloat(fill.sz || '0');
-            const isBuy =
-                fill.side === 'B' || fill.dir === 'Open Long' || fill.dir === 'Close Short';
+            const isBuy = fill.side === 'B' || fill.dir === 'Open Long' || fill.dir === 'Close Short';
             const side: 'long' | 'short' = isBuy ? 'long' : 'short';
             const closedPnl = parseFloat(fill.closedPnl || '0');
             const isClose = closedPnl !== 0;
@@ -79,8 +72,8 @@ export default function OrderHistory() {
                 type: isClose ? ('closed' as const) : ('open' as const),
                 side,
                 symbol,
-                entryPrice: price,
-                exitPrice: price,
+                entryPrice: px,
+                exitPrice: px,
                 pnl: closedPnl,
                 size,
                 time: fill.time || Date.now(),
@@ -97,7 +90,7 @@ export default function OrderHistory() {
         const wins = recent.filter((e) => (e.pnl || 0) > 0).length;
         const total = recent.length;
         const winRate = total ? (wins / total) * 100 : 0;
-        const fees = recent.reduce((s) => s + 0, 0); // no fee field on fills here
+        const fees = 0; // no fee field on fills here
         return { totalPnl, wins, total, winRate, fees };
     }, [entries]);
 
@@ -114,21 +107,18 @@ export default function OrderHistory() {
         today.setHours(0, 0, 0, 0);
         const yesterday = new Date(today.getTime() - MS_DAY);
         const groups: { label: string; items: OrderHistoryEntry[] }[] = [];
-
         const monthLabel = (d: Date) => {
             const months = language === 'es'
                 ? ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
                 : ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
             return `${d.getDate()} ${months[d.getMonth()]}`;
         };
-
         filtered.forEach((e) => {
             const d = new Date(e.time);
             d.setHours(0, 0, 0, 0);
             let label: string;
             if (d.getTime() === today.getTime()) label = t.screens.historial.groups.today;
-            else if (d.getTime() === yesterday.getTime())
-                label = t.screens.historial.groups.yesterday.replace('{date}', monthLabel(new Date(e.time)));
+            else if (d.getTime() === yesterday.getTime()) label = t.screens.historial.groups.yesterday.replace('{date}', monthLabel(new Date(e.time)));
             else label = monthLabel(new Date(e.time));
             const last = groups[groups.length - 1];
             if (last && last.label === label) last.items.push(e);
@@ -139,367 +129,143 @@ export default function OrderHistory() {
 
     if (!address) {
         return (
-            <div className="atmosphere-warm grain" style={{ minHeight: '100%', color: '#fff' }}>
-                <ScreenHeader title={t.screens.historial.title} large italic />
-                <EmptyState
-                    icon={History}
-                    title={t.history.connectWalletToView}
-                />
-            </div>
+            <ScreenV2 pad={0}>
+                <V2Header title={t.screens.historial.title.replace(/\.$/, '')} />
+                <div style={{ padding: '24px 20px' }}>
+                    <EmptyState icon={History} title={t.history.connectWalletToView} />
+                </div>
+            </ScreenV2>
         );
     }
 
     return (
-        <div className="atmosphere-warm grain" style={{ minHeight: '100%', color: '#fff' }}>
-            <ScreenHeader
-                title={t.screens.historial.title}
-                large
-                italic
-                right={
-                    <button
-                        type="button"
-                        aria-label="Download CSV"
-                        style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: '50%',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            background: 'rgba(255,255,255,0.02)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        <Download size={14} color="rgba(255,255,255,0.7)" />
-                    </button>
-                }
-            />
+        <ScreenV2 pad={0}>
+            <V2Header title={t.screens.historial.title.replace(/\.$/, '')} right={<IconBtn name="arrowDownLeft" />} />
 
             {/* Summary */}
-            <div style={{ padding: '12px 6px 0' }}>
-                <div
-                    style={{
-                        padding: 20,
-                        borderRadius: 22,
-                        background: 'linear-gradient(165deg, #16120D 0%, #0B0907 100%)',
-                        border: '1px solid rgba(255,255,255,0.07)',
-                    }}
-                >
-                    <div
-                        style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'flex-start',
-                            gap: 12,
-                        }}
-                    >
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div
-                                style={{
-                                    fontSize: 10,
-                                    color: 'rgba(255,255,255,0.5)',
-                                    letterSpacing: '0.22em',
-                                    textTransform: 'uppercase',
-                                    fontWeight: 700,
-                                    marginBottom: 8,
-                                }}
-                            >
-                                {t.screens.historial.summary}
-                            </div>
-                            <div
-                                className="font-display tabular-mono"
-                                style={{
-                                    fontSize: 38,
-                                    lineHeight: 1,
-                                    fontWeight: 500,
-                                    fontVariationSettings: '"opsz" 144, "SOFT" 40, "wght" 500',
-                                    letterSpacing: '-0.04em',
-                                    color: summary.totalPnl >= 0
-                                        ? 'var(--color-positive)'
-                                        : 'var(--color-negative)',
-                                }}
-                            >
-                                {summary.totalPnl >= 0 ? '+' : '-'}
-                                {formatCurrency(Math.abs(summary.totalPnl))}
+            <div style={{ padding: '8px 20px 0' }}>
+                <div className="v2-card" style={{ padding: '16px 18px' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                        <div>
+                            <div style={{ fontSize: 12.5, color: V2.t3, fontWeight: 600 }}>{t.screens.historial.summary} · 30d</div>
+                            <div style={{ fontSize: 30, fontWeight: 800, marginTop: 6, color: summary.totalPnl >= 0 ? V2.pos : V2.neg, letterSpacing: '-0.02em', fontFamily: V2.ui }}>
+                                {summary.totalPnl >= 0 ? '+' : '-'}{formatCurrency(Math.abs(summary.totalPnl))}
                             </div>
                         </div>
-                        <span
-                            className="tabular-mono"
-                            style={{
-                                fontSize: 11,
-                                padding: '4px 8px',
-                                borderRadius: 99,
-                                background: 'rgba(250,204,21,0.08)',
-                                border: '1px solid rgba(250,204,21,0.18)',
-                                color: 'var(--color-brand-primary)',
-                                fontWeight: 700,
-                            }}
-                        >
-                            {t.screens.historial.wins
-                                .replace('{wins}', summary.wins.toString())
-                                .replace('{total}', summary.total.toString())}
+                        <span style={{ padding: '5px 10px', borderRadius: 99, background: V2.posSoft, color: V2.pos, fontFamily: V2.mono, fontWeight: 700, fontSize: 12.5 }}>
+                            {t.screens.historial.wins.replace('{wins}', summary.wins.toString()).replace('{total}', summary.total.toString())}
                         </span>
                     </div>
-
-                    <div
-                        style={{
-                            marginTop: 18,
-                            paddingTop: 14,
-                            borderTop: '1px solid rgba(255,255,255,0.08)',
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: 8,
-                        }}
-                    >
-                        <Stat
-                            label={t.screens.historial.stats.trades}
-                            value={summary.total.toString()}
-                        />
-                        <Stat
-                            label={t.screens.historial.stats.winRate}
-                            value={`${summary.winRate.toFixed(0)}%`}
-                        />
-                        <Stat
-                            label={t.screens.historial.stats.fees}
-                            value={formatCurrency(summary.fees, 2)}
-                        />
+                    <div style={{ display: 'flex', gap: 16, marginTop: 14 }}>
+                        {[
+                            { l: t.screens.historial.stats.trades, v: summary.total.toString() },
+                            { l: t.screens.historial.stats.winRate, v: `${summary.winRate.toFixed(0)}%` },
+                            { l: t.screens.historial.stats.fees, v: formatCurrency(summary.fees, 2) },
+                        ].map((s) => (
+                            <div key={s.l} style={{ flex: 1 }}>
+                                <div style={{ fontSize: 11.5, color: V2.t3, fontWeight: 600 }}>{s.l}</div>
+                                <div style={{ fontSize: 15, fontWeight: 700, marginTop: 3, fontFamily: V2.mono }}>{s.v}</div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div
-                className="snap-rail"
-                style={{ marginTop: 18, padding: '4px 6px' }}
-            >
-                {(['all', 'closed', 'open', 'deposits'] as Tab[]).map((k) => (
-                    <button
-                        key={k}
-                        type="button"
-                        onClick={() => setTab(k)}
-                        style={{
-                            padding: '6px 14px',
-                            borderRadius: 99,
-                            border: tab === k
-                                ? '1px solid var(--color-brand-primary)'
-                                : '1px solid rgba(255,255,255,0.08)',
-                            background: tab === k
-                                ? 'rgba(250,204,21,0.12)'
-                                : 'rgba(255,255,255,0.02)',
-                            color: tab === k ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0,
-                            letterSpacing: '0.04em',
-                        }}
-                    >
-                        {t.screens.historial.tabs[k]}
-                    </button>
-                ))}
+            <div className="v2-noscroll" style={{ display: 'flex', gap: 8, padding: '16px 20px 0', overflowX: 'auto' }}>
+                {(['all', 'closed', 'open', 'deposits'] as Tab[]).map((k) => {
+                    const on = tab === k;
+                    return (
+                        <button
+                            key={k}
+                            onClick={() => setTab(k)}
+                            style={{ padding: '8px 14px', borderRadius: 99, cursor: 'pointer', fontFamily: V2.ui, fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', border: on ? `1px solid ${V2.accent}` : `1px solid ${V2.hair}`, background: on ? V2.accentSoft : 'transparent', color: on ? V2.accent : V2.t3 }}
+                        >
+                            {t.screens.historial.tabs[k]}
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Body */}
-            <div style={{ padding: '20px 6px 0' }}>
+            {/* Groups */}
+            <div style={{ padding: '20px 20px 0' }}>
                 {userDataLoading ? (
                     <SkeletonRow count={6} height={64} />
                 ) : grouped.length === 0 ? (
-                    <EmptyState
-                        icon={History}
-                        title={t.screens.historial.empty.title}
-                        body={t.screens.historial.empty.body}
-                        cta={t.screens.historial.empty.cta}
-                    />
+                    <EmptyState icon={History} title={t.screens.historial.empty.title} body={t.screens.historial.empty.body} cta={t.screens.historial.empty.cta} />
                 ) : (
                     grouped.map((g, gi) => (
                         <div key={`${g.label}-${gi}`} style={{ marginBottom: 18 }}>
-                            <div
-                                className="font-display"
-                                style={{
-                                    fontStyle: 'italic',
-                                    fontSize: 14,
-                                    color: 'var(--color-text-secondary)',
-                                    fontVariationSettings: '"opsz" 36, "SOFT" 100, "wght" 500',
-                                    marginBottom: 6,
-                                }}
-                            >
-                                {g.label}
+                            <div style={{ fontSize: 13, fontWeight: 700, color: V2.t3, marginBottom: 10 }}>{g.label}</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                {g.items.map((e, i) => (
+                                    <HistoryRowV2 key={`${e.id}-${i}`} entry={e} formatCurrency={formatCurrency} t={t} />
+                                ))}
                             </div>
-                            {g.items.map((e, i) => (
-                                <HistoryRow
-                                    key={e.id}
-                                    entry={e}
-                                    last={i === g.items.length - 1}
-                                    formatCurrency={formatCurrency}
-                                    t={t}
-                                />
-                            ))}
                         </div>
                     ))
                 )}
             </div>
-        </div>
+        </ScreenV2>
     );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-    return (
-        <div>
-            <div
-                style={{
-                    fontSize: 9,
-                    color: 'rgba(255,255,255,0.45)',
-                    letterSpacing: '0.14em',
-                    textTransform: 'uppercase',
-                    fontWeight: 700,
-                }}
-            >
-                {label}
-            </div>
-            <div
-                className="tabular-mono"
-                style={{
-                    fontWeight: 700,
-                    fontSize: 13,
-                    color: '#fff',
-                    marginTop: 4,
-                }}
-            >
-                {value}
-            </div>
-        </div>
-    );
-}
-
-function HistoryRow({
+function HistoryRowV2({
     entry,
-    last,
     formatCurrency,
     t,
 }: {
     entry: OrderHistoryEntry;
-    last: boolean;
     formatCurrency: (v: number, dp?: number) => string;
     t: any;
 }) {
-    const time = new Date(entry.time);
-    const timeStr = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = new Date(entry.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const ticker = entry.symbol?.replace(/-USD$/, '').replace(/-PERP$/, '') || '';
     const isLong = entry.side === 'long';
     const positive = (entry.pnl || 0) >= 0;
     const isClose = entry.type === 'closed';
     const isOpen = entry.type === 'open';
 
+    if (entry.type === 'deposit') {
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', borderRadius: 14, background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.14)' }}>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: V2.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name="plus" size={17} color={V2.accent} strokeWidth={2.6} />
+                </div>
+                <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700 }}>{t.screens.historial.row.deposit}</div>
+                    <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 1 }}>{timeStr}</div>
+                </div>
+                <div style={{ fontFamily: V2.mono, fontWeight: 700, color: V2.accent }}>+{formatCurrency(entry.amount || 0)}</div>
+            </div>
+        );
+    }
+
     return (
-        <div
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '12px 0',
-                borderBottom: last ? 'none' : '1px solid rgba(255,255,255,0.06)',
-            }}
-        >
-            <TokenLogo symbol={entry.symbol || 'USDC'} size={36} />
+        <div className="v2-card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', borderRadius: 14 }}>
+            <MarketLogo sym={entry.symbol || 'USDC'} size={38} />
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'baseline',
-                        gap: 8,
-                        flexWrap: 'wrap',
-                    }}
-                >
-                    <div
-                        style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: '#fff',
-                        }}
-                    >
-                        {isClose
-                            ? t.screens.historial.row.closed.replace('{symbol}', ticker)
-                            : isOpen
-                            ? t.screens.historial.row.opened.replace('{symbol}', ticker)
-                            : t.screens.historial.row.deposit}
-                    </div>
-                    {(isClose || isOpen) && entry.side && (
-                        <span
-                            style={{
-                                fontSize: 9,
-                                padding: '2px 6px',
-                                borderRadius: 4,
-                                fontWeight: 800,
-                                letterSpacing: '0.08em',
-                                background: isLong
-                                    ? 'rgba(34,197,94,0.16)'
-                                    : 'rgba(239,68,68,0.16)',
-                                color: isLong
-                                    ? 'var(--color-positive)'
-                                    : 'var(--color-negative)',
-                            }}
-                        >
-                            {isLong ? 'LONG' : 'SHORT'}
-                            {entry.leverage ? ` ${entry.leverage}×` : ''}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 15, fontWeight: 700 }}>
+                        {isClose ? t.screens.historial.row.closed.replace('{symbol}', ticker) : t.screens.historial.row.opened.replace('{symbol}', ticker)}
+                    </span>
+                    {entry.side && (
+                        <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 5px', borderRadius: 4, background: isLong ? V2.posSoft : V2.negSoft, color: isLong ? V2.pos : V2.neg }}>
+                            {isLong ? 'LONG' : 'SHORT'}{entry.leverage ? ` ${entry.leverage}x` : ''}
                         </span>
                     )}
                 </div>
-                <div
-                    className="tabular-mono"
-                    style={{
-                        fontSize: 11,
-                        color: 'rgba(255,255,255,0.5)',
-                        marginTop: 2,
-                    }}
-                >
+                <div style={{ fontSize: 12, color: V2.t3, marginTop: 2, fontFamily: V2.mono, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {(entry.size || 0).toFixed(4)} @ {formatCurrency(entry.entryPrice || 0)} · {timeStr}
                 </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-                {isClose && entry.pnl !== undefined ? (
-                    <div
-                        className="tabular-mono"
-                        style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: positive
-                                ? 'var(--color-positive)'
-                                : 'var(--color-negative)',
-                        }}
-                    >
-                        {positive ? '+' : '-'}
-                        {formatCurrency(Math.abs(entry.pnl))}
-                    </div>
-                ) : isOpen ? (
-                    <div
-                        style={{
-                            fontSize: 9,
-                            padding: '2px 8px',
-                            borderRadius: 99,
-                            background: 'rgba(250,204,21,0.12)',
-                            color: 'var(--color-brand-primary)',
-                            fontWeight: 800,
-                            letterSpacing: '0.1em',
-                        }}
-                    >
-                        {t.screens.historial.row.open}
-                    </div>
-                ) : (
-                    <div
-                        className="tabular-mono"
-                        style={{
-                            fontSize: 14,
-                            fontWeight: 800,
-                            color: 'var(--color-brand-primary)',
-                        }}
-                    >
-                        +{formatCurrency(entry.amount || 0)}
-                    </div>
-                )}
-            </div>
+            {isOpen ? (
+                <span style={{ fontSize: 11, color: V2.accent, fontWeight: 800, letterSpacing: '0.04em' }}>{t.screens.historial.row.open}</span>
+            ) : (
+                <span style={{ fontFamily: V2.mono, fontWeight: 800, fontSize: 15, color: positive ? V2.pos : V2.neg }}>
+                    {positive ? '+' : '-'}{formatCurrency(Math.abs(entry.pnl || 0))}
+                </span>
+            )}
         </div>
     );
 }

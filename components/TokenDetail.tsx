@@ -1,15 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ArrowUpRight, Share2, Star } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
-import { getTokenFullName, STORAGE_KEYS } from '@/lib/constants';
-import TokenLogo from '@/components/TokenLogo';
+import { getTokenFullName } from '@/lib/constants';
 import TokenCandleChart from '@/components/TokenCandleChart';
-import ScreenHeader from '@/components/ScreenHeader';
-import HairlineSection from '@/components/HairlineSection';
+import { ScreenV2, BigMoney, PctBadge, MarketLogo, Icon, V2 } from '@/components/V2Kit';
 
 interface TokenDetailProps {
     symbol: string;
@@ -18,16 +15,27 @@ interface TokenDetailProps {
     onTrade?: () => void;
 }
 
+const TF_PILLS: { key: string; label: string }[] = [
+    { key: '5m', label: 'En vivo' },
+    { key: '4h', label: '4H' },
+    { key: '1d', label: '1D' },
+    { key: '1w', label: '1S' },
+    { key: '1m', label: '1M' },
+    { key: 'all', label: 'Todo' },
+];
+
 export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDetailProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { getMarket, markets, positions, setSelectedMarket } = useHyperliquid();
 
-    const market = useMemo(() => getMarket(symbol) || (markets || []).find((m) => m.symbol === symbol || m.name === symbol), [symbol, getMarket, markets]);
+    const market = useMemo(
+        () => getMarket(symbol) || (markets || []).find((m) => m.symbol === symbol || m.name === symbol),
+        [symbol, getMarket, markets],
+    );
     const ticker = (market?.name || symbol).replace(/-USD$/, '').replace(/-PERP$/, '');
     const fullName = getTokenFullName(ticker);
     const up = (market?.change24h || 0) >= 0;
-    const cl = up ? 'var(--color-positive)' : 'var(--color-negative)';
 
     const position = useMemo(
         () => (positions || []).find((p) => p.symbol === market?.symbol || p.symbol === symbol),
@@ -35,384 +43,198 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
     );
 
     const [isFav, setIsFav] = useState(false);
+    const [tfKey, setTfKey] = useState('1d');
+    const [tab, setTab] = useState<'overview' | 'stats' | 'results' | 'news'>('overview');
 
     if (!market) {
         return (
-            <div className="atmosphere-warm grain" style={{ minHeight: '100%', color: '#fff' }}>
-                <ScreenHeader title={symbol} onBack={onBack} italic={false} />
-                <div style={{ padding: '60px 22px', textAlign: 'center', color: 'var(--color-text-tertiary)' }}>
-                    No market data
+            <ScreenV2 pad={16}>
+                <div style={{ padding: '54px 18px 0', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={onBack} style={circleBtn}><Icon name="chevronLeft" size={18} color={V2.t1} /></button>
                 </div>
-            </div>
+                <div style={{ padding: '60px 22px', textAlign: 'center', color: V2.t3 }}>No market data</div>
+            </ScreenV2>
         );
     }
 
+    const price = market.price || 0;
+    const changeAbs = (price * (market.change24h || 0)) / 100;
+
     const stats = [
         { label: 'Vol 24h', value: `$${((market.volume24h || 0) / 1_000_000).toFixed(1)}M` },
-        {
-            label: 'Open Interest',
-            value: `$${((market.openInterest || 0) / 1_000_000).toFixed(1)}M`,
-        },
-        {
-            label: 'Funding',
-            value: `${((market.fundingRate || 0) * 100).toFixed(3)}%`,
-            color: (market.fundingRate || 0) >= 0 ? 'var(--color-positive)' : 'var(--color-negative)',
-        },
-        {
-            label: t.markets.lev,
-            value: `${market.maxLeverage || 20}×`,
-        },
+        { label: 'Open Interest', value: `$${((market.openInterest || 0) / 1_000_000).toFixed(1)}M` },
+        { label: 'Funding', value: `${((market.fundingRate || 0) * 100).toFixed(3)}%`, color: (market.fundingRate || 0) >= 0 ? V2.pos : V2.neg },
+        { label: t.markets.lev, value: `${market.maxLeverage || 20}×` },
+    ];
+
+    const TABS: { id: typeof tab; label: string }[] = [
+        { id: 'overview', label: 'Resumen' },
+        { id: 'stats', label: 'Stats' },
+        { id: 'results', label: 'Resultados' },
+        { id: 'news', label: 'Noticias' },
     ];
 
     return (
-        <div className="atmosphere-warm grain" style={{ minHeight: '100%', color: '#fff' }}>
-            <ScreenHeader
-                title={`${fullName}.`}
-                sub={ticker}
-                onBack={onBack}
-                large
-                italic
-                right={
-                    <>
-                        <button
-                            type="button"
-                            onClick={() => setIsFav((v) => !v)}
-                            aria-label="Favorite"
-                            style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: '50%',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                background: 'rgba(255,255,255,0.02)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <Star
-                                size={14}
-                                fill={isFav ? 'var(--color-brand-primary)' : 'none'}
-                                color={isFav ? 'var(--color-brand-primary)' : 'rgba(255,255,255,0.7)'}
-                            />
-                        </button>
-                        <button
-                            type="button"
-                            aria-label="Share"
-                            style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: '50%',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                background: 'rgba(255,255,255,0.02)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <Share2 size={14} color="rgba(255,255,255,0.7)" />
-                        </button>
-                    </>
-                }
-            />
+        <ScreenV2 pad={16}>
+            {/* Header */}
+            <div style={{ padding: '54px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <button onClick={onBack} style={circleBtn}><Icon name="chevronLeft" size={18} color={V2.t1} /></button>
+                <button onClick={() => setIsFav((v) => !v)} style={circleBtn} aria-label="Favorite">
+                    <Icon name="star" size={17} color={isFav ? V2.accent : V2.t2} />
+                </button>
+            </div>
 
-            {/* Hero */}
-            <div style={{ padding: '12px 6px 0', display: 'flex', alignItems: 'center', gap: 16 }}>
-                <TokenLogo symbol={market.symbol} size={56} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                        className="font-display tabular-mono"
-                        style={{
-                            fontSize: 40,
-                            lineHeight: 1,
-                            fontWeight: 500,
-                            fontVariationSettings: '"opsz" 144, "SOFT" 40, "wght" 500',
-                            letterSpacing: '-0.03em',
-                        }}
-                    >
-                        ${(market.price || 0).toLocaleString('en-US', {
-                            maximumFractionDigits: (market.price || 0) < 1 ? 4 : 2,
-                        })}
+            {/* Instrument + price */}
+            <div style={{ padding: '14px 20px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <MarketLogo sym={market.symbol} size={56} />
+                    <div>
+                        <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>{ticker}</div>
+                        <div style={{ fontSize: 15, color: V2.t3, marginTop: 3 }}>{fullName}</div>
                     </div>
-                    <div
-                        className="tabular-mono"
-                        style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            marginTop: 8,
-                            padding: '4px 8px',
-                            borderRadius: 99,
-                            background: up ? 'rgba(34,197,94,0.14)' : 'rgba(239,68,68,0.14)',
-                            color: cl,
-                            fontWeight: 700,
-                            fontSize: 12,
-                        }}
-                    >
-                        {up ? '+' : ''}
-                        {(market.change24h || 0).toFixed(2)}% · 24h
+                </div>
+                <div style={{ marginTop: 20 }}>
+                    <BigMoney value={price} size={44} decimals={price < 1 ? 4 : 2} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
+                        <span style={{ color: up ? V2.pos : V2.neg, fontWeight: 700, fontSize: 16, fontFamily: V2.mono }}>
+                            {up ? '+' : '-'}${Math.abs(changeAbs).toLocaleString('en-US', { maximumFractionDigits: price < 1 ? 4 : 2 })}
+                        </span>
+                        <PctBadge v={market.change24h || 0} />
                     </div>
                 </div>
             </div>
 
             {/* Chart */}
-            <div style={{ padding: '20px 6px 0' }}>
-                <TokenCandleChart
-                    symbol={market.symbol}
-                    isStock={market.isStock === true}
-                    height={240}
-                />
+            <div style={{ position: 'relative', marginTop: 12, padding: '0 8px' }}>
+                <TokenCandleChart symbol={market.symbol} isStock={market.isStock === true} height={200} hideTimeframes tfKey={tfKey} />
             </div>
 
-            {/* Position */}
-            {position && (
-                <div style={{ padding: '24px 6px 0' }}>
-                    <HairlineSection label={t.screens.tokenDetail.yourPosition} />
-                    <div
-                        style={{
-                            marginTop: 14,
-                            padding: 16,
-                            borderRadius: 18,
-                            background: position.side === 'long'
-                                ? 'linear-gradient(140deg, rgba(34,197,94,0.08), rgba(255,255,255,0.015) 60%)'
-                                : 'linear-gradient(140deg, rgba(239,68,68,0.08), rgba(255,255,255,0.015) 60%)',
-                            border: '1px solid rgba(255,255,255,0.06)',
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'baseline',
-                                gap: 8,
-                            }}
+            {/* Timeframes */}
+            <div style={{ display: 'flex', gap: 4, padding: '6px 14px 0', justifyContent: 'space-between' }}>
+                {TF_PILLS.map((p) => {
+                    const on = p.key === tfKey;
+                    return (
+                        <button
+                            key={p.key}
+                            onClick={() => setTfKey(p.key)}
+                            style={{ flex: 1, padding: '9px 0', borderRadius: 10, cursor: 'pointer', fontFamily: V2.ui, fontSize: 14, fontWeight: 700, background: on ? V2.accentSoft : 'transparent', color: on ? V2.accent : V2.t3, border: 'none' }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <span
-                                    style={{
-                                        fontSize: 9,
-                                        padding: '2px 6px',
-                                        borderRadius: 4,
-                                        fontWeight: 800,
-                                        letterSpacing: '0.08em',
-                                        background:
-                                            position.side === 'long'
-                                                ? 'rgba(34,197,94,0.18)'
-                                                : 'rgba(239,68,68,0.18)',
-                                        color:
-                                            position.side === 'long'
-                                                ? 'var(--color-positive)'
-                                                : 'var(--color-negative)',
-                                    }}
-                                >
-                                    {position.side === 'long' ? 'LONG' : 'SHORT'} {position.leverage}×
-                                </span>
-                                <span
-                                    className="tabular-mono"
-                                    style={{
-                                        fontSize: 11,
-                                        color: 'rgba(255,255,255,0.55)',
-                                    }}
-                                >
-                                    {position.size.toLocaleString('en-US', {
-                                        maximumFractionDigits: 4,
-                                    })}{' '}
-                                    {ticker} · {formatCurrency(position.entryPrice)}
-                                </span>
-                            </div>
-                            <div
-                                className="tabular-mono"
-                                style={{
-                                    fontSize: 18,
-                                    fontWeight: 800,
-                                    color:
-                                        position.unrealizedPnl >= 0
-                                            ? 'var(--color-positive)'
-                                            : 'var(--color-negative)',
-                                }}
-                            >
-                                {position.unrealizedPnl >= 0 ? '+' : '-'}
-                                {formatCurrency(Math.abs(position.unrealizedPnl))}
+                            {p.label}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Tabs */}
+            <div className="v2-noscroll" style={{ display: 'flex', gap: 24, padding: '18px 20px 0', borderBottom: `1px solid ${V2.hair}`, margin: '14px 0 0', overflowX: 'auto' }}>
+                {TABS.map((tb) => {
+                    const on = tb.id === tab;
+                    return (
+                        <button
+                            key={tb.id}
+                            onClick={() => setTab(tb.id)}
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: V2.ui, padding: '0 0 12px', position: 'relative', whiteSpace: 'nowrap', fontSize: 16, fontWeight: on ? 700 : 600, color: on ? V2.accent : V2.t3 }}
+                        >
+                            {tb.label}
+                            {on && <div style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 2.5, borderRadius: 99, background: V2.accent }} />}
+                        </button>
+                    );
+                })}
+            </div>
+
+            {/* Tab content */}
+            {tab === 'overview' && (
+                <>
+                    {position && (
+                        <div style={{ padding: '20px 20px 0' }}>
+                            <div className="v2-card" style={{ padding: '16px 18px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                        <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 6px', borderRadius: 5, letterSpacing: '0.04em', whiteSpace: 'nowrap', background: position.side === 'long' ? V2.posSoft : V2.negSoft, color: position.side === 'long' ? V2.pos : V2.neg }}>
+                                            {position.side === 'long' ? 'LONG' : 'SHORT'} {position.leverage}x
+                                        </span>
+                                        <span style={{ fontSize: 12.5, color: V2.t3, fontFamily: V2.mono, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {position.size.toLocaleString('en-US', { maximumFractionDigits: 4 })} {ticker} · {formatCurrency(position.entryPrice)}
+                                        </span>
+                                    </div>
+                                    <div style={{ fontSize: 18, fontWeight: 800, fontFamily: V2.mono, color: position.unrealizedPnl >= 0 ? V2.pos : V2.neg }}>
+                                        {position.unrealizedPnl >= 0 ? '+' : '-'}{formatCurrency(Math.abs(position.unrealizedPnl))}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                                    <ActionButton label={t.screens.tokenDetail.actions.add} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }} />
+                                    <ActionButton label={t.screens.tokenDetail.actions.tp} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }} />
+                                    <ActionButton label={t.screens.tokenDetail.actions.close} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }} variant="danger" />
+                                </div>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                            <ActionButton
-                                label={t.screens.tokenDetail.actions.add}
-                                onClick={() => {
-                                    setSelectedMarket(market.symbol);
-                                    onTrade?.();
-                                }}
-                            />
-                            <ActionButton
-                                label={t.screens.tokenDetail.actions.tp}
-                                onClick={() => {
-                                    setSelectedMarket(market.symbol);
-                                    onTrade?.();
-                                }}
-                            />
-                            <ActionButton
-                                label={t.screens.tokenDetail.actions.close}
-                                onClick={() => {
-                                    setSelectedMarket(market.symbol);
-                                    onTrade?.();
-                                }}
-                                variant="danger"
-                            />
+                    )}
+                    <div style={{ padding: '24px 20px 0' }}>
+                        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 10 }}>Acerca de {ticker}</div>
+                        <div style={{ fontSize: 14.5, color: V2.t2, lineHeight: 1.5 }}>
+                            {fullName} ({ticker}) opera en Rayo como mercado de futuros perpetuos liquidado en USDC. Operá al alza o a la baja con el multiplicador que elijas.
                         </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 20 }}>
+                            {stats.map((s) => (
+                                <div key={s.label}>
+                                    <div style={{ fontSize: 12.5, color: V2.t3, fontWeight: 600 }}>{s.label}</div>
+                                    <div style={{ fontSize: 15.5, fontWeight: 700, marginTop: 3, fontFamily: V2.mono, color: s.color || V2.t1 }}>{s.value}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {tab === 'stats' && (
+                <div style={{ padding: '20px 20px 0' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                        {stats.map((s) => (
+                            <div key={s.label} className="v2-card" style={{ padding: 14, borderRadius: 14 }}>
+                                <div style={{ fontSize: 11.5, color: V2.t3, fontWeight: 600, letterSpacing: '0.02em' }}>{s.label}</div>
+                                <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6, fontFamily: V2.mono, color: s.color || V2.t1 }}>{s.value}</div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
 
-            {/* Stats */}
-            <div style={{ padding: '28px 6px 0' }}>
-                <HairlineSection label={t.screens.tokenDetail.stats} />
-                <div
-                    style={{
-                        marginTop: 14,
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)',
-                        gap: 10,
-                    }}
-                >
-                    {stats.map((s) => (
-                        <div
-                            key={s.label}
-                            style={{
-                                padding: 14,
-                                borderRadius: 14,
-                                background: 'rgba(255,255,255,0.025)',
-                                border: '1px solid rgba(255,255,255,0.06)',
-                            }}
-                        >
-                            <div
-                                style={{
-                                    fontSize: 9,
-                                    color: 'rgba(255,255,255,0.5)',
-                                    letterSpacing: '0.18em',
-                                    textTransform: 'uppercase',
-                                    fontWeight: 700,
-                                    marginBottom: 6,
-                                }}
-                            >
-                                {s.label}
-                            </div>
-                            <div
-                                className="tabular-mono"
-                                style={{
-                                    fontSize: 16,
-                                    fontWeight: 700,
-                                    color: s.color || '#fff',
-                                }}
-                            >
-                                {s.value}
-                            </div>
-                        </div>
-                    ))}
+            {(tab === 'results' || tab === 'news') && (
+                <div style={{ padding: '48px 20px', textAlign: 'center', color: V2.t3, fontSize: 13 }}>
+                    Próximamente
                 </div>
-            </div>
+            )}
 
-            {/* Sticky bottom action bar */}
-            <div style={{ height: 100 }} />
-            <div
-                style={{
-                    position: 'sticky',
-                    bottom: 110,
-                    left: 0,
-                    right: 0,
-                    padding: '12px 6px',
-                    display: 'flex',
-                    gap: 10,
-                    background:
-                        'linear-gradient(180deg, transparent, rgba(10,9,7,0.85) 60%)',
-                    backdropFilter: 'blur(8px)',
-                    zIndex: 10,
-                }}
-            >
+            {/* Sticky Up / Down */}
+            <div style={{ position: 'sticky', bottom: 0, marginTop: 24, padding: '16px 18px calc(16px + env(safe-area-inset-bottom))', background: `linear-gradient(180deg, rgba(10,12,14,0) 0%, ${V2.bg} 36%)`, display: 'flex', gap: 12 }}>
                 <button
-                    type="button"
-                    onClick={() => {
-                        setSelectedMarket(market.symbol);
-                        onTrade?.();
-                    }}
-                    style={{
-                        flex: '0 0 35%',
-                        padding: '14px',
-                        borderRadius: 14,
-                        background: 'rgba(255,255,255,0.04)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: 13,
-                        cursor: 'pointer',
-                        fontFamily: 'inherit',
-                    }}
+                    onClick={() => { setSelectedMarket(market.symbol); onBuy?.(); }}
+                    style={{ flex: 1, padding: 17, borderRadius: 99, border: 'none', cursor: 'pointer', fontFamily: V2.ui, background: V2.pos, color: '#05381b', fontWeight: 800, fontSize: 16, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}
                 >
-                    {t.screens.tokenDetail.cta.sell}
+                    Subir <Icon name="arrowUpRight" size={17} color="#05381b" strokeWidth={2.8} />
                 </button>
                 <button
-                    type="button"
-                    onClick={() => {
-                        setSelectedMarket(market.symbol);
-                        onBuy?.();
-                    }}
-                    style={{
-                        flex: 1,
-                        padding: '14px',
-                        borderRadius: 14,
-                        background:
-                            'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
-                        border: 'none',
-                        color: '#1A1304',
-                        fontWeight: 800,
-                        fontSize: 14,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        boxShadow:
-                            '0 1px 0 rgba(255,255,255,0.4) inset, 0 12px 28px -8px rgba(250,204,21,0.5)',
-                        fontFamily: 'inherit',
-                    }}
+                    onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }}
+                    style={{ flex: 1, padding: 17, borderRadius: 99, border: 'none', cursor: 'pointer', fontFamily: V2.ui, background: V2.neg, color: '#fff', fontWeight: 800, fontSize: 16, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}
                 >
-                    <span>{t.screens.tokenDetail.cta.buy.replace('{symbol}', ticker)}</span>
-                    <ArrowUpRight size={16} strokeWidth={2.6} />
+                    Bajar <Icon name="arrowDownLeft" size={17} color="#fff" strokeWidth={2.8} />
                 </button>
             </div>
-        </div>
+        </ScreenV2>
     );
 }
 
-function ActionButton({
-    label,
-    onClick,
-    variant = 'default',
-}: {
-    label: string;
-    onClick: () => void;
-    variant?: 'default' | 'danger';
-}) {
+const circleBtn: React.CSSProperties = {
+    width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.06)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+};
+
+function ActionButton({ label, onClick, variant = 'default' }: { label: string; onClick: () => void; variant?: 'default' | 'danger' }) {
     return (
         <button
             type="button"
             onClick={onClick}
-            style={{
-                flex: 1,
-                padding: '10px 8px',
-                borderRadius: 10,
-                background:
-                    variant === 'danger'
-                        ? 'rgba(239,68,68,0.12)'
-                        : 'rgba(255,255,255,0.04)',
-                border: variant === 'danger'
-                    ? '1px solid rgba(239,68,68,0.25)'
-                    : '1px solid rgba(255,255,255,0.08)',
-                color: variant === 'danger' ? 'var(--color-negative)' : '#fff',
-                fontWeight: 600,
-                fontSize: 12,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-            }}
+            style={{ flex: 1, padding: '10px 8px', borderRadius: 10, background: variant === 'danger' ? V2.negSoft : 'rgba(255,255,255,0.04)', border: variant === 'danger' ? `1px solid rgba(239,68,68,0.25)` : `1px solid ${V2.hair2}`, color: variant === 'danger' ? V2.neg : V2.t1, fontWeight: 600, fontSize: 12, cursor: 'pointer', fontFamily: V2.ui }}
         >
             {label}
         </button>

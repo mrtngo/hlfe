@@ -29,7 +29,7 @@ import BolsillosScreen from '@/components/BolsillosScreen';
 import DepositModal from '@/components/DepositModal';
 import BridgeModal from '@/components/BridgeModal';
 import Trollbox from '@/components/Trollbox';
-import { BarChart3, Coins, History, User, Sliders } from 'lucide-react';
+import { Icon, V2, type IconName } from '@/components/V2Kit';
 
 export default function Home() {
     const { t } = useLanguage();
@@ -125,10 +125,19 @@ export default function Home() {
         }
     };
 
+    // V2 "serious redesign" screens render full-bleed (they own their padding
+    // and background via ScreenV2). Everything else keeps the legacy padded
+    // container + live-sync chip.
+    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings'];
+    const isV2View = V2_VIEWS.includes(view);
+    // Detail / order-entry screens carry their own sticky bottom CTA, so the
+    // floating bottom nav is hidden on them (matches the redesign).
+    const hideNav = view === 'tokenDetail' || view === 'trading';
+
     return (
-        <div className="min-h-screen flex flex-col bg-bg-primary">
-            {/* Main Content - No header, extra top padding for breathing room */}
-            <main className="flex-1 relative" style={{ paddingBottom: '120px' }}>
+        <div className="v2-app min-h-screen flex flex-col" style={{ background: '#0A0C0E' }}>
+            {/* Main Content - V2 screens are full-bleed; legacy screens are padded */}
+            <main className="flex-1 relative">
                 <PullToRefresh onRefresh={async () => {
                     await Promise.all([
                         refreshAccountData(),
@@ -136,18 +145,12 @@ export default function Home() {
                         refreshMarketData()
                     ]);
                 }}>
-                    <div className="container px-4 pt-[48px] max-w-[1920px] w-[90%] mx-auto">
-                        {/* Live Sync Indicator */}
-                        <div className="flex items-center gap-1.5 mb-2 px-2 opacity-50 text-[10px] uppercase tracking-wider font-bold text-primary-400">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
-                            </span>
-                            Live Sync • <span suppressHydrationWarning>{new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-                        </div>
-
-                        {view === 'home' ? (
-                            <div className="mt-6" style={{ paddingBottom: '100px' }}>
+                    {isV2View ? (
+                        <div
+                            className="mx-auto w-full max-w-[480px]"
+                            style={{ paddingBottom: hideNav ? 0 : 'calc(96px + env(safe-area-inset-bottom))' }}
+                        >
+                            {view === 'home' ? (
                                 <HomeScreen
                                     onTokenClick={(symbol) => {
                                         setSelectedMarket(symbol);
@@ -162,25 +165,59 @@ export default function Home() {
                                     onBuyClick={() => setView('spot')}
                                     onDeposit={() => setView('cctp')}
                                 />
-                            </div>
-                        ) : view === 'history' ? (
-                            <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
+                            ) : view === 'markets' ? (
+                                <MarketsScreen
+                                    onBack={() => setView('home')}
+                                    onTokenClick={(symbol) => {
+                                        setSelectedMarket(symbol);
+                                        setDetailSymbol(symbol);
+                                        setView('tokenDetail');
+                                    }}
+                                />
+                            ) : view === 'tokenDetail' ? (
+                                <TokenDetail
+                                    symbol={detailSymbol || selectedMarket || 'BTC'}
+                                    onBack={() => setView('markets')}
+                                    onBuy={() => setView('spot')}
+                                    onTrade={() => setView('trading')}
+                                />
+                            ) : view === 'trading' ? (
+                                <TradearScreen onBack={() => setView('advanced')} />
+                            ) : view === 'portfolio' ? (
+                                <PortfolioScreen
+                                    onBack={() => setView('profile')}
+                                    onBuyClick={() => setView('spot')}
+                                    onTokenClick={(symbol) => {
+                                        setSelectedMarket(symbol);
+                                        setDetailSymbol(symbol);
+                                        setView('tokenDetail');
+                                    }}
+                                />
+                            ) : view === 'history' ? (
                                 <OrderHistory />
-                            </div>
-                        ) : view === 'profile' ? (
-                            <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                            ) : view === 'profile' ? (
                                 <ProfileScreen
                                     onOpenSettings={() => setView('settings')}
                                     onOpenPortfolio={() => setView('portfolio')}
                                     onOpenHistory={() => setView('history')}
                                     onOpenLeaderboard={() => setView('leaderboard')}
                                 />
-                            </div>
-                        ) : view === 'settings' ? (
-                            <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
+                            ) : (
                                 <AjustesScreen onBack={() => setView('profile')} />
-                            </div>
-                        ) : view === 'leaderboard' ? (
+                            )}
+                        </div>
+                    ) : (
+                    <div className="container px-4 pt-[48px] max-w-[1920px] w-[90%] mx-auto" style={{ paddingBottom: '120px' }}>
+                        {/* Live Sync Indicator */}
+                        <div className="flex items-center gap-1.5 mb-2 px-2 opacity-50 text-[10px] uppercase tracking-wider font-bold text-primary-400">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+                            </span>
+                            Live Sync • <span suppressHydrationWarning>{new Date(lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                        </div>
+
+                        {view === 'leaderboard' ? (
                             <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <Leaderboard />
                             </div>
@@ -235,7 +272,7 @@ export default function Home() {
                             <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <PredictionsHub />
                             </div>
-                        ) : view === 'advanced' ? (
+                        ) : (
                             <div className="mt-6" style={{ paddingBottom: '100px' }}>
                                 <AdvancedMenu
                                     onSelectPerps={() => setView('trading')}
@@ -247,188 +284,79 @@ export default function Home() {
                                     onSelectCctp={() => setView('cctp')}
                                 />
                             </div>
-                        ) : view === 'markets' ? (
-                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
-                                <MarketsScreen
-                                    onBack={() => setView('home')}
-                                    onTokenClick={(symbol) => {
-                                        setSelectedMarket(symbol);
-                                        setDetailSymbol(symbol);
-                                        setView('tokenDetail');
-                                    }}
-                                />
-                            </div>
-                        ) : view === 'tokenDetail' ? (
-                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
-                                <TokenDetail
-                                    symbol={detailSymbol || selectedMarket || 'BTC'}
-                                    onBack={() => setView('markets')}
-                                    onBuy={() => setView('spot')}
-                                    onTrade={() => setView('trading')}
-                                />
-                            </div>
-                        ) : view === 'portfolio' ? (
-                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
-                                <PortfolioScreen
-                                    onBack={() => setView('profile')}
-                                    onBuyClick={() => setView('spot')}
-                                    onTokenClick={(symbol) => {
-                                        setSelectedMarket(symbol);
-                                        setDetailSymbol(symbol);
-                                        setView('tokenDetail');
-                                    }}
-                                />
-                            </div>
-                        ) : (
-                            <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
-                                <TradearScreen onBack={() => setView('advanced')} />
-                            </div>
                         )}
                     </div>
+                    )}
                 </PullToRefresh>
             </main>
 
 
-            {/* Footer Navigation - Rayo Style */}
-            <nav
-                style={{
-                    position: 'fixed',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    zIndex: 9999,
-                    backgroundColor: '#000000',
-                    height: 'calc(75px + env(safe-area-inset-bottom))', // Include safe area in height
-                    paddingBottom: 'env(safe-area-inset-bottom)', // Push content up
-                    borderTop: '1px solid rgba(255, 255, 0, 0.2)', // Move border here for consistency
-                    boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.5)', // Add shadow to hide potential background bleed
-                }}
-            >
-                {/* Background filler for bounce/overscroll */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        height: '1000px', // Excessive height to cover any bounce
-                        backgroundColor: '#000000'
-                    }}
-                />
-
-                <div className="flex items-center justify-between h-[75px] w-[90%] max-w-2xl mx-auto relative z-10">
-                    {/* Home */}
-                    <button
-                        onClick={() => setView('home')}
-                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'home' ? 'scale-110' : ''}`}
+            {/* Footer Navigation — V2 floating glassy pill with bolt indicator */}
+            {!hideNav && (() => {
+                const tabs: { id: string; label: string; icon: IconName; on: boolean; onClick: () => void; domId?: string }[] = [
+                    { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home', onClick: () => setView('home') },
+                    { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },
+                    { id: 'spot', label: t.nav.spot, icon: 'coins', on: view === 'spotReal' || view === 'spot' || view === 'spotManage', onClick: () => setView('spotReal'), domId: 'nav-spot-tab' },
+                    { id: 'history', label: t.nav.history, icon: 'history', on: view === 'history', onClick: () => setView('history') },
+                    { id: 'advanced', label: t.nav.advanced, icon: 'sliders', on: view === 'advanced' || view === 'predictions' || view === 'leaderboard' || view === 'cctp' || view === 'bolsillos', onClick: () => setView('advanced'), domId: 'nav-advanced-tab' },
+                    { id: 'account', label: t.nav.profile, icon: 'user', on: view === 'profile' || view === 'settings' || view === 'portfolio', onClick: handleProfileClick, domId: 'nav-profile-tab' },
+                ];
+                return (
+                    <nav
                         style={{
-                            color: '#FFFF00',
-                            background: 'transparent',
-                            filter: view === 'home' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: view === 'home' ? 1 : 0.6
+                            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+                            padding: '20px 12px calc(14px + env(safe-area-inset-bottom))',
+                            background: 'linear-gradient(180deg, rgba(10,12,14,0) 0%, rgba(10,12,14,0) 45%, rgba(10,12,14,0.65) 100%)',
+                            pointerEvents: 'none',
                         }}
                     >
-                        <img
-                            src="/logo.svg"
-                            alt="Home"
-                            className="w-7 h-7"
-                            style={{ objectFit: 'contain' }}
-                        />
-                        <span className="text-[11px] font-semibold">{t.nav.home}</span>
-                    </button>
-
-                    {/* Markets */}
-                    <button
-                        onClick={() => setView('markets')}
-                        id="nav-markets-tab"
-                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'markets' || view === 'tokenDetail' ? 'scale-110' : ''}`}
-                        style={{
-                            color: '#FFFF00',
-                            background: 'transparent',
-                            filter: (view === 'markets' || view === 'tokenDetail') ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: (view === 'markets' || view === 'tokenDetail') ? 1 : 0.6
-                        }}
-                    >
-                        <BarChart3 className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">{t.nav.markets}</span>
-                    </button>
-
-                    {/* Spot — real token ownership (HYPE, PURR, etc.) */}
-                    <button
-                        onClick={() => setView('spotReal')}
-                        id="nav-spot-tab"
-                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'spotReal' ? 'scale-110' : ''}`}
-                        style={{
-                            color: '#FFFF00',
-                            background: 'transparent',
-                            filter: view === 'spotReal' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: view === 'spotReal' ? 1 : 0.6,
-                        }}
-                    >
-                        <Coins className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">{t.nav.spot}</span>
-                    </button>
-
-                    {/* History */}
-                    <button
-                        onClick={() => setView('history')}
-                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'history' ? 'scale-110' : ''}`}
-                        style={{
-                            color: '#FFFF00',
-                            background: 'transparent',
-                            filter: view === 'history' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: view === 'history' ? 1 : 0.6
-                        }}
-                    >
-                        <History className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">{t.nav.history}</span>
-                    </button>
-
-                    {/* Advanced (Perps + Predictions + Leaderboard) */}
-                    <button
-                        onClick={() => setView('advanced')}
-                        id="nav-advanced-tab"
-                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'advanced' || view === 'trading' || view === 'predictions' || view === 'leaderboard' ? 'scale-110' : ''}`}
-                        style={{
-                            color: '#FFFF00',
-                            background: 'transparent',
-                            filter: (view === 'advanced' || view === 'trading' || view === 'predictions' || view === 'leaderboard') ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: (view === 'advanced' || view === 'trading' || view === 'predictions' || view === 'leaderboard') ? 1 : 0.6
-                        }}
-                    >
-                        <Sliders className="w-7 h-7" strokeWidth={2} />
-                        <span className="text-[11px] font-semibold">{t.nav.advanced}</span>
-                    </button>
-
-                    {/* Profile/Account */}
-                    <button
-                        onClick={handleProfileClick}
-                        disabled={!ready}
-                        id="nav-profile-tab"
-                        className={`flex flex-col items-center gap-1 px-2 py-3 transition-all border-none outline-none ${view === 'profile' ? 'scale-110' : ''}`}
-                        style={{
-                            color: '#FFFF00',
-                            background: 'transparent',
-                            filter: view === 'profile' ? 'drop-shadow(0 0 8px rgba(255, 255, 0, 0.6))' : 'none',
-                            opacity: view === 'profile' ? 1 : 0.6
-                        }}
-                    >
-                        {!ready ? (
-                            <>
-                                <div className="w-7 h-7 flex items-center justify-center">
-                                    <div className="spinner w-5 h-5 border-2" style={{ borderTopColor: '#FFFF00' }} />
-                                </div>
-                                <span className="text-[11px] font-semibold">...</span>
-                            </>
-                        ) : (
-                            <>
-                                <User className="w-7 h-7" strokeWidth={2} />
-                                <span className="text-[11px] font-semibold">{t.nav.profile}</span>
-                            </>
-                        )}
-                    </button>
-                </div>
-            </nav>
+                        <div
+                            className="mx-auto"
+                            style={{
+                                maxWidth: 456, pointerEvents: 'auto',
+                                background: 'rgba(24,27,31,0.72)',
+                                backdropFilter: 'blur(28px) saturate(170%)', WebkitBackdropFilter: 'blur(28px) saturate(170%)',
+                                border: `1px solid ${V2.hair2}`, borderRadius: 26,
+                                boxShadow: '0 18px 44px -10px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+                                display: 'flex', alignItems: 'center', padding: '10px 6px',
+                            }}
+                        >
+                            {tabs.map((tab) => {
+                                const accountLoading = tab.id === 'account' && !ready;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        id={tab.domId}
+                                        onClick={tab.onClick}
+                                        disabled={accountLoading}
+                                        style={{
+                                            flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                                            cursor: 'pointer', position: 'relative', minWidth: 0,
+                                            border: 'none', background: 'transparent', outline: 'none', padding: 0,
+                                        }}
+                                    >
+                                        <div style={{ position: 'relative', width: 38, height: 30, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {tab.on && (
+                                                <svg width="10" height="13" viewBox="0 0 24 24" aria-hidden style={{ position: 'absolute', top: -9, filter: 'drop-shadow(0 0 5px rgba(250,204,21,0.9))' }}>
+                                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={V2.accent} />
+                                                </svg>
+                                            )}
+                                            {accountLoading ? (
+                                                <div className="spinner w-5 h-5 border-2" style={{ borderTopColor: V2.accent }} />
+                                            ) : (
+                                                <Icon name={tab.icon} size={19} color={tab.on ? V2.accent : V2.t3} strokeWidth={tab.on ? 2.4 : 1.9} />
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: 9, fontWeight: tab.on ? 800 : 600, color: tab.on ? V2.accent : V2.t3, whiteSpace: 'nowrap' }}>
+                                            {accountLoading ? '...' : tab.label}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </nav>
+                );
+            })()}
 
             {/* Trollbox Component */}
             <Trollbox isOpen={isTrollboxOpen} onClose={() => setIsTrollboxOpen(false)} />

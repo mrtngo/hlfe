@@ -1,29 +1,27 @@
 'use client';
 
 import { useEffect, useMemo, useState, memo } from 'react';
-import {
-    ArrowUpRight,
-    ArrowDownLeft,
-    Bell,
-    ChevronDown,
-    Plus,
-    Repeat,
-    X,
-} from 'lucide-react';
 import { useHyperliquid, type Market } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
-import TokenLogo from '@/components/TokenLogo';
 import MiniChart from '@/components/MiniChart';
-import PortfolioSparkline from '@/components/PortfolioSparkline';
 import MarketSelectModal from '@/components/MarketSelectModal';
 import DepositModal from '@/components/DepositModal';
+import WithdrawModal from '@/components/WithdrawModal';
 import ProToggle from '@/components/ProToggle';
-
-const MONTHS_ES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+import {
+    ScreenV2,
+    BigMoney,
+    PctBadge,
+    SectionHead,
+    IconBtn,
+    MarketLogo,
+    Icon,
+    V2,
+} from '@/components/V2Kit';
 
 interface HomeNormalProps {
     onTokenClick?: (symbol: string) => void;
@@ -37,13 +35,11 @@ interface HomeNormalProps {
 }
 
 function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode }: HomeNormalProps) {
-    const { t, language } = useLanguage();
+    const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, markets, thirtyDayPnl, setSelectedMarket, spotBalances, spotPrices } = useHyperliquid();
 
-    // Spot holdings to render (excluding USDC, which is counted as cash).
-    // Anything with a known spot price OR a perp price gets a value; rows
-    // without any price get hidden — beats showing "$NaN" or $0.
+    // Spot holdings to render (excluding stablecoins, counted as cash).
     const spotHoldings = useMemo(() => {
         return (spotBalances || [])
             .filter((b) => b.coin !== 'USDC' && b.coin !== 'USDT')
@@ -54,21 +50,19 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                 const perpPx = markets.find((m) => m.name === b.coin)?.price || 0;
                 const price = spotPx || perpPx;
                 if (price <= 0) return null;
-                return {
-                    coin: b.coin,
-                    amount,
-                    price,
-                    valueUsd: amount * price,
-                };
+                return { coin: b.coin, amount, price, valueUsd: amount * price };
             })
             .filter((x): x is NonNullable<typeof x> => x !== null)
             .sort((a, b) => b.valueUsd - a.valueUsd);
     }, [spotBalances, spotPrices, markets]);
+
     const { user: privyUser } = usePrivy();
     const { user } = useUser();
     const [now, setNow] = useState<Date | null>(null);
-    const [showAddDropdown, setShowAddDropdown] = useState(false);
+    const [picker, setPicker] = useState<null | 'search' | 'watch'>(null);
     const [showDepositModal, setShowDepositModal] = useState(false);
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [moverCat, setMoverCat] = useState<'crypto' | 'stocks'>('crypto');
 
     useEffect(() => {
         setNow(new Date());
@@ -94,1141 +88,331 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
 
     const watchlistToShow = (watchlist || []).length > 0 ? watchlist : DEFAULT_WATCHLIST;
     const watchlistMarkets = useMemo(
-        () =>
-            (markets || []).filter(
-                (m) => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol),
-            ),
+        () => (markets || []).filter((m) => watchlistToShow.includes(m.name) || watchlistToShow.includes(m.symbol)),
         [markets, watchlistToShow],
     );
 
     const portfolioValue = account.equity || account.balance || 0;
-    const intPart = Math.floor(Math.abs(portfolioValue));
-    const decPart = Math.abs(portfolioValue)
-        .toFixed(2)
-        .split('.')[1];
-    const sign = portfolioValue < 0 ? '-' : '';
 
     const thirtyDayPct = useMemo(
         () => (account.equity > 0 ? (thirtyDayPnl / account.equity) * 100 : 0),
         [account.equity, thirtyDayPnl],
     );
 
-    // 24h change derived from positions' markPrice vs entry (approx) — fall back to 0.
-    const change24h = account.unrealizedPnl || 0;
-    const change24hPct = useMemo(
-        () => (account.equity > 0 ? (change24h / account.equity) * 100 : 0),
-        [change24h, account.equity],
+    // Movers, derived from live markets (no commodity feed → crypto / stocks).
+    const moverPool = useMemo(
+        () => (markets || []).filter((m) => (moverCat === 'stocks' ? m.isStock : !m.isStock)),
+        [markets, moverCat],
     );
+    const gainers = useMemo(() => [...moverPool].sort((a, b) => (b.change24h || 0) - (a.change24h || 0)).slice(0, 3), [moverPool]);
+    const losers = useMemo(() => [...moverPool].sort((a, b) => (a.change24h || 0) - (b.change24h || 0)).slice(0, 3), [moverPool]);
 
     const greet = useMemo(() => {
-        if (!now) return { word: t.homeRedesign.greet.afternoon, emoji: '🌤' };
+        if (!now) return t.homeRedesign.greet.afternoon;
         const h = now.getHours();
-        if (h < 6) return { word: t.homeRedesign.greet.evening, emoji: '🌙' };
-        if (h < 12) return { word: t.homeRedesign.greet.morning, emoji: '☕' };
-        if (h < 19) return { word: t.homeRedesign.greet.afternoon, emoji: '🌤' };
-        return { word: t.homeRedesign.greet.evening, emoji: '🌙' };
+        if (h < 6) return t.homeRedesign.greet.evening;
+        if (h < 12) return t.homeRedesign.greet.morning;
+        if (h < 19) return t.homeRedesign.greet.afternoon;
+        return t.homeRedesign.greet.evening;
     }, [now, t]);
-
-    const dateLabel = useMemo(() => {
-        if (!now) return '';
-        const months = language === 'es'
-            ? MONTHS_ES
-            : ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-        return `${now.getDate()} ${months[now.getMonth()]}`;
-    }, [now, language]);
-
-    const timeLabel = useMemo(() => {
-        if (!now) return '';
-        return now.toLocaleTimeString(language === 'es' ? 'es-AR' : 'en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    }, [now, language]);
-
-    const cityLabel = user?.display_name && user.display_name.toLowerCase().includes('city')
-        ? user.display_name
-        : 'Bogotá';
 
     const firstName = useMemo(() => {
         if (user?.username) return user.username;
         if (user?.display_name) return user.display_name.split(' ')[0];
         const email = privyUser?.email?.address;
         if (email) return email.split('@')[0];
-        const googleName = (privyUser as any)?.google?.name;
+        const googleName = (privyUser as { google?: { name?: string } })?.google?.name;
         if (googleName) return googleName.split(' ')[0];
         return '';
     }, [user, privyUser]);
 
-    const pullQuote = useMemo(() => {
-        const pct = thirtyDayPct;
-        const fmt = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
-        let key: keyof typeof t.homeRedesign.quote = 'steady';
-        if (portfolioValue < 50) key = 'small';
-        else if (positions.length === 0) key = 'empty';
-        else if (pct > 10) key = 'great';
-        else if (pct < -5) key = 'down';
-        const template = t.homeRedesign.quote[key];
-        const positive = pct >= 0;
-        return { template, fmt, positive, key };
-    }, [thirtyDayPct, positions.length, portfolioValue, t]);
+    const avatarInitial = (firstName || 'R').charAt(0).toUpperCase();
 
     const addToWatchlist = (symbol: string) => {
         if (!watchlist.includes(symbol)) setWatchlist([...watchlist, symbol]);
-        setShowAddDropdown(false);
+        setPicker(null);
     };
-
-    const removeFromWatchlist = (symbol: string) =>
-        setWatchlist((prev) => prev.filter((s) => s !== symbol));
+    const removeFromWatchlist = (symbol: string) => setWatchlist((prev) => prev.filter((s) => s !== symbol));
 
     const handleTokenClick = (symbol: string) => {
         setSelectedMarket(symbol);
         onTokenClick?.(symbol);
     };
 
+    const withdrawLabel = t.withdraw?.withdraw || 'Retirar';
+
     return (
-        <div
-            className="atmosphere-warm grain"
-            style={{
-                minHeight: '100%',
-                position: 'relative',
-                color: '#fff',
-            }}
-        >
+        <ScreenV2 pad={0}>
             {/* Header */}
-            <div style={{ padding: '8px 6px 0', position: 'relative' }}>
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        gap: 12,
-                    }}
-                >
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                            style={{
-                                fontSize: 11,
-                                color: 'rgba(255,255,255,0.5)',
-                                fontWeight: 500,
-                                marginBottom: 4,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                            }}
-                        >
-                            <span style={{ fontSize: 13 }}>{greet.emoji}</span>
-                            <span>{greet.word}{firstName ? ',' : ''}</span>
-                        </div>
-                        <div
-                            className="font-display"
-                            style={{
-                                fontSize: 30,
-                                lineHeight: 1,
-                                fontVariationSettings: '"opsz" 144, "SOFT" 50, "wght" 500',
-                                letterSpacing: '-0.025em',
-                                color: '#fff',
-                            }}
-                        >
-                            {firstName || 'Hola'}
-                            <span
-                                style={{
-                                    fontStyle: 'italic',
-                                    color: 'var(--color-brand-primary)',
-                                    fontVariationSettings: '"opsz" 144, "SOFT" 100, "wght" 400',
-                                    marginLeft: 1,
-                                }}
-                            >
-                                .
-                            </span>
-                        </div>
-                        {now && (
-                            <div
-                                style={{
-                                    fontSize: 10,
-                                    color: 'rgba(255,255,255,0.4)',
-                                    marginTop: 7,
-                                    letterSpacing: '0.18em',
-                                    textTransform: 'uppercase',
-                                    fontWeight: 700,
-                                }}
-                                suppressHydrationWarning
-                            >
-                                {dateLabel} · {timeLabel} · {cityLabel}
+            <div style={{ padding: '54px 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: V2.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: V2.accentInk, fontSize: 18 }}>
+                        {avatarInitial}
+                    </div>
+                    <div>
+                        <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, textTransform: 'capitalize' }}>{greet}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>{firstName || 'Rayo'}</div>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <ProToggle pro={false} onClick={onToggleProMode} />
+                    <IconBtn name="search" onClick={() => setPicker('search')} />
+                    <IconBtn name="bell" />
+                </div>
+            </div>
+
+            {/* Portfolio (no chart) */}
+            <div style={{ padding: '24px 20px 0', position: 'relative' }}>
+                <svg width="116" height="150" viewBox="0 0 24 24" aria-hidden style={{ position: 'absolute', top: 4, right: 6, opacity: 0.05, pointerEvents: 'none' }}>
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={V2.accent} />
+                </svg>
+                <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, letterSpacing: '0.01em' }}>{t.homeRedesign.totalValue}</div>
+                <div style={{ marginTop: 8 }}><BigMoney value={portfolioValue} size={52} /></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
+                    <span style={{ color: thirtyDayPnl >= 0 ? V2.pos : V2.neg, fontWeight: 700, fontSize: 16, fontFamily: V2.mono }}>
+                        {thirtyDayPnl >= 0 ? '+' : '-'}${Math.abs(thirtyDayPnl).toFixed(2)}
+                    </span>
+                    <PctBadge v={thirtyDayPct} />
+                    <span style={{ color: V2.t3, fontSize: 14, fontWeight: 600 }}>30d</span>
+                </div>
+
+                {/* mini stat row */}
+                <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+                    {[
+                        { l: t.homeRedesign.available, v: account.availableMargin },
+                        { l: t.homeRedesign.inPosition, v: account.usedMargin },
+                        { l: t.homeRedesign.equity, v: account.equity },
+                    ].map((s) => (
+                        <div key={s.l} className="v2-card" style={{ flex: 1, padding: '12px 14px', borderRadius: 14 }}>
+                            <div style={{ fontSize: 11.5, color: V2.t3, fontWeight: 600 }}>{s.l}</div>
+                            <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, fontFamily: V2.mono, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                                {formatCurrency(s.v || 0, 0)}
                             </div>
-                        )}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-                        <ProToggle pro={false} onClick={onToggleProMode} />
-                        <button
-                            type="button"
-                            aria-label="Notifications"
-                            style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: '50%',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                background: 'rgba(255,255,255,0.02)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                position: 'relative',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            <Bell size={15} color="rgba(255,255,255,0.7)" />
-                            <span
-                                style={{
-                                    position: 'absolute',
-                                    top: 7,
-                                    right: 8,
-                                    width: 6,
-                                    height: 6,
-                                    borderRadius: '50%',
-                                    background: 'var(--color-brand-primary)',
-                                    boxShadow: '0 0 6px var(--color-brand-primary)',
-                                }}
-                            />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Portfolio card */}
-            <div style={{ padding: '20px 6px 0' }}>
-                <div
-                    style={{
-                        position: 'relative',
-                        borderRadius: 28,
-                        overflow: 'hidden',
-                        background: 'linear-gradient(165deg, #16120D 0%, #0B0907 100%)',
-                        border: '1px solid rgba(255,255,255,0.07)',
-                        boxShadow:
-                            '0 24px 60px -20px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05)',
-                        padding: '20px 22px 0',
-                    }}
-                >
-                    <div
-                        aria-hidden
-                        style={{
-                            position: 'absolute',
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            height: 150,
-                            opacity: 0.55,
-                            pointerEvents: 'none',
-                        }}
-                    >
-                        <PortfolioSparkline color="#FACC15" height={150} />
-                    </div>
-                    <div
-                        aria-hidden
-                        style={{
-                            position: 'absolute',
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            height: 60,
-                            pointerEvents: 'none',
-                            background: 'linear-gradient(180deg, transparent, rgba(11,9,7,0.6))',
-                        }}
-                    />
-
-                    <div
-                        style={{
-                            position: 'relative',
-                            zIndex: 2,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <div
-                            style={{
-                                fontSize: 10,
-                                letterSpacing: '0.22em',
-                                textTransform: 'uppercase',
-                                color: 'rgba(255,255,255,0.5)',
-                                fontWeight: 700,
-                            }}
-                        >
-                            {t.homeRedesign.totalValue} · USD
                         </div>
-                        <button
-                            type="button"
-                            style={{
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                background: 'rgba(255,255,255,0.02)',
-                                borderRadius: 99,
-                                padding: '4px 10px',
-                                fontSize: 10,
-                                color: 'rgba(255,255,255,0.7)',
-                                fontWeight: 700,
-                                letterSpacing: '0.02em',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 4,
-                                fontFamily: 'inherit',
-                                cursor: 'pointer',
-                            }}
-                        >
-                            30 {language === 'es' ? 'días' : 'days'}
-                            <ChevronDown size={11} />
-                        </button>
-                    </div>
-
-                    <div
-                        style={{
-                            position: 'relative',
-                            zIndex: 2,
-                            marginTop: 12,
-                            marginBottom: 14,
-                        }}
-                    >
-                        <div
-                            className="font-display tabular-mono"
-                            style={{
-                                fontSize: 60,
-                                lineHeight: 0.95,
-                                fontWeight: 500,
-                                fontVariationSettings: '"opsz" 144, "SOFT" 40, "wght" 500',
-                                letterSpacing: '-0.04em',
-                                color: '#fff',
-                            }}
-                        >
-                            {sign}
-                            <span
-                                style={{
-                                    fontSize: 26,
-                                    verticalAlign: 'top',
-                                    marginRight: 2,
-                                    opacity: 0.4,
-                                }}
-                            >
-                                $
-                            </span>
-                            {intPart.toLocaleString('en-US')}
-                            <span style={{ fontSize: 26, color: 'rgba(255,255,255,0.4)' }}>
-                                .{decPart}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div
-                        style={{
-                            position: 'relative',
-                            zIndex: 2,
-                            display: 'flex',
-                            gap: 18,
-                            marginBottom: 14,
-                        }}
-                    >
-                        <DeltaCell label={t.homeRedesign.today} pct={change24hPct} abs={change24h} />
-                        <div style={{ width: 1, background: 'rgba(255,255,255,0.08)' }} />
-                        <DeltaCell
-                            label={t.homeRedesign.thirtyDays}
-                            pct={thirtyDayPct}
-                            abs={thirtyDayPnl}
-                        />
-                    </div>
-
-                    <div
-                        style={{
-                            position: 'relative',
-                            zIndex: 2,
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(3, 1fr)',
-                            gap: 8,
-                            paddingTop: 14,
-                            paddingBottom: 18,
-                            marginTop: 62,
-                            borderTop: '1px solid rgba(255,255,255,0.08)',
-                        }}
-                    >
-                        <MetricCell
-                            label={t.homeRedesign.available}
-                            value={account.availableMargin}
-                            formatCurrency={formatCurrency}
-                        />
-                        <MetricCell
-                            label={t.homeRedesign.inPosition}
-                            value={account.usedMargin}
-                            formatCurrency={formatCurrency}
-                        />
-                        <MetricCell
-                            label={t.homeRedesign.equity}
-                            value={account.equity}
-                            formatCurrency={formatCurrency}
-                        />
-                    </div>
+                    ))}
                 </div>
-            </div>
 
-            {/* Deposit CTA — straight to the multichain (CCTP) deposit screen */}
-            {onDeposit && (
-                <div style={{ padding: '16px 6px 0' }}>
+                {/* actions */}
+                <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
                     <button
-                        type="button"
-                        onClick={onDeposit}
-                        style={{
-                            width: '100%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 12,
-                            padding: '14px 16px',
-                            borderRadius: 16,
-                            background: 'rgba(250,204,21,0.08)',
-                            border: '1px solid rgba(250,204,21,0.25)',
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                        }}
+                        onClick={() => (onDeposit ? onDeposit() : setShowDepositModal(true))}
+                        style={{ flex: 1, padding: 14, borderRadius: 14, border: 'none', background: V2.accent, color: V2.accentInk, fontWeight: 800, fontSize: 15, cursor: 'pointer', fontFamily: V2.ui }}
                     >
-                        <span
-                            style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: 12,
-                                background: 'rgba(250,204,21,0.15)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                            }}
-                        >
-                            <ArrowDownLeft size={18} strokeWidth={2.4} color="var(--color-brand-primary)" />
-                        </span>
-                        <span style={{ flex: 1, textAlign: 'left' }}>
-                            <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: '#fff' }}>
-                                {t.common.deposit}
-                            </span>
-                            <span style={{ display: 'block', fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                                USDC desde cualquier red
-                            </span>
-                        </span>
-                        <ArrowUpRight size={16} color="var(--color-text-tertiary)" />
+                        {t.common.deposit}
+                    </button>
+                    <button
+                        onClick={() => setShowWithdrawModal(true)}
+                        style={{ flex: 1, padding: 14, borderRadius: 14, border: `1px solid ${V2.hair2}`, background: 'transparent', color: V2.t1, fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: V2.ui }}
+                    >
+                        {withdrawLabel}
                     </button>
                 </div>
+            </div>
+
+            {/* Open positions */}
+            {positions.length > 0 && (
+                <>
+                    <SectionHead
+                        title={t.homeRedesign.section.tenencias}
+                        right={<span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{t.homeRedesign.holdings.active.replace('{count}', positions.length.toString())}</span>}
+                    />
+                    <div style={{ padding: '0 20px' }}>
+                        <div className="v2-card" style={{ overflow: 'hidden' }}>
+                            {positions.map((pos, i) => {
+                                const isLong = pos.side === 'long';
+                                const value = pos.size * pos.markPrice;
+                                return (
+                                    <div
+                                        key={pos.symbol}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => handleTokenClick(pos.symbol)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleTokenClick(pos.symbol)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '14px 16px', cursor: 'pointer', borderBottom: i < positions.length - 1 ? `1px solid ${V2.hair}` : 'none' }}
+                                    >
+                                        <MarketLogo sym={pos.symbol} size={40} />
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                                                <span style={{ fontSize: 16, fontWeight: 700 }}>{pos.symbol}</span>
+                                                <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 6px', borderRadius: 5, letterSpacing: '0.04em', whiteSpace: 'nowrap', background: isLong ? V2.posSoft : V2.negSoft, color: isLong ? V2.pos : V2.neg }}>
+                                                    {isLong ? 'LONG' : 'SHORT'} {pos.leverage}x
+                                                </span>
+                                            </div>
+                                            <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 2, fontFamily: V2.mono }}>
+                                                {pos.size.toLocaleString('en-US', { maximumFractionDigits: 4 })} {pos.name || pos.symbol}
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontSize: 16, fontWeight: 700, fontFamily: V2.mono, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                                                {formatCurrency(value, 0)}
+                                            </div>
+                                            <div style={{ marginTop: 4, display: 'flex', justifyContent: 'flex-end' }}>
+                                                <PctBadge v={pos.unrealizedPnlPercent} size="sm" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </>
             )}
 
-            {/* Pull quote */}
-            <div style={{ padding: '22px 6px 0' }}>
-                <div
-                    className="font-display"
-                    style={{
-                        padding: '14px 14px 14px 20px',
-                        borderLeft: '2px solid var(--color-brand-primary)',
-                        fontSize: 15,
-                        lineHeight: 1.4,
-                        color: '#E5E5E5',
-                        fontStyle: 'italic',
-                        fontVariationSettings: '"opsz" 36, "SOFT" 80, "wght" 400',
-                    }}
-                >
-                    {renderQuote(pullQuote.template, pullQuote.fmt, pullQuote.positive)}
-                </div>
-            </div>
-
-            {/* CTA row */}
-            <div style={{ padding: '28px 6px 0' }}>
-                <SectionRule label={t.homeRedesign.section.comprar} />
-                <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-                    <button
-                        type="button"
-                        onClick={onBuyClick}
-                        style={{
-                            flex: '1 1 62%',
-                            padding: '20px 18px 18px',
-                            background:
-                                'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
-                            border: 'none',
-                            borderRadius: 22,
-                            textAlign: 'left',
-                            boxShadow:
-                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 22px 50px -16px rgba(250,204,21,0.45)',
-                            color: '#1A1304',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        <div
-                            style={{
-                                fontSize: 9.5,
-                                letterSpacing: '0.26em',
-                                textTransform: 'uppercase',
-                                fontWeight: 800,
-                                marginBottom: 8,
-                                color: 'rgba(26,19,4,0.6)',
-                            }}
-                        >
-                            {t.homeRedesign.cta.comprar.eyebrow}
-                        </div>
-                        <div
-                            className="font-display"
-                            style={{
-                                fontSize: 52,
-                                lineHeight: 0.88,
-                                fontWeight: 500,
-                                fontStyle: 'italic',
-                                fontVariationSettings: '"opsz" 144, "SOFT" 100, "wght" 500',
-                                letterSpacing: '-0.04em',
-                                marginBottom: 10,
-                            }}
-                        >
-                            {t.homeRedesign.cta.comprar.word}
-                        </div>
-                        <div
-                            style={{
-                                fontSize: 11.5,
-                                color: 'rgba(26,19,4,0.7)',
-                                lineHeight: 1.35,
-                                marginBottom: 12,
-                            }}
-                        >
-                            {t.homeRedesign.cta.comprar.desc}{' '}
-                            <strong>{t.homeRedesign.cta.comprar.descHighlight}</strong>
-                        </div>
-                        <div
-                            style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: '50%',
-                                background: '#1A1304',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 4px 10px rgba(0,0,0,0.25)',
-                            }}
-                        >
-                            <ArrowUpRight
-                                size={16}
-                                color="var(--color-brand-primary)"
-                                strokeWidth={2.6}
-                            />
-                        </div>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onBuyClick}
-                        style={{
-                            flex: '1 1 38%',
-                            padding: '20px 16px 18px',
-                            background:
-                                'linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015))',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            borderRadius: 22,
-                            textAlign: 'left',
-                            color: '#fff',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            cursor: 'pointer',
-                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: 12,
-                                background: 'rgba(250,204,21,0.13)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: 14,
-                            }}
-                        >
-                            <Repeat size={17} color="var(--color-brand-primary)" strokeWidth={2.2} />
-                        </div>
-                        <div
-                            className="font-display"
-                            style={{
-                                fontSize: 26,
-                                lineHeight: 1,
-                                fontWeight: 500,
-                                fontStyle: 'italic',
-                                fontVariationSettings: '"opsz" 144, "SOFT" 100, "wght" 500',
-                                letterSpacing: '-0.03em',
-                                marginBottom: 6,
-                            }}
-                        >
-                            {t.homeRedesign.cta.programar.word}
-                        </div>
-                        <div
-                            style={{
-                                fontSize: 11,
-                                color: 'rgba(255,255,255,0.55)',
-                                lineHeight: 1.35,
-                            }}
-                        >
-                            {t.homeRedesign.cta.programar.desc}
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            {/* Tenencias */}
-            {positions.length > 0 && (
-                <div style={{ padding: '36px 6px 0' }}>
-                    <SectionRule
-                        label={t.homeRedesign.section.tenencias}
-                        right={
-                            <span
-                                className="tabular-mono"
-                                style={{
-                                    fontSize: 10,
-                                    color: 'var(--color-text-tertiary)',
-                                    letterSpacing: '0.05em',
-                                }}
-                            >
-                                {t.homeRedesign.holdings.active.replace(
-                                    '{count}',
-                                    positions.length.toString(),
-                                )}
-                            </span>
-                        }
-                    />
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 10,
-                            marginTop: 16,
-                        }}
-                    >
-                        {positions.map((pos) => {
-                            const up = pos.unrealizedPnl >= 0;
-                            const cl = up ? 'var(--color-positive)' : 'var(--color-negative)';
-                            const isLong = pos.side === 'long';
-                            return (
+            {/* Spot holdings */}
+            {spotHoldings.length > 0 && (
+                <>
+                    <SectionHead title={t.spot.homeSectionTitle} right={<span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{spotHoldings.length}</span>} />
+                    <div style={{ padding: '0 20px' }}>
+                        <div className="v2-card" style={{ overflow: 'hidden' }}>
+                            {spotHoldings.map((h, i) => (
                                 <div
-                                    key={pos.symbol}
+                                    key={h.coin}
                                     role="button"
                                     tabIndex={0}
-                                    onClick={() => handleTokenClick(pos.symbol)}
-                                    onKeyDown={(e) =>
-                                        e.key === 'Enter' && handleTokenClick(pos.symbol)
-                                    }
-                                    style={{
-                                        padding: 14,
-                                        borderRadius: 18,
-                                        position: 'relative',
-                                        overflow: 'hidden',
-                                        background: `linear-gradient(140deg, ${
-                                            isLong
-                                                ? 'rgba(34,197,94,0.07)'
-                                                : 'rgba(239,68,68,0.06)'
-                                        } 0%, rgba(255,255,255,0.015) 60%)`,
-                                        border: '1px solid rgba(255,255,255,0.06)',
-                                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 12,
-                                        cursor: 'pointer',
-                                    }}
+                                    onClick={() => onSpotHoldingClick?.(h.coin)}
+                                    onKeyDown={(e) => e.key === 'Enter' && onSpotHoldingClick?.(h.coin)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '14px 16px', cursor: 'pointer', borderBottom: i < spotHoldings.length - 1 ? `1px solid ${V2.hair}` : 'none' }}
                                 >
-                                    <TokenLogo symbol={pos.symbol} size={42} />
+                                    <MarketLogo sym={h.coin} size={40} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'baseline',
-                                                gap: 8,
-                                            }}
-                                        >
-                                            <div
-                                                className="font-display"
-                                                style={{
-                                                    fontSize: 18,
-                                                    fontWeight: 500,
-                                                    fontVariationSettings:
-                                                        '"opsz" 36, "SOFT" 40, "wght" 500',
-                                                    letterSpacing: '-0.015em',
-                                                }}
-                                            >
-                                                {getTokenFullName(pos.name || pos.symbol)}
-                                            </div>
-                                            <span
-                                                style={{
-                                                    fontSize: 9,
-                                                    padding: '2px 6px',
-                                                    borderRadius: 4,
-                                                    fontWeight: 800,
-                                                    letterSpacing: '0.08em',
-                                                    background: isLong
-                                                        ? 'rgba(34,197,94,0.16)'
-                                                        : 'rgba(239,68,68,0.16)',
-                                                    color: isLong
-                                                        ? 'var(--color-positive)'
-                                                        : 'var(--color-negative)',
-                                                }}
-                                            >
-                                                {isLong ? 'LONG' : 'SHORT'} {pos.leverage}×
-                                            </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                                            <span style={{ fontSize: 16, fontWeight: 700 }}>{getTokenFullName(h.coin)}</span>
+                                            <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 6px', borderRadius: 5, letterSpacing: '0.04em', background: 'rgba(56,189,248,0.16)', color: '#38BDF8' }}>SPOT</span>
                                         </div>
-                                        <div
-                                            className="tabular-mono"
-                                            style={{
-                                                fontSize: 10.5,
-                                                color: 'rgba(255,255,255,0.5)',
-                                                marginTop: 3,
-                                                letterSpacing: '0.02em',
-                                            }}
-                                        >
-                                            {pos.size.toLocaleString('en-US', {
-                                                maximumFractionDigits: 4,
-                                            })}{' '}
-                                            {pos.name || pos.symbol} ·{' '}
-                                            {t.homeRedesign.position.enteredAt.replace(
-                                                '{price}',
-                                                formatCurrency(pos.entryPrice),
-                                            )}
+                                        <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 2, fontFamily: V2.mono }}>
+                                            {h.amount.toLocaleString('en-US', { maximumFractionDigits: 6 })} {h.coin}
                                         </div>
                                     </div>
-                                    <div style={{ width: 50, height: 28 }}>
-                                        <MiniChart
-                                            symbol={pos.symbol}
-                                            isStock={pos.isStock === true}
-                                        />
-                                    </div>
-                                    <div style={{ textAlign: 'right', minWidth: 62 }}>
-                                        <div
-                                            className="tabular-mono"
-                                            style={{ fontSize: 14, fontWeight: 800, color: cl }}
-                                        >
-                                            {up ? '+' : '-'}
-                                            {formatCurrency(Math.abs(pos.unrealizedPnl))}
-                                        </div>
-                                        <div
-                                            className="tabular-mono"
-                                            style={{
-                                                fontSize: 10.5,
-                                                color: cl,
-                                                opacity: 0.85,
-                                                fontWeight: 600,
-                                            }}
-                                        >
-                                            {up ? '+' : ''}
-                                            {pos.unrealizedPnlPercent.toFixed(2)}%
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontSize: 16, fontWeight: 700, fontFamily: V2.mono, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
+                                            {formatCurrency(h.valueUsd, 0)}
                                         </div>
                                     </div>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Movers by category */}
+            <SectionHead
+                title="Movers"
+                right={
+                    <div style={{ display: 'flex', gap: 6 }}>
+                        {([{ id: 'crypto', l: 'Cripto' }, { id: 'stocks', l: 'Acciones' }] as const).map((c) => {
+                            const on = moverCat === c.id;
+                            return (
+                                <button
+                                    key={c.id}
+                                    onClick={() => setMoverCat(c.id)}
+                                    style={{ padding: '6px 11px', borderRadius: 99, cursor: 'pointer', fontFamily: V2.ui, fontSize: 12.5, fontWeight: 700, border: on ? `1px solid ${V2.accent}` : `1px solid ${V2.hair}`, background: on ? V2.accentSoft : 'transparent', color: on ? V2.accent : V2.t3 }}
+                                >
+                                    {c.l}
+                                </button>
                             );
                         })}
                     </div>
-                </div>
-            )}
-
-            {/* Spot holdings — rendered separately from perp positions so
-                the user can tell at a glance which side they own. */}
-            {spotHoldings.length > 0 && (
-                <div style={{ padding: '36px 6px 0' }}>
-                    <SectionRule
-                        label={t.spot.homeSectionTitle}
-                        right={
-                            <span
-                                className="tabular-mono"
-                                style={{
-                                    fontSize: 10,
-                                    color: 'var(--color-text-tertiary)',
-                                    letterSpacing: '0.05em',
-                                }}
-                            >
-                                {spotHoldings.length}
-                            </span>
-                        }
-                    />
-                    <div
-                        style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: 10,
-                            marginTop: 16,
-                        }}
-                    >
-                        {spotHoldings.map((h) => (
-                            <div
-                                key={h.coin}
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => onSpotHoldingClick?.(h.coin)}
-                                onKeyDown={(e) =>
-                                    e.key === 'Enter' && onSpotHoldingClick?.(h.coin)
-                                }
-                                style={{
-                                    padding: 14,
-                                    borderRadius: 18,
-                                    background:
-                                        'linear-gradient(140deg, rgba(56,189,248,0.06) 0%, rgba(255,255,255,0.015) 60%)',
-                                    border: '1px solid rgba(255,255,255,0.06)',
-                                    boxShadow:
-                                        'inset 0 1px 0 rgba(255,255,255,0.04)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 12,
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                <TokenLogo symbol={h.coin} size={42} />
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'baseline',
-                                            gap: 8,
-                                        }}
-                                    >
-                                        <div
-                                            className="font-display"
-                                            style={{
-                                                fontSize: 18,
-                                                fontWeight: 500,
-                                                fontVariationSettings:
-                                                    '"opsz" 36, "SOFT" 40, "wght" 500',
-                                                letterSpacing: '-0.015em',
-                                            }}
-                                        >
-                                            {getTokenFullName(h.coin)}
-                                        </div>
-                                        <span
-                                            style={{
-                                                fontSize: 9,
-                                                padding: '2px 6px',
-                                                borderRadius: 4,
-                                                fontWeight: 800,
-                                                letterSpacing: '0.08em',
-                                                background: 'rgba(56,189,248,0.16)',
-                                                color: '#38BDF8',
-                                            }}
-                                        >
-                                            SPOT
-                                        </span>
-                                    </div>
-                                    <div
-                                        className="tabular-mono"
-                                        style={{
-                                            fontSize: 10.5,
-                                            color: 'rgba(255,255,255,0.5)',
-                                            marginTop: 3,
-                                            letterSpacing: '0.02em',
-                                        }}
-                                    >
-                                        {h.amount.toLocaleString('en-US', {
-                                            maximumFractionDigits: 6,
-                                        })}{' '}
-                                        {h.coin} · {formatCurrency(h.price)}
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right', minWidth: 62 }}>
-                                    <div
-                                        className="tabular-mono"
-                                        style={{
-                                            fontSize: 14,
-                                            fontWeight: 800,
-                                            color: 'var(--color-text-primary)',
-                                        }}
-                                    >
-                                        {formatCurrency(h.valueUsd)}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Mirando */}
-            <div style={{ padding: '36px 6px 0' }}>
-                <SectionRule
-                    label={t.homeRedesign.section.mirando}
-                    right={
-                        <button
-                            type="button"
-                            onClick={() => setShowAddDropdown(true)}
-                            style={{
-                                background: 'transparent',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                borderRadius: 99,
-                                color: 'var(--color-text-secondary)',
-                                padding: '4px 10px',
-                                fontSize: 10,
-                                letterSpacing: '0.16em',
-                                textTransform: 'uppercase',
-                                fontWeight: 700,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 4,
-                                cursor: 'pointer',
-                                fontFamily: 'inherit',
-                            }}
-                        >
-                            <Plus size={11} strokeWidth={2.6} /> {t.homeRedesign.watch.add}
-                        </button>
-                    }
-                />
-                <div style={{ marginTop: 4 }}>
-                    {watchlistMarkets.length === 0 ? (
-                        <div
-                            style={{
-                                padding: '32px 0',
-                                textAlign: 'center',
-                                color: 'var(--color-text-tertiary)',
-                                fontSize: 12,
-                            }}
-                        >
-                            {t.homeRedesign.watch.empty}
-                        </div>
-                    ) : (
-                        watchlistMarkets.map((market, i) => (
-                            <WatchRow
-                                key={market.name}
-                                index={i}
-                                market={market}
-                                isLast={i === watchlistMarkets.length - 1}
-                                isInWatchlist={watchlist.includes(market.name)}
-                                onClick={() => handleTokenClick(market.symbol)}
-                                onRemove={() => removeFromWatchlist(market.name)}
-                                formatCurrency={formatCurrency}
-                            />
-                        ))
-                    )}
-                </div>
+                }
+            />
+            <div style={{ padding: '0 20px', display: 'flex', gap: 10 }}>
+                <MoversCol title="Suben" rows={gainers} up onRowClick={handleTokenClick} />
+                <MoversCol title="Bajan" rows={losers} onRowClick={handleTokenClick} />
             </div>
 
-            {/* Footer */}
-            <div style={{ marginTop: 32, padding: '0 6px' }}>
-                <div
-                    style={{
-                        height: 1,
-                        background: 'rgba(255,255,255,0.06)',
-                        marginBottom: 12,
-                    }}
-                />
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                    }}
-                >
-                    <div
-                        className="font-display"
-                        style={{
-                            fontStyle: 'italic',
-                            fontSize: 11,
-                            color: 'var(--color-text-muted)',
-                            fontVariationSettings: '"opsz" 24, "SOFT" 100',
-                        }}
-                    >
-                        {t.homeRedesign.footer.end}
+            {/* Watchlist */}
+            <SectionHead title={t.homeRedesign.section.mirando} right={<button onClick={() => setPicker('watch')} style={{ background: 'transparent', border: 'none', fontSize: 13, color: V2.accent, fontWeight: 700, cursor: 'pointer', fontFamily: V2.ui }}>{t.homeRedesign.watch.add}</button>} />
+            <div style={{ padding: '0 20px' }}>
+                {watchlistMarkets.length === 0 ? (
+                    <div style={{ padding: '32px 0', textAlign: 'center', color: V2.t3, fontSize: 12 }}>{t.homeRedesign.watch.empty}</div>
+                ) : (
+                    <div className="v2-card" style={{ overflow: 'hidden' }}>
+                        {watchlistMarkets.map((m, i) => (
+                            <WatchRowV2
+                                key={m.name}
+                                market={m}
+                                isLast={i === watchlistMarkets.length - 1}
+                                inWatchlist={watchlist.includes(m.name)}
+                                onClick={() => handleTokenClick(m.symbol)}
+                                onRemove={() => removeFromWatchlist(m.name)}
+                                formatCurrency={formatCurrency}
+                            />
+                        ))}
                     </div>
-                    <div
-                        style={{
-                            fontSize: 9,
-                            color: 'var(--color-text-muted)',
-                            letterSpacing: '0.2em',
-                            textTransform: 'uppercase',
-                            fontWeight: 700,
-                        }}
-                    >
-                        {t.homeRedesign.footer.tagline.replace('{city}', cityLabel)}
-                    </div>
-                </div>
+                )}
             </div>
 
             <MarketSelectModal
-                isOpen={showAddDropdown}
-                onClose={() => setShowAddDropdown(false)}
-                onSelect={(m) => addToWatchlist(m.name)}
+                isOpen={picker !== null}
+                onClose={() => setPicker(null)}
+                onSelect={(m) => (picker === 'watch' ? addToWatchlist(m.name) : handleTokenClick(m.symbol))}
                 markets={markets}
-                title={t.home.addToWatchlist}
+                title={picker === 'watch' ? t.home.addToWatchlist : t.home.tapToAddTokens}
                 subtitle={t.home.tapToAddTokens}
-                excludeSymbols={watchlist}
+                excludeSymbols={picker === 'watch' ? watchlist : []}
             />
-            <DepositModal
-                isOpen={showDepositModal}
-                onClose={() => setShowDepositModal(false)}
-            />
-        </div>
+            <DepositModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
+            <WithdrawModal isOpen={showWithdrawModal} onClose={() => setShowWithdrawModal(false)} />
+        </ScreenV2>
     );
 }
 
 export default memo(HomeNormal);
 
-function DeltaCell({
-    label,
-    pct,
-    abs,
+function MoversCol({
+    title,
+    rows,
+    up,
+    onRowClick,
 }: {
-    label: string;
-    pct: number;
-    abs: number;
+    title: string;
+    rows: Market[];
+    up?: boolean;
+    onRowClick: (symbol: string) => void;
 }) {
-    const up = pct >= 0;
-    const cl = up ? 'var(--color-positive)' : 'var(--color-negative)';
     return (
-        <div>
-            <div
-                style={{
-                    fontSize: 9,
-                    letterSpacing: '0.2em',
-                    textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.5)',
-                    fontWeight: 700,
-                    marginBottom: 4,
-                }}
-            >
-                {label}
+        <div className="v2-card" style={{ flex: 1, padding: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                <Icon name={up ? 'arrowUpRight' : 'arrowDownLeft'} size={15} color={up ? V2.pos : V2.neg} strokeWidth={2.6} />
+                <span style={{ fontSize: 13.5, fontWeight: 700, color: V2.t2 }}>{title}</span>
             </div>
-            <div
-                className="tabular-mono"
-                style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 5,
-                    color: cl,
-                    fontWeight: 700,
-                    fontSize: 14,
-                }}
-            >
-                {up ? (
-                    <ArrowUpRight size={12} strokeWidth={2.6} />
-                ) : (
-                    <ArrowDownLeft size={12} strokeWidth={2.6} />
-                )}
-                {up ? '+' : ''}
-                {pct.toFixed(2)}%
-                <span
-                    style={{
-                        color: 'rgba(255,255,255,0.4)',
-                        marginLeft: 3,
-                        fontWeight: 500,
-                        fontSize: 11,
-                    }}
-                >
-                    {up ? '+' : '-'}${Math.abs(abs).toLocaleString('en-US', {
-                        maximumFractionDigits: 2,
-                    })}
-                </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
+                {rows.map((m) => {
+                    const ch = m.change24h || 0;
+                    return (
+                        <div key={m.symbol} role="button" tabIndex={0} onClick={() => onRowClick(m.symbol)} onKeyDown={(e) => e.key === 'Enter' && onRowClick(m.symbol)} style={{ display: 'flex', alignItems: 'center', gap: 9, cursor: 'pointer' }}>
+                            <MarketLogo sym={m.name} size={28} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{m.name}</div>
+                            </div>
+                            <span style={{ fontFamily: V2.mono, fontWeight: 700, fontSize: 12.5, color: ch >= 0 ? V2.pos : V2.neg, fontVariantNumeric: 'tabular-nums' }}>
+                                {ch >= 0 ? '+' : ''}{ch.toFixed(1)}%
+                            </span>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
 }
 
-function MetricCell({
-    label,
-    value,
-    formatCurrency,
-}: {
-    label: string;
-    value: number;
-    formatCurrency: (v: number, dp?: number) => string;
-}) {
-    return (
-        <div>
-            <div
-                style={{
-                    fontSize: 9,
-                    color: 'rgba(255,255,255,0.45)',
-                    letterSpacing: '0.16em',
-                    textTransform: 'uppercase',
-                    fontWeight: 700,
-                }}
-            >
-                {label}
-            </div>
-            <div
-                className="tabular-mono"
-                style={{
-                    fontWeight: 700,
-                    fontSize: 13,
-                    color: '#fff',
-                    marginTop: 3,
-                }}
-            >
-                {formatCurrency(value || 0, 0)}
-            </div>
-        </div>
-    );
-}
-
-function SectionRule({
-    label,
-    right,
-}: {
-    label: string;
-    right?: React.ReactNode;
-}) {
-    return (
-        <div
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                justifyContent: 'space-between',
-                paddingBottom: 6,
-                borderBottom: '1px solid rgba(255,255,255,0.08)',
-            }}
-        >
-            <div
-                className="font-display"
-                style={{
-                    fontStyle: 'italic',
-                    fontSize: 15,
-                    color: 'var(--color-brand-primary)',
-                    fontVariationSettings: '"opsz" 36, "SOFT" 100, "wght" 500',
-                    letterSpacing: '0.01em',
-                }}
-            >
-                {label}
-            </div>
-            {right}
-        </div>
-    );
-}
-
-function renderQuote(template: string, fmt: string, positive: boolean) {
-    const parts = template.split('{pct}');
-    const cl = positive ? 'var(--color-positive)' : 'var(--color-negative)';
-    return (
-        <>
-            "{parts[0]}
-            <span
-                className="tabular-mono"
-                style={{
-                    color: cl,
-                    fontStyle: 'normal',
-                    fontWeight: 600,
-                    fontSize: 13,
-                }}
-            >
-                {fmt}
-            </span>
-            {parts[1] || ''}"
-        </>
-    );
-}
-
-interface WatchRowProps {
-    index: number;
-    market: Market;
-    isLast: boolean;
-    isInWatchlist: boolean;
-    onClick: () => void;
-    onRemove: () => void;
-    formatCurrency: (v: number, dp?: number) => string;
-}
-
-function WatchRow({
-    index,
+function WatchRowV2({
     market,
     isLast,
-    isInWatchlist,
+    inWatchlist,
     onClick,
     onRemove,
     formatCurrency,
-}: WatchRowProps) {
-    const up = (market.change24h || 0) >= 0;
-    const cl = up ? 'var(--color-positive)' : 'var(--color-negative)';
+}: {
+    market: Market;
+    isLast: boolean;
+    inWatchlist: boolean;
+    onClick: () => void;
+    onRemove: () => void;
+    formatCurrency: (v: number, dp?: number) => string;
+}) {
+    const ch = market.change24h || 0;
+    const up = ch >= 0;
     const cleanTicker = market.name.replace(/-USD$/, '').replace(/-PERP$/, '');
     const [hover, setHover] = useState(false);
     return (
@@ -1239,100 +423,34 @@ function WatchRow({
             onKeyDown={(e) => e.key === 'Enter' && onClick()}
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
-            style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
-                padding: '16px 0',
-                borderBottom: isLast ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                cursor: 'pointer',
-                position: 'relative',
-            }}
+            style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '13px 16px', cursor: 'pointer', position: 'relative', borderBottom: isLast ? 'none' : `1px solid ${V2.hair}` }}
         >
-            <div
-                className="font-display"
-                style={{
-                    width: 22,
-                    fontStyle: 'italic',
-                    fontSize: 18,
-                    color: 'var(--color-text-muted)',
-                    fontVariationSettings: '"opsz" 24, "SOFT" 100',
-                }}
-            >
-                {String(index + 1).padStart(2, '0')}
-            </div>
-            <TokenLogo symbol={market.symbol} size={34} />
+            <MarketLogo sym={market.symbol} size={36} />
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                    className="font-display"
-                    style={{
-                        fontSize: 16,
-                        fontWeight: 500,
-                        fontVariationSettings: '"opsz" 36, "SOFT" 40',
-                        letterSpacing: '-0.01em',
-                    }}
-                >
-                    {getTokenFullName(cleanTicker)}
-                </div>
-                <div
-                    style={{
-                        fontSize: 10,
-                        color: 'var(--color-text-tertiary)',
-                        letterSpacing: '0.16em',
-                        textTransform: 'uppercase',
-                        fontWeight: 700,
-                        marginTop: 1,
-                    }}
-                >
-                    {cleanTicker}
-                </div>
+                <div style={{ fontSize: 15.5, fontWeight: 700 }}>{cleanTicker}</div>
+                <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getTokenFullName(cleanTicker)}</div>
             </div>
-            <div style={{ width: 64, height: 30 }}>
+            <div style={{ width: 56, height: 28 }}>
                 <MiniChart symbol={market.symbol} isStock={market.isStock === true} />
             </div>
-            <div style={{ textAlign: 'right', minWidth: 70 }}>
-                <div
-                    className="tabular-mono"
-                    style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}
-                >
+            <div style={{ textAlign: 'right', minWidth: 76 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, fontFamily: V2.mono, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
                     {market.price ? formatCurrency(market.price) : '0'}
                 </div>
-                <div
-                    className="tabular-mono"
-                    style={{ fontSize: 11, color: cl, fontWeight: 600 }}
-                >
-                    {up ? '+' : ''}
-                    {(market.change24h || 0).toFixed(2)}%
+                <div style={{ marginTop: 4, display: 'flex', justifyContent: 'flex-end' }}>
+                    <PctBadge v={ch} size="sm" />
                 </div>
             </div>
-            {hover && isInWatchlist && (
+            {hover && inWatchlist && (
                 <button
                     type="button"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onRemove();
-                    }}
-                    style={{
-                        position: 'absolute',
-                        top: 4,
-                        right: -4,
-                        width: 22,
-                        height: 22,
-                        borderRadius: '50%',
-                        background: 'rgba(239,68,68,0.85)',
-                        border: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        zIndex: 2,
-                    }}
+                    onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                    style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%', background: 'rgba(239,68,68,0.85)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 2, transform: 'rotate(45deg)' }}
                     aria-label="Quitar"
                 >
-                    <X size={12} color="#fff" />
+                    <Icon name="plus" size={12} color="#fff" strokeWidth={2.6} />
                 </button>
             )}
         </div>
     );
 }
-
