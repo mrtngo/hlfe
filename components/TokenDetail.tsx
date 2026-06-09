@@ -6,6 +6,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { getTokenFullName } from '@/lib/constants';
 import TokenCandleChart from '@/components/TokenCandleChart';
+import ClosePositionSheet from '@/components/ClosePositionSheet';
 import { ScreenV2, BigMoney, PctBadge, MarketLogo, Icon, V2 } from '@/components/V2Kit';
 
 interface TokenDetailProps {
@@ -45,6 +46,7 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
     const [isFav, setIsFav] = useState(false);
     const [tfKey, setTfKey] = useState('1d');
     const [tab, setTab] = useState<'overview' | 'stats' | 'results' | 'news'>('overview');
+    const [showCloseSheet, setShowCloseSheet] = useState(false);
 
     if (!market) {
         return (
@@ -106,7 +108,14 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
 
             {/* Chart */}
             <div style={{ position: 'relative', marginTop: 12, padding: '0 8px' }}>
-                <TokenCandleChart symbol={market.symbol} isStock={market.isStock === true} height={200} hideTimeframes tfKey={tfKey} />
+                <TokenCandleChart
+                    symbol={market.symbol}
+                    isStock={market.isStock === true}
+                    height={200}
+                    hideTimeframes
+                    tfKey={tfKey}
+                    liqPrice={position && position.liquidationPrice > 0 ? position.liquidationPrice : undefined}
+                />
             </div>
 
             {/* Timeframes */}
@@ -164,7 +173,7 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                                     <ActionButton label={t.screens.tokenDetail.actions.add} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }} />
                                     <ActionButton label={t.screens.tokenDetail.actions.tp} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }} />
-                                    <ActionButton label={t.screens.tokenDetail.actions.close} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }} variant="danger" />
+                                    <ActionButton label={t.screens.tokenDetail.actions.close} onClick={() => setShowCloseSheet(true)} variant="danger" />
                                 </div>
                             </div>
                         </div>
@@ -220,6 +229,17 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                     Bajar <Icon name="arrowDownLeft" size={17} color="#fff" strokeWidth={2.8} />
                 </button>
             </div>
+
+            {/* Close-position prompt — slider + one tap, no trade-screen detour */}
+            {position && (
+                <ClosePositionSheet
+                    open={showCloseSheet}
+                    onClose={() => setShowCloseSheet(false)}
+                    position={position}
+                    ticker={ticker}
+                    formatCurrency={formatCurrency}
+                />
+            )}
         </ScreenV2>
     );
 }

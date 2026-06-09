@@ -27,6 +27,7 @@ import TokenDetail from '@/components/TokenDetail';
 import PortfolioScreen from '@/components/PortfolioScreen';
 import BolsillosScreen from '@/components/BolsillosScreen';
 import DepositModal from '@/components/DepositModal';
+import DepositScreen from '@/components/DepositScreen';
 import BridgeModal from '@/components/BridgeModal';
 import Trollbox from '@/components/Trollbox';
 import { Icon, V2, type IconName } from '@/components/V2Kit';
@@ -47,7 +48,7 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Base ticker to preselect when navigating into Spot from a holdings row. */
     const [selectedSpotBase, setSelectedSpotBase] = useState<string | undefined>(undefined);
@@ -128,11 +129,8 @@ export default function Home() {
     // V2 "serious redesign" screens render full-bleed (they own their padding
     // and background via ScreenV2). Everything else keeps the legacy padded
     // container + live-sync chip.
-    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings'];
+    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit'];
     const isV2View = V2_VIEWS.includes(view);
-    // Detail / order-entry screens carry their own sticky bottom CTA, so the
-    // floating bottom nav is hidden on them (matches the redesign).
-    const hideNav = view === 'tokenDetail' || view === 'trading';
 
     return (
         <div className="v2-app min-h-screen flex flex-col" style={{ background: '#0A0C0E' }}>
@@ -148,7 +146,7 @@ export default function Home() {
                     {isV2View ? (
                         <div
                             className="mx-auto w-full max-w-[480px]"
-                            style={{ paddingBottom: hideNav ? 0 : 'calc(96px + env(safe-area-inset-bottom))' }}
+                            style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom))' }}
                         >
                             {view === 'home' ? (
                                 <HomeScreen
@@ -162,8 +160,8 @@ export default function Home() {
                                         setView('spotManage');
                                     }}
                                     onTradeClick={() => setView('trading')}
-                                    onBuyClick={() => setView('spot')}
-                                    onDeposit={() => setView('cctp')}
+                                    onBuyClick={() => setView('trading')}
+                                    onDeposit={() => setView('deposit')}
                                 />
                             ) : view === 'markets' ? (
                                 <MarketsScreen
@@ -178,15 +176,23 @@ export default function Home() {
                                 <TokenDetail
                                     symbol={detailSymbol || selectedMarket || 'BTC'}
                                     onBack={() => setView('markets')}
-                                    onBuy={() => setView('spot')}
+                                    onBuy={() => setView('trading')}
                                     onTrade={() => setView('trading')}
                                 />
                             ) : view === 'trading' ? (
                                 <TradearScreen onBack={() => setView('advanced')} />
+                            ) : view === 'deposit' ? (
+                                <DepositScreen
+                                    onBack={() => setView('home')}
+                                    onDone={() => {
+                                        setView('home');
+                                        refreshAccountData();
+                                    }}
+                                />
                             ) : view === 'portfolio' ? (
                                 <PortfolioScreen
                                     onBack={() => setView('profile')}
-                                    onBuyClick={() => setView('spot')}
+                                    onBuyClick={() => setView('trading')}
                                     onTokenClick={(symbol) => {
                                         setSelectedMarket(symbol);
                                         setDetailSymbol(symbol);
@@ -291,8 +297,9 @@ export default function Home() {
             </main>
 
 
-            {/* Footer Navigation — V2 floating glassy pill with bolt indicator */}
-            {!hideNav && (() => {
+            {/* Footer Navigation — V2 floating glassy pill with bolt indicator.
+                Always visible, on every screen. */}
+            {(() => {
                 const tabs: { id: string; label: string; icon: IconName; on: boolean; onClick: () => void; domId?: string }[] = [
                     { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home', onClick: () => setView('home') },
                     { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },

@@ -28,6 +28,12 @@ interface TokenCandleChartProps {
     hideTimeframes?: boolean;
     /** External TF key (one of TF_OPTIONS.key) — only used when hideTimeframes */
     tfKey?: string;
+    /**
+     * Liquidation price — draws a dashed red line with a "Liq" tag. If the
+     * price falls outside the candle range it's pinned to the chart edge
+     * (the tag still shows the real value).
+     */
+    liqPrice?: number;
 }
 
 export const TRADEAR_TF_KEYS = ['5m', '1h', '4h', '1d', '1w', '1m'] as const;
@@ -38,6 +44,7 @@ export default function TokenCandleChart({
     height = 220,
     hideTimeframes = false,
     tfKey: externalTfKey,
+    liqPrice,
 }: TokenCandleChartProps) {
     const [internalTfKey, setInternalTfKey] = useState<string>('1d');
     const tfKey = hideTimeframes ? (externalTfKey || '1d') : internalTfKey;
@@ -116,7 +123,7 @@ export default function TokenCandleChart({
                         Sin datos
                     </div>
                 ) : (
-                    <Candles candles={sampled} width={width} height={height} />
+                    <Candles candles={sampled} width={width} height={height} liqPrice={liqPrice} />
                 )}
             </div>
 
@@ -169,10 +176,12 @@ function Candles({
     candles,
     width,
     height,
+    liqPrice,
 }: {
     candles: { open: number; high: number; low: number; close: number; time: number }[];
     width: number;
     height: number;
+    liqPrice?: number;
 }) {
     if (width === 0 || candles.length === 0) return null;
 
@@ -190,6 +199,17 @@ function Candles({
     const bodyW = Math.max(2, cellW * 0.64);
 
     const y = (price: number) => padTop + (1 - (price - lo) / range) * innerH;
+
+    // Liquidation line — pinned to the chart edge when out of the price range.
+    const showLiq = typeof liqPrice === 'number' && liqPrice > 0;
+    const liqRawY = showLiq ? y(liqPrice) : 0;
+    const liqY = Math.max(padTop + 6, Math.min(height - padBot - 6, liqRawY));
+    const liqPinned = showLiq && liqRawY !== liqY;
+    const liqLabel = showLiq
+        ? `${liqPinned ? (liqRawY > liqY ? '▼ ' : '▲ ') : ''}Liq $${liqPrice.toLocaleString('en-US', {
+              maximumFractionDigits: liqPrice < 1 ? 4 : 2,
+          })}`
+        : '';
 
     return (
         <svg
@@ -240,6 +260,31 @@ function Candles({
                     </g>
                 );
             })}
+            {showLiq && (
+                <g>
+                    <line
+                        x1={0}
+                        x2={width}
+                        y1={liqY}
+                        y2={liqY}
+                        stroke="#EF4444"
+                        strokeWidth={1.2}
+                        strokeDasharray="5 4"
+                        opacity={0.85}
+                    />
+                    <text
+                        x={width - 8}
+                        y={liqY - 5}
+                        textAnchor="end"
+                        fontSize={10}
+                        fontWeight={700}
+                        fill="#EF4444"
+                        fontFamily="var(--font-mono), ui-monospace, monospace"
+                    >
+                        {liqLabel}
+                    </text>
+                </g>
+            )}
         </svg>
     );
 }

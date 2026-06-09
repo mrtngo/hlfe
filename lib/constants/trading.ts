@@ -10,6 +10,14 @@
 export const MIN_NOTIONAL_VALUE = 10;
 
 /**
+ * Safe minimum order notional (margin × leverage) used for UI validation.
+ * Hyperliquid rejects orders below $10 notional; we require $11 so price
+ * drift / rounding between quote and execution can't dip the order under
+ * the exchange minimum.
+ */
+export const MIN_ORDER_NOTIONAL_USD = 11;
+
+/**
  * Default tokens shown in watchlist for new users
  */
 export const DEFAULT_WATCHLIST = ['BTC', 'ETH', 'SOL'];

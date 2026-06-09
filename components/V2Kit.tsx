@@ -10,7 +10,7 @@
 // the `--v2-*` CSS variables in app/globals.css.
 // ============================================================================
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import TokenLogo from '@/components/TokenLogo';
 
 // ---- Design tokens (inline-style mirror of the --v2-* CSS vars) ------------
@@ -431,6 +431,89 @@ export function SliderRow({
           />
         )}
       </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// SlideToConfirm — drag-to-confirm track. Knob slides; crossing the threshold
+// fires onConfirm. Shared by the trade panel and the close-position sheet.
+// ============================================================================
+export function SlideToConfirm({
+  color,
+  soft,
+  border,
+  label,
+  disabled,
+  onConfirm,
+}: {
+  color: string;
+  soft: string;
+  border: string;
+  label: string;
+  disabled: boolean;
+  onConfirm: () => void;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [x, setX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const KNOB = 64;
+  const PAD = 6;
+
+  useEffect(() => {
+    if (!dragging) return;
+    const move = (clientX: number) => {
+      const track = trackRef.current;
+      if (!track) return;
+      const rect = track.getBoundingClientRect();
+      const max = rect.width - KNOB - PAD * 2;
+      let nx = clientX - rect.left - KNOB / 2;
+      nx = Math.max(0, Math.min(nx, max));
+      setX(nx);
+    };
+    const onMove = (e: PointerEvent) => move(e.clientX);
+    const onUp = () => {
+      const track = trackRef.current;
+      if (track) {
+        const rect = track.getBoundingClientRect();
+        const max = rect.width - KNOB - PAD * 2;
+        if (x >= max - 6) onConfirm();
+      }
+      setDragging(false);
+      setX(0);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [dragging, x, onConfirm]);
+
+  return (
+    <div
+      ref={trackRef}
+      style={{
+        marginTop: 22, position: 'relative', height: 60, borderRadius: 18,
+        background: disabled ? 'rgba(255,255,255,0.04)' : soft,
+        border: `1px solid ${disabled ? V2.hair : border}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: disabled ? 0.6 : 1, userSelect: 'none', touchAction: 'none',
+      }}
+    >
+      <span style={{ fontSize: 17, fontWeight: 800, color: disabled ? V2.t3 : color, letterSpacing: '-0.01em', pointerEvents: 'none' }}>{label}</span>
+      {!disabled && (
+        <div
+          onPointerDown={() => setDragging(true)}
+          style={{
+            position: 'absolute', left: PAD + x, top: PAD, bottom: PAD, width: KNOB, borderRadius: 14,
+            background: soft, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'grab', touchAction: 'none',
+          }}
+        >
+          <Icon name="chevronsRight" size={22} color={color} strokeWidth={2.6} />
+        </div>
+      )}
     </div>
   );
 }

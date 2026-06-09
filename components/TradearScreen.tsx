@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePreferences } from '@/hooks/usePreferences';
-import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
+import { MIN_ORDER_NOTIONAL_USD } from '@/lib/constants';
+import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import TokenLogo from '@/components/TokenLogo';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import TradingChart from '@/components/TradingChart';
@@ -16,7 +17,7 @@ import MarketSelectModal from '@/components/MarketSelectModal';
 import EmptyState from '@/components/EmptyState';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 import ProToggle from '@/components/ProToggle';
-import { ScreenV2, BigMoney, PctBadge, MarketLogo, SliderRow, Icon, V2 } from '@/components/V2Kit';
+import { ScreenV2, BigMoney, PctBadge, MarketLogo, SliderRow, SlideToConfirm, Icon, V2 } from '@/components/V2Kit';
 
 interface TradearScreenProps {
     onBack?: () => void;
@@ -143,20 +144,43 @@ function NormalMode({
     const [filled, setFilled] = useState({ token: 0, usd: 0, price: 0, side: 'buy' as 'buy' | 'sell' });
     const [isFav, setIsFav] = useState(false);
 
-    const maxLev = Math.min(market.maxLeverage || 20, 20);
+    // Each asset's real max leverage from HL metadata (e.g. BTC 40x, ETH 25x).
+    const maxLev = market.maxLeverage || 20;
+
+    // Clamp when switching to a market with a lower cap (e.g. 40x BTC → 10x alt).
+    useEffect(() => {
+        setLeverage((lev) => Math.min(lev, maxLev));
+    }, [maxLev]);
+
     const price = market.price || 0;
     const amount = (availableUsd * balancePct) / 100;
     const positionSize = amount * leverage;
     const tokenSize = price > 0 ? positionSize / price : 0;
     const changeAbs = (price * (market.change24h || 0)) / 100;
     const targetProfit = cashout != null ? (amount * cashout) / 100 : 0;
+
+    // Estimated liquidation price (isolated margin). Maintenance margin ≈ 50%
+    // of initial margin — same approximation as OrderPanel:
+    //   long:  entry × (1 − (1 − MMR) / lev)    short: entry × (1 + (1 − MMR) / lev)
+    const MMR = 0.5;
+    const liqPrice = price > 0 && positionSize > 0
+        ? side === 'buy'
+            ? price * (1 - (1 - MMR) / leverage)
+            : price * (1 + (1 - MMR) / leverage)
+        : 0;
+
+    // Taker fee (market order) + builder fee, charged on the notional.
+    const feeRate = 0.00045 + (BUILDER_CONFIG.enabled ? BUILDER_CONFIG.fee / 100000 : 0);
+    const estFee = positionSize * feeRate;
     const targetPrice = cashout != null
         ? side === 'buy'
             ? price * (1 + cashout / 100 / leverage)
             : price * (1 - cashout / 100 / leverage)
         : 0;
 
-    const canSubmit = amount >= MIN_NOTIONAL_VALUE && amount <= availableUsd + 0.01 && !submitting && price > 0;
+    // HL's $10 minimum applies to the order's notional (margin × leverage),
+    // not the margin alone — validate against the total with a $1 buffer.
+    const canSubmit = positionSize >= MIN_ORDER_NOTIONAL_USD && amount <= availableUsd + 0.01 && !submitting && price > 0;
 
     const handleConfirm = async () => {
         if (!canSubmit) return;
@@ -222,7 +246,7 @@ function NormalMode({
 
             {/* Chart */}
             <div style={{ position: 'relative', marginTop: 10, height: 160, overflow: 'hidden', padding: '0 8px' }}>
-                <TokenCandleChart symbol={market.symbol} isStock={market.isStock === true} height={150} hideTimeframes tfKey="1h" />
+                <TokenCandleChart symbol={market.symbol} isStock={market.isStock === true} height={150} hideTimeframes tfKey="1h" liqPrice={liqPrice > 0 ? liqPrice : undefined} />
             </div>
 
             {/* New trade panel */}
@@ -264,10 +288,24 @@ function NormalMode({
                     <SliderRow label="Multiplicador" valueText={`${leverage}x`} pct={maxLev > 1 ? ((leverage - 1) / (maxLev - 1)) * 100 : 0} info color={V2.accent} min={1} max={maxLev} step={1} value={leverage} onChange={setLeverage} />
                 </div>
 
-                {/* Total */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 0', borderTop: `1px solid ${V2.hair}`, borderBottom: `1px solid ${V2.hair}` }}>
-                    <span style={{ fontSize: 16, fontWeight: 600, color: V2.t2 }}>Total</span>
-                    <span style={{ fontSize: 22, fontWeight: 800, fontFamily: V2.mono, letterSpacing: '-0.02em' }}>{formatCurrency(positionSize)}</span>
+                {/* Total + order details */}
+                <div style={{ padding: '18px 0', borderTop: `1px solid ${V2.hair}`, borderBottom: `1px solid ${V2.hair}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 16, fontWeight: 600, color: V2.t2 }}>Total</span>
+                        <span style={{ fontSize: 22, fontWeight: 800, fontFamily: V2.mono, letterSpacing: '-0.02em' }}>{formatCurrency(positionSize)}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>Precio de liquidación</span>
+                        <span style={{ fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: V2.neg }}>
+                            {liqPrice > 0 ? formatCurrency(liqPrice, price < 1 ? 4 : 2) : '—'}
+                        </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>Comisión</span>
+                        <span style={{ fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: V2.t2 }}>
+                            {estFee > 0 ? `~${formatCurrency(estFee)}` : '—'}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Cash out when I'm up */}
@@ -310,7 +348,7 @@ function NormalMode({
                     soft={sideSoft}
                     border={sideBorder}
                     disabled={!canSubmit}
-                    label={submitting ? 'Procesando…' : !canSubmit ? `Mín. ${formatCurrency(MIN_NOTIONAL_VALUE, 0)}` : 'Deslizá para confirmar'}
+                    label={submitting ? 'Procesando…' : !canSubmit ? `Total mín. ${formatCurrency(MIN_ORDER_NOTIONAL_USD, 0)}` : 'Deslizá para confirmar'}
                     onConfirm={handleConfirm}
                 />
             </div>
@@ -345,86 +383,6 @@ const circleBtn: React.CSSProperties = {
     width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.06)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
 };
-
-// Drag-to-confirm. Knob slides; crossing the threshold fires onConfirm.
-function SlideToConfirm({
-    color,
-    soft,
-    border,
-    label,
-    disabled,
-    onConfirm,
-}: {
-    color: string;
-    soft: string;
-    border: string;
-    label: string;
-    disabled: boolean;
-    onConfirm: () => void;
-    }) {
-    const trackRef = useRef<HTMLDivElement>(null);
-    const [x, setX] = useState(0);
-    const [dragging, setDragging] = useState(false);
-    const KNOB = 64;
-    const PAD = 6;
-
-    useEffect(() => {
-        if (!dragging) return;
-        const move = (clientX: number) => {
-            const track = trackRef.current;
-            if (!track) return;
-            const rect = track.getBoundingClientRect();
-            const max = rect.width - KNOB - PAD * 2;
-            let nx = clientX - rect.left - KNOB / 2;
-            nx = Math.max(0, Math.min(nx, max));
-            setX(nx);
-        };
-        const onMove = (e: PointerEvent) => move(e.clientX);
-        const onUp = () => {
-            const track = trackRef.current;
-            if (track) {
-                const rect = track.getBoundingClientRect();
-                const max = rect.width - KNOB - PAD * 2;
-                if (x >= max - 6) onConfirm();
-            }
-            setDragging(false);
-            setX(0);
-        };
-        window.addEventListener('pointermove', onMove);
-        window.addEventListener('pointerup', onUp);
-        return () => {
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-        };
-    }, [dragging, x, onConfirm]);
-
-    return (
-        <div
-            ref={trackRef}
-            style={{
-                marginTop: 22, position: 'relative', height: 60, borderRadius: 18,
-                background: disabled ? 'rgba(255,255,255,0.04)' : soft,
-                border: `1px solid ${disabled ? V2.hair : border}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                opacity: disabled ? 0.6 : 1, userSelect: 'none', touchAction: 'none',
-            }}
-        >
-            <span style={{ fontSize: 17, fontWeight: 800, color: disabled ? V2.t3 : color, letterSpacing: '-0.01em', pointerEvents: 'none' }}>{label}</span>
-            {!disabled && (
-                <div
-                    onPointerDown={() => setDragging(true)}
-                    style={{
-                        position: 'absolute', left: PAD + x, top: PAD, bottom: PAD, width: KNOB, borderRadius: 14,
-                        background: soft, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        cursor: 'grab', touchAction: 'none',
-                    }}
-                >
-                    <Icon name="chevronsRight" size={22} color={color} strokeWidth={2.6} />
-                </div>
-            )}
-        </div>
-    );
-}
 
 // ---------------------------------------------------------------------------
 // PRO MODE — terminal layout (chart + orderbook + AdvancedOrderPanel)
