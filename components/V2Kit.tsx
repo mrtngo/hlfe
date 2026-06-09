@@ -44,7 +44,7 @@ export type IconName =
   | 'settings' | 'cart' | 'repeat' | 'flame' | 'layers' | 'user' | 'clock'
   | 'target' | 'star' | 'sun' | 'moon' | 'eye' | 'sparkle' | 'bolt' | 'sliders'
   | 'coins' | 'search' | 'info' | 'pencil' | 'heart' | 'history' | 'qr'
-  | 'share' | 'logout' | 'copy';
+  | 'share' | 'logout' | 'copy' | 'news';
 
 export function Icon({
   name,
@@ -104,6 +104,7 @@ export function Icon({
     share: <><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" /></>,
     logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>,
     copy: <><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></>,
+    news: <><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-4 0V9" /><path d="M18 14h-8M15 18h-5M10 6h8v4h-8z" /></>,
   };
   return <svg {...props}>{paths[name] ?? null}</svg>;
 }

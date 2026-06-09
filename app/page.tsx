@@ -28,6 +28,7 @@ import PortfolioScreen from '@/components/PortfolioScreen';
 import BolsillosScreen from '@/components/BolsillosScreen';
 import DepositModal from '@/components/DepositModal';
 import DepositScreen from '@/components/DepositScreen';
+import NewsScreen from '@/components/NewsScreen';
 import BridgeModal from '@/components/BridgeModal';
 import Trollbox from '@/components/Trollbox';
 import { Icon, V2, type IconName } from '@/components/V2Kit';
@@ -48,7 +49,7 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Base ticker to preselect when navigating into Spot from a holdings row. */
     const [selectedSpotBase, setSelectedSpotBase] = useState<string | undefined>(undefined);
@@ -129,7 +130,7 @@ export default function Home() {
     // V2 "serious redesign" screens render full-bleed (they own their padding
     // and background via ScreenV2). Everything else keeps the legacy padded
     // container + live-sync chip.
-    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit'];
+    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news'];
     const isV2View = V2_VIEWS.includes(view);
 
     return (
@@ -181,6 +182,13 @@ export default function Home() {
                                 />
                             ) : view === 'trading' ? (
                                 <TradearScreen onBack={() => setView('advanced')} />
+                            ) : view === 'news' ? (
+                                <NewsScreen
+                                    onTickerClick={(symbol) => {
+                                        setSelectedMarket(symbol);
+                                        setView('trading');
+                                    }}
+                                />
                             ) : view === 'deposit' ? (
                                 <DepositScreen
                                     onBack={() => setView('home')}
@@ -303,7 +311,7 @@ export default function Home() {
                 const tabs: { id: string; label: string; icon: IconName; on: boolean; onClick: () => void; domId?: string }[] = [
                     { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home', onClick: () => setView('home') },
                     { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },
-                    { id: 'spot', label: t.nav.spot, icon: 'coins', on: view === 'spotReal' || view === 'spot' || view === 'spotManage', onClick: () => setView('spotReal'), domId: 'nav-spot-tab' },
+                    { id: 'news', label: t.nav.news || 'Noticias', icon: 'news', on: view === 'news', onClick: () => setView('news'), domId: 'nav-news-tab' },
                     { id: 'history', label: t.nav.history, icon: 'history', on: view === 'history', onClick: () => setView('history') },
                     { id: 'advanced', label: t.nav.advanced, icon: 'sliders', on: view === 'advanced' || view === 'predictions' || view === 'leaderboard' || view === 'cctp' || view === 'bolsillos', onClick: () => setView('advanced'), domId: 'nav-advanced-tab' },
                     { id: 'account', label: t.nav.profile, icon: 'user', on: view === 'profile' || view === 'settings' || view === 'portfolio', onClick: handleProfileClick, domId: 'nav-profile-tab' },

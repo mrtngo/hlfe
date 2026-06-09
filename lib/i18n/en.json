@@ -42,7 +42,8 @@
     "tutorial": "Tutorial",
     "settings": "Settings",
     "profile": "Profile",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "news": "News"
   },
   "advanced": {
     "title": "Advanced Mode",
