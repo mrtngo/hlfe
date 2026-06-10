@@ -1222,5 +1222,60 @@
     "feeDesc": "Approve the fee to start trading.",
     "processing": "Processing...",
     "important": "Important"
+  },
+  "onboarding": {
+    "welcome": {
+      "live": "Live · 200+ markets",
+      "headlineA": "Trade everything.",
+      "headlineB": "One tap.",
+      "subtitle": "Stocks, crypto, gold and indexes — go long or short with leverage, straight from your phone.",
+      "createAccount": "Create account",
+      "logIn": "Log in",
+      "continueWith": "or continue with",
+      "wallet": "Wallet",
+      "guest": "Enter as guest",
+      "howItWorks": "See how it works",
+      "terms": "Terms",
+      "privacy": "Privacy Policy",
+      "agreePre": "By continuing you agree to our ",
+      "agreeMid": " & ",
+      "agreePost": "."
+    },
+    "tutorial": {
+      "skip": "Skip",
+      "next": "Next",
+      "depositStart": "Deposit & start",
+      "perps": {
+        "eyebrow": "Perpetuals",
+        "title": "Profit when it goes <up>up</up> — or <down>down</down>.",
+        "body": "Go long or short on any market. No expiry date, no settlement — hold as long as you want.",
+        "long": "LONG +$214",
+        "short": "SHORT works too"
+      },
+      "leverage": {
+        "eyebrow": "Leverage",
+        "title": "A little goes <y>further</y>.",
+        "body": "Multiply your exposure up to 20×. Bigger wins — but losses move faster too, and you can be liquidated.",
+        "putIn": "You put in",
+        "control": "You control",
+        "multiplier": "Multiplier",
+        "move": "+5% move",
+        "liquidation": "Liquidation"
+      },
+      "deposit": {
+        "eyebrow": "Deposit",
+        "title": "Fund in <y>seconds</y>.",
+        "body": "Top up from your wallet, card or bank. Your balance is ready to trade instantly — no waiting.",
+        "wallet": "Wallet",
+        "card": "Card",
+        "bank": "Bank",
+        "balance": "Balance"
+      },
+      "ready": {
+        "title": "Make your first trade.",
+        "body": "Deposit in seconds and trade 200+ markets with leverage.",
+        "headline": "You're ready."
+      }
+    }
   }
 }

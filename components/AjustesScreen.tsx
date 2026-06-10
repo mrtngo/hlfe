@@ -39,9 +39,11 @@ import { ScreenV2, V2Header, V2 } from '@/components/V2Kit';
 
 interface AjustesScreenProps {
     onBack?: () => void;
+    /** Replay the animated onboarding tutorial. */
+    onReplayTutorial?: () => void;
 }
 
-export default function AjustesScreen({ onBack }: AjustesScreenProps) {
+export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScreenProps) {
     const { t, language, setLanguage } = useLanguage();
     const { currency, toggleCurrency } = useCurrency();
     const { logout } = usePrivy();
@@ -130,7 +132,7 @@ export default function AjustesScreen({ onBack }: AjustesScreenProps) {
 
                 {/* ayuda */}
                 <SettingGroup label={t.screens.ajustes.section.help}>
-                    <Row icon={LifeBuoy} label={t.screens.ajustes.help.tutorial} right={<ChevronIcon />} />
+                    <Row icon={LifeBuoy} label={t.screens.ajustes.help.tutorial} right={<ChevronIcon />} onClick={onReplayTutorial} />
                     <Row icon={HelpCircle} label={t.screens.ajustes.help.center} right={<ChevronIcon />} />
                     <Row icon={Twitter} label={t.screens.ajustes.help.twitter} right={<ChevronIcon />} />
                     <Row icon={MessageSquareWarning} label={t.screens.ajustes.help.feedback} right={<ChevronIcon />} last />
@@ -181,6 +183,7 @@ function Row({
     right,
     last,
     warn,
+    onClick,
 }: {
     icon: LucideIcon;
     label: string;
@@ -188,9 +191,10 @@ function Row({
     right?: React.ReactNode;
     last?: boolean;
     warn?: boolean;
+    onClick?: () => void;
 }) {
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '14px 15px', borderBottom: last ? 'none' : `1px solid ${V2.hair}`, cursor: 'pointer' }}>
+        <div onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '14px 15px', borderBottom: last ? 'none' : `1px solid ${V2.hair}`, cursor: 'pointer' }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: warn ? V2.negSoft : V2.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Icon size={17} color={warn ? V2.neg : V2.accent} strokeWidth={2} />
             </div>

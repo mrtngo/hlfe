@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useOnboarding } from '@/hooks/useOnboarding';
 import { usePrivy } from '@privy-io/react-auth';
+import WelcomeScreen from '@/components/WelcomeScreen';
+import OnboardingTutorial from '@/components/OnboardingTutorial';
 import HomeScreen from '@/components/HomeScreen';
 import OrderHistory from '@/components/OrderHistory';
 import Leaderboard from '@/components/Leaderboard';
@@ -67,12 +68,42 @@ export default function Home() {
     const [showBridgeModal, setShowBridgeModal] = useState(false);
     const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
-    // Initialize onboarding tour
-    useOnboarding({
-        enabled: true,
-        setView,
-        currentView: view
-    });
+    // Pre-login welcome gate + animated tutorial (v2 onboarding redesign).
+    // `guest` lets users browse without auth; `rayo_onboarded` persists that the
+    // tutorial has been seen so it auto-plays only once (replayable from Settings).
+    const [guest, setGuest] = useState(false);
+    const [showTutorial, setShowTutorial] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        setGuest(localStorage.getItem('rayo_guest') === 'true');
+    }, []);
+
+    // Auto-play the tutorial once, right after a first authentication.
+    useEffect(() => {
+        if (ready && authenticated && typeof window !== 'undefined' && !localStorage.getItem('rayo_onboarded')) {
+            setShowTutorial(true);
+        }
+    }, [ready, authenticated]);
+
+    const closeTutorial = () => {
+        if (typeof window !== 'undefined') localStorage.setItem('rayo_onboarded', 'true');
+        setShowTutorial(false);
+    };
+
+    const enterAsGuest = () => {
+        if (typeof window !== 'undefined') localStorage.setItem('rayo_guest', 'true');
+        setGuest(true);
+    };
+
+    // Final tutorial CTA: deposit when signed in, otherwise route through auth first.
+    const handleTutorialDeposit = () => {
+        if (authenticated) {
+            setView('deposit');
+        } else {
+            login();
+        }
+    };
 
     // Auto-prompt setup wizard when entering trading view if setup not complete
     useEffect(() => {
@@ -140,6 +171,25 @@ export default function Home() {
     // container + live-sync chip.
     const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'traderSearch', 'publicProfile'];
     const isV2View = V2_VIEWS.includes(view);
+
+    const tutorialOverlay = showTutorial ? (
+        <OnboardingTutorial onClose={closeTutorial} onDeposit={handleTutorialDeposit} />
+    ) : null;
+
+    // Pre-login welcome gate. Logged-out users see the full-bleed Welcome screen
+    // (no bottom nav) unless they chose to browse as a guest.
+    if (ready && !authenticated && !guest) {
+        return (
+            <>
+                <WelcomeScreen
+                    onLogin={login}
+                    onGuest={enterAsGuest}
+                    onTutorial={() => setShowTutorial(true)}
+                />
+                {tutorialOverlay}
+            </>
+        );
+    }
 
     return (
         <div className="v2-app min-h-screen flex flex-col" style={{ background: '#0A0C0E' }}>
@@ -247,7 +297,10 @@ export default function Home() {
                                     onOpenAdvanced={() => setView('advanced')}
                                 />
                             ) : (
-                                <AjustesScreen onBack={() => setView('profile')} />
+                                <AjustesScreen
+                                    onBack={() => setView('profile')}
+                                    onReplayTutorial={() => setShowTutorial(true)}
+                                />
                             )}
                         </div>
                     ) : (
@@ -453,6 +506,10 @@ export default function Home() {
                     }
                 }}
             />
+
+            {/* Animated onboarding tutorial — auto-plays once after first login,
+                replayable from Settings → Help → Tutorial. */}
+            {tutorialOverlay}
         </div>
     );
 }

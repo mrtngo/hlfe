@@ -1221,5 +1221,60 @@
     "feeDesc": "Aprueba la tarifa para comenzar a operar.",
     "processing": "Procesando...",
     "important": "Importante"
+  },
+  "onboarding": {
+    "welcome": {
+      "live": "En vivo · +200 mercados",
+      "headlineA": "Operá de todo.",
+      "headlineB": "Un toque.",
+      "subtitle": "Acciones, cripto, oro e índices — ponete largo o corto con apalancamiento, directo desde tu teléfono.",
+      "createAccount": "Crear cuenta",
+      "logIn": "Iniciar sesión",
+      "continueWith": "o continuá con",
+      "wallet": "Billetera",
+      "guest": "Entrar como invitado",
+      "howItWorks": "Ver cómo funciona",
+      "terms": "Términos",
+      "privacy": "Política de Privacidad",
+      "agreePre": "Al continuar aceptás nuestros ",
+      "agreeMid": " y ",
+      "agreePost": "."
+    },
+    "tutorial": {
+      "skip": "Saltar",
+      "next": "Siguiente",
+      "depositStart": "Depositar y empezar",
+      "perps": {
+        "eyebrow": "Perpetuos",
+        "title": "Ganá cuando <up>sube</up> — o <down>baja</down>.",
+        "body": "Ponete largo o corto en cualquier mercado. Sin vencimiento ni liquidación final — mantené la posición el tiempo que quieras.",
+        "long": "LONG +$214",
+        "short": "SHORT también"
+      },
+      "leverage": {
+        "eyebrow": "Apalancamiento",
+        "title": "Con poco llegás <y>más lejos</y>.",
+        "body": "Multiplicá tu exposición hasta 20×. Ganancias más grandes — pero las pérdidas también se mueven más rápido y podés ser liquidado.",
+        "putIn": "Ponés",
+        "control": "Controlás",
+        "multiplier": "Multiplicador",
+        "move": "Movimiento +5%",
+        "liquidation": "Liquidación"
+      },
+      "deposit": {
+        "eyebrow": "Depósito",
+        "title": "Cargá saldo en <y>segundos</y>.",
+        "body": "Cargá desde tu billetera, tarjeta o banco. Tu saldo queda listo para operar al instante — sin esperas.",
+        "wallet": "Billetera",
+        "card": "Tarjeta",
+        "bank": "Banco",
+        "balance": "Saldo"
+      },
+      "ready": {
+        "title": "Hacé tu primer trade.",
+        "body": "Depositá en segundos y operá +200 mercados con apalancamiento.",
+        "headline": "Estás listo."
+      }
+    }
   }
 }
