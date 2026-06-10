@@ -25,6 +25,11 @@ cd "$ROOT"
 API_DIR="app/api"
 STAGE_DIR="_api_temp"
 
+# Middleware is unsupported under `output: 'export'`; move it aside for the
+# duration of the export and restore it (with the API routes) on exit.
+MW_FILE="middleware.ts"
+MW_STAGE="_middleware_temp.ts"
+
 restore_api() {
     if [ -d "$STAGE_DIR" ]; then
         echo "🛟 Restoring API routes from $STAGE_DIR..."
@@ -42,6 +47,10 @@ restore_api() {
             rmdir "$STAGE_DIR" 2>/dev/null || true
         fi
     fi
+    if [ -f "$MW_STAGE" ] && [ ! -f "$MW_FILE" ]; then
+        echo "🛟 Restoring $MW_FILE..."
+        mv "$MW_STAGE" "$MW_FILE"
+    fi
 }
 trap restore_api EXIT
 
@@ -51,6 +60,10 @@ echo "🍎 Building for iOS..."
 if [ ! -d "$API_DIR" ] && [ -d "$STAGE_DIR" ]; then
     echo "⚠️  Found stale $STAGE_DIR from previous crash — restoring first."
     mv "$STAGE_DIR" "$API_DIR"
+fi
+if [ ! -f "$MW_FILE" ] && [ -f "$MW_STAGE" ]; then
+    echo "⚠️  Found stale $MW_STAGE from previous crash — restoring first."
+    mv "$MW_STAGE" "$MW_FILE"
 fi
 
 # Nuke stale Next caches so generated type validators don't reference the
@@ -63,6 +76,12 @@ rm -rf .next .next-3001 out
 if [ -d "$API_DIR" ]; then
     echo "📦 Moving API routes aside..."
     mv "$API_DIR" "$STAGE_DIR"
+fi
+
+# Move middleware aside (unsupported by static export).
+if [ -f "$MW_FILE" ]; then
+    echo "📦 Moving $MW_FILE aside..."
+    mv "$MW_FILE" "$MW_STAGE"
 fi
 
 # Run the static export.
