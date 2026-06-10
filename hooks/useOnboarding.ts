@@ -42,19 +42,19 @@ export function useOnboarding({ enabled = true, setView, currentView }: UseOnboa
                     }
                 },
                 {
-                    element: '#nav-buy-tab',
+                    element: '#nav-news-tab',
                     popover: {
-                        title: 'Comprar Cripto',
-                        description: 'Acá comprás cripto al precio de mercado. Simple, sin apalancamiento. Ideal para empezar.',
+                        title: 'Noticias',
+                        description: 'Enterate de lo que mueve el mercado, en español. Tocá un ticker para operarlo al instante.',
                         side: 'top',
                         align: 'center'
                     }
                 },
                 {
-                    element: '#nav-advanced-tab',
+                    element: '#nav-rewards-tab',
                     popover: {
-                        title: 'Modo Avanzado',
-                        description: 'Cuando estés listo, acá encontrás perpetuos, predicciones y herramientas para traders experimentados.',
+                        title: 'Premios',
+                        description: 'Invitá amigos y ganá el 10% de sus comisiones. Sumá puntos cada semana operando.',
                         side: 'top',
                         align: 'center'
                     }

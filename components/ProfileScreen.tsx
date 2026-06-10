@@ -15,9 +15,10 @@ interface ProfileScreenProps {
     onOpenPortfolio?: () => void;
     onOpenHistory?: () => void;
     onOpenLeaderboard?: () => void;
+    onOpenAdvanced?: () => void;
 }
 
-export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenHistory, onOpenLeaderboard }: ProfileScreenProps) {
+export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenHistory, onOpenLeaderboard, onOpenAdvanced }: ProfileScreenProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { address, fills } = useHyperliquid();
@@ -111,6 +112,7 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
         { icon: 'wallet', label: t.nav.portfolio, onClick: onOpenPortfolio },
         { icon: 'history', label: t.nav.history, onClick: onOpenHistory },
         { icon: 'star', label: 'Tabla', onClick: onOpenLeaderboard },
+        { icon: 'sliders', label: t.nav.advanced, onClick: onOpenAdvanced },
     ];
 
     return (
@@ -136,11 +138,11 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
             </div>
 
             {/* Quick links */}
-            <div style={{ padding: '14px 20px 0', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
+            <div style={{ padding: '14px 20px 0', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
                 {quickLinks.map((q) => (
-                    <button key={q.label} onClick={q.onClick} className="v2-card" style={{ padding: '14px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer', color: V2.t1, fontFamily: V2.ui }}>
+                    <button key={q.label} onClick={q.onClick} className="v2-card" style={{ padding: '14px 6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, cursor: 'pointer', color: V2.t1, fontFamily: V2.ui }}>
                         <Icon name={q.icon} size={18} color={V2.accent} />
-                        <span style={{ fontSize: 12, fontWeight: 600 }}>{q.label}</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' }}>{q.label}</span>
                     </button>
                 ))}
             </div>
