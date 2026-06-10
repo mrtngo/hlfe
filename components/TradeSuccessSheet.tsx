@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import { MarketLogo, Icon, V2 } from '@/components/V2Kit';
+import { haptic } from '@/lib/haptics';
 
 interface TradeSuccessSheetProps {
     open: boolean;
@@ -58,6 +60,11 @@ export default function TradeSuccessSheet({
     resting,
     ctaLabel,
 }: TradeSuccessSheetProps) {
+    // Celebratory buzz the moment the success sheet appears.
+    useEffect(() => {
+        if (open) haptic.success();
+    }, [open]);
+
     if (!open) return null;
 
     const isBuy = side === 'buy';

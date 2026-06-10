@@ -10,6 +10,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
 import { SliderRow, SlideToConfirm, V2 } from '@/components/V2Kit';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
+import { haptic } from '@/lib/haptics';
 
 interface ClosePositionSheetProps {
     open: boolean;
@@ -76,6 +77,7 @@ export default function ClosePositionSheet({
                 true,
             );
             if (result && result.filled === false) {
+                haptic.error();
                 setError(result.error || 'No se pudo cerrar la posición');
             } else {
                 setFilled({ token: closeSize, usd: closeNotional, price, side: closeSide });
@@ -83,6 +85,7 @@ export default function ClosePositionSheet({
                 setTimeout(() => refreshAccountData(), 500);
             }
         } catch (e) {
+            haptic.error();
             setError(e instanceof Error ? e.message : 'No se pudo cerrar la posición');
         } finally {
             setSubmitting(false);
@@ -163,7 +166,7 @@ export default function ClosePositionSheet({
                                 {[25, 50, 75, 100].map((p) => (
                                     <button
                                         key={p}
-                                        onClick={() => setPct(p)}
+                                        onClick={() => { haptic.light(); setPct(p); }}
                                         style={{
                                             flex: 1, padding: '9px 0', borderRadius: 10, cursor: 'pointer', fontFamily: V2.ui,
                                             fontSize: 13, fontWeight: 700,

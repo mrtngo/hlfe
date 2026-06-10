@@ -12,6 +12,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import TokenLogo from '@/components/TokenLogo';
+import { haptic } from '@/lib/haptics';
 
 // ---- Design tokens (inline-style mirror of the --v2-* CSS vars) ------------
 export const V2 = {
@@ -423,7 +424,7 @@ export function SliderRow({
             max={max}
             step={step}
             value={value}
-            onChange={(e) => onChange(Number(e.target.value))}
+            onChange={(e) => { haptic.tick(); onChange(Number(e.target.value)); }}
             style={{
               position: 'absolute', left: 0, right: 0, top: '50%', transform: 'translateY(-50%)',
               width: '100%', height: 36, margin: 0, opacity: 0, cursor: 'pointer', WebkitAppearance: 'none',
@@ -478,7 +479,10 @@ export function SlideToConfirm({
       if (track) {
         const rect = track.getBoundingClientRect();
         const max = rect.width - KNOB - PAD * 2;
-        if (x >= max - 6) onConfirm();
+        if (x >= max - 6) {
+          haptic.medium();
+          onConfirm();
+        }
       }
       setDragging(false);
       setX(0);
@@ -505,7 +509,7 @@ export function SlideToConfirm({
       <span style={{ fontSize: 17, fontWeight: 800, color: disabled ? V2.t3 : color, letterSpacing: '-0.01em', pointerEvents: 'none' }}>{label}</span>
       {!disabled && (
         <div
-          onPointerDown={() => setDragging(true)}
+          onPointerDown={() => { haptic.light(); setDragging(true); }}
           style={{
             position: 'absolute', left: PAD + x, top: PAD, bottom: PAD, width: KNOB, borderRadius: 14,
             background: soft, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -32,6 +32,7 @@ import NewsScreen from '@/components/NewsScreen';
 import BridgeModal from '@/components/BridgeModal';
 import Trollbox from '@/components/Trollbox';
 import { Icon, V2, type IconName } from '@/components/V2Kit';
+import { haptic } from '@/lib/haptics';
 
 export default function Home() {
     const { t } = useLanguage();
@@ -342,7 +343,7 @@ export default function Home() {
                                     <button
                                         key={tab.id}
                                         id={tab.domId}
-                                        onClick={tab.onClick}
+                                        onClick={() => { haptic.light(); tab.onClick(); }}
                                         disabled={accountLoading}
                                         style={{
                                             flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,

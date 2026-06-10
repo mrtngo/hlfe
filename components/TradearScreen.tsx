@@ -8,6 +8,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { usePreferences } from '@/hooks/usePreferences';
 import { MIN_ORDER_NOTIONAL_USD } from '@/lib/constants';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
+import { haptic } from '@/lib/haptics';
 import TokenLogo from '@/components/TokenLogo';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import TradingChart from '@/components/TradingChart';
@@ -189,6 +190,7 @@ function NormalMode({
         try {
             const result = await placeOrder(market.symbol, side, 'market', tokenSize, undefined, leverage);
             if (!result?.filled) {
+                haptic.error();
                 setError(result?.error || 'No se pudo completar la operación');
             } else {
                 // Optional take-profit ("cobrar cuando suba") — a real TP trigger.
@@ -204,6 +206,7 @@ function NormalMode({
                 setTimeout(() => refreshAccountData(), 500);
             }
         } catch (e: any) {
+            haptic.error();
             setError(e?.message || 'No se pudo completar la operación');
         } finally {
             setSubmitting(false);
@@ -269,7 +272,7 @@ function NormalMode({
                             <ChevronDown size={12} color={V2.t3} />
                         </button>
                         <button
-                            onClick={() => setSide(side === 'buy' ? 'sell' : 'buy')}
+                            onClick={() => { haptic.light(); setSide(side === 'buy' ? 'sell' : 'buy'); }}
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 9, cursor: 'pointer', fontFamily: V2.ui, border: 'none', background: side === 'buy' ? V2.posSoft : V2.negSoft, color: side === 'buy' ? V2.pos : V2.neg, fontWeight: 800, fontSize: 14 }}
                         >
                             {side === 'buy' ? 'Subir' : 'Bajar'} <Icon name={side === 'buy' ? 'arrowUpRight' : 'arrowDownLeft'} size={14} strokeWidth={2.6} />
@@ -327,7 +330,7 @@ function NormalMode({
                         return (
                             <button
                                 key={String(c.id)}
-                                onClick={() => setCashout(c.id)}
+                                onClick={() => { haptic.light(); setCashout(c.id); }}
                                 style={{ flex: 1, padding: '12px 0', borderRadius: 12, cursor: 'pointer', fontFamily: V2.ui, fontSize: 14, fontWeight: 700, border: on ? `1.5px solid ${V2.pos}` : `1px solid ${V2.hair}`, background: on ? V2.posSoft : 'transparent', color: on ? V2.pos : V2.t2 }}
                             >
                                 {c.t}

@@ -32,6 +32,7 @@ import { useCctpTransfer } from '@/hooks/useCctpTransfer';
 import { useSolanaDeposit } from '@/hooks/useSolanaDeposit';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { copyToClipboard } from '@/lib/clipboard';
+import { haptic } from '@/lib/haptics';
 import { ScreenV2, Icon, V2 } from '@/components/V2Kit';
 
 // Same kill-switch as the manual bridge: Solana is on-chain-untested.
@@ -254,21 +255,25 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     // Refresh the HL balance once the sweep lands.
     useEffect(() => {
         if (flow.status === 'success') {
+            haptic.success();
             const t = setTimeout(() => refreshAccountData(), 500);
             return () => clearTimeout(t);
         }
+        if (flow.status === 'error') haptic.error();
     }, [flow.status, refreshAccountData]);
 
     const handleCopy = async () => {
         if (!depositAddress) return;
         const ok = await copyToClipboard(depositAddress);
         if (ok) {
+            haptic.light();
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
     };
 
     const pickNetwork = (n: Network) => {
+        haptic.light();
         resetFlows();
         setNet(n);
     };
