@@ -29,6 +29,7 @@ import {
 import { encodeReceiveMessage, encodeTransfer, pollAttestation } from '@/lib/cctp/client';
 import { HYPERLIQUID_BRIDGE_ADDRESS } from '@/lib/constants/bridge';
 import { SOLANA_DOMAIN } from '@/lib/cctp/solana';
+import { makeSendOnChain } from '@/lib/cctp/evm-send';
 
 export type SolanaDepositStatus =
     | 'idle'
@@ -85,8 +86,8 @@ export function useSolanaDeposit() {
             setDepositTxHash('');
 
             const solWallet = solWallets?.[0];
-            const evmAddress = evmWallets.find((w) => w.walletClientType === 'privy')?.address
-                ?? evmWallets?.[0]?.address;
+            const evmWallet = evmWallets.find((w) => w.walletClientType === 'privy') ?? evmWallets?.[0];
+            const evmAddress = evmWallet?.address;
 
             if (!solWallet?.address) {
                 setError('No encontramos tu wallet de Solana. Vuelve a iniciar sesión.');
@@ -100,6 +101,10 @@ export function useSolanaDeposit() {
             }
 
             const arbDest = CCTP_CHAINS.arbitrum;
+            // Ensure the EVM wallet is actively on Arbitrum before the mint /
+            // forward, so a stale nonce from a prior EVM-chain deposit can't
+            // leak in (see lib/cctp/evm-send.ts).
+            const sendOnChain = makeSendOnChain(evmWallet as never, sendTransaction as never);
 
             try {
                 const connection = new Connection(SOLANA_RPC, 'confirmed');
@@ -143,15 +148,11 @@ export function useSolanaDeposit() {
                     balanceBefore = BigInt(0);
                 }
 
-                const mint = await sendTransaction(
-                    {
-                        to: CCTP_V2.messageTransmitter as Hex,
-                        data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
-                        value: BigInt(0),
-                        chainId: arbDest.chainId,
-                    },
-                    { sponsor: true },
-                );
+                const mint = await sendOnChain(arbDest.chainId, {
+                    to: CCTP_V2.messageTransmitter as Hex,
+                    data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
+                    value: BigInt(0),
+                });
                 setMintTxHash(mint.hash);
 
                 // 4) Forward the freshly-minted USDC into the HL bridge → perps.
@@ -186,15 +187,11 @@ export function useSolanaDeposit() {
                     );
                 }
 
-                const dep = await sendTransaction(
-                    {
-                        to: arbDest.usdc,
-                        data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, minted),
-                        value: BigInt(0),
-                        chainId: arbDest.chainId,
-                    },
-                    { sponsor: true },
-                );
+                const dep = await sendOnChain(arbDest.chainId, {
+                    to: arbDest.usdc,
+                    data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, minted),
+                    value: BigInt(0),
+                });
                 setDepositTxHash(dep.hash);
 
                 setStatus('success');

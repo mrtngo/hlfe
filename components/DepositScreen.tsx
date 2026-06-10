@@ -28,6 +28,7 @@ import {
 } from '@/lib/cctp/constants';
 import { encodeTransfer } from '@/lib/cctp/client';
 import { HYPERLIQUID_BRIDGE_ADDRESS } from '@/lib/constants/bridge';
+import { makeSendOnChain } from '@/lib/cctp/evm-send';
 import { useCctpTransfer } from '@/hooks/useCctpTransfer';
 import { useSolanaDeposit } from '@/hooks/useSolanaDeposit';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
@@ -113,9 +114,9 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     const [arbError, setArbError] = useState('');
     const attemptedRef = useRef(false);
 
-    const evmAddress =
-        evmWallets.find((w) => w.walletClientType === 'privy')?.address ??
-        evmWallets?.[0]?.address;
+    const evmWallet =
+        evmWallets.find((w) => w.walletClientType === 'privy') ?? evmWallets?.[0];
+    const evmAddress = evmWallet?.address;
     const solAddress = solWallets?.[0]?.address;
     const depositAddress = net?.key === 'solana' ? solAddress : evmAddress;
 
@@ -170,15 +171,12 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                 setArbStatus('depositing');
                 setArbError('');
                 try {
-                    await sendTransaction(
-                        {
-                            to: CCTP_CHAINS.arbitrum.usdc,
-                            data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, balance),
-                            value: BigInt(0),
-                            chainId: CCTP_CHAINS.arbitrum.chainId,
-                        },
-                        { sponsor: true },
-                    );
+                    const sendOnChain = makeSendOnChain(evmWallet as never, sendTransaction as never);
+                    await sendOnChain(CCTP_CHAINS.arbitrum.chainId, {
+                        to: CCTP_CHAINS.arbitrum.usdc,
+                        data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, balance),
+                        value: BigInt(0),
+                    });
                     setArbStatus('success');
                 } catch (e) {
                     setArbError(e instanceof Error ? e.message : 'No pudimos acreditar el depósito');
@@ -189,7 +187,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
             evm.transfer(net.key, 'arbitrum', amountStr, { autoDeposit: true });
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [net, sol.deposit, evm.transfer, sendTransaction],
+        [net, sol.deposit, evm.transfer, sendTransaction, evmWallet],
     );
 
     // ── Balance watcher — polls the deposit address on the selected chain ───

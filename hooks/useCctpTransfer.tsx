@@ -20,6 +20,7 @@ import {
     fastMaxFee,
 } from '@/lib/cctp/client';
 import { HYPERLIQUID_BRIDGE_ADDRESS } from '@/lib/constants/bridge';
+import { makeSendOnChain } from '@/lib/cctp/evm-send';
 
 /**
  * Native USDC transfer across chains via Circle CCTP V2 (Fast).
@@ -112,6 +113,10 @@ export function useCctpTransfer() {
 
             const maxFee = fastMaxFee(amount);
 
+            // Switches the wallet's active chain before each send so Privy
+            // computes the nonce against the right chain (see evm-send.ts).
+            const sendOnChain = makeSendOnChain(activeWallet as never, sendTransaction as never);
+
             try {
                 // 1) Check current allowance (best-effort; assume 0 if the read fails).
                 let allowance = BigInt(0);
@@ -133,34 +138,26 @@ export function useCctpTransfer() {
                 // 2) Approve the TokenMessenger to pull USDC, if needed.
                 if (allowance < amount) {
                     setStatus('approving');
-                    await sendTransaction(
-                        {
-                            to: from.usdc,
-                            data: encodeApprove(CCTP_V2.tokenMessenger, amount),
-                            value: BigInt(0),
-                            chainId: from.chainId,
-                        },
-                        { sponsor: true },
-                    );
+                    await sendOnChain(from.chainId, {
+                        to: from.usdc,
+                        data: encodeApprove(CCTP_V2.tokenMessenger, amount),
+                        value: BigInt(0),
+                    });
                 }
 
                 // 3) Burn on the source chain.
                 setStatus('burning');
-                const burn = await sendTransaction(
-                    {
-                        to: CCTP_V2.tokenMessenger as Hex,
-                        data: encodeDepositForBurn({
-                            amount,
-                            destinationDomain: to.domain,
-                            mintRecipient: address,
-                            burnToken: from.usdc,
-                            maxFee,
-                        }),
-                        value: BigInt(0),
-                        chainId: from.chainId,
-                    },
-                    { sponsor: true },
-                );
+                const burn = await sendOnChain(from.chainId, {
+                    to: CCTP_V2.tokenMessenger as Hex,
+                    data: encodeDepositForBurn({
+                        amount,
+                        destinationDomain: to.domain,
+                        mintRecipient: address,
+                        burnToken: from.usdc,
+                        maxFee,
+                    }),
+                    value: BigInt(0),
+                });
                 const burnHash = burn.hash;
                 setBurnTxHash(burnHash);
 
@@ -192,15 +189,11 @@ export function useCctpTransfer() {
                     }
                 }
 
-                const mint = await sendTransaction(
-                    {
-                        to: CCTP_V2.messageTransmitter as Hex,
-                        data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
-                        value: BigInt(0),
-                        chainId: to.chainId,
-                    },
-                    { sponsor: true },
-                );
+                const mint = await sendOnChain(to.chainId, {
+                    to: CCTP_V2.messageTransmitter as Hex,
+                    data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
+                    value: BigInt(0),
+                });
                 setMintTxHash(mint.hash);
 
                 // 6) Forward into the Hyperliquid bridge → perps balance. Silent
@@ -244,15 +237,11 @@ export function useCctpTransfer() {
                         );
                     }
 
-                    const deposit = await sendTransaction(
-                        {
-                            to: to.usdc,
-                            data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, minted),
-                            value: BigInt(0),
-                            chainId: to.chainId,
-                        },
-                        { sponsor: true },
-                    );
+                    const deposit = await sendOnChain(to.chainId, {
+                        to: to.usdc,
+                        data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, minted),
+                        value: BigInt(0),
+                    });
                     setDepositTxHash(deposit.hash);
                 }
 
