@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Share2, Trophy } from 'lucide-react';
+import { Search, Trophy } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useUser } from '@/hooks/useUser';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -14,7 +14,14 @@ import SkeletonRow from '@/components/SkeletonRow';
 
 type Period = 'daily' | 'weekly' | 'monthly' | 'all';
 
-export default function Leaderboard() {
+interface LeaderboardProps {
+    /** Open another trader's public profile. */
+    onSelectTrader?: (address: string) => void;
+    /** Open the trader search screen. */
+    onOpenSearch?: () => void;
+}
+
+export default function Leaderboard({ onSelectTrader, onOpenSearch }: LeaderboardProps = {}) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { address } = useHyperliquid();
@@ -64,7 +71,8 @@ export default function Leaderboard() {
                 right={
                     <button
                         type="button"
-                        aria-label="Share"
+                        aria-label="Buscar trader"
+                        onClick={onOpenSearch}
                         style={{
                             width: 36,
                             height: 36,
@@ -77,7 +85,7 @@ export default function Leaderboard() {
                             cursor: 'pointer',
                         }}
                     >
-                        <Share2 size={14} color="rgba(255,255,255,0.7)" />
+                        <Search size={14} color="rgba(255,255,255,0.7)" />
                     </button>
                 }
             />
@@ -161,6 +169,7 @@ export default function Leaderboard() {
                                             tfLabel[period],
                                         )}
                                         formatCurrency={formatCurrency}
+                                        onClick={() => onSelectTrader?.(e.wallet_address)}
                                     />
                                 );
                             })}
@@ -242,6 +251,10 @@ export default function Leaderboard() {
                                     return (
                                         <div
                                             key={e.user_id}
+                                            onClick={() => onSelectTrader?.(e.wallet_address)}
+                                            role="button"
+                                            tabIndex={0}
+                                            onKeyDown={(ev) => { if (ev.key === 'Enter') onSelectTrader?.(e.wallet_address); }}
                                             style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -255,6 +268,7 @@ export default function Leaderboard() {
                                                 paddingLeft: isMe ? 8 : 0,
                                                 paddingRight: isMe ? 8 : 0,
                                                 borderRadius: isMe ? 12 : 0,
+                                                cursor: onSelectTrader ? 'pointer' : 'default',
                                             }}
                                         >
                                             <div
@@ -357,6 +371,7 @@ function PodiumCard({
     height,
     tfLabel,
     formatCurrency,
+    onClick,
 }: {
     rank: number;
     entry: LeaderboardEntry;
@@ -365,10 +380,15 @@ function PodiumCard({
     height: number;
     tfLabel: string;
     formatCurrency: (v: number, dp?: number) => string;
+    onClick?: () => void;
 }) {
     const positive = entry.total_pnl >= 0;
     return (
         <div
+            onClick={onClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(ev) => { if (ev.key === 'Enter') onClick?.(); }}
             style={{
                 height,
                 padding: 12,
@@ -380,6 +400,7 @@ function PodiumCard({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 textAlign: 'center',
+                cursor: onClick ? 'pointer' : 'default',
             }}
         >
             <div style={{ fontSize: 22 }}>{medal}</div>

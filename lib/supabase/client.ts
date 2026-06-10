@@ -228,6 +228,27 @@ export const db = {
             return user;
         },
 
+        /**
+         * Search registered users by username (case-insensitive prefix/substring)
+         * for the public-profile lookup. Only returns users who set a username.
+         */
+        async search(query: string, limit = 20): Promise<User[]> {
+            const q = query.trim();
+            if (!q) return [];
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .ilike('username', `%${q}%`)
+                .not('username', 'is', null)
+                .limit(limit);
+
+            if (error) {
+                console.error('Error searching users:', error);
+                return [];
+            }
+            return data || [];
+        },
+
         async getByReferralCode(code: string): Promise<User | null> {
             const { data, error } = await supabase
                 .from('users')

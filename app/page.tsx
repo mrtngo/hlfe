@@ -29,6 +29,8 @@ import BolsillosScreen from '@/components/BolsillosScreen';
 import DepositModal from '@/components/DepositModal';
 import DepositScreen from '@/components/DepositScreen';
 import NewsScreen from '@/components/NewsScreen';
+import PublicProfileScreen from '@/components/PublicProfileScreen';
+import TraderSearchScreen from '@/components/TraderSearchScreen';
 import BridgeModal from '@/components/BridgeModal';
 import Trollbox from '@/components/Trollbox';
 import { Icon, V2, type IconName } from '@/components/V2Kit';
@@ -50,8 +52,12 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
+    /** Address whose public profile is being viewed. */
+    const [profileAddress, setProfileAddress] = useState<string | null>(null);
+    /** View to return to from the public profile / search. */
+    const [profileReturn, setProfileReturn] = useState<'leaderboard' | 'traderSearch'>('leaderboard');
     /** Base ticker to preselect when navigating into Spot from a holdings row. */
     const [selectedSpotBase, setSelectedSpotBase] = useState<string | undefined>(undefined);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
@@ -131,7 +137,7 @@ export default function Home() {
     // V2 "serious redesign" screens render full-bleed (they own their padding
     // and background via ScreenV2). Everything else keeps the legacy padded
     // container + live-sync chip.
-    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news'];
+    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'traderSearch', 'publicProfile'];
     const isV2View = V2_VIEWS.includes(view);
 
     return (
@@ -190,6 +196,25 @@ export default function Home() {
                                         setView('trading');
                                     }}
                                 />
+                            ) : view === 'traderSearch' ? (
+                                <TraderSearchScreen
+                                    onBack={() => setView('leaderboard')}
+                                    onSelect={(addr) => {
+                                        setProfileAddress(addr);
+                                        setProfileReturn('traderSearch');
+                                        setView('publicProfile');
+                                    }}
+                                />
+                            ) : view === 'publicProfile' ? (
+                                <PublicProfileScreen
+                                    address={profileAddress || ''}
+                                    onBack={() => setView(profileReturn)}
+                                    onTokenClick={(symbol) => {
+                                        setSelectedMarket(symbol);
+                                        setDetailSymbol(symbol);
+                                        setView('tokenDetail');
+                                    }}
+                                />
                             ) : view === 'deposit' ? (
                                 <DepositScreen
                                     onBack={() => setView('home')}
@@ -234,7 +259,14 @@ export default function Home() {
 
                         {view === 'leaderboard' ? (
                             <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                                <Leaderboard />
+                                <Leaderboard
+                                    onSelectTrader={(addr) => {
+                                        setProfileAddress(addr);
+                                        setProfileReturn('leaderboard');
+                                        setView('publicProfile');
+                                    }}
+                                    onOpenSearch={() => setView('traderSearch')}
+                                />
                             </div>
                         ) : view === 'spot' ? (
                             <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
