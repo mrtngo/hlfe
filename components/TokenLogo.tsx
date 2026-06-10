@@ -197,6 +197,13 @@ function getCryptoLogoUrls(symbol: string): string[] {
     // 3. cryptocurrency-icons GitHub CDN (fallback)
     urls.push(`https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/${lowerSymbol}.png`);
 
+    // 4. trade.xyz markets CDN — covers the HIP-3 "xyz:" stock/commodity/index
+    //    perps (SP500, MU, EWY, GOLD, MSTR, KR200, …). These RWAs aren't in the
+    //    hardcoded stock map, so they land in this crypto branch; this last
+    //    fallback gives them their real logo instead of a generic letter. Real
+    //    crypto resolves above and never reaches here.
+    urls.push(`https://app.trade.xyz/markets/${lowerSymbol}.svg`);
+
     return urls;
 }
 
