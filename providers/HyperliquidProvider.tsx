@@ -2887,7 +2887,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             hyperliquidChain: 'Mainnet',
                             destination: destination,
                             amount: amount,
-                            time: BigInt(nonce),
+                            // Plain number — JSON.stringify throws on a BigInt
+                            // ("Do not know how to serialize a BigInt"), which
+                            // killed the whole withdraw before signing. nonce is
+                            // Date.now(), well within safe-integer range, and the
+                            // wallet encodes it to uint64.
+                            time: nonce,
                         },
                     }),
                 ],
