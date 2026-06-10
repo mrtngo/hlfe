@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useWallets } from '@privy-io/react-auth';
@@ -28,10 +28,25 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
         setMounted(true);
     }, []);
 
+    // When the modal opens by tapping "Retirar", iOS dispatches the tap's
+    // synthesized `click` AFTER the full-screen backdrop has rendered at the
+    // same coordinates — which would immediately fire the backdrop's onClose,
+    // so the modal flashes open and shuts ("nothing happens"). Ignore backdrop
+    // dismissals for a beat after opening to absorb that ghost click.
+    const openedAtRef = useRef(0);
+    useEffect(() => {
+        if (isOpen) openedAtRef.current = Date.now();
+    }, [isOpen]);
+
+    const handleBackdropClose = () => {
+        if (Date.now() - openedAtRef.current < 400) return;
+        onClose();
+    };
+
     // Withdrawal fee is $1
     const WITHDRAWAL_FEE = 1;
     const MIN_WITHDRAWAL = 2; // Min $2 to cover fee + some amount
-    const availableBalance = account.availableMargin || 0;
+    const availableBalance = account?.availableMargin || 0;
     const amountNum = parseFloat(amount || '0');
     const netAmount = amountNum - WITHDRAWAL_FEE;
     const isValidAmount = amountNum >= MIN_WITHDRAWAL && amountNum <= availableBalance;
@@ -58,11 +73,11 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     if (!isOpen || !mounted) return null;
 
     const modalContent = (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black/85 backdrop-blur-sm"
-                onClick={onClose}
+                onClick={handleBackdropClose}
             />
 
             {/* Modal */}
