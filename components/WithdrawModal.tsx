@@ -1,22 +1,30 @@
 'use client';
 
+// Withdraw USDC → Arbitrum. Rewritten as a V2 bottom sheet with inline styles:
+// the previous version used pre-V2 Tailwind classes (bg-brand, text-coffee-medium…)
+// that no longer resolve, so it opened as a near-invisible dark panel and looked
+// like "nothing happened". Inline styles render regardless of the Tailwind theme.
+
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { useWallets } from '@privy-io/react-auth';
-import { X, AlertCircle, Loader2, ArrowUpRight, Clock, DollarSign } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { API_URL } from '@/lib/hyperliquid/client';
+import { useCurrency } from '@/context/CurrencyContext';
+import { haptic } from '@/lib/haptics';
+import { Icon, V2 } from '@/components/V2Kit';
 
 interface WithdrawModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
+const WITHDRAWAL_FEE = 1; // $1 Hyperliquid withdrawal fee
+const MIN_WITHDRAWAL = 2; // must cover the fee + something
+
 export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const { address, account, withdraw } = useHyperliquid();
-    const { wallets } = useWallets();
     const { t } = useLanguage();
+    const { formatCurrency } = useCurrency();
 
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -24,209 +32,204 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const [success, setSuccess] = useState(false);
     const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+    useEffect(() => setMounted(true), []);
 
-    // When the modal opens by tapping "Retirar", iOS dispatches the tap's
-    // synthesized `click` AFTER the full-screen backdrop has rendered at the
-    // same coordinates — which would immediately fire the backdrop's onClose,
-    // so the modal flashes open and shuts ("nothing happens"). Ignore backdrop
-    // dismissals for a beat after opening to absorb that ghost click.
+    // Reset fields each time the sheet opens, and record the open time so the
+    // backdrop can ignore the tap that opened it (iOS ghost click).
     const openedAtRef = useRef(0);
     useEffect(() => {
-        if (isOpen) openedAtRef.current = Date.now();
+        if (isOpen) {
+            openedAtRef.current = Date.now();
+            setAmount('');
+            setError('');
+            setSuccess(false);
+            setLoading(false);
+        }
     }, [isOpen]);
 
-    const handleBackdropClose = () => {
-        if (Date.now() - openedAtRef.current < 400) return;
-        onClose();
-    };
-
-    // Withdrawal fee is $1
-    const WITHDRAWAL_FEE = 1;
-    const MIN_WITHDRAWAL = 2; // Min $2 to cover fee + some amount
     const availableBalance = account?.availableMargin || 0;
     const amountNum = parseFloat(amount || '0');
     const netAmount = amountNum - WITHDRAWAL_FEE;
     const isValidAmount = amountNum >= MIN_WITHDRAWAL && amountNum <= availableBalance;
+    const belowMin = amountNum > 0 && amountNum < MIN_WITHDRAWAL;
+    const overBalance = amountNum > availableBalance;
 
-    const handleWithdraw = async () => {
-        if (!address || !isValidAmount) return;
-
-        setLoading(true);
+    const handleType = (v: string) => {
+        let c = v.replace(/[^0-9.]/g, '');
+        const d = c.indexOf('.');
+        if (d >= 0) c = c.slice(0, d + 1) + c.slice(d + 1).replace(/\./g, '');
+        if (c.startsWith('.')) c = '0' + c;
+        setAmount(c);
         setError('');
         setSuccess(false);
+    };
 
+    const handleWithdraw = async () => {
+        if (!address || !isValidAmount || loading) return;
+        haptic.medium();
+        setLoading(true);
+        setError('');
         try {
             await withdraw(amount, address);
+            haptic.success();
             setSuccess(true);
             setAmount('');
         } catch (err: any) {
-            console.error('Withdrawal error:', err);
-            setError(err.message || 'Failed to process withdrawal');
+            haptic.error();
+            setError(err?.message || 'No se pudo procesar el retiro');
         } finally {
             setLoading(false);
         }
     };
 
+    const handleBackdrop = () => {
+        if (loading) return;
+        if (Date.now() - openedAtRef.current < 400) return; // absorb the opening tap
+        onClose();
+    };
+
     if (!isOpen || !mounted) return null;
 
-    const modalContent = (
-        <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4">
+    return createPortal(
+        <div style={{ position: 'fixed', inset: 0, zIndex: 10001, fontFamily: V2.ui, color: V2.t1 }}>
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/85 backdrop-blur-sm"
-                onClick={handleBackdropClose}
+                onClick={handleBackdrop}
+                style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}
             />
 
-            {/* Modal */}
-            <div className="relative w-full max-w-[400px] bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10">
-                    <h2 className="text-xl font-bold text-white">{t.withdraw.title}</h2>
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-full hover:bg-bg-secondary transition-colors"
-                    >
-                        <X className="w-5 h-5 text-white" />
-                    </button>
-                </div>
+            {/* Sheet */}
+            <div
+                style={{
+                    position: 'absolute', left: 0, right: 0, bottom: 0, maxWidth: 480, margin: '0 auto',
+                    background: V2.cardSolid, border: `1px solid ${V2.hair}`, borderBottom: 'none',
+                    borderTopLeftRadius: 26, borderTopRightRadius: 26,
+                    padding: '14px 20px calc(24px + env(safe-area-inset-bottom))',
+                    boxShadow: '0 -20px 50px -16px rgba(0,0,0,0.8)',
+                }}
+            >
+                <div style={{ width: 42, height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.16)', margin: '0 auto 18px' }} />
 
-                {/* Content */}
-                <div className="p-4 space-y-4">
-                    {/* Info Banner */}
-                    <div className="bg-brand/10 border border-[#FFFF00]/20 rounded-xl p-3 flex gap-3">
-                        <ArrowUpRight className="w-5 h-5 text-brand shrink-0" />
-                        <div className="text-sm">
-                            <div className="font-semibold text-brand mb-1">{t.withdraw.toArbitrum}</div>
-                            <div className="text-white/60">
-                                {t.withdraw.desc}
-                                <br />
-                                <span className="text-brand">{t.withdraw.fee}: ${WITHDRAWAL_FEE} USDC</span>
-                            </div>
+                {success ? (
+                    <div style={{ textAlign: 'center', padding: '10px 0 6px' }}>
+                        <div style={{ width: 72, height: 72, margin: '0 auto 14px', borderRadius: '50%', background: 'radial-gradient(circle at 30% 30%, rgba(34,197,94,0.35), rgba(34,197,94,0.06))', border: '1px solid rgba(34,197,94,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Icon name="bolt" size={30} color={V2.pos} />
                         </div>
+                        <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }}>Retiro enviado</div>
+                        <div style={{ marginTop: 8, fontSize: 14, color: V2.t2, lineHeight: 1.5 }}>
+                            {t.withdraw.success || 'Tu USDC llegará a Arbitrum en unos minutos.'}
+                        </div>
+                        <button onClick={onClose} style={{ ...ctaBtn, marginTop: 22, background: V2.accent, color: V2.accentInk }}>Listo</button>
                     </div>
+                ) : (
+                    <>
+                        {/* Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }}>{t.withdraw.title || 'Retirar USDC'}</div>
+                            <button onClick={onClose} aria-label="Cerrar" style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.06)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Icon name="plus" size={18} color={V2.t2} strokeWidth={2.4} />
+                            </button>
+                        </div>
+                        <div style={{ marginTop: 6, fontSize: 13.5, color: V2.t3, lineHeight: 1.45 }}>
+                            {t.withdraw.desc || 'Retirá USDC de tu cuenta hacia Arbitrum.'}
+                        </div>
 
-                    {/* Balance */}
-                    <div className="flex justify-between items-center text-sm">
-                        <span className="text-white/50">{t.withdraw.available}:</span>
+                        {/* Available */}
                         <button
                             onClick={() => setAmount(availableBalance.toFixed(2))}
-                            className="text-white hover:text-brand transition-colors font-mono"
+                            style={{ marginTop: 16, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 12, background: V2.card, border: `1px solid ${V2.hair}`, cursor: 'pointer', fontFamily: V2.ui }}
                         >
-                            ${availableBalance.toFixed(2)}
+                            <span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{t.withdraw.available || 'Disponible'}</span>
+                            <span style={{ fontSize: 14, fontWeight: 700, fontFamily: V2.mono, color: V2.accent }}>{formatCurrency(availableBalance)}</span>
                         </button>
-                    </div>
 
-                    {/* Amount Input */}
-                    <div className="relative">
-                        <input
-                            type="number"
-                            value={amount}
-                            onChange={(e) => {
-                                setAmount(e.target.value);
-                                setError('');
-                                setSuccess(false);
-                            }}
-                            placeholder="0.00"
-                            className="w-full py-4 px-4 pr-20 bg-[#1A1A1A] border border-white/10 rounded-xl text-white text-lg font-mono focus:border-[#FFFF00]/50 focus:ring-2 focus:ring-brand/20 outline-none transition-all"
-                        />
-                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white font-semibold">
-                            USDC
-                        </span>
-                    </div>
-
-                    {/* Quick Amount Buttons */}
-                    <div className="flex gap-2">
-                        {[25, 50, 75, 100].map((pct) => (
-                            <button
-                                key={pct}
-                                onClick={() => setAmount((availableBalance * pct / 100).toFixed(2))}
-                                className="flex-1 py-2 text-sm font-semibold text-white/60 hover:text-brand bg-bg-secondary hover:bg-brand/10 rounded-lg transition-all"
-                            >
-                                {pct}%
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Summary */}
-                    {amountNum > 0 && (
-                        <div className="bg-[#1A1A1A] rounded-xl p-3 space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-white/50">{t.withdraw.amount}</span>
-                                <span className="text-white font-mono">${amountNum.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-white/50">{t.withdraw.fee}</span>
-                                <span className="text-white/70 font-mono">-${WITHDRAWAL_FEE.toFixed(2)}</span>
-                            </div>
-                            <div className="border-t border-white/10 pt-2 flex justify-between">
-                                <span className="text-white/50">{t.withdraw.receive}</span>
-                                <span className={`font-mono font-bold ${netAmount > 0 ? 'text-brand' : 'text-red-400'}`}>
-                                    ${Math.max(0, netAmount).toFixed(2)}
-                                </span>
-                            </div>
+                        {/* Amount input */}
+                        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderRadius: 14, background: V2.card, border: `1px solid ${belowMin || overBalance ? 'rgba(239,68,68,0.4)' : V2.hair}` }}>
+                            <input
+                                inputMode="decimal"
+                                value={amount}
+                                onChange={(e) => handleType(e.target.value)}
+                                placeholder="0.00"
+                                autoFocus
+                                style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: V2.t1, fontSize: 26, fontWeight: 700, fontFamily: V2.mono }}
+                            />
+                            <span style={{ fontSize: 13, fontWeight: 700, color: V2.t3 }}>USDC</span>
                         </div>
-                    )}
 
-                    {/* Validation Messages */}
-                    {amountNum > 0 && amountNum < MIN_WITHDRAWAL && (
-                        <div className="flex items-center gap-2 text-red-400 text-sm">
-                            <AlertCircle className="w-4 h-4" />
-                            {t.withdraw.minAmount.replace('{{amount}}', MIN_WITHDRAWAL.toString())}
+                        {/* Percentage chips */}
+                        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                            {[25, 50, 75, 100].map((p) => (
+                                <button
+                                    key={p}
+                                    onClick={() => { haptic.light(); setAmount(((availableBalance * p) / 100).toFixed(2)); }}
+                                    style={{ flex: 1, padding: '9px 0', borderRadius: 10, cursor: 'pointer', fontFamily: V2.ui, fontSize: 13, fontWeight: 700, border: `1px solid ${V2.hair}`, background: 'transparent', color: V2.t2 }}
+                                >
+                                    {p === 100 ? 'Máx' : `${p}%`}
+                                </button>
+                            ))}
                         </div>
-                    )}
 
-                    {amountNum > availableBalance && (
-                        <div className="flex items-center gap-2 text-red-400 text-sm">
-                            <AlertCircle className="w-4 h-4" />
-                            {t.withdraw.insufficient}
-                        </div>
-                    )}
-
-                    {/* Withdraw Button */}
-                    <button
-                        onClick={handleWithdraw}
-                        disabled={loading || !isValidAmount || !address}
-                        className="w-full py-4 bg-brand text-black font-bold rounded-full hover:bg-brand-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                    >
-                        {loading ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                {t.withdraw.processing}
-                            </>
-                        ) : (
-                            <>
-                                <ArrowUpRight className="w-5 h-5" />
-                                {t.withdraw.withdraw}
-                            </>
+                        {/* Summary */}
+                        {amountNum > 0 && (
+                            <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 12, background: V2.card, border: `1px solid ${V2.hair}`, display: 'flex', flexDirection: 'column', gap: 7 }}>
+                                <Row label={t.withdraw.fee || 'Tarifa'} value={`-${formatCurrency(WITHDRAWAL_FEE)}`} />
+                                <div style={{ height: 1, background: V2.hair }} />
+                                <Row label={t.withdraw.receive || 'Recibes'} value={formatCurrency(Math.max(0, netAmount))} strong color={netAmount > 0 ? V2.accent : V2.neg} />
+                            </div>
                         )}
-                    </button>
 
-                    {/* Feedback */}
-                    {error && (
-                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-sm">
-                            {error}
+                        {/* Validation / error */}
+                        {(belowMin || overBalance || error) && (
+                            <div style={{ marginTop: 12, fontSize: 12.5, color: V2.neg, fontWeight: 600, textAlign: 'center' }}>
+                                {error
+                                    ? error
+                                    : belowMin
+                                      ? (t.withdraw.minAmount || 'El mínimo es ${{amount}} USDC').replace('{{amount}}', String(MIN_WITHDRAWAL))
+                                      : t.withdraw.insufficient || 'Saldo insuficiente'}
+                            </div>
+                        )}
+
+                        {/* CTA */}
+                        <button
+                            onClick={handleWithdraw}
+                            disabled={!isValidAmount || !address || loading}
+                            style={{
+                                ...ctaBtn, marginTop: 16,
+                                background: isValidAmount && address && !loading ? V2.accent : 'rgba(255,255,255,0.05)',
+                                color: isValidAmount && address && !loading ? V2.accentInk : V2.t3,
+                                cursor: isValidAmount && address && !loading ? 'pointer' : 'not-allowed',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                            }}
+                        >
+                            {loading ? (t.withdraw.processing || 'Procesando…') : (
+                                <>
+                                    {t.withdraw.withdraw || 'Retirar'}
+                                    <Icon name="arrowUpRight" size={17} color={isValidAmount && address ? V2.accentInk : V2.t3} strokeWidth={2.6} />
+                                </>
+                            )}
+                        </button>
+
+                        <div style={{ marginTop: 12, textAlign: 'center', fontSize: 12, color: V2.t3 }}>
+                            {t.withdraw.estTime || 'Llega en ~5 minutos · Arbitrum'}
                         </div>
-                    )}
-
-                    {success && (
-                        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-green-400 text-sm flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            {t.withdraw.success}
-                        </div>
-                    )}
-
-                    {/* Time Estimate */}
-                    <div className="flex items-center justify-center gap-2 text-white/40 text-xs">
-                        <Clock className="w-3 h-3" />
-                        {t.withdraw.estTime}
-                    </div>
-                </div>
+                    </>
+                )}
             </div>
+        </div>,
+        document.body,
+    );
+}
+
+function Row({ label, value, strong, color }: { label: string; value: string; strong?: boolean; color?: string }) {
+    return (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{label}</span>
+            <span style={{ fontSize: strong ? 15 : 13.5, fontWeight: strong ? 800 : 600, fontFamily: V2.mono, color: color || V2.t2 }}>{value}</span>
         </div>
     );
-
-    return createPortal(modalContent, document.body);
 }
+
+const ctaBtn: React.CSSProperties = {
+    width: '100%', padding: 15, borderRadius: 16, border: 'none',
+    fontWeight: 800, fontSize: 15.5, fontFamily: 'inherit', cursor: 'pointer',
+};
