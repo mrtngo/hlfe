@@ -134,6 +134,16 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                             {t.withdraw.desc || 'Retirá USDC de tu cuenta hacia Arbitrum.'}
                         </div>
 
+                        {/* Fee notice — always visible. The $1 fee is deducted by
+                            Hyperliquid from the withdrawal itself, so the user can
+                            withdraw their full balance; we just inform them. */}
+                        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8, padding: '10px 13px', borderRadius: 12, background: V2.accentSoft, border: '1px solid rgba(250,204,21,0.2)' }}>
+                            <Icon name="info" size={15} color={V2.accent} />
+                            <span style={{ fontSize: 12.5, color: V2.t2, lineHeight: 1.4 }}>
+                                Se descuenta una tarifa de red de <span style={{ color: V2.accent, fontWeight: 700, fontFamily: V2.mono }}>$1 USD</span> del monto que retires.
+                            </span>
+                        </div>
+
                         {/* Available */}
                         <button
                             onClick={() => setAmount(availableBalance.toFixed(2))}
@@ -169,12 +179,10 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                             ))}
                         </div>
 
-                        {/* Summary */}
+                        {/* Net received — fee already surfaced in the notice above. */}
                         {amountNum > 0 && (
-                            <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 12, background: V2.card, border: `1px solid ${V2.hair}`, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                                <Row label={t.withdraw.fee || 'Tarifa'} value={`-${formatCurrency(WITHDRAWAL_FEE)}`} />
-                                <div style={{ height: 1, background: V2.hair }} />
-                                <Row label={t.withdraw.receive || 'Recibes'} value={formatCurrency(Math.max(0, netAmount))} strong color={netAmount > 0 ? V2.accent : V2.neg} />
+                            <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 12, background: V2.card, border: `1px solid ${V2.hair}` }}>
+                                <Row label={t.withdraw.receive || 'Recibes (después de la tarifa)'} value={formatCurrency(Math.max(0, netAmount))} strong color={netAmount > 0 ? V2.accent : V2.neg} />
                             </div>
                         )}
 
