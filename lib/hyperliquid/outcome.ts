@@ -21,9 +21,32 @@ export interface OutcomeMetaEntry {
     name: string;
     description: string;
     sideSpecs: OutcomeSideSpec[];
-    /** Settles in this token — `USDH` for most, but `USDC` for some markets. */
+    /** Settles in this token — `USDH` for some, `USDC` for most mainnet markets. */
     quoteToken: 'USDH' | 'USDC' | string;
 }
+
+/**
+ * Raw `questions[]` entry from /info `outcomeMeta`. A question groups several
+ * outcomes that belong to the same real-world event (e.g. "2026 World Cup
+ * Champion" → one outcome per team), plus an internal `fallbackOutcome` that
+ * is a placeholder and must never be shown as a tradeable market.
+ */
+export interface OutcomeQuestionEntry {
+    question: number;
+    name: string;
+    description?: string;
+    fallbackOutcome: number;
+    namedOutcomes: number[];
+}
+
+/** Full /info `outcomeMeta` payload. */
+export interface OutcomeMeta {
+    outcomes: OutcomeMetaEntry[];
+    questions: OutcomeQuestionEntry[];
+}
+
+/** Coarse category, derived from the event name for filtering/labelling. */
+export type OutcomeCategory = 'sports' | 'economy' | 'politics' | 'crypto' | 'other';
 
 /** Flattened view used by the UI — one entry per side. */
 export interface OutcomeSideView {
@@ -43,6 +66,12 @@ export interface OutcomeMarketView {
     description: string;
     quoteToken: string;
     sides: OutcomeSideView[];
+    /** Parent question id, when this outcome belongs to a grouped event. */
+    questionId: number | null;
+    /** Event name to group under — the question name, or the market's own. */
+    eventName: string;
+    /** Coarse category derived from the event name. */
+    category: OutcomeCategory;
 }
 
 /**
@@ -84,7 +113,7 @@ export function parseCoinRef(coin: string): { outcomeId: number; sideIdx: number
 }
 
 /** Fetches `outcomeMeta` from /info. Throws on non-2xx. */
-export async function fetchOutcomeMeta(): Promise<OutcomeMetaEntry[]> {
+export async function fetchOutcomeMeta(): Promise<OutcomeMeta> {
     const res = await fetch(`${API_URL}/info`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,29 +121,74 @@ export async function fetchOutcomeMeta(): Promise<OutcomeMetaEntry[]> {
     });
     if (!res.ok) throw new Error(`outcomeMeta fetch failed: ${res.status}`);
     const data = await res.json();
-    return data?.outcomes || [];
+    return { outcomes: data?.outcomes || [], questions: data?.questions || [] };
 }
 
-/** Helper to join outcomeMeta + allMids into the consumable market list. */
+/** Keyword → coarse category. Used for the filter chips and labelling. */
+export function deriveCategory(name: string): OutcomeCategory {
+    const n = name.toLowerCase();
+    if (/(world cup|nba|finals|champion|\bvs\b|game \d|\bcup\b|league|match)/.test(n)) return 'sports';
+    if (/(cpi|fed|rate|fomc|inflation|gdp|jobs|unemployment|interest|recession)/.test(n)) return 'economy';
+    if (/(btc|bitcoin|eth|ethereum|crypto|solana|\bsol\b|\bhype\b|token)/.test(n)) return 'crypto';
+    if (/(election|president|senate|congress|vote|poll|trump|government)/.test(n)) return 'politics';
+    return 'other';
+}
+
+/**
+ * Join outcomeMeta + allMids into the consumable market list.
+ *
+ * Drops internal `fallbackOutcome` placeholders (and anything literally named
+ * "Fallback"/"Recurring") so they never surface as tradeable markets, and
+ * attaches each market's parent event name + category for grouping.
+ */
 export function buildMarketViews(
-    outcomes: OutcomeMetaEntry[],
+    meta: OutcomeMeta,
     allMids: Record<string, string>,
 ): OutcomeMarketView[] {
-    return outcomes.map((o) => ({
-        outcomeId: o.outcome,
-        name: o.name,
-        description: o.description,
-        quoteToken: o.quoteToken,
-        sides: o.sideSpecs.map((s, idx) => {
-            const ref = outcomeCoinRef(o.outcome, idx);
-            const midStr = allMids[ref];
+    const { outcomes, questions } = meta;
+    // Outcome ids that are internal fallbacks — never show these.
+    const fallbackIds = new Set(questions.map((q) => q.fallbackOutcome));
+    // outcomeId → parent question, for grouping + event naming.
+    const questionByOutcome = new Map<number, OutcomeQuestionEntry>();
+    for (const q of questions) {
+        for (const oid of q.namedOutcomes) questionByOutcome.set(oid, q);
+    }
+
+    // Internal/placeholder markets that aren't presentable: explicit
+    // fallbacks, anything literally "Fallback", and the "Recurring"
+    // price-bucket template (outcomes named "Recurring …" with no real
+    // labels, and its parent question).
+    const isJunk = (o: OutcomeMetaEntry): boolean => {
+        if (fallbackIds.has(o.outcome)) return true;
+        if (o.name === 'Fallback' || /^recurring/i.test(o.name)) return true;
+        if (questionByOutcome.get(o.outcome)?.name === 'Recurring') return true;
+        return false;
+    };
+
+    return outcomes
+        .filter((o) => !isJunk(o))
+        .map((o) => {
+            const q = questionByOutcome.get(o.outcome) || null;
+            const eventName = q?.name || o.name;
             return {
                 outcomeId: o.outcome,
-                sideIdx: idx,
-                name: s.name,
-                coinRef: ref,
-                mid: midStr ? parseFloat(midStr) : 0,
+                name: o.name,
+                description: o.description,
+                quoteToken: o.quoteToken,
+                questionId: q?.question ?? null,
+                eventName,
+                category: deriveCategory(eventName),
+                sides: o.sideSpecs.map((s, idx) => {
+                    const ref = outcomeCoinRef(o.outcome, idx);
+                    const midStr = allMids[ref];
+                    return {
+                        outcomeId: o.outcome,
+                        sideIdx: idx,
+                        name: s.name,
+                        coinRef: ref,
+                        mid: midStr ? parseFloat(midStr) : 0,
+                    };
+                }),
             };
-        }),
-    }));
+        });
 }

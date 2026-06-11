@@ -15,6 +15,7 @@ import {
     buildMarketViews,
     fetchOutcomeMeta,
     type OutcomeMarketView,
+    type OutcomeMeta,
 } from '@/lib/hyperliquid/outcome';
 
 interface Result {
@@ -32,7 +33,7 @@ export function useOutcomeMarkets(): Result {
     const fetchAll = useCallback(async () => {
         try {
             // Cache outcomeMeta — the universe of markets evolves slowly.
-            const outcomes = await cachedFetch(
+            const meta = await cachedFetch<OutcomeMeta>(
                 'outcomeMeta',
                 fetchOutcomeMeta,
                 30_000,
@@ -52,7 +53,7 @@ export function useOutcomeMarkets(): Result {
                 },
                 3_000,
             );
-            setMarkets(buildMarketViews(outcomes, allMids));
+            setMarkets(buildMarketViews(meta, allMids));
             setError(null);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : String(err));

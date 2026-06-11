@@ -169,7 +169,7 @@ export default function Home() {
     // V2 "serious redesign" screens render full-bleed (they own their padding
     // and background via ScreenV2). Everything else keeps the legacy padded
     // container + live-sync chip.
-    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'traderSearch', 'publicProfile'];
+    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'traderSearch', 'publicProfile', 'predictions'];
     const isV2View = V2_VIEWS.includes(view);
 
     const tutorialOverlay = showTutorial ? (
@@ -249,6 +249,8 @@ export default function Home() {
                                 />
                             ) : view === 'rewards' ? (
                                 <RewardsScreen />
+                            ) : view === 'predictions' ? (
+                                <PredictionsHub onBack={() => setView('advanced')} />
                             ) : view === 'traderSearch' ? (
                                 <TraderSearchScreen
                                     onBack={() => setView('leaderboard')}
@@ -371,10 +373,6 @@ export default function Home() {
                                     onBack={() => setView('home')}
                                     onDeposit={() => setShowBridgeModal(true)}
                                 />
-                            </div>
-                        ) : view === 'predictions' ? (
-                            <div className="max-w-4xl mx-auto" style={{ paddingBottom: '100px' }}>
-                                <PredictionsHub />
                             </div>
                         ) : (
                             <div className="mt-6" style={{ paddingBottom: '100px' }}>

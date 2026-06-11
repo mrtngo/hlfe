@@ -304,7 +304,15 @@
     "yourBets": "Your bets",
     "tabTrade": "Trade",
     "tabChart": "Chart",
-    "tabBook": "Order Book"
+    "tabBook": "Order Book",
+    "cat": {
+      "all": "All",
+      "sports": "Sports",
+      "economy": "Economy",
+      "politics": "Politics",
+      "crypto": "Crypto",
+      "other": "Other"
+    }
   },
   "buy": {
     "title": "Buy Crypto",

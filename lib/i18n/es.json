@@ -304,7 +304,15 @@
     "yourBets": "Tus apuestas",
     "tabTrade": "Operar",
     "tabChart": "Gráfico",
-    "tabBook": "Libro de Órdenes"
+    "tabBook": "Libro de Órdenes",
+    "cat": {
+      "all": "Todos",
+      "sports": "Deportes",
+      "economy": "Economía",
+      "politics": "Política",
+      "crypto": "Cripto",
+      "other": "Otros"
+    }
   },
   "buy": {
     "title": "Comprar Cripto",
