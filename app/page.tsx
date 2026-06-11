@@ -220,6 +220,7 @@ export default function Home() {
                                     onTradeClick={() => setView('trading')}
                                     onBuyClick={() => setView('trading')}
                                     onDeposit={() => setView('deposit')}
+                                    onOpenPredictions={() => setView('predictions')}
                                 />
                             ) : view === 'markets' ? (
                                 <MarketsScreen

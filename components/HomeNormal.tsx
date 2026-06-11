@@ -22,6 +22,8 @@ import {
     Icon,
     V2,
 } from '@/components/V2Kit';
+import { useOutcomePositions } from '@/hooks/useOutcomePositions';
+import OutcomePositionCard from '@/components/OutcomePositionCard';
 
 interface HomeNormalProps {
     onTokenClick?: (symbol: string) => void;
@@ -32,12 +34,15 @@ interface HomeNormalProps {
     onBuyClick?: () => void;
     onDeposit?: () => void;
     onToggleProMode: () => void;
+    /** Navigate to the predictions screen (to manage outcome positions). */
+    onOpenPredictions?: () => void;
 }
 
-function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode }: HomeNormalProps) {
+function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode, onOpenPredictions }: HomeNormalProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, markets, thirtyDayPnl, setSelectedMarket, spotBalances, spotPrices } = useHyperliquid();
+    const { positions: outcomePositions } = useOutcomePositions();
 
     // Spot holdings to render (excluding stablecoins, counted as cash).
     const spotHoldings = useMemo(() => {
@@ -254,6 +259,25 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                                 );
                             })}
                         </div>
+                    </div>
+                </>
+            )}
+
+            {/* Prediction (HIP-4 outcome) positions */}
+            {outcomePositions.length > 0 && (
+                <>
+                    <SectionHead
+                        title={t.outcomeMarkets.positionsTitle}
+                        right={<span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{outcomePositions.length}</span>}
+                    />
+                    <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {outcomePositions.map((p) => (
+                            <OutcomePositionCard
+                                key={p.coinRef}
+                                position={p}
+                                onManage={onOpenPredictions ? () => onOpenPredictions() : undefined}
+                            />
+                        ))}
                     </div>
                 </>
             )}

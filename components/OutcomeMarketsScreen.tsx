@@ -300,6 +300,20 @@ export default function OutcomeMarketsScreen() {
                 </div>
             )}
 
+            {/* User's open positions — manage cards (see / add more / close), at top */}
+            {outcomePositions.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <EventHeader name={t.outcomeMarkets.positionsTitle} count={outcomePositions.length} />
+                    {outcomePositions.map((p) => (
+                        <OutcomePositionCard
+                            key={p.coinRef}
+                            position={p}
+                            onManage={(pos) => openSheet(pos.outcomeId, pos.sideIdx, 'buy')}
+                        />
+                    ))}
+                </div>
+            )}
+
             {/* Grouped market list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {groups.map((g) => (
@@ -721,20 +735,6 @@ export default function OutcomeMarketsScreen() {
                     </>
                 )}
             </ModalSheet>
-
-            {/* User's open positions — manage cards (see / add more / close) */}
-            {outcomePositions.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <EventHeader name={t.outcomeMarkets.positionsTitle} count={outcomePositions.length} />
-                    {outcomePositions.map((p) => (
-                        <OutcomePositionCard
-                            key={p.coinRef}
-                            position={p}
-                            onManage={(pos) => openSheet(pos.outcomeId, pos.sideIdx, 'buy')}
-                        />
-                    ))}
-                </div>
-            )}
 
             {/* Agent approval — auto-opened when an outcome order fails because
                 no on-device agent exists. After success the bet retries. */}
