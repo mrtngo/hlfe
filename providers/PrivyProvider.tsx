@@ -33,11 +33,12 @@ const wagmiConfig = createConfig({
 
 
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
-    // Beginner-first login: email + Google only.
+    // Beginner-first login: email OTP only.
     // Privy auto-creates an embedded wallet under the hood — the user never sees the word "wallet".
-    // External wallet connect (MetaMask etc.) is intentionally hidden for the LATAM hodler/DCA audience.
+    // External wallet connect (MetaMask etc.) and social logins are intentionally
+    // hidden for the LATAM hodler/DCA audience — just email + one-time code.
     const config: any = {
-        loginMethods: ['email', 'google'],
+        loginMethods: ['email'],
         appearance: {
             theme: 'dark',
             accentColor: '#FACC15', // Rayo brand yellow

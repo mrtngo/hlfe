@@ -17,12 +17,24 @@ interface TransferModalProps {
      * Reset to this value every time the modal opens.
      */
     defaultToPerp?: boolean;
+    /**
+     * Friendly names for the two balances, for retail-facing contexts that
+     * avoid the "spot"/"perp" jargon (e.g. predictions calls them
+     * "Predicción"/"Trade"). When omitted, the default i18n labels are used.
+     */
+    spotLabel?: string;
+    perpLabel?: string;
+    /** Overrides the info-box helper text (which otherwise says "Spot y Perp"). */
+    helpText?: string;
 }
 
 export default function TransferModal({
     isOpen,
     onClose,
     defaultToPerp = true,
+    spotLabel,
+    perpLabel,
+    helpText,
 }: TransferModalProps) {
     const { wallets } = useWallets();
     const { address, account } = useHyperliquid();
@@ -61,6 +73,14 @@ export default function TransferModal({
     const amountNum = parseFloat(amount || '0');
     const sourceBalance = toPerp ? spotBalance : availableBalance;
     const isValidAmount = amountNum > 0 && amountNum <= sourceBalance;
+
+    // Optional retail-friendly labels (e.g. predictions → "Predicción"/"Trade").
+    const hasFriendly = !!spotLabel && !!perpLabel;
+    const toPerpText = hasFriendly ? `${spotLabel} → ${perpLabel}` : t.transfer.spotToPerp;
+    const toSpotText = hasFriendly ? `${perpLabel} → ${spotLabel}` : t.transfer.perpToSpot;
+    const spotBalanceLabel = spotLabel || t.transfer.spotBalance;
+    const perpBalanceLabel = perpLabel || t.transfer.perpBalance;
+    const infoText = helpText || t.transfer.moveBetween;
 
     const handleTransfer = async () => {
         if (!activeWallet || !address || !isValidAmount) return;
@@ -237,7 +257,7 @@ export default function TransferModal({
                         <div style={{ fontSize: '13px' }}>
                             <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>{t.transfer.betweenAccounts}</div>
                             <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-                                {t.transfer.moveBetween}
+                                {infoText}
                             </div>
                         </div>
                     </div>
@@ -265,7 +285,7 @@ export default function TransferModal({
                                 transition: 'all 0.2s',
                             }}
                         >
-                            {t.transfer.spotToPerp}
+                            {toPerpText}
                         </button>
                         <button
                             onClick={() => setToPerp(false)}
@@ -282,7 +302,7 @@ export default function TransferModal({
                                 transition: 'all 0.2s',
                             }}
                         >
-                            {t.transfer.perpToSpot}
+                            {toSpotText}
                         </button>
                     </div>
 
@@ -295,7 +315,7 @@ export default function TransferModal({
                             padding: '12px'
                         }}>
                             <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
-                                {t.transfer.spotBalance}
+                                {spotBalanceLabel}
                             </div>
                             <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
                                 {formatCurrency(spotBalance)}
@@ -308,7 +328,7 @@ export default function TransferModal({
                             padding: '12px'
                         }}>
                             <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
-                                {t.transfer.perpBalance}
+                                {perpBalanceLabel}
                             </div>
                             <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
                                 {formatCurrency(availableBalance)}

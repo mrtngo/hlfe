@@ -398,57 +398,6 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
                 >
                     {t.onboarding.welcome.logIn}
                 </button>
-                <div
-                    className="wkrise"
-                    style={{
-                        animationDelay: '520ms',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
-                        margin: '6px 0',
-                    }}
-                >
-                    <div style={{ flex: 1, height: 1, background: V2.hair }} />
-                    <span style={{ fontSize: 12, color: V2.t3, fontWeight: 600 }}>
-                        {t.onboarding.welcome.continueWith}
-                    </span>
-                    <div style={{ flex: 1, height: 1, background: V2.hair }} />
-                </div>
-                <div
-                    className="wkrise"
-                    style={{ animationDelay: '560ms', display: 'flex', gap: 10 }}
-                >
-                    {[
-                        { k: 'wallet' as const, label: t.onboarding.welcome.wallet, icon: 'wallet' as const },
-                        { k: 'apple', label: 'Apple', icon: 'user' as const },
-                        { k: 'google', label: 'Google', icon: 'user' as const },
-                    ].map((o) => (
-                        <button
-                            key={o.k}
-                            type="button"
-                            onClick={login}
-                            style={{
-                                flex: 1,
-                                padding: 13,
-                                borderRadius: 14,
-                                cursor: 'pointer',
-                                fontFamily: V2.ui,
-                                background: 'rgba(255,255,255,0.04)',
-                                border: `1px solid ${V2.hair}`,
-                                color: V2.t2,
-                                fontWeight: 700,
-                                fontSize: 13.5,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: 6,
-                            }}
-                        >
-                            <Icon name={o.icon} size={15} color={V2.t2} />
-                            {o.label}
-                        </button>
-                    ))}
-                </div>
 
                 <button
                     type="button"
@@ -458,7 +407,7 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
                     }}
                     className="wkrise"
                     style={{
-                        animationDelay: '600ms',
+                        animationDelay: '520ms',
                         marginTop: 4,
                         width: '100%',
                         background: 'transparent',

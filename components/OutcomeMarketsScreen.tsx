@@ -15,8 +15,8 @@
  * Styled with the v2 design kit (Hanken, #0A0C0E, bolt accent).
  */
 
-import { useMemo, useState } from 'react';
-import { AlertCircle, Check, ChevronRight, Loader2, TrendingUp } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, ArrowLeftRight, Check, ChevronRight, Loader2, TrendingUp } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -27,15 +27,17 @@ import {
     type OutcomeMarketView,
     type OutcomeSideView,
 } from '@/lib/hyperliquid/outcome';
+import { API_URL } from '@/lib/hyperliquid/client';
 import { ModalSheet, ModalHeader } from '@/components/ModalSheet';
 import ApproveAgentModal from '@/components/ApproveAgentModal';
+import TransferModal from '@/components/TransferModal';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import OrderBook from '@/components/OrderBook';
 import { Icon, V2 } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
 // Side palette — green for the "positive" side (Yes / Change / first side),
-// red for the "negative" (No / No-Change / second side). Polymarket-style.
+// red for the "negative" (No / No-Change / second side).
 const SIDE_COLOR = {
     0: { color: V2.pos, soft: V2.posSoft, border: 'rgba(34,197,94,0.3)' },
     1: { color: V2.neg, soft: V2.negSoft, border: 'rgba(239,68,68,0.3)' },
@@ -47,7 +49,9 @@ export default function OutcomeMarketsScreen() {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { markets, loading } = useOutcomeMarkets();
-    const { spotBalances, placeOutcomeOrder, buyUsdh } = useHyperliquid();
+    const { spotBalances, placeOutcomeOrder, buyUsdh, account } = useHyperliquid();
+    /** Perp ↔ spot transfer modal. HIP-4 settles from the SPOT balance. */
+    const [showTransfer, setShowTransfer] = useState(false);
 
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [selectedSideIdx, setSelectedSideIdx] = useState<number>(0);
@@ -92,6 +96,13 @@ export default function OutcomeMarketsScreen() {
         const b = (spotBalances || []).find((b) => b.coin === selected.quoteToken);
         return b ? parseFloat(b.total) || 0 : 0;
     }, [selected, spotBalances]);
+
+    /** Spot USDC balance (the default settlement token) + perp available. */
+    const spotUsdc = useMemo(() => {
+        const b = (spotBalances || []).find((b) => b.coin === 'USDC');
+        return b ? parseFloat(b.total) || 0 : 0;
+    }, [spotBalances]);
+    const perpAvailable = account?.availableMargin || 0;
 
     const contractsNum = parseInt(contracts || '0', 10) || 0;
     const totalCost = selectedSide ? contractsNum * selectedSide.mid : 0;
@@ -202,6 +213,16 @@ export default function OutcomeMarketsScreen() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontFamily: V2.ui, color: V2.t1 }}>
+            {/* Balance + perp↔spot transfer bar — HIP-4 settles from Spot. */}
+            <BalanceBar
+                spot={spotUsdc}
+                perp={perpAvailable}
+                onTransfer={() => {
+                    haptic.light();
+                    setShowTransfer(true);
+                }}
+            />
+
             {/* Zero-fee perk chip */}
             <div
                 style={{
@@ -350,6 +371,9 @@ export default function OutcomeMarketsScreen() {
                                 })}
                             </div>
 
+                            {/* At-a-glance spread / liquidity for the chosen side */}
+                            <OutcomeSpread coinRef={selectedSide.coinRef} />
+
                             {/* Tab selector */}
                             <div
                                 style={{
@@ -481,6 +505,39 @@ export default function OutcomeMarketsScreen() {
                                         <UsdhOnramp buyUsdh={buyUsdh} needed={Math.max(20, Math.ceil(totalCost) + 5)} />
                                     )}
 
+                                    {/* USDC markets: if Spot is short but funds sit in Perp,
+                                        offer a one-tap move into the Spot balance. */}
+                                    {selected.quoteToken === 'USDC' &&
+                                        totalCost > quoteBalance &&
+                                        perpAvailable > 0 && (
+                                            <button
+                                                onClick={() => {
+                                                    haptic.light();
+                                                    setShowTransfer(true);
+                                                }}
+                                                style={{
+                                                    width: '100%',
+                                                    marginBottom: 10,
+                                                    padding: '11px 14px',
+                                                    background: V2.accentSoft,
+                                                    border: '1px solid rgba(250,204,21,0.22)',
+                                                    borderRadius: 12,
+                                                    color: V2.t1,
+                                                    fontWeight: 700,
+                                                    fontSize: 13.5,
+                                                    cursor: 'pointer',
+                                                    fontFamily: V2.ui,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: 8,
+                                                }}
+                                            >
+                                                <ArrowLeftRight style={{ width: 14, height: 14, color: V2.accent }} />
+                                                {t.outcomeMarkets.transferFromPerp}
+                                            </button>
+                                        )}
+
                                     {result.kind === 'success' && (
                                         <div
                                             style={{
@@ -584,6 +641,18 @@ export default function OutcomeMarketsScreen() {
             {/* Agent approval — auto-opened when an outcome order fails because
                 no on-device agent exists. After success the bet retries. */}
             <ApproveAgentModal open={needsAgent} onClose={() => setNeedsAgent(false)} onSuccess={handleAgentSuccess} />
+
+            {/* Perp ↔ spot USDC transfer. Defaults to Trade → Predicción
+                (perp → spot) — the direction users need to fund bets — and
+                uses retail-friendly pocket names instead of perp/spot jargon. */}
+            <TransferModal
+                isOpen={showTransfer}
+                onClose={() => setShowTransfer(false)}
+                defaultToPerp={false}
+                spotLabel={t.outcomeMarkets.spotBalanceLabel}
+                perpLabel={t.outcomeMarkets.perpBalanceLabel}
+                helpText={t.outcomeMarkets.transferHelp}
+            />
         </div>
     );
 }
@@ -609,6 +678,156 @@ function CatChip({ label, active, onClick }: { label: string; active: boolean; o
         >
             {label}
         </button>
+    );
+}
+
+function BalanceBar({ spot, perp, onTransfer }: { spot: number; perp: number; onTransfer: () => void }) {
+    const { t } = useLanguage();
+    const { formatCurrency } = useCurrency();
+    return (
+        <div
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '12px 14px',
+                background: V2.card,
+                border: `1px solid ${V2.hair}`,
+                borderRadius: 14,
+            }}
+        >
+            <div style={{ flex: 1, display: 'flex', gap: 20 }}>
+                <div>
+                    <div style={{ fontSize: 10.5, color: V2.t3, fontWeight: 600 }}>{t.outcomeMarkets.spotBalanceLabel}</div>
+                    <div className="font-mono" style={{ fontSize: 16, fontWeight: 800, color: V2.t1 }}>
+                        {formatCurrency(spot, 2)}
+                    </div>
+                </div>
+                <div>
+                    <div style={{ fontSize: 10.5, color: V2.t3, fontWeight: 600 }}>{t.outcomeMarkets.perpBalanceLabel}</div>
+                    <div className="font-mono" style={{ fontSize: 16, fontWeight: 800, color: V2.t2 }}>
+                        {formatCurrency(perp, 2)}
+                    </div>
+                </div>
+            </div>
+            <button
+                onClick={onTransfer}
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '9px 14px',
+                    background: V2.accent,
+                    color: V2.accentInk,
+                    border: 'none',
+                    borderRadius: 11,
+                    fontWeight: 800,
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontFamily: V2.ui,
+                    flexShrink: 0,
+                }}
+            >
+                <ArrowLeftRight style={{ width: 14, height: 14 }} />
+                {t.outcomeMarkets.transferCta}
+            </button>
+        </div>
+    );
+}
+
+/**
+ * At-a-glance best bid/ask + spread + top-of-book size for an outcome side.
+ * Polls l2Book directly (5s) so users see the spread without opening the
+ * full order-book tab.
+ */
+function OutcomeSpread({ coinRef }: { coinRef: string }) {
+    const { t } = useLanguage();
+    const [book, setBook] = useState<{ bid: number; ask: number; bidSz: number; askSz: number } | null>(null);
+
+    useEffect(() => {
+        let alive = true;
+        const fetchBook = async () => {
+            try {
+                const res = await fetch(`${API_URL}/info`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'l2Book', coin: coinRef }),
+                });
+                const data = await res.json();
+                const bids = data?.levels?.[0] || [];
+                const asks = data?.levels?.[1] || [];
+                if (!alive) return;
+                if (bids[0] && asks[0]) {
+                    setBook({
+                        bid: parseFloat(bids[0].px),
+                        ask: parseFloat(asks[0].px),
+                        bidSz: parseFloat(bids[0].sz),
+                        askSz: parseFloat(asks[0].sz),
+                    });
+                } else {
+                    setBook(null);
+                }
+            } catch {
+                /* transient — keep last value */
+            }
+        };
+        fetchBook();
+        const id = setInterval(fetchBook, 5000);
+        return () => {
+            alive = false;
+            clearInterval(id);
+        };
+    }, [coinRef]);
+
+    if (!book) return null;
+    const spread = book.ask - book.bid;
+    const spreadPct = book.ask > 0 ? (spread / book.ask) * 100 : 0;
+    return (
+        <div
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 12px',
+                background: V2.card,
+                border: `1px solid ${V2.hair}`,
+                borderRadius: 12,
+                marginBottom: 14,
+            }}
+        >
+            <SpreadCell label={t.outcomeMarkets.bidLabel} value={`${(book.bid * 100).toFixed(1)}¢`} color={V2.pos} sub={book.bidSz.toFixed(0)} />
+            <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontSize: 10, color: V2.t3, fontWeight: 600 }}>{t.outcomeMarkets.spreadLabel}</div>
+                <div className="font-mono" style={{ fontSize: 13, fontWeight: 800, color: V2.t1 }}>
+                    {(spread * 100).toFixed(1)}¢ · {spreadPct.toFixed(1)}%
+                </div>
+            </div>
+            <SpreadCell label={t.outcomeMarkets.askLabel} value={`${(book.ask * 100).toFixed(1)}¢`} color={V2.neg} sub={book.askSz.toFixed(0)} align="right" />
+        </div>
+    );
+}
+
+function SpreadCell({
+    label,
+    value,
+    color,
+    sub,
+    align,
+}: {
+    label: string;
+    value: string;
+    color: string;
+    sub: string;
+    align?: 'right';
+}) {
+    return (
+        <div style={{ textAlign: align || 'left', minWidth: 52 }}>
+            <div style={{ fontSize: 10, color: V2.t3, fontWeight: 600 }}>{label}</div>
+            <div className="font-mono" style={{ fontSize: 14, fontWeight: 800, color }}>
+                {value}
+            </div>
+            <div className="font-mono" style={{ fontSize: 9.5, color: V2.t3 }}>{sub}</div>
+        </div>
     );
 }
 

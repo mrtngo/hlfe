@@ -18,7 +18,6 @@ import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotScreen from '@/components/SpotScreen';
 import SpotBuyScreen from '@/components/SpotBuyScreen';
 import CctpBridge from '@/components/CctpBridge';
-import PolymarketPanel from '@/components/PolymarketPanel';
 import PredictionsHub from '@/components/PredictionsHub';
 import AdvancedMenu from '@/components/AdvancedMenu';
 import ComprarFlow from '@/components/ComprarFlow';
@@ -250,7 +249,7 @@ export default function Home() {
                             ) : view === 'rewards' ? (
                                 <RewardsScreen />
                             ) : view === 'predictions' ? (
-                                <PredictionsHub onBack={() => setView('advanced')} />
+                                <PredictionsHub />
                             ) : view === 'traderSearch' ? (
                                 <TraderSearchScreen
                                     onBack={() => setView('leaderboard')}
@@ -399,10 +398,11 @@ export default function Home() {
                 const tabs: { id: string; label: string; icon: IconName; on: boolean; onClick: () => void; domId?: string }[] = [
                     { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home', onClick: () => setView('home') },
                     { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },
+                    { id: 'predictions', label: t.nav.predictions || 'Predice', icon: 'target', on: view === 'predictions', onClick: () => setView('predictions'), domId: 'nav-predictions-tab' },
                     { id: 'news', label: t.nav.news || 'Noticias', icon: 'news', on: view === 'news', onClick: () => setView('news'), domId: 'nav-news-tab' },
                     { id: 'history', label: t.nav.history, icon: 'history', on: view === 'history', onClick: () => setView('history') },
                     { id: 'rewards', label: t.nav.rewards || 'Premios', icon: 'gift', on: view === 'rewards', onClick: () => setView('rewards'), domId: 'nav-rewards-tab' },
-                    { id: 'account', label: t.nav.profile, icon: 'user', on: view === 'profile' || view === 'settings' || view === 'portfolio' || view === 'advanced' || view === 'predictions' || view === 'leaderboard' || view === 'cctp' || view === 'bolsillos' || view === 'traderSearch' || view === 'publicProfile', onClick: handleProfileClick, domId: 'nav-profile-tab' },
+                    { id: 'account', label: t.nav.profile, icon: 'user', on: view === 'profile' || view === 'settings' || view === 'portfolio' || view === 'advanced' || view === 'leaderboard' || view === 'cctp' || view === 'bolsillos' || view === 'traderSearch' || view === 'publicProfile', onClick: handleProfileClick, domId: 'nav-profile-tab' },
                 ];
                 return (
                     <nav
