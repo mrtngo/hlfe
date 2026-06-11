@@ -5,6 +5,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { Search, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
 import TokenLogo from '@/components/TokenLogo';
+import { getTokenFullName } from '@/lib/constants';
 
 interface MarketOverviewProps {
     onTokenClick?: (symbol: string) => void;
@@ -39,8 +40,10 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
         }
 
         // Then filter by search query
-        return market.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            market.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const q = searchQuery.toLowerCase();
+        return market.symbol.toLowerCase().includes(q) ||
+            market.name.toLowerCase().includes(q) ||
+            getTokenFullName(market.name).toLowerCase().includes(q);
     });
 
     // Debug: Log stock markets count

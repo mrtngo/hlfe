@@ -69,7 +69,11 @@ export default function MarketSelectModal({
         .filter(m => !excludeSymbols.includes(m.name))
         .filter(m => {
             const query = searchQuery.toLowerCase();
-            return m.symbol.toLowerCase().includes(query) || m.name.toLowerCase().includes(query);
+            return (
+                m.symbol.toLowerCase().includes(query) ||
+                m.name.toLowerCase().includes(query) ||
+                getTokenFullName(m.name).toLowerCase().includes(query)
+            );
         });
 
     const modalContent = (
