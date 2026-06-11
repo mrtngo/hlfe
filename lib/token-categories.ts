@@ -2,6 +2,11 @@
 
 export type TokenCategory =
     | 'watchlist'
+    // Single bucket for ALL crypto (replaces the l1/l2/meme/… split in the
+    // user-facing markets tabs — we don't want to over-index on crypto).
+    | 'crypto'
+    // Crypto sub-sectors — still used by PRO mode (HomePro) for fine-grained
+    // sector browsing; not surfaced as top-level markets tabs.
     | 'l1'
     | 'l2'
     | 'meme'
@@ -9,9 +14,15 @@ export type TokenCategory =
     | 'ai'
     | 'defi'
     | 'stocks'
+    // Trade.xyz real-world asset classes (the "xyz" HIP-3 DEX).
+    | 'us-stocks'
+    | 'korea'
+    | 'japan'
+    | 'etf'
     | 'indices'
     | 'forex'
-    | 'commodities';
+    | 'commodities'
+    | 'preipo';
 
 export interface Category {
     id: TokenCategory;
@@ -20,19 +31,91 @@ export interface Category {
     description: string;
 }
 
+/**
+ * Top-level markets tabs (normal mode). Crypto is a single bucket; the rest
+ * break the xyz real-world assets into their actual classes so the app
+ * surfaces equities, ETFs, commodities, etc. — not just crypto.
+ */
 export const CATEGORIES: Category[] = [
-    { id: 'watchlist', label: 'Watchlist', emoji: '⭐', description: 'Your tracked assets' },
-    { id: 'l1', label: 'L1', emoji: '🔷', description: 'Layer 1 blockchains' },
-    { id: 'l2', label: 'L2', emoji: '⚡', description: 'Layer 2 scaling solutions' },
-    { id: 'meme', label: 'Meme', emoji: '🐸', description: 'Meme coins' },
-    { id: 'infra', label: 'Infra', emoji: '🏗️', description: 'Infrastructure & tooling' },
-    { id: 'ai', label: 'AI', emoji: '🤖', description: 'AI & machine learning' },
-    { id: 'defi', label: 'DeFi', emoji: '💎', description: 'Decentralized finance' },
-    { id: 'stocks', label: 'Stocks', emoji: '📈', description: 'US stocks' },
-    { id: 'indices', label: 'Indices', emoji: '📊', description: 'Stock indices' },
-    { id: 'forex', label: 'Forex', emoji: '💱', description: 'Currency pairs' },
-    { id: 'commodities', label: 'Commodities', emoji: '🥇', description: 'Gold, silver, oil, etc.' },
+    { id: 'watchlist', label: 'Watchlist', emoji: '⭐', description: 'Tus activos seguidos' },
+    { id: 'crypto', label: 'Cripto', emoji: '🪙', description: 'Criptomonedas' },
+    { id: 'us-stocks', label: 'Acciones US', emoji: '📈', description: 'Acciones de EE.UU.' },
+    { id: 'korea', label: 'Corea', emoji: '🇰🇷', description: 'Acciones coreanas' },
+    { id: 'japan', label: 'Japón', emoji: '🇯🇵', description: 'Acciones japonesas' },
+    { id: 'etf', label: 'ETFs', emoji: '🧺', description: 'Fondos cotizados' },
+    { id: 'commodities', label: 'Materias primas', emoji: '🥇', description: 'Oro, petróleo, etc.' },
+    { id: 'indices', label: 'Índices', emoji: '📊', description: 'Índices bursátiles' },
+    { id: 'forex', label: 'Divisas', emoji: '💱', description: 'Pares de divisas' },
+    { id: 'preipo', label: 'Pre-IPO', emoji: '🚀', description: 'Empresas privadas' },
 ];
+
+/**
+ * Trade.xyz (HIP-3 "xyz" DEX) ticker → asset class. Derived from the live
+ * xyz universe. US-listed foreign ADRs (TSM, BABA, ASML, ARM, NOK) are
+ * grouped under US stocks since that's where they trade.
+ */
+export const XYZ_CLASSES: Record<string, TokenCategory[]> = {
+    // US stocks
+    TSLA: ['us-stocks'], NVDA: ['us-stocks'], HOOD: ['us-stocks'], INTC: ['us-stocks'],
+    PLTR: ['us-stocks'], COIN: ['us-stocks'], META: ['us-stocks'], AAPL: ['us-stocks'],
+    MSFT: ['us-stocks'], ORCL: ['us-stocks'], GOOGL: ['us-stocks'], AMZN: ['us-stocks'],
+    AMD: ['us-stocks'], MU: ['us-stocks'], SNDK: ['us-stocks'], MSTR: ['us-stocks'],
+    CRCL: ['us-stocks'], NFLX: ['us-stocks'], COST: ['us-stocks'], LLY: ['us-stocks'],
+    RIVN: ['us-stocks'], USAR: ['us-stocks'], CRWV: ['us-stocks'], GME: ['us-stocks'],
+    HIMS: ['us-stocks'], DKNG: ['us-stocks'], LITE: ['us-stocks'], RKLB: ['us-stocks'],
+    BX: ['us-stocks'], MRVL: ['us-stocks'], NBIS: ['us-stocks'], WDC: ['us-stocks'],
+    AVGO: ['us-stocks'], NOW: ['us-stocks'], IBM: ['us-stocks'], DELL: ['us-stocks'],
+    ZM: ['us-stocks'], EBAY: ['us-stocks'], BIRD: ['us-stocks'], BB: ['us-stocks'],
+    TSM: ['us-stocks'], BABA: ['us-stocks'], ASML: ['us-stocks'], ARM: ['us-stocks'],
+    NOK: ['us-stocks'],
+
+    // Korean equities
+    SKHX: ['korea'], SMSN: ['korea'], HYUNDAI: ['korea'],
+    // Japanese equities
+    SOFTBANK: ['japan'], KIOXIA: ['japan'],
+
+    // ETFs
+    URNM: ['etf'], EWY: ['etf'], EWJ: ['etf'], EWZ: ['etf'], EWT: ['etf'], XLE: ['etf'],
+
+    // Commodities
+    GOLD: ['commodities'], SILVER: ['commodities'], CL: ['commodities'], COPPER: ['commodities'],
+    NATGAS: ['commodities'], URANIUM: ['commodities'], ALUMINIUM: ['commodities'],
+    PLATINUM: ['commodities'], PALLADIUM: ['commodities'], BRENTOIL: ['commodities'],
+    CORN: ['commodities'], WHEAT: ['commodities'], TTF: ['commodities'],
+
+    // Indices
+    XYZ100: ['indices'], KR200: ['indices'], JP225: ['indices'], SP500: ['indices'],
+    NIFTY: ['indices'], IBOV: ['indices'], DXY: ['indices'], VIX: ['indices'],
+
+    // Forex
+    JPY: ['forex'], EUR: ['forex'], GBP: ['forex'], KRW: ['forex'],
+
+    // Pre-IPO / private companies
+    SPCX: ['preipo'], MINIMAX: ['preipo'],
+};
+
+/** Categories that come from the xyz real-world-asset map (not crypto). */
+const XYZ_CLASS_IDS: TokenCategory[] = [
+    'us-stocks', 'korea', 'japan', 'etf', 'indices', 'forex', 'commodities', 'preipo',
+];
+
+/**
+ * Whether a market belongs to a top-level category. Crypto is "anything that
+ * isn't an xyz stock"; the real-world classes look up the xyz map; the legacy
+ * crypto sub-sectors fall back to TOKEN_CATEGORIES (used by PRO mode).
+ */
+export function marketMatchesCategory(
+    market: { name: string; symbol?: string; isStock?: boolean },
+    category: TokenCategory,
+): boolean {
+    if (category === 'watchlist') return false;
+    const base = market.name.replace(/^xyz:/i, '').replace('-USD', '').replace('-PERP', '');
+    if (category === 'crypto') return market.isStock !== true;
+    if (XYZ_CLASS_IDS.includes(category)) {
+        return (XYZ_CLASSES[base] || []).includes(category);
+    }
+    return isInCategory(base, category);
+}
 
 // Token to category mapping
 export const TOKEN_CATEGORIES: Record<string, TokenCategory[]> = {

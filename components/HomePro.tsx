@@ -6,7 +6,7 @@ import { useHyperliquid, type Market } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
-import { CATEGORIES, isInCategory, type TokenCategory } from '@/lib/token-categories';
+import { isInCategory, type TokenCategory } from '@/lib/token-categories';
 import TokenLogo from '@/components/TokenLogo';
 import MiniChart from '@/components/MiniChart';
 import DepositModal from '@/components/DepositModal';

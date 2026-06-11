@@ -6,7 +6,7 @@ import { useHyperliquid, type Market } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePreferences } from '@/hooks/usePreferences';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
-import { CATEGORIES, isInCategory, type TokenCategory } from '@/lib/token-categories';
+import { CATEGORIES, marketMatchesCategory, type TokenCategory } from '@/lib/token-categories';
 import TokenLogo from '@/components/TokenLogo';
 import MiniChart from '@/components/MiniChart';
 import EmptyState from '@/components/EmptyState';
@@ -57,8 +57,7 @@ function MarketsScreen({ onTokenClick, onBack }: MarketsScreenProps) {
                     return watchset.includes(m.name) || watchset.includes(m.symbol);
                 }
                 if (category !== 'all') {
-                    const baseSymbol = m.name.replace('-USD', '').replace('-PERP', '');
-                    return isInCategory(baseSymbol, category);
+                    return marketMatchesCategory(m, category);
                 }
                 return true;
             })
