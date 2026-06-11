@@ -281,6 +281,7 @@ export default function Home() {
                                 <PortfolioScreen
                                     onBack={() => setView('profile')}
                                     onBuyClick={() => setView('trading')}
+                                    onOpenPredictions={() => setView('predictions')}
                                     onTokenClick={(symbol) => {
                                         setSelectedMarket(symbol);
                                         setDetailSymbol(symbol);

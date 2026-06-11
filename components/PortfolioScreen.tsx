@@ -5,23 +5,28 @@ import { ShoppingBag } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useOutcomePositions } from '@/hooks/useOutcomePositions';
 import { getTokenFullName } from '@/lib/constants';
 import EmptyState from '@/components/EmptyState';
 import SkeletonRow from '@/components/SkeletonRow';
+import OutcomePositionCard from '@/components/OutcomePositionCard';
 import { ScreenV2, V2Header, BigMoney, PctBadge, SectionHead, IconBtn, MarketLogo, V2 } from '@/components/V2Kit';
 
 interface PortfolioScreenProps {
     onBack?: () => void;
     onBuyClick?: () => void;
     onTokenClick?: (symbol: string) => void;
+    /** Navigate to the predictions screen (to manage outcome positions). */
+    onOpenPredictions?: () => void;
 }
 
 const ALLOC_COLORS = ['#FACC15', '#22C55E', '#60A5FA', '#A78BFA', '#FB7185', '#F97316', '#10B981'];
 
-export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick }: PortfolioScreenProps) {
+export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick, onOpenPredictions }: PortfolioScreenProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, userDataLoading } = useHyperliquid();
+    const { positions: outcomePositions } = useOutcomePositions();
 
     const allocation = useMemo(() => {
         const list = positions || [];
@@ -43,7 +48,7 @@ export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick }: Po
     }, [positions]);
 
     const isLoading = userDataLoading;
-    const isEmpty = !isLoading && (positions || []).length === 0;
+    const isEmpty = !isLoading && (positions || []).length === 0 && outcomePositions.length === 0;
     const totalPnl = account.unrealizedPnl || 0;
     const pnlPct = account.equity > 0 ? (totalPnl / account.equity) * 100 : 0;
 
@@ -94,7 +99,9 @@ export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick }: Po
                         </div>
                     )}
 
-                    {/* Positions */}
+                    {/* Perp positions */}
+                    {positions.length > 0 && (
+                    <>
                     <SectionHead title={t.screens.portafolio.open} right={<span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{positions.length}</span>} />
                     <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {positions.map((p) => {
@@ -142,6 +149,27 @@ export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick }: Po
                             );
                         })}
                     </div>
+                    </>
+                    )}
+
+                    {/* Prediction (HIP-4 outcome) positions */}
+                    {outcomePositions.length > 0 && (
+                        <>
+                            <SectionHead
+                                title={t.outcomeMarkets.positionsTitle}
+                                right={<span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{outcomePositions.length}</span>}
+                            />
+                            <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                {outcomePositions.map((p) => (
+                                    <OutcomePositionCard
+                                        key={p.coinRef}
+                                        position={p}
+                                        onManage={onOpenPredictions ? () => onOpenPredictions() : undefined}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </>
             )}
         </ScreenV2>

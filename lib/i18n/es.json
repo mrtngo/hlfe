@@ -322,7 +322,18 @@
     "bidLabel": "Compra",
     "askLabel": "Venta",
     "needSpotNote": "Las predicciones usan tu bolsillo de Predicción. Mové fondos desde Trade para apostar.",
-    "transferHelp": "Mové USDC entre Trade y Predicción. Al instante y gratis."
+    "transferHelp": "Mové USDC entre Trade y Predicción. Al instante y gratis.",
+    "close": "Cerrar",
+    "confirmClose": "¿Confirmar?",
+    "closing": "Cerrando...",
+    "addMore": "Agregar",
+    "errClose": "No se pudo cerrar la posición",
+    "positionsTitle": "Tus posiciones",
+    "value": "Valor",
+    "buyTab": "Comprar",
+    "sellTab": "Vender",
+    "sellMax": "Tenés {n}",
+    "noToSell": "No tenés contratos para vender"
   },
   "buy": {
     "title": "Comprar Cripto",
@@ -727,7 +738,9 @@
     "availablePerp": "Disponible (Perp)",
     "transfer": "Transferir",
     "transferring": "Transfiriendo...",
-    "transferComplete": "✅ ¡Transferencia completada!"
+    "transferComplete": "✅ ¡Transferencia completada!",
+    "perpPrompt": "Tu plata está en Predicción. Movela a Trade para operar.",
+    "perpCta": "Mover de Predicción a Trade"
   },
   "tooltips": {
     "leverage": "El apalancamiento aumenta tu poder de compra pero también el riesgo de liquidación.",

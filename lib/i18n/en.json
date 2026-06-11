@@ -322,7 +322,18 @@
     "bidLabel": "Bid",
     "askLabel": "Ask",
     "needSpotNote": "Predictions use your Predictions pocket. Move funds from Trade to bet.",
-    "transferHelp": "Move USDC between Trade and Predictions. Instant and free."
+    "transferHelp": "Move USDC between Trade and Predictions. Instant and free.",
+    "close": "Close",
+    "confirmClose": "Confirm?",
+    "closing": "Closing...",
+    "addMore": "Add more",
+    "errClose": "Could not close the position",
+    "positionsTitle": "Your positions",
+    "value": "Value",
+    "buyTab": "Buy",
+    "sellTab": "Sell",
+    "sellMax": "You hold {n}",
+    "noToSell": "No contracts to sell"
   },
   "buy": {
     "title": "Buy Crypto",
@@ -728,7 +739,9 @@
     "availablePerp": "Available (Perp)",
     "transfer": "Transfer",
     "transferring": "Transferring...",
-    "transferComplete": "✅ Transfer completed!"
+    "transferComplete": "✅ Transfer completed!",
+    "perpPrompt": "Your balance is in Predictions. Move it to Trade to trade.",
+    "perpCta": "Move Predictions → Trade"
   },
   "tooltips": {
     "leverage": "Leverage increases your buying power but also liquidation risk.",

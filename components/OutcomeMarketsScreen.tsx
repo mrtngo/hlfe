@@ -28,12 +28,14 @@ import {
     type OutcomeSideView,
 } from '@/lib/hyperliquid/outcome';
 import { API_URL } from '@/lib/hyperliquid/client';
+import { useOutcomePositions, type OutcomePosition } from '@/hooks/useOutcomePositions';
 import { ModalSheet, ModalHeader } from '@/components/ModalSheet';
 import ApproveAgentModal from '@/components/ApproveAgentModal';
 import TransferModal from '@/components/TransferModal';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import OrderBook from '@/components/OrderBook';
-import { Icon, V2 } from '@/components/V2Kit';
+import OutcomePositionCard from '@/components/OutcomePositionCard';
+import { Icon, SliderRow, V2 } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
 // Side palette — green for the "positive" side (Yes / Change / first side),
@@ -55,7 +57,10 @@ export default function OutcomeMarketsScreen() {
 
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [selectedSideIdx, setSelectedSideIdx] = useState<number>(0);
-    const [contracts, setContracts] = useState<string>('1');
+    /** Buy (open / add) vs sell (reduce / close). */
+    const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
+    /** Size as a % of the relevant balance (quote for buy, held for sell). */
+    const [pct, setPct] = useState<number>(50);
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<{ kind: 'idle' | 'success' | 'error'; message?: string }>({
         kind: 'idle',
@@ -104,13 +109,34 @@ export default function OutcomeMarketsScreen() {
     }, [spotBalances]);
     const perpAvailable = account?.availableMargin || 0;
 
-    const contractsNum = parseInt(contracts || '0', 10) || 0;
-    const totalCost = selectedSide ? contractsNum * selectedSide.mid : 0;
-    const potentialPayout = contractsNum; // YES contract settles at $1 if it wins
+    /** Contracts held on the currently-selected side (for sell/close). */
+    const heldContracts = useMemo(() => {
+        if (!selected) return 0;
+        const p = userPositions[outcomeCoinRef(selected.outcomeId, selectedSideIdx)];
+        return p ? Math.floor(p.amount) : 0;
+    }, [selected, selectedSideIdx, userPositions]);
+
+    const price = selectedSide?.mid ?? 0;
+
+    // Derive whole contracts from the % slider: buy spends a % of the quote
+    // balance; sell unwinds a % of the held contracts.
+    const contractsNum = useMemo(() => {
+        if (tradeSide === 'sell') return Math.floor((heldContracts * pct) / 100);
+        if (price <= 0) return 0;
+        return Math.floor((quoteBalance * pct) / 100 / price);
+    }, [tradeSide, pct, heldContracts, quoteBalance, price]);
+
+    const totalCost = contractsNum * price; // buy: spend; sell: proceeds
+    const potentialPayout = contractsNum; // a winning contract settles at $1
     const potentialProfit = potentialPayout - totalCost;
 
     const validationError = (() => {
         if (!selected || !selectedSide) return null;
+        if (tradeSide === 'sell') {
+            if (heldContracts < 1) return t.outcomeMarkets.noToSell;
+            if (contractsNum < 1) return t.outcomeMarkets.minContracts;
+            return null;
+        }
         if (contractsNum < 1) return t.outcomeMarkets.minContracts;
         if (totalCost < 10) return t.outcomeMarkets.minNotional.replace('{amount}', '10');
         if (totalCost > quoteBalance)
@@ -125,7 +151,7 @@ export default function OutcomeMarketsScreen() {
         const res = await placeOutcomeOrder({
             outcomeId: selected.outcomeId,
             sideIdx: selectedSideIdx,
-            side: 'buy',
+            side: tradeSide,
             type: 'market',
             size: contractsNum,
             marketSlippagePct: 0.05,
@@ -141,7 +167,7 @@ export default function OutcomeMarketsScreen() {
         const res = await placeBet();
         if (res.ok) {
             setResult({ kind: 'success' });
-            setContracts('1');
+            setPct(50);
         } else if (res.error?.toLowerCase().includes('agent wallet not approved')) {
             // No on-device agent yet — open the approval modal; its onSuccess retries.
             setNeedsAgent(true);
@@ -158,11 +184,24 @@ export default function OutcomeMarketsScreen() {
         const res = await placeBet();
         if (res.ok) {
             setResult({ kind: 'success' });
-            setContracts('1');
+            setPct(50);
         } else {
             setResult({ kind: 'error', message: res.error || t.outcomeMarkets.errBet });
         }
         setSubmitting(false);
+    };
+
+    const { positions: outcomePositions } = useOutcomePositions();
+
+    /** Open the trade sheet for a given outcome+side (used by position cards). */
+    const openSheet = (outcomeId: number, sideIdx: number, side: 'buy' | 'sell' = 'buy') => {
+        haptic.light();
+        setSelectedId(outcomeId);
+        setSelectedSideIdx(sideIdx);
+        setTradeSide(side);
+        setPct(50);
+        setResult({ kind: 'idle' });
+        setActiveTab('trade');
     };
 
     /** Which categories actually have markets — drives the filter chips. */
@@ -279,7 +318,8 @@ export default function OutcomeMarketsScreen() {
                                         haptic.light();
                                         setSelectedId(m.outcomeId);
                                         setSelectedSideIdx(0);
-                                        setContracts('1');
+                                        setTradeSide('buy');
+                                        setPct(50);
                                         setResult({ kind: 'idle' });
                                         setActiveTab('trade');
                                     }}
@@ -419,41 +459,70 @@ export default function OutcomeMarketsScreen() {
 
                             {activeTab === 'trade' && (
                                 <>
-                                    {/* Contracts input */}
-                                    <div style={{ marginBottom: 14 }}>
+                                    {/* Buy / Sell toggle */}
+                                    <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+                                        {([
+                                            ['buy', t.outcomeMarkets.buyTab, V2.pos, V2.posSoft] as const,
+                                            ['sell', t.outcomeMarkets.sellTab, V2.neg, V2.negSoft] as const,
+                                        ]).map(([k, label, c, soft]) => {
+                                            const on = tradeSide === k;
+                                            return (
+                                                <button
+                                                    key={k}
+                                                    onClick={() => {
+                                                        haptic.light();
+                                                        setTradeSide(k);
+                                                        setPct(50);
+                                                    }}
+                                                    style={{
+                                                        flex: 1,
+                                                        padding: '10px 0',
+                                                        borderRadius: 11,
+                                                        border: on ? `1px solid ${c}` : `1px solid ${V2.hair}`,
+                                                        background: on ? soft : V2.card,
+                                                        color: on ? c : V2.t2,
+                                                        fontWeight: 800,
+                                                        fontSize: 14,
+                                                        cursor: 'pointer',
+                                                        fontFamily: V2.ui,
+                                                    }}
+                                                >
+                                                    {label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {/* Amount slider (% of balance for buy, % of held for sell) */}
+                                    <div style={{ marginBottom: 18 }}>
+                                        <SliderRow
+                                            label={t.outcomeMarkets.amountLabel}
+                                            valueText={`${Math.round(pct)}%`}
+                                            pct={pct}
+                                            min={0}
+                                            max={100}
+                                            step={1}
+                                            value={pct}
+                                            onChange={setPct}
+                                            color={tradeSide === 'buy' ? V2.pos : V2.neg}
+                                        />
                                         <div
                                             style={{
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
-                                                fontSize: 12,
-                                                color: V2.t3,
-                                                marginBottom: 6,
+                                                marginTop: 14,
+                                                fontSize: 12.5,
                                             }}
                                         >
-                                            <span>{t.outcomeMarkets.amountLabel}</span>
-                                            <span className="font-mono">
-                                                {selected.quoteToken}: {formatCurrency(quoteBalance, 2)}
+                                            <span className="font-mono" style={{ color: V2.t2, fontWeight: 700 }}>
+                                                {contractsNum} {t.outcomeMarkets.contracts}
+                                            </span>
+                                            <span className="font-mono" style={{ color: V2.t3 }}>
+                                                {tradeSide === 'sell'
+                                                    ? t.outcomeMarkets.sellMax.replace('{n}', String(heldContracts))
+                                                    : `${selected.quoteToken}: ${formatCurrency(quoteBalance, 2)}`}
                                             </span>
                                         </div>
-                                        <input
-                                            type="number"
-                                            min={1}
-                                            step={1}
-                                            value={contracts}
-                                            onChange={(e) => setContracts(e.target.value.replace(/[^0-9]/g, ''))}
-                                            className="font-mono"
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px 14px',
-                                                background: V2.card,
-                                                border: `1px solid ${V2.hair}`,
-                                                borderRadius: 12,
-                                                color: V2.t1,
-                                                fontSize: 22,
-                                                fontWeight: 800,
-                                                outline: 'none',
-                                            }}
-                                        />
                                     </div>
 
                                     {/* Preview */}
@@ -469,19 +538,29 @@ export default function OutcomeMarketsScreen() {
                                             gap: 6,
                                         }}
                                     >
-                                        <PreviewRow
-                                            label={t.outcomeMarkets.totalCost}
-                                            value={`${formatCurrency(totalCost, 2)} ${selected.quoteToken}`}
-                                        />
-                                        <PreviewRow
-                                            label={t.outcomeMarkets.potentialPayout}
-                                            value={`${formatCurrency(potentialPayout, 2)} ${selected.quoteToken}`}
-                                        />
-                                        <PreviewRow
-                                            label={t.outcomeMarkets.potentialProfit}
-                                            value={`${potentialProfit >= 0 ? '+' : ''}${formatCurrency(potentialProfit, 2)}`}
-                                            color={potentialProfit >= 0 ? V2.pos : V2.neg}
-                                        />
+                                        {tradeSide === 'buy' ? (
+                                            <>
+                                                <PreviewRow
+                                                    label={t.outcomeMarkets.totalCost}
+                                                    value={`${formatCurrency(totalCost, 2)} ${selected.quoteToken}`}
+                                                />
+                                                <PreviewRow
+                                                    label={t.outcomeMarkets.potentialPayout}
+                                                    value={`${formatCurrency(potentialPayout, 2)} ${selected.quoteToken}`}
+                                                />
+                                                <PreviewRow
+                                                    label={t.outcomeMarkets.potentialProfit}
+                                                    value={`${potentialProfit >= 0 ? '+' : ''}${formatCurrency(potentialProfit, 2)}`}
+                                                    color={potentialProfit >= 0 ? V2.pos : V2.neg}
+                                                />
+                                            </>
+                                        ) : (
+                                            <PreviewRow
+                                                label={t.outcomeMarkets.value}
+                                                value={`~${formatCurrency(totalCost, 2)} ${selected.quoteToken}`}
+                                                color={V2.pos}
+                                            />
+                                        )}
                                     </div>
 
                                     {validationError && contractsNum > 0 && (
@@ -501,13 +580,14 @@ export default function OutcomeMarketsScreen() {
                                     )}
 
                                     {/* USDH onramp for USDH-quoted markets when balance is short */}
-                                    {selected.quoteToken === 'USDH' && quoteBalance < 10 && (
+                                    {tradeSide === 'buy' && selected.quoteToken === 'USDH' && quoteBalance < 10 && (
                                         <UsdhOnramp buyUsdh={buyUsdh} needed={Math.max(20, Math.ceil(totalCost) + 5)} />
                                     )}
 
                                     {/* USDC markets: if Spot is short but funds sit in Perp,
                                         offer a one-tap move into the Spot balance. */}
-                                    {selected.quoteToken === 'USDC' &&
+                                    {tradeSide === 'buy' &&
+                                        selected.quoteToken === 'USDC' &&
                                         totalCost > quoteBalance &&
                                         perpAvailable > 0 && (
                                             <button
@@ -581,7 +661,9 @@ export default function OutcomeMarketsScreen() {
                                             width: '100%',
                                             padding: 15,
                                             background: canSubmit
-                                                ? (SIDE_COLOR[selectedSideIdx as 0 | 1] || SIDE_COLOR[0]).color
+                                                ? tradeSide === 'sell'
+                                                    ? V2.neg
+                                                    : (SIDE_COLOR[selectedSideIdx as 0 | 1] || SIDE_COLOR[0]).color
                                                 : V2.card,
                                             border: 'none',
                                             borderRadius: 14,
@@ -601,6 +683,8 @@ export default function OutcomeMarketsScreen() {
                                                 <Loader2 className="animate-spin" style={{ width: 14, height: 14 }} />
                                                 {t.outcomeMarkets.betting}
                                             </>
+                                        ) : tradeSide === 'sell' ? (
+                                            `${t.outcomeMarkets.sellTab} ${contractsNum || '?'} ${t.outcomeMarkets.contracts}`
                                         ) : (
                                             t.outcomeMarkets.placeBetCta
                                                 .replace('{amount}', `${contractsNum || '?'} ${t.outcomeMarkets.contracts}`)
@@ -635,8 +719,19 @@ export default function OutcomeMarketsScreen() {
                 )}
             </ModalSheet>
 
-            {/* User's open positions across all markets */}
-            <YourBets positions={userPositions} markets={markets} />
+            {/* User's open positions — manage cards (see / add more / close) */}
+            {outcomePositions.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <EventHeader name={t.outcomeMarkets.positionsTitle} count={outcomePositions.length} />
+                    {outcomePositions.map((p) => (
+                        <OutcomePositionCard
+                            key={p.coinRef}
+                            position={p}
+                            onManage={(pos) => openSheet(pos.outcomeId, pos.sideIdx, 'buy')}
+                        />
+                    ))}
+                </div>
+            )}
 
             {/* Agent approval — auto-opened when an outcome order fails because
                 no on-device agent exists. After success the bet retries. */}
@@ -1026,88 +1121,6 @@ function UsdhOnramp({
                     </>
                 )}
             </button>
-        </div>
-    );
-}
-
-function YourBets({
-    positions,
-    markets,
-}: {
-    positions: Record<string, { outcomeId: number; sideIdx: number; amount: number }>;
-    markets: OutcomeMarketView[];
-}) {
-    const { t } = useLanguage();
-    const list = useMemo(() => {
-        return Object.entries(positions).map(([coin, pos]) => {
-            const m = markets.find((mm) => mm.outcomeId === pos.outcomeId);
-            const sideName = m?.sides[pos.sideIdx]?.name || `Side ${pos.sideIdx}`;
-            return { coin, pos, marketName: m?.name || `#${pos.outcomeId}`, sideName };
-        });
-    }, [positions, markets]);
-
-    if (list.length === 0) return null;
-
-    return (
-        <div
-            style={{
-                background: V2.card,
-                border: `1px solid ${V2.hair}`,
-                borderRadius: 16,
-                padding: 16,
-            }}
-        >
-            <div
-                style={{
-                    fontSize: 11,
-                    color: V2.t3,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.16em',
-                    fontWeight: 700,
-                    marginBottom: 12,
-                }}
-            >
-                {t.outcomeMarkets.yourBets}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {list.map(({ coin, pos, marketName, sideName }) => {
-                    const palette = SIDE_COLOR[pos.sideIdx as 0 | 1] || SIDE_COLOR[0];
-                    return (
-                        <div
-                            key={coin}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 10,
-                                padding: '10px 12px',
-                                background: V2.bg,
-                                border: `1px solid ${V2.hair}`,
-                                borderRadius: 12,
-                            }}
-                        >
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <div
-                                    style={{
-                                        fontSize: 12,
-                                        fontWeight: 700,
-                                        whiteSpace: 'nowrap',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                    }}
-                                >
-                                    {marketName}
-                                </div>
-                                <div style={{ marginTop: 2, fontSize: 10, color: palette.color, fontWeight: 700 }}>
-                                    {sideName}
-                                </div>
-                            </div>
-                            <div className="font-mono" style={{ fontSize: 12, fontWeight: 700, color: palette.color }}>
-                                {pos.amount.toFixed(0)}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
         </div>
     );
 }

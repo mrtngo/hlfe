@@ -18,6 +18,8 @@ import MarketSelectModal from '@/components/MarketSelectModal';
 import EmptyState from '@/components/EmptyState';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 import ProToggle from '@/components/ProToggle';
+import TransferModal from '@/components/TransferModal';
+import { ArrowLeftRight } from 'lucide-react';
 import { ScreenV2, BigMoney, PctBadge, MarketLogo, SliderRow, SlideToConfirm, Icon, V2 } from '@/components/V2Kit';
 
 interface TradearScreenProps {
@@ -89,6 +91,7 @@ export default function TradearScreen({ onBack }: TradearScreenProps) {
             markets={markets}
             setSelectedMarket={setSelectedMarket}
             availableUsd={account?.availableMargin || 0}
+            spotBalance={account?.spotBalance || 0}
             equity={account?.equity || 0}
             placeOrder={placeOrder}
             placeTriggerOrder={placeTriggerOrder}
@@ -113,6 +116,7 @@ function NormalMode({
     markets,
     setSelectedMarket,
     availableUsd,
+    spotBalance,
     equity,
     placeOrder,
     placeTriggerOrder,
@@ -129,13 +133,16 @@ function NormalMode({
     markets: any[];
     setSelectedMarket: (s: string) => void;
     availableUsd: number;
+    spotBalance: number;
     equity: number;
     placeOrder: any;
     placeTriggerOrder: any;
     refreshAccountData: () => void;
     formatCurrency: (v: number, dp?: number) => string;
 }) {
+    const { t } = useLanguage();
     const [side, setSide] = useState<'buy' | 'sell'>('buy');
+    const [showTransfer, setShowTransfer] = useState(false);
     const [balancePct, setBalancePct] = useState<number>(50);
     const [leverage, setLeverage] = useState<number>(2);
     const [cashout, setCashout] = useState<number | null>(null);
@@ -345,6 +352,27 @@ function NormalMode({
                     </div>
                 )}
 
+                {/* Funds-in-the-wrong-pocket nudge: perps trade from the Trade
+                    (perp) balance — if it's empty but money sits in Predicción
+                    (spot), prompt a one-tap move. */}
+                {availableUsd < MIN_ORDER_NOTIONAL_USD && spotBalance >= MIN_ORDER_NOTIONAL_USD && (
+                    <button
+                        onClick={() => { haptic.light(); setShowTransfer(true); }}
+                        style={{
+                            width: '100%', marginTop: 16, padding: '13px 14px', borderRadius: 12,
+                            background: V2.accentSoft, border: '1px solid rgba(250,204,21,0.22)',
+                            color: V2.t1, fontFamily: V2.ui, cursor: 'pointer', textAlign: 'left',
+                            display: 'flex', alignItems: 'center', gap: 10,
+                        }}
+                    >
+                        <ArrowLeftRight style={{ width: 18, height: 18, color: V2.accent, flexShrink: 0 }} />
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ display: 'block', fontSize: 12.5, color: V2.t2, lineHeight: 1.35 }}>{t.transfer.perpPrompt}</span>
+                            <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800, color: V2.accent, marginTop: 3 }}>{t.transfer.perpCta}</span>
+                        </span>
+                    </button>
+                )}
+
                 {/* Slide to confirm */}
                 <SlideToConfirm
                     color={sideColor}
@@ -355,6 +383,16 @@ function NormalMode({
                     onConfirm={handleConfirm}
                 />
             </div>
+
+            {/* Predicción → Trade (spot → perp) transfer. */}
+            <TransferModal
+                isOpen={showTransfer}
+                onClose={() => { setShowTransfer(false); refreshAccountData(); }}
+                defaultToPerp={true}
+                spotLabel={t.outcomeMarkets.spotBalanceLabel}
+                perpLabel={t.outcomeMarkets.perpBalanceLabel}
+                helpText={t.transfer.perpPrompt}
+            />
 
             <MarketSelectModal
                 isOpen={showPicker}
