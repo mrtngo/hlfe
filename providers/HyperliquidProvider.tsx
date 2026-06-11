@@ -33,6 +33,8 @@ export interface SpotBalance {
     token: number;
     hold: string;
     total: string;
+    /** Entry notional (cost basis). Present for HIP-4 outcome holdings. */
+    entryNtl?: string;
 }
 
 // Define types (copied from useHyperliquid.tsx to ensure compatibility)

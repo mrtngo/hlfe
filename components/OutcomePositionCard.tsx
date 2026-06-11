@@ -99,10 +99,21 @@ export default function OutcomePositionCard({
                         <div className="font-mono" style={{ fontSize: 17, fontWeight: 800 }}>
                             {formatCurrency(position.value, 2)}
                         </div>
-                        <div className="font-mono" style={{ fontSize: 11, color: V2.t3, marginTop: 2 }}>
-                            {position.contracts.toFixed(0)} {t.outcomeMarkets.contracts}
+                        <div className="font-mono" style={{ fontSize: 12, fontWeight: 700, marginTop: 2, color: position.pnl >= 0 ? V2.pos : V2.neg }}>
+                            {position.pnl >= 0 ? '+' : '-'}{formatCurrency(Math.abs(position.pnl), 2)}
                         </div>
                     </div>
+                </div>
+
+                {/* Invested / contracts */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 11.5 }}>
+                    <span style={{ color: V2.t3 }}>
+                        {t.outcomeMarkets.invested}{' '}
+                        <span className="font-mono" style={{ color: V2.t2, fontWeight: 700 }}>{formatCurrency(position.cost, 2)}</span>
+                    </span>
+                    <span className="font-mono" style={{ color: V2.t3 }}>
+                        {position.contracts.toFixed(0)} {t.outcomeMarkets.contracts}
+                    </span>
                 </div>
             </button>
 

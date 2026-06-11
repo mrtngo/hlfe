@@ -79,18 +79,21 @@ export default function OutcomeMarketsScreen() {
 
     /**
      * User's open positions across HIP-4 markets, derived from spotBalances
-     * entries whose coin starts with "#" (HL stores outcome holdings in the
-     * spot clearinghouse). Map back to {outcomeId, sideIdx, amount}.
+     * entries whose coin starts with "+" (HL stores outcome holdings in the
+     * spot clearinghouse as "+{10*outcome+side}"). Keyed by the "#" market
+     * ref (outcomeCoinRef) so the lookups below stay consistent.
      */
     const userPositions = useMemo(() => {
         const positions: Record<string, { outcomeId: number; sideIdx: number; amount: number }> = {};
         (spotBalances || []).forEach((b) => {
-            if (!b.coin.startsWith('#')) return;
+            if (!b.coin.startsWith('+')) return;
             const n = parseInt(b.coin.slice(1), 10);
             if (!Number.isFinite(n)) return;
             const amount = parseFloat(b.total) || 0;
             if (amount <= 0) return;
-            positions[b.coin] = { outcomeId: Math.floor(n / 10), sideIdx: n % 10, amount };
+            const outcomeId = Math.floor(n / 10);
+            const sideIdx = n % 10;
+            positions[outcomeCoinRef(outcomeId, sideIdx)] = { outcomeId, sideIdx, amount };
         });
         return positions;
     }, [spotBalances]);

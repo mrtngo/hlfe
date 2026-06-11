@@ -3,11 +3,12 @@
 /**
  * useOutcomePositions — the user's open HIP-4 outcome positions.
  *
- * HL stores outcome holdings in the spot clearinghouse as coins prefixed with
- * "#" (e.g. "#1010" = outcome 101, side 0). We join those balances with the
- * live outcome-market metadata (names + current mid) to produce display-ready
- * positions: which event/side, how many contracts, and current market value
- * (contracts × mid, since outcome contracts settle to 0 or 1).
+ * HL stores outcome holdings in the spot clearinghouse under a coin prefixed
+ * with "+" (e.g. "+2480" = outcome 248, side 0) — note this differs from the
+ * market/price reference which uses "#" (allMids, l2Book). Each holding also
+ * carries `entryNtl` (cost basis). We join those balances with the live
+ * outcome-market metadata (names + current mid) to produce display-ready
+ * positions: which event/side, contracts, cost, current value and P&L.
  */
 
 import { useMemo } from 'react';
@@ -16,7 +17,7 @@ import { useOutcomeMarkets } from '@/hooks/useOutcomeMarkets';
 import type { OutcomeMarketView, OutcomeSideView } from '@/lib/hyperliquid/outcome';
 
 export interface OutcomePosition {
-    /** "#1010" style coin ref. */
+    /** "+2480" style balance coin (spot ledger). */
     coinRef: string;
     outcomeId: number;
     sideIdx: number;
@@ -26,6 +27,10 @@ export interface OutcomePosition {
     mid: number;
     /** Current market value = contracts × mid (USDC/USDH). */
     value: number;
+    /** Cost basis (entryNtl) — what the user put in. */
+    cost: number;
+    /** value − cost. */
+    pnl: number;
     /** Parent event name (question) for grouping/labelling. */
     eventName: string;
     /** This market's own name (e.g. team / outcome). */
@@ -54,7 +59,7 @@ export function useOutcomePositions(): Result {
         for (const m of markets) byId.set(m.outcomeId, m);
 
         return (spotBalances || [])
-            .filter((b) => b.coin.startsWith('#'))
+            .filter((b) => b.coin.startsWith('+'))
             .map((b) => {
                 const n = parseInt(b.coin.slice(1), 10);
                 if (!Number.isFinite(n)) return null;
@@ -65,13 +70,17 @@ export function useOutcomePositions(): Result {
                 const market = byId.get(outcomeId) || null;
                 const side = market?.sides[sideIdx] || null;
                 const mid = side?.mid ?? 0;
+                const value = contracts * mid;
+                const cost = parseFloat(b.entryNtl || '0') || 0;
                 return {
                     coinRef: b.coin,
                     outcomeId,
                     sideIdx,
                     contracts,
                     mid,
-                    value: contracts * mid,
+                    value,
+                    cost,
+                    pnl: value - cost,
                     eventName: market?.eventName || market?.name || `#${outcomeId}`,
                     marketName: market?.name || `#${outcomeId}`,
                     sideName: side?.name || `Lado ${sideIdx}`,

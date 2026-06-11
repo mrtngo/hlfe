@@ -333,7 +333,8 @@
     "buyTab": "Buy",
     "sellTab": "Sell",
     "sellMax": "You hold {n}",
-    "noToSell": "No contracts to sell"
+    "noToSell": "No contracts to sell",
+    "invested": "Invested"
   },
   "buy": {
     "title": "Buy Crypto",

@@ -333,7 +333,8 @@
     "buyTab": "Comprar",
     "sellTab": "Vender",
     "sellMax": "Tenés {n}",
-    "noToSell": "No tenés contratos para vender"
+    "noToSell": "No tenés contratos para vender",
+    "invested": "Invertido"
   },
   "buy": {
     "title": "Comprar Cripto",
