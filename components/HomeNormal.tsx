@@ -42,7 +42,7 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, markets, thirtyDayPnl, setSelectedMarket, spotBalances, spotPrices } = useHyperliquid();
-    const { positions: outcomePositions } = useOutcomePositions();
+    const { positions: outcomePositions, totalValue: outcomeValue } = useOutcomePositions();
 
     // Spot holdings to render (excluding stablecoins, counted as cash).
     const spotHoldings = useMemo(() => {
@@ -97,7 +97,9 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
         [markets, watchlistToShow],
     );
 
-    const portfolioValue = account.equity || account.balance || 0;
+    // Total value = perp/spot equity + current value of HIP-4 prediction
+    // positions (those settle from spot but aren't priced into account.equity).
+    const portfolioValue = (account.equity || account.balance || 0) + outcomeValue;
 
     const thirtyDayPct = useMemo(
         () => (account.equity > 0 ? (thirtyDayPnl / account.equity) * 100 : 0),
@@ -186,7 +188,7 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                     {[
                         { l: t.homeRedesign.available, v: account.availableMargin },
                         { l: t.homeRedesign.inPosition, v: account.usedMargin },
-                        { l: t.homeRedesign.equity, v: account.equity },
+                        { l: t.homeRedesign.equity, v: account.equity + outcomeValue },
                     ].map((s) => (
                         <div key={s.l} className="v2-card" style={{ flex: 1, padding: '12px 14px', borderRadius: 14 }}>
                             <div style={{ fontSize: 11.5, color: V2.t3, fontWeight: 600 }}>{s.l}</div>

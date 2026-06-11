@@ -26,7 +26,8 @@ export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick, onOp
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, userDataLoading } = useHyperliquid();
-    const { positions: outcomePositions } = useOutcomePositions();
+    const { positions: outcomePositions, totalValue: outcomeValue } = useOutcomePositions();
+    const outcomePnl = outcomePositions.reduce((s, p) => s + p.pnl, 0);
 
     const allocation = useMemo(() => {
         const list = positions || [];
@@ -49,8 +50,10 @@ export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick, onOp
 
     const isLoading = userDataLoading;
     const isEmpty = !isLoading && (positions || []).length === 0 && outcomePositions.length === 0;
-    const totalPnl = account.unrealizedPnl || 0;
-    const pnlPct = account.equity > 0 ? (totalPnl / account.equity) * 100 : 0;
+    // Total = perp/spot equity + current value of prediction positions.
+    const totalEquity = (account.equity || 0) + outcomeValue;
+    const totalPnl = (account.unrealizedPnl || 0) + outcomePnl;
+    const pnlPct = totalEquity > 0 ? (totalPnl / totalEquity) * 100 : 0;
 
     return (
         <ScreenV2 pad={0}>
@@ -59,7 +62,7 @@ export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick, onOp
             {/* Equity */}
             <div style={{ padding: '8px 20px 0' }}>
                 <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{t.screens.portafolio.totalEquity}</div>
-                <div style={{ marginTop: 8 }}><BigMoney value={account.equity || 0} size={48} /></div>
+                <div style={{ marginTop: 8 }}><BigMoney value={totalEquity} size={48} /></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
                     <span style={{ color: totalPnl >= 0 ? V2.pos : V2.neg, fontWeight: 700, fontSize: 16, fontFamily: V2.mono }}>
                         {totalPnl >= 0 ? '+' : '-'}{formatCurrency(Math.abs(totalPnl))}
