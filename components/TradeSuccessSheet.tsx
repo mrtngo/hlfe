@@ -24,6 +24,15 @@ interface TradeSuccessSheetProps {
     resting?: boolean;
     /** CTA label override (default: "Listo") */
     ctaLabel?: string;
+    /** Eyebrow text override (default derives from `resting`). */
+    eyebrow?: string;
+    /** When set, the ticker pill shows this text and the token logo is hidden.
+     *  Used for prediction markets, which have no token art. */
+    pillText?: string;
+    /** Override the bottom summary headline (default "{verb} {amount} {ticker}"). */
+    summaryTitle?: string;
+    /** Override the bottom summary sub-line (default avg price / balance). */
+    summarySub?: string;
 }
 
 // Scattered bolts: { left%, top%, size, delay, rot }
@@ -59,6 +68,10 @@ export default function TradeSuccessSheet({
     formatCurrency,
     resting,
     ctaLabel,
+    eyebrow: eyebrowProp,
+    pillText,
+    summaryTitle,
+    summarySub,
 }: TradeSuccessSheetProps) {
     // Celebratory buzz the moment the success sheet appears.
     useEffect(() => {
@@ -70,7 +83,7 @@ export default function TradeSuccessSheet({
     const isBuy = side === 'buy';
     const shownTicker = (ticker || symbol).replace(/-USD$/, '').replace(/-PERP$/, '');
     const verb = isBuy ? 'Compraste' : 'Vendiste';
-    const eyebrow = resting ? '¡Orden colocada!' : '¡Operación realizada!';
+    const eyebrow = eyebrowProp ?? (resting ? '¡Orden colocada!' : '¡Operación realizada!');
     const [intPart, decPart] = usdAmount.toFixed(2).split('.');
     const fmt = (v: number) => (formatCurrency ? formatCurrency(v, 2) : `$${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
 
@@ -114,8 +127,14 @@ export default function TradeSuccessSheet({
                         <span style={{ color: V2.t3 }}>.{decPart}</span>
                     </div>
                     <div style={{ marginTop: 22, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 99, background: 'rgba(255,255,255,0.05)', border: `1px solid ${V2.hair}` }}>
-                        <span style={{ fontSize: 16, fontWeight: 700 }}>{shownTicker}</span>
-                        <MarketLogo sym={symbol} size={20} />
+                        {pillText ? (
+                            <span style={{ fontSize: 15, fontWeight: 700 }}>{pillText}</span>
+                        ) : (
+                            <>
+                                <span style={{ fontSize: 16, fontWeight: 700 }}>{shownTicker}</span>
+                                <MarketLogo sym={symbol} size={20} />
+                            </>
+                        )}
                         <Icon name={isBuy ? 'arrowUpRight' : 'arrowDownLeft'} size={15} color={isBuy ? V2.pos : V2.neg} strokeWidth={2.6} />
                     </div>
                 </div>
@@ -129,11 +148,15 @@ export default function TradeSuccessSheet({
                     </div>
                     <div style={{ textAlign: 'left', minWidth: 0 }}>
                         <div style={{ fontSize: 15, fontWeight: 700 }}>
-                            {verb} {tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 6 })} {shownTicker}
+                            {summaryTitle ?? `${verb} ${tokenAmount.toLocaleString('en-US', { maximumFractionDigits: 6 })} ${shownTicker}`}
                         </div>
                         <div style={{ fontSize: 13, color: V2.t3, marginTop: 2, lineHeight: 1.35, fontFamily: V2.mono }}>
-                            {avgPrice && avgPrice > 0 ? `Prom. $${avgPrice.toLocaleString('en-US', { maximumFractionDigits: avgPrice < 1 ? 4 : 2 })}` : `${fmt(usdAmount)}`}
-                            {newBalance !== undefined ? ` · Saldo ${fmt(newBalance)}` : ''}
+                            {summarySub ?? (
+                                <>
+                                    {avgPrice && avgPrice > 0 ? `Prom. $${avgPrice.toLocaleString('en-US', { maximumFractionDigits: avgPrice < 1 ? 4 : 2 })}` : `${fmt(usdAmount)}`}
+                                    {newBalance !== undefined ? ` · Saldo ${fmt(newBalance)}` : ''}
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

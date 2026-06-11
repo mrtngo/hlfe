@@ -16,7 +16,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, ArrowLeftRight, Check, ChevronRight, Loader2, TrendingUp } from 'lucide-react';
+import { AlertCircle, ArrowLeftRight, ChevronRight, Loader2, TrendingUp } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -35,6 +35,7 @@ import TransferModal from '@/components/TransferModal';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import OrderBook from '@/components/OrderBook';
 import OutcomePositionCard from '@/components/OutcomePositionCard';
+import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 import { Icon, SliderRow, V2 } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
@@ -65,6 +66,14 @@ export default function OutcomeMarketsScreen() {
     const [result, setResult] = useState<{ kind: 'idle' | 'success' | 'error'; message?: string }>({
         kind: 'idle',
     });
+    /** Drives the full-screen confirmation animation on a filled bet/sell. */
+    const [success, setSuccess] = useState<{
+        side: 'buy' | 'sell';
+        usd: number;
+        contracts: number;
+        sideName: string;
+        marketName: string;
+    } | null>(null);
     /** When set, ApproveAgentModal pops; success retries the bet. */
     const [needsAgent, setNeedsAgent] = useState(false);
     const [activeTab, setActiveTab] = useState<'trade' | 'chart' | 'book'>('trade');
@@ -159,7 +168,23 @@ export default function OutcomeMarketsScreen() {
             size: contractsNum,
             marketSlippagePct: 0.05,
         });
-        return { ok: !!res.filled, error: res.error } as const;
+        return { ok: !!res.filled, filledSize: res.filledSize, filledPrice: res.filledPrice, error: res.error } as const;
+    };
+
+    /** Fire the confirmation animation, reset the slider, close the trade sheet. */
+    const onFilled = (res: { filledSize?: number; filledPrice?: number }) => {
+        if (!selected || !selectedSide) return;
+        const filledSz = res.filledSize && res.filledSize > 0 ? res.filledSize : contractsNum;
+        const filledPx = res.filledPrice && res.filledPrice > 0 ? res.filledPrice : price;
+        setSuccess({
+            side: tradeSide,
+            usd: filledSz * filledPx,
+            contracts: filledSz,
+            sideName: selectedSide.name,
+            marketName: selected.name,
+        });
+        setPct(50);
+        setSelectedId(null);
     };
 
     const handleBet = async () => {
@@ -169,8 +194,7 @@ export default function OutcomeMarketsScreen() {
         setResult({ kind: 'idle' });
         const res = await placeBet();
         if (res.ok) {
-            setResult({ kind: 'success' });
-            setPct(50);
+            onFilled(res);
         } else if (res.error?.toLowerCase().includes('agent wallet not approved')) {
             // No on-device agent yet — open the approval modal; its onSuccess retries.
             setNeedsAgent(true);
@@ -186,8 +210,7 @@ export default function OutcomeMarketsScreen() {
         setResult({ kind: 'idle' });
         const res = await placeBet();
         if (res.ok) {
-            setResult({ kind: 'success' });
-            setPct(50);
+            onFilled(res);
         } else {
             setResult({ kind: 'error', message: res.error || t.outcomeMarkets.errBet });
         }
@@ -532,11 +555,13 @@ export default function OutcomeMarketsScreen() {
                                             }}
                                         >
                                             <span className="font-mono" style={{ color: V2.t2, fontWeight: 700 }}>
-                                                {contractsNum} {t.outcomeMarkets.contracts}
+                                                {tradeSide === 'sell'
+                                                    ? `${t.outcomeMarkets.value}: ${formatCurrency(totalCost, 2)}`
+                                                    : `${t.outcomeMarkets.betAmountLabel}: ${formatCurrency(totalCost, 2)}`}
                                             </span>
                                             <span className="font-mono" style={{ color: V2.t3 }}>
                                                 {tradeSide === 'sell'
-                                                    ? t.outcomeMarkets.sellMax.replace('{n}', String(heldContracts))
+                                                    ? t.outcomeMarkets.sellMax.replace('{n}', formatCurrency(heldContracts * price, 2))
                                                     : `${selected.quoteToken}: ${formatCurrency(quoteBalance, 2)}`}
                                             </span>
                                         </div>
@@ -635,25 +660,6 @@ export default function OutcomeMarketsScreen() {
                                             </button>
                                         )}
 
-                                    {result.kind === 'success' && (
-                                        <div
-                                            style={{
-                                                background: V2.posSoft,
-                                                border: '1px solid rgba(34,197,94,0.3)',
-                                                borderRadius: 12,
-                                                padding: '10px 12px',
-                                                fontSize: 14,
-                                                color: V2.pos,
-                                                display: 'flex',
-                                                gap: 8,
-                                                alignItems: 'center',
-                                                marginBottom: 10,
-                                            }}
-                                        >
-                                            <Check style={{ width: 14, height: 14 }} />
-                                            {t.outcomeMarkets.successBet}
-                                        </div>
-                                    )}
                                     {result.kind === 'error' && (
                                         <div
                                             style={{
@@ -701,10 +707,10 @@ export default function OutcomeMarketsScreen() {
                                                 {t.outcomeMarkets.betting}
                                             </>
                                         ) : tradeSide === 'sell' ? (
-                                            `${t.outcomeMarkets.sellTab} ${contractsNum || '?'} ${t.outcomeMarkets.contracts}`
+                                            `${t.outcomeMarkets.sellTab} (${formatCurrency(totalCost, 2)})`
                                         ) : (
                                             t.outcomeMarkets.placeBetCta
-                                                .replace('{amount}', `${contractsNum || '?'} ${t.outcomeMarkets.contracts}`)
+                                                .replace('{amount}', formatCurrency(totalCost, 2))
                                                 .replace('{side}', selectedSide.name)
                                         )}
                                     </button>
@@ -750,6 +756,31 @@ export default function OutcomeMarketsScreen() {
                 spotLabel={t.outcomeMarkets.spotBalanceLabel}
                 perpLabel={t.outcomeMarkets.perpBalanceLabel}
                 helpText={t.outcomeMarkets.transferHelp}
+            />
+
+            {/* Full-screen confirmation animation (shared with perps). */}
+            <TradeSuccessSheet
+                open={!!success}
+                onClose={() => setSuccess(null)}
+                side={success?.side || 'buy'}
+                symbol=""
+                tokenAmount={success?.contracts || 0}
+                usdAmount={success?.usd || 0}
+                formatCurrency={formatCurrency}
+                eyebrow={success?.side === 'sell' ? t.outcomeMarkets.successSell : t.outcomeMarkets.successBet}
+                pillText={success ? `${success.marketName} · ${success.sideName}` : undefined}
+                summaryTitle={
+                    success?.side === 'sell'
+                        ? t.outcomeMarkets.sheetSellTitle
+                        : t.outcomeMarkets.sheetBetTitle.replace('{side}', success?.sideName || '')
+                }
+                summarySub={
+                    success?.side === 'sell'
+                        ? t.outcomeMarkets.sheetSellSub
+                              .replace('{side}', success?.sideName || '')
+                              .replace('{amount}', formatCurrency(success?.usd || 0, 2))
+                        : t.outcomeMarkets.sheetBetSub.replace('{amount}', formatCurrency(success?.contracts || 0, 2))
+                }
             />
         </div>
     );

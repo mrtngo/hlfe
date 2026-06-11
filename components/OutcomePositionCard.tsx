@@ -17,6 +17,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { V2 } from '@/components/V2Kit';
+import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 import { haptic } from '@/lib/haptics';
 import type { OutcomePosition } from '@/hooks/useOutcomePositions';
 
@@ -39,6 +40,8 @@ export default function OutcomePositionCard({
     const [confirming, setConfirming] = useState(false);
     const [closing, setClosing] = useState(false);
     const [err, setErr] = useState<string | null>(null);
+    /** Proceeds from a filled close → drives the confirmation animation. */
+    const [closedUsd, setClosedUsd] = useState<number | null>(null);
 
     const palette = SIDE[position.sideIdx as 0 | 1] || SIDE[0];
 
@@ -59,6 +62,9 @@ export default function OutcomePositionCard({
             setErr(res.error || t.outcomeMarkets.errClose);
         } else {
             setConfirming(false);
+            const proceeds =
+                res.filledSize && res.filledPrice ? res.filledSize * res.filledPrice : position.value;
+            setClosedUsd(proceeds);
         }
         // Provider polling refreshes spotBalances → the card drops out.
     };
@@ -111,8 +117,9 @@ export default function OutcomePositionCard({
                         {t.outcomeMarkets.invested}{' '}
                         <span className="font-mono" style={{ color: V2.t2, fontWeight: 700 }}>{formatCurrency(position.cost, 2)}</span>
                     </span>
-                    <span className="font-mono" style={{ color: V2.t3 }}>
-                        {position.contracts.toFixed(0)} {t.outcomeMarkets.contracts}
+                    <span style={{ color: V2.t3 }}>
+                        {t.outcomeMarkets.payoutIfWin}{' '}
+                        <span className="font-mono" style={{ color: V2.pos, fontWeight: 700 }}>{formatCurrency(position.contracts, 2)}</span>
                     </span>
                 </div>
             </button>
@@ -205,6 +212,23 @@ export default function OutcomePositionCard({
                     </button>
                 )}
             </div>
+
+            {/* Full-screen confirmation animation (shared with perps). */}
+            <TradeSuccessSheet
+                open={closedUsd !== null}
+                onClose={() => setClosedUsd(null)}
+                side="sell"
+                symbol=""
+                tokenAmount={position.contracts}
+                usdAmount={closedUsd || 0}
+                formatCurrency={formatCurrency}
+                eyebrow={t.outcomeMarkets.successSell}
+                pillText={`${position.marketName} · ${position.sideName}`}
+                summaryTitle={t.outcomeMarkets.sheetSellTitle}
+                summarySub={t.outcomeMarkets.sheetSellSub
+                    .replace('{side}', position.sideName)
+                    .replace('{amount}', formatCurrency(closedUsd || 0, 2))}
+            />
         </div>
     );
 }
