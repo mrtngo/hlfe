@@ -32,17 +32,6 @@ export {
 } from './bridge';
 
 export {
-    POLYGON_CHAIN_ID,
-    POLYMARKET_API,
-    POLYMARKET_WS,
-    POLYMARKET_CONTRACTS,
-    POLYMARKET_CATEGORIES,
-    POLYMARKET_MIN_ORDER,
-    POLYGON_USDC_ABI,
-    PROXY_INIT_CODE_HASH,
-} from './polymarket';
-
-export {
     SPOT_PICKER_TOP_N,
     SPOT_LOW_LIQUIDITY_THRESHOLD_USD,
 } from './spot-tokens';

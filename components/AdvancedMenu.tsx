@@ -418,7 +418,7 @@ export default function AdvancedMenu({
                                         className="text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5"
                                         style={{ color: '#A78BFA' }}
                                     >
-                                        Polymarket · Eventos
+                                        HIP-4 · Eventos
                                     </div>
                                     <div
                                         className="font-display"

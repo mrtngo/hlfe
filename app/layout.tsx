@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { LanguageProvider } from '@/hooks/useLanguage';
 import { HyperliquidProvider } from '@/providers/HyperliquidProvider';
-import { PolymarketProvider } from '@/providers/PolymarketProvider';
 import { PrivyProvider } from '@/providers/PrivyProvider';
 import { UserProvider } from '@/hooks/useUser';
 import { CurrencyProvider } from '@/context/CurrencyContext';
@@ -77,11 +76,9 @@ export default function RootLayout({
                     <LanguageProvider>
                         <CurrencyProvider>
                             <HyperliquidProvider>
-                                <PolymarketProvider>
-                                    <UserProvider>
-                                        {children}
-                                    </UserProvider>
-                                </PolymarketProvider>
+                                <UserProvider>
+                                    {children}
+                                </UserProvider>
                             </HyperliquidProvider>
                         </CurrencyProvider>
                     </LanguageProvider>
