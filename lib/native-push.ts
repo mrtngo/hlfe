@@ -25,6 +25,8 @@ interface RegisterOpts {
 
 /** Most-recent user binding, so a token that arrives before login still links. */
 let pending: RegisterOpts = {};
+/** Last token APNs handed us, so we can re-post it when the user logs in. */
+let lastToken: string | null = null;
 
 async function postToken(token: string) {
     try {
@@ -41,6 +43,17 @@ async function postToken(token: string) {
     } catch (e) {
         console.warn('[native-push] failed to post token', e);
     }
+}
+
+/**
+ * Associate the device token with a user once they're known (called after
+ * login). Idempotent: re-upserts the same token row with the binding. No-op on
+ * web or before a token has been issued.
+ */
+export function linkPushUser(opts: RegisterOpts): void {
+    const changed = opts.userId !== pending.userId || opts.walletAddress !== pending.walletAddress;
+    pending = { ...pending, ...opts };
+    if (changed && lastToken) void postToken(lastToken);
 }
 
 export async function registerNativePush(opts: RegisterOpts = {}): Promise<void> {
@@ -62,6 +75,7 @@ export async function registerNativePush(opts: RegisterOpts = {}): Promise<void>
         }
 
         await PushNotifications.addListener('registration', (t: { value: string }) => {
+            lastToken = t.value;
             void postToken(t.value);
         });
         await PushNotifications.addListener('registrationError', (err: unknown) => {

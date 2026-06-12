@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import webPush from 'web-push';
 import { supabase } from '@/lib/supabase/client';
+import { sendApnsToAll } from '@/lib/apns';
 
 // VAPID configuration
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
@@ -195,16 +196,18 @@ export async function GET(request: NextRequest) {
 
                 console.log(`[PriceAlerts] Sending alert: ${title}`);
 
-                const sent = await sendPushToAll(title, body, {
-                    symbol: `${symbol}-USD`,
-                    url: `/trade?symbol=${symbol}-USD`,
-                });
+                const data = { symbol: `${symbol}-USD`, url: `/trade?symbol=${symbol}-USD` };
+                // Web Push (browser/PWA) + native APNs (iOS app) — both broadcast.
+                const [sent, sentNative] = await Promise.all([
+                    sendPushToAll(title, body, data),
+                    sendApnsToAll({ title, body, data, collapseId: `price-${symbol}` }),
+                ]);
 
                 // Update state to the STABLE threshold level we just crossed
                 // This ensures we stay "locked" to the grid and prevent oscillations
                 await updateLastAlertPrice(symbol, crossedLevel);
 
-                alerts.push(`${symbol}: ${sent} notifications sent for level ${crossedLevel}`);
+                alerts.push(`${symbol}: ${sent} web + ${sentNative} native sent for level ${crossedLevel}`);
             }
         }
 

@@ -78,6 +78,15 @@ export default function Home() {
         setGuest(localStorage.getItem('rayo_guest') === 'true');
     }, []);
 
+    // Link the native push token to this wallet once authenticated, so pushes
+    // (DCA runs, fills, deposits) can target the right user. No-op on web.
+    useEffect(() => {
+        if (!authenticated || !address) return;
+        import('@/lib/native-push')
+            .then(({ linkPushUser }) => linkPushUser({ walletAddress: address }))
+            .catch(() => { /* plugin absent in this build */ });
+    }, [authenticated, address]);
+
     // Auto-play the tutorial once, right after a first authentication.
     useEffect(() => {
         if (ready && authenticated && typeof window !== 'undefined' && !localStorage.getItem('rayo_onboarded')) {
