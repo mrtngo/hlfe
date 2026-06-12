@@ -131,6 +131,17 @@ export interface Asset {
 
 export type DcaFrequency = 'daily' | 'weekly' | 'monthly';
 
+export interface DeviceToken {
+    id: string;
+    /** APNs/FCM registration token. */
+    token: string;
+    platform: 'ios' | 'android' | 'web';
+    user_id: string | null;
+    wallet_address: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface DcaSchedule {
     id: string;
     user_id: string;
@@ -750,6 +761,75 @@ export const db = {
                 return false;
             }
             return true;
+        },
+    },
+
+    // Native (APNs/FCM) device tokens — for iOS/Android push. Distinct from
+    // `push_subscriptions`, which is browser Web Push (VAPID + service worker).
+    deviceTokens: {
+        async save(
+            token: string,
+            platform: DeviceToken['platform'],
+            opts: { userId?: string | null; walletAddress?: string | null } = {},
+        ): Promise<DeviceToken | null> {
+            const { data, error } = await supabase
+                .from('device_tokens')
+                .upsert({
+                    token,
+                    platform,
+                    user_id: opts.userId ?? null,
+                    wallet_address: opts.walletAddress?.toLowerCase() ?? null,
+                    updated_at: new Date().toISOString(),
+                }, { onConflict: 'token' })
+                .select()
+                .single();
+            if (error) {
+                console.error('Error saving device token:', error);
+                return null;
+            }
+            return data;
+        },
+
+        async remove(token: string): Promise<boolean> {
+            const { error } = await supabase.from('device_tokens').delete().eq('token', token);
+            if (error) {
+                console.error('Error removing device token:', error);
+                return false;
+            }
+            return true;
+        },
+
+        async getByUser(userId: string): Promise<DeviceToken[]> {
+            const { data, error } = await supabase
+                .from('device_tokens')
+                .select('*')
+                .eq('user_id', userId);
+            if (error) {
+                console.error('Error fetching device tokens:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getByWallet(walletAddress: string): Promise<DeviceToken[]> {
+            const { data, error } = await supabase
+                .from('device_tokens')
+                .select('*')
+                .eq('wallet_address', walletAddress.toLowerCase());
+            if (error) {
+                console.error('Error fetching device tokens:', error);
+                return [];
+            }
+            return data || [];
+        },
+
+        async getAll(): Promise<DeviceToken[]> {
+            const { data, error } = await supabase.from('device_tokens').select('*');
+            if (error) {
+                console.error('Error fetching device tokens:', error);
+                return [];
+            }
+            return data || [];
         },
     },
 

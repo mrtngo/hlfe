@@ -56,6 +56,13 @@ export default function CapacitorInit() {
             }
         })();
 
+        // Register for native (APNs) push, independent of splash. No-op until
+        // the Push Notifications capability + APNs key are configured; the
+        // token is linked to the user later once known.
+        import('@/lib/native-push')
+            .then(({ registerNativePush }) => registerNativePush())
+            .catch(() => { /* plugin absent in this build */ });
+
         return () => {
             cancelled = true;
         };

@@ -40,6 +40,10 @@ const config: CapacitorConfig = {
       backgroundColor: '#000000',
       overlaysWebView: false,
     },
+    PushNotifications: {
+      // Banner + sound + badge when a push arrives while the app is foreground.
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
   },
 };
 
