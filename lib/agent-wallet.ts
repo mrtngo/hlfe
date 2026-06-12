@@ -12,7 +12,12 @@ import { Hyperliquid } from './vendor/hyperliquid/index.js';
 
 const AGENT_WALLET_KEY = 'hyperliquid_agent_wallet';
 const AGENT_APPROVAL_KEY = 'hyperliquid_agent_approved';
-const ENCRYPTION_SALT = 'rayo_agent_wallet_v1';
+const ENCRYPTION_SALT = 'rayo_agent_wallet_v1'; // legacy (v1) PBKDF2 salt
+
+// Non-extractable key-wrapping key (KWK), persisted as a CryptoKey in IndexedDB.
+const KWK_DB = 'rayo_secure';
+const KWK_STORE = 'keys';
+const KWK_ID = 'agent_kwk_v2';
 
 export interface AgentWallet {
     address: string;
@@ -21,77 +26,164 @@ export interface AgentWallet {
 }
 
 interface EncryptedAgentWallet {
+    /** Scheme version: 2 = non-extractable KWK (default); 1/undefined = legacy
+     *  PBKDF2-from-address (kept only to decrypt + migrate old blobs). */
+    v?: 1 | 2;
     address: string;
     encryptedPrivateKey: string; // base64 encoded encrypted data
     iv: string; // base64 encoded initialization vector
     name: string;
 }
 
-/**
- * Derive an encryption key from the user's address using PBKDF2
- * This ties the encryption to the user's wallet
- */
-async function deriveKey(userAddress: string): Promise<CryptoKey> {
-    const encoder = new TextEncoder();
+const enc = new TextEncoder();
+const dec = new TextDecoder();
+const toB64 = (b: ArrayBuffer | Uint8Array) =>
+    btoa(String.fromCharCode(...(b instanceof Uint8Array ? b : new Uint8Array(b))));
+const fromB64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+
+// ── Hardened key storage ────────────────────────────────────────────────────
+//
+// The agent private key is encrypted with a key-wrapping key (KWK): an AES-GCM
+// CryptoKey generated with `extractable: false` and persisted as a CryptoKey
+// object in IndexedDB. Its raw bytes never exist in JS, localStorage, or any
+// form derivable from the (public) wallet address — so reading localStorage or
+// knowing the address is no longer enough to recover the agent key. The user
+// address is fed in as AES-GCM additional-authenticated-data, so a blob can
+// only be decrypted for the same account it was saved under (this preserves the
+// old per-user clearing behaviour on account switch).
+//
+// The legacy v1 scheme (PBKDF2 from the public address) is retained ONLY to
+// decrypt and transparently migrate already-stored wallets.
+
+function idbOpen(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(KWK_DB, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(KWK_STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function idbGet<T>(id: string): Promise<T | undefined> {
+    const db = await idbOpen();
+    try {
+        return await new Promise<T | undefined>((resolve, reject) => {
+            const req = db.transaction(KWK_STORE, 'readonly').objectStore(KWK_STORE).get(id);
+            req.onsuccess = () => resolve(req.result as T | undefined);
+            req.onerror = () => reject(req.error);
+        });
+    } finally {
+        db.close();
+    }
+}
+
+async function idbPut(id: string, val: unknown): Promise<void> {
+    const db = await idbOpen();
+    try {
+        await new Promise<void>((resolve, reject) => {
+            const tx = db.transaction(KWK_STORE, 'readwrite');
+            tx.objectStore(KWK_STORE).put(val, id);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    } finally {
+        db.close();
+    }
+}
+
+let kwkPromise: Promise<CryptoKey | null> | null = null;
+
+/** The device's non-extractable key-wrapping key, created on first use.
+ *  Returns null when IndexedDB / WebCrypto is unavailable (e.g. some private
+ *  modes) — callers then fall back to the legacy scheme so nothing breaks. */
+async function getKwk(): Promise<CryptoKey | null> {
+    if (typeof indexedDB === 'undefined' || !crypto?.subtle) return null;
+    if (!kwkPromise) {
+        kwkPromise = (async () => {
+            try {
+                const existing = await idbGet<CryptoKey>(KWK_ID);
+                if (existing) return existing;
+                const key = await crypto.subtle.generateKey(
+                    { name: 'AES-GCM', length: 256 },
+                    false, // non-extractable — raw bytes can never leave WebCrypto
+                    ['encrypt', 'decrypt'],
+                );
+                await idbPut(KWK_ID, key);
+                return key;
+            } catch (e) {
+                console.warn('Agent KWK unavailable; falling back to legacy key derivation', e);
+                return null;
+            }
+        })();
+    }
+    return kwkPromise;
+}
+
+/** Legacy v1 key: PBKDF2 from the (public) user address. Decrypt/migrate only. */
+async function deriveLegacyKey(userAddress: string): Promise<CryptoKey> {
     const keyMaterial = await crypto.subtle.importKey(
         'raw',
-        encoder.encode(userAddress.toLowerCase()),
+        enc.encode(userAddress.toLowerCase()),
         'PBKDF2',
         false,
-        ['deriveKey']
+        ['deriveKey'],
     );
-
     return crypto.subtle.deriveKey(
-        {
-            name: 'PBKDF2',
-            salt: encoder.encode(ENCRYPTION_SALT),
-            iterations: 100000,
-            hash: 'SHA-256'
-        },
+        { name: 'PBKDF2', salt: enc.encode(ENCRYPTION_SALT), iterations: 100000, hash: 'SHA-256' },
         keyMaterial,
         { name: 'AES-GCM', length: 256 },
         false,
-        ['encrypt', 'decrypt']
+        ['encrypt', 'decrypt'],
     );
 }
 
 /**
- * Encrypt private key using AES-GCM
+ * Encrypt the agent private key. Prefers the hardened v2 (non-extractable KWK)
+ * scheme; falls back to legacy v1 only if the KWK can't be created.
  */
-async function encryptPrivateKey(privateKey: string, userAddress: string): Promise<{ encrypted: string; iv: string }> {
-    const key = await deriveKey(userAddress);
+async function encryptPrivateKey(
+    privateKey: string,
+    userAddress: string,
+): Promise<{ encrypted: string; iv: string; v: 1 | 2 }> {
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const encoder = new TextEncoder();
-
-    const encrypted = await crypto.subtle.encrypt(
-        { name: 'AES-GCM', iv },
-        key,
-        encoder.encode(privateKey)
-    );
-
-    return {
-        encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
-        iv: btoa(String.fromCharCode(...iv))
-    };
+    const kwk = await getKwk();
+    if (kwk) {
+        const encrypted = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv, additionalData: enc.encode(userAddress.toLowerCase()) },
+            kwk,
+            enc.encode(privateKey),
+        );
+        return { encrypted: toB64(encrypted), iv: toB64(iv), v: 2 };
+    }
+    const key = await deriveLegacyKey(userAddress);
+    const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(privateKey));
+    return { encrypted: toB64(encrypted), iv: toB64(iv), v: 1 };
 }
 
 /**
- * Decrypt private key using AES-GCM
+ * Decrypt the agent private key for the given scheme version.
  */
-async function decryptPrivateKey(encryptedData: string, iv: string, userAddress: string): Promise<string> {
-    const key = await deriveKey(userAddress);
-    const decoder = new TextDecoder();
-
-    const encryptedBytes = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
-    const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
-
-    const decrypted = await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: ivBytes },
-        key,
-        encryptedBytes
-    );
-
-    return decoder.decode(decrypted);
+async function decryptPrivateKey(
+    encryptedData: string,
+    iv: string,
+    userAddress: string,
+    v: 1 | 2,
+): Promise<string> {
+    const ivBytes = fromB64(iv);
+    const data = fromB64(encryptedData);
+    if (v === 2) {
+        const kwk = await getKwk();
+        if (!kwk) throw new Error('Agent key-wrapping key unavailable');
+        const decrypted = await crypto.subtle.decrypt(
+            { name: 'AES-GCM', iv: ivBytes, additionalData: enc.encode(userAddress.toLowerCase()) },
+            kwk,
+            data,
+        );
+        return dec.decode(decrypted);
+    }
+    const key = await deriveLegacyKey(userAddress);
+    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: ivBytes }, key, data);
+    return dec.decode(decrypted);
 }
 
 /**
@@ -129,18 +221,29 @@ export async function getAgentWallet(userAddress?: string): Promise<AgentWallet 
             }
 
             const encryptedWallet = parsed as EncryptedAgentWallet;
+            const version: 1 | 2 = encryptedWallet.v === 2 ? 2 : 1;
             try {
                 const privateKey = await decryptPrivateKey(
                     encryptedWallet.encryptedPrivateKey,
                     encryptedWallet.iv,
-                    userAddress
+                    userAddress,
+                    version,
                 );
 
-                return {
+                const wallet = {
                     address: encryptedWallet.address,
                     privateKey,
                     name: encryptedWallet.name,
                 };
+
+                // Transparently upgrade legacy (v1, address-derived) blobs to the
+                // hardened KWK scheme on first unlock. Best-effort: a failure here
+                // leaves the working v1 blob untouched.
+                if (version === 1) {
+                    try { await saveAgentWallet(wallet, userAddress); } catch { /* keep v1 */ }
+                }
+
+                return wallet;
             } catch (decryptErr) {
                 // Stored agent was encrypted for a different user address (or got
                 // corrupted). Clear it so setupAgentWallet can start fresh instead
@@ -204,9 +307,10 @@ export async function saveAgentWallet(agent: AgentWallet, userAddress: string): 
     if (typeof window === 'undefined') return;
 
     try {
-        const { encrypted, iv } = await encryptPrivateKey(agent.privateKey, userAddress);
+        const { encrypted, iv, v } = await encryptPrivateKey(agent.privateKey, userAddress);
 
         const encryptedWallet: EncryptedAgentWallet = {
+            v,
             address: agent.address,
             encryptedPrivateKey: encrypted,
             iv,
