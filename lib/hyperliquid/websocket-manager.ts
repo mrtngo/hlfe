@@ -26,12 +26,16 @@ export interface WebSocketCallbacks {
 class HyperliquidWebSocketManager {
     private ws: WebSocket | null = null;
     private reconnectAttempts = 0;
-    private maxReconnectAttempts = 5;
-    private reconnectDelay = 1000;
+    private reconnectDelay = 1000;            // base backoff
+    private maxReconnectDelay = 30000;        // backoff cap — we retry forever
+    private reconnectTimer: NodeJS.Timeout | null = null;
     private callbacks: WebSocketCallbacks = {};
     private isConnecting = false;
     private subscriptions: Set<string> = new Set();
     private heartbeatInterval: NodeJS.Timeout | null = null;
+    private lastMessageAt = 0;                // liveness: last inbound frame (ms)
+    private readonly staleTimeoutMs = 45000;  // no data for this long ⇒ dead socket
+    private lifecycleBound = false;
 
     connect(callbacks: WebSocketCallbacks) {
         if (this.ws?.readyState === WebSocket.OPEN) {
@@ -48,11 +52,36 @@ class HyperliquidWebSocketManager {
         this.callbacks = { ...this.callbacks, ...callbacks };
         this.isConnecting = true;
         this.reconnectAttempts = 0;
+        this.bindLifecycle();
 
         this.establishConnection();
     }
 
+    /**
+     * Recover the socket when the app comes back to the foreground or the
+     * network returns. Mobile WebViews freeze/kill sockets while backgrounded,
+     * often without firing `onclose`, so prices would otherwise stay frozen
+     * until a full app reload. Bound once (singleton).
+     */
+    private bindLifecycle() {
+        if (this.lifecycleBound || typeof window === 'undefined') return;
+        this.lifecycleBound = true;
+        const wake = () => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+            if (this.ws?.readyState === WebSocket.OPEN || this.isConnecting) return;
+            if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
+            this.reconnectAttempts = 0;
+            this.establishConnection();
+        };
+        window.addEventListener('online', wake);
+        if (typeof document !== 'undefined') document.addEventListener('visibilitychange', wake);
+    }
+
     private establishConnection() {
+        // Don't stack sockets if one is already opening/open.
+        if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) {
+            return;
+        }
         try {
             log.info('📡 Connecting to Hyperliquid WebSocket:', WS_URL);
             this.ws = new WebSocket(WS_URL);
@@ -61,12 +90,15 @@ class HyperliquidWebSocketManager {
                 log.info('✅ WebSocket connected');
                 this.isConnecting = false;
                 this.reconnectAttempts = 0;
+                if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
+                this.lastMessageAt = Date.now();
                 this.startHeartbeat();
                 this.resubscribeAll();
                 this.callbacks.onConnect?.();
             };
 
             this.ws.onmessage = (event) => {
+                this.lastMessageAt = Date.now(); // liveness for the staleness watchdog
                 try {
                     const data = JSON.parse(event.data);
                     this.handleMessage(data);
@@ -406,12 +438,20 @@ class HyperliquidWebSocketManager {
     }
 
     private startHeartbeat() {
-        // Send ping every 30 seconds to keep connection alive
+        this.stopHeartbeat();
+        // Every 15s: keep the connection warm AND check liveness. HL streams
+        // allMids sub-second, so a long silence means a half-open/dead socket
+        // that never fired `onclose` (common on mobile) — force a recycle.
         this.heartbeatInterval = setInterval(() => {
-            if (this.ws?.readyState === WebSocket.OPEN) {
-                this.ws.send(JSON.stringify({ method: 'ping' }));
+            const ws = this.ws;
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            if (Date.now() - this.lastMessageAt > this.staleTimeoutMs) {
+                log.warn('⚠️ WebSocket stale (no data) — forcing reconnect');
+                try { ws.close(); } catch { /* ignore */ } // onclose → attemptReconnect
+                return;
             }
-        }, 30000);
+            try { ws.send(JSON.stringify({ method: 'ping' })); } catch { /* ignore */ }
+        }, 15000);
     }
 
     private stopHeartbeat() {
@@ -422,17 +462,22 @@ class HyperliquidWebSocketManager {
     }
 
     private attemptReconnect() {
-        if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            log.error('❌ Max reconnection attempts reached');
-            this.callbacks.onError?.(new Error('Failed to reconnect WebSocket'));
-            return;
-        }
+        if (this.reconnectTimer) return;                       // already scheduled
+        if (this.ws?.readyState === WebSocket.OPEN) return;     // already back up
 
         this.reconnectAttempts++;
-        const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-        log.info(`🔄 Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+        // Exponential backoff capped at maxReconnectDelay — we NEVER give up.
+        // Mobile sockets drop constantly (backgrounding, network switches, HL
+        // shedding load); a permanent stop here is what freezes prices until a
+        // full app reload.
+        const delay = Math.min(
+            this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1),
+            this.maxReconnectDelay,
+        );
+        log.info(`🔄 Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
-        setTimeout(() => {
+        this.reconnectTimer = setTimeout(() => {
+            this.reconnectTimer = null;
             this.isConnecting = false;
             this.establishConnection();
         }, delay);
@@ -440,6 +485,7 @@ class HyperliquidWebSocketManager {
 
     disconnect() {
         this.stopHeartbeat();
+        if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
         if (this.ws) {
             this.ws.close();
             this.ws = null;
