@@ -9,6 +9,8 @@ export interface NewsItem {
     url: string;
     source: string;
     lang: 'es' | 'en';
+    /** 'crypto' or 'tradfi' — drives the feed filter chips. */
+    category: 'crypto' | 'tradfi';
     /** Unix ms. */
     publishedAt: number;
     image: string | null;

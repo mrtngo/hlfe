@@ -12,10 +12,12 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { apiUrl } from '@/lib/api-base';
 import { ScreenV2, MarketLogo, Icon, V2 } from '@/components/V2Kit';
 
-type Filter = 'all' | 'es' | 'BTC' | 'ETH' | 'SOL';
+type Filter = 'all' | 'tradfi' | 'crypto' | 'es' | 'BTC' | 'ETH' | 'SOL';
 
 const FILTERS: { id: Filter; label: string }[] = [
     { id: 'all', label: 'Todas' },
+    { id: 'tradfi', label: 'TradFi' },
+    { id: 'crypto', label: 'Cripto' },
     { id: 'es', label: 'En español' },
     { id: 'BTC', label: 'Bitcoin' },
     { id: 'ETH', label: 'Ethereum' },
@@ -48,6 +50,7 @@ export default function NewsScreen({ onTickerClick }: NewsScreenProps) {
         if (!items) return [];
         if (filter === 'all') return items;
         if (filter === 'es') return items.filter((it) => it.lang === 'es');
+        if (filter === 'tradfi' || filter === 'crypto') return items.filter((it) => it.category === filter);
         return items.filter((it) => it.tickers.includes(filter));
     }, [items, filter]);
 
