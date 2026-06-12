@@ -31,7 +31,8 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useMfaEnrollment } from '@privy-io/react-auth';
+import { useMfaGate } from '@/hooks/useMfaGate';
 import { usePreferences } from '@/hooks/usePreferences';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useUser } from '@/hooks/useUser';
@@ -46,13 +47,48 @@ interface AjustesScreenProps {
 export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScreenProps) {
     const { t, language, setLanguage } = useLanguage();
     const { currency, toggleCurrency } = useCurrency();
-    const { logout } = usePrivy();
+    const { logout, user: privyUser, exportWallet } = usePrivy();
     const { user } = useUser();
     const { proMode, toggleProMode } = usePreferences();
     const pushNotifications = usePushNotifications();
     const { address } = useHyperliquid();
+    const { showMfaEnrollmentModal, unenrollWithTotp } = useMfaEnrollment();
+    const { requireMfa } = useMfaGate();
     const [dolarBlueOn, setDolarBlueOn] = useState(language === 'es');
     const [walletCopied, setWalletCopied] = useState(false);
+    const [secErr, setSecErr] = useState<string | null>(null);
+
+    // 2FA is opt-in: a user "has" it once they've enrolled a Privy MFA method.
+    const twoFaOn = (privyUser?.mfaMethods?.length ?? 0) > 0;
+
+    /** Enroll (opt in) or unenroll TOTP 2FA via Privy's default modals. */
+    const handleToggle2fa = async () => {
+        setSecErr(null);
+        try {
+            if (twoFaOn) await unenrollWithTotp();
+            else await showMfaEnrollmentModal();
+        } catch {
+            // User cancelled, or MFA isn't enabled on the Privy app yet.
+            setSecErr(t.screens.ajustes.security.twoFaError);
+        }
+    };
+
+    /** Export the embedded wallet's private key — gated behind 2FA when on. */
+    const handleExportKey = async () => {
+        setSecErr(null);
+        const embedded = privyUser?.wallet?.address;
+        if (!embedded) return;
+        try {
+            await requireMfa(); // no-op unless the user opted into 2FA
+        } catch {
+            return; // 2FA cancelled — abort silently
+        }
+        try {
+            await exportWallet({ address: embedded });
+        } catch {
+            setSecErr(t.screens.ajustes.security.exportError);
+        }
+    };
 
     const copyWallet = async () => {
         if (!address) return;
@@ -106,9 +142,23 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
                 {/* seguridad */}
                 <SettingGroup label={t.screens.ajustes.section.security}>
                     <Row icon={Lock} label={t.screens.ajustes.security.lock} right={<Toggle on={true} onToggle={() => {}} />} />
-                    <Row icon={Shield} label={t.screens.ajustes.security.twoFa} warn right={<WarningChip label={t.screens.ajustes.security.twoFaWarn} />} />
-                    <Row icon={BookOpen} label={t.screens.ajustes.security.backupPhrase} warn right={<ChevronIcon />} />
+                    <Row
+                        icon={Shield}
+                        label={t.screens.ajustes.security.twoFa}
+                        warn={!twoFaOn}
+                        onClick={handleToggle2fa}
+                        right={
+                            <Pill
+                                label={twoFaOn ? t.screens.ajustes.security.twoFaOn : t.screens.ajustes.security.twoFaActivate}
+                                tone={twoFaOn ? 'ok' : 'brand'}
+                            />
+                        }
+                    />
+                    <Row icon={BookOpen} label={t.screens.ajustes.security.backupPhrase} onClick={handleExportKey} right={<ChevronIcon />} />
                     <Row icon={Users} label={t.screens.ajustes.security.sessions} right={<CountBadge n={2} />} last />
+                    {secErr && (
+                        <div style={{ padding: '0 15px 12px', fontSize: 12, color: V2.neg }}>{secErr}</div>
+                    )}
                 </SettingGroup>
 
                 {/* preferencias */}
@@ -242,8 +292,13 @@ function CountBadge({ n }: { n: number }) {
     );
 }
 
-function WarningChip({ label }: { label: string }) {
+function Pill({ label, tone }: { label: string; tone: 'ok' | 'warn' | 'brand' }) {
+    const palette = {
+        ok: [V2.posSoft, V2.pos],
+        warn: [V2.negSoft, V2.neg],
+        brand: [V2.accentSoft, V2.accent],
+    }[tone];
     return (
-        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 99, background: V2.negSoft, color: V2.neg, fontFamily: V2.mono }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 99, background: palette[0], color: palette[1], fontFamily: V2.mono }}>{label}</span>
     );
 }

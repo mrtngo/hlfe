@@ -1103,6 +1103,11 @@
         "lock": "Bloqueo",
         "twoFa": "2FA",
         "twoFaWarn": "Sin 2FA",
+        "twoFaOn": "Activado",
+        "twoFaActivate": "Activar",
+        "twoFaError": "No se pudo cambiar el 2FA. Probá de nuevo.",
+        "twoFaCancelled": "Verificación 2FA cancelada",
+        "exportError": "No se pudo exportar la clave",
         "backupPhrase": "Frase de respaldo",
         "sessions": "Sesiones activas"
       },

@@ -1104,6 +1104,11 @@
         "lock": "Lock",
         "twoFa": "2FA",
         "twoFaWarn": "No 2FA",
+        "twoFaOn": "On",
+        "twoFaActivate": "Enable",
+        "twoFaError": "Couldn't change 2FA. Try again.",
+        "twoFaCancelled": "2FA check cancelled",
+        "exportError": "Couldn't export the key",
         "backupPhrase": "Backup phrase",
         "sessions": "Active sessions"
       },

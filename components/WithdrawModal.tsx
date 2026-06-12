@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useMfaGate } from '@/hooks/useMfaGate';
 import { haptic } from '@/lib/haptics';
 import { Icon, V2 } from '@/components/V2Kit';
 
@@ -25,6 +26,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const { address, account, withdraw } = useHyperliquid();
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
+    const { requireMfa } = useMfaGate();
 
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -69,6 +71,15 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
         haptic.medium();
         setLoading(true);
         setError('');
+        // Optional 2FA gate — no-op unless the user opted in (see useMfaGate).
+        try {
+            await requireMfa();
+        } catch {
+            haptic.error();
+            setError(t.screens.ajustes.security.twoFaCancelled);
+            setLoading(false);
+            return;
+        }
         try {
             await withdraw(amount, address);
             haptic.success();
