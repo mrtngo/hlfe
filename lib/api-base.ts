@@ -37,14 +37,37 @@ const RAW_BASE = process.env.NEXT_PUBLIC_API_BASE || '';
 export const API_BASE: string = RAW_BASE.replace(/\/+$/, '');
 
 /**
+ * Production API host used as a safety net for native shells. The Capacitor
+ * iOS bundle is a static export with no `/api/*` of its own and serves from
+ * `capacitor://localhost`, so if it's built WITHOUT `NEXT_PUBLIC_API_BASE`
+ * every API fetch would hit a dead `capacitor://localhost/api/*` and fail
+ * (e.g. "no pudimos cargar las noticias"). When the app is running on a
+ * non-http(s) origin and no base was configured, route to production instead
+ * of the (non-existent) local origin.
+ */
+const NATIVE_FALLBACK_BASE = 'https://www.rayotrade.xyz';
+
+/** Effective base for the current runtime (explicit env wins; native shells
+ *  fall back to production; web stays same-origin). */
+function resolveBase(): string {
+    if (API_BASE) return API_BASE; // explicit NEXT_PUBLIC_API_BASE
+    if (typeof window !== 'undefined') {
+        const origin = window.location.origin || '';
+        // capacitor://localhost, ionic://localhost, file://… — no API there.
+        if (!/^https?:/i.test(origin)) return NATIVE_FALLBACK_BASE;
+    }
+    return ''; // web: same-origin route handlers
+}
+
+/**
  * Build a fully-qualified URL for an API route.
  *
  * Examples:
  *   apiUrl('/api/bridge')      → '/api/bridge'                        (web)
- *   apiUrl('/api/bridge')      → 'https://api.rayotrade.xyz/api/...'  (iOS)
+ *   apiUrl('/api/bridge')      → 'https://www.rayotrade.xyz/api/...'  (iOS)
  *   apiUrl('/api/bridge?x=1')  → preserves query string
  */
 export function apiUrl(path: string): string {
     if (!path.startsWith('/')) path = '/' + path;
-    return `${API_BASE}${path}`;
+    return `${resolveBase()}${path}`;
 }
