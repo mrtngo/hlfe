@@ -241,8 +241,9 @@ function AreaLine({
     const actPrice = act
         ? `$${act.close.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp })}`
         : '';
+    // Candle `time` is in seconds (see useCandleData) — convert to ms.
     const actDate = act
-        ? new Date(act.time).toLocaleString('es-AR', {
+        ? new Date(act.time * 1000).toLocaleString('es-AR', {
               day: '2-digit',
               month: 'short',
               hour: '2-digit',
