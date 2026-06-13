@@ -5,7 +5,7 @@ import { History } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useOutcomeMarkets } from '@/hooks/useOutcomeMarkets';
-import { parseCoinRef, readOutcomeNameCache, type CachedOutcome } from '@/lib/hyperliquid/outcome';
+import { parseCoinRef, readOutcomeNameCache, localizeSideName, type CachedOutcome } from '@/lib/hyperliquid/outcome';
 import { useCurrency } from '@/context/CurrencyContext';
 import EmptyState from '@/components/EmptyState';
 import SkeletonRow from '@/components/SkeletonRow';
@@ -102,11 +102,11 @@ export default function OrderHistory() {
             if (ref) {
                 const om = outcomeById.get(ref.outcomeId);
                 if (om && (om.eventName || om.name)) {
-                    outcomeLabel =
-                        om.questionId != null && om.name !== om.eventName
-                            ? `${om.eventName}: ${om.name}`
-                            : om.eventName || om.name;
-                    outcomeSide = om.sides[ref.sideIdx];
+                    // Title reads "<outcome> / <side>", e.g. "Switzerland / Sí".
+                    const oName = om.name || om.eventName;
+                    const side = om.sides[ref.sideIdx];
+                    const sideLoc = side ? localizeSideName(side, language) : '';
+                    outcomeLabel = sideLoc ? `${oName} / ${sideLoc}` : oName;
                 } else {
                     // Settled & uncached → name unrecoverable; show a friendly label.
                     outcomeLabel = t.screens.historial.row.prediction;
@@ -129,7 +129,7 @@ export default function OrderHistory() {
             };
         });
         return fromFills.sort((a, b) => b.time - a.time);
-    }, [fills, outcomeById, t]);
+    }, [fills, outcomeById, t, language]);
 
     const summary = useMemo(() => {
         const cutoff = Date.now() - 30 * MS_DAY;
@@ -298,13 +298,15 @@ function HistoryRowV2({
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 15, fontWeight: 700, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
-                        {isClose ? t.screens.historial.row.closed.replace('{symbol}', ticker) : t.screens.historial.row.opened.replace('{symbol}', ticker)}
+                        {/* Prediction rows: bare "<outcome> / <side>" (the open/closed
+                            state already shows on the right). Perps keep "Abrió/Cerró". */}
+                        {isOutcome
+                            ? ticker
+                            : isClose
+                                ? t.screens.historial.row.closed.replace('{symbol}', ticker)
+                                : t.screens.historial.row.opened.replace('{symbol}', ticker)}
                     </span>
-                    {isOutcome && entry.outcomeSide ? (
-                        <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 5px', borderRadius: 4, background: V2.accentSoft, color: V2.accent }}>
-                            {entry.outcomeSide.toUpperCase()}
-                        </span>
-                    ) : entry.side && (
+                    {!isOutcome && entry.side && (
                         <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 5px', borderRadius: 4, background: isLong ? V2.posSoft : V2.negSoft, color: isLong ? V2.pos : V2.neg }}>
                             {isLong ? 'LONG' : 'SHORT'}{entry.leverage ? ` ${entry.leverage}x` : ''}
                         </span>

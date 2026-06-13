@@ -167,6 +167,23 @@ export async function fetchOutcomeMeta(): Promise<OutcomeMeta> {
     return { outcomes: data?.outcomes || [], questions: data?.questions || [] };
 }
 
+/**
+ * Implied probability → payout multiplier, e.g. 0.5 → "2x", 0.25 → "4x",
+ * 0.8 → "1.25x". Easier for beginners than a raw percentage ("if you're
+ * right you ~double your money"). Returns "—" for an unknown/zero price.
+ */
+export function oddsMultiplier(mid: number): string {
+    if (!mid || mid <= 0) return '—';
+    return `${parseFloat((1 / mid).toFixed(2))}x`;
+}
+
+/** Localize a side name (HL ships English): "Yes" → "Sí" in Spanish. */
+export function localizeSideName(name: string, language: string): string {
+    if (!name) return name;
+    if (language === 'es' && name.trim().toLowerCase() === 'yes') return 'Sí';
+    return name;
+}
+
 /** Keyword → coarse category. Used for the filter chips and labelling. */
 export function deriveCategory(name: string): OutcomeCategory {
     const n = name.toLowerCase();

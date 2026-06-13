@@ -23,6 +23,8 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { useOutcomeMarkets } from '@/hooks/useOutcomeMarkets';
 import {
     outcomeCoinRef,
+    oddsMultiplier,
+    localizeSideName,
     type OutcomeCategory,
     type OutcomeMarketView,
     type OutcomeSideView,
@@ -49,7 +51,7 @@ const SIDE_COLOR = {
 const CATS: OutcomeCategory[] = ['sports', 'economy', 'politics', 'crypto', 'other'];
 
 export default function OutcomeMarketsScreen() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { markets, loading } = useOutcomeMarkets();
     const { spotBalances, placeOutcomeOrder, buyUsdh, account } = useHyperliquid();
@@ -180,7 +182,7 @@ export default function OutcomeMarketsScreen() {
             side: tradeSide,
             usd: filledSz * filledPx,
             contracts: filledSz,
-            sideName: selectedSide.name,
+            sideName: localizeSideName(selectedSide.name, language),
             marketName: selected.name,
         });
         setPct(50);
@@ -364,6 +366,7 @@ export default function OutcomeMarketsScreen() {
                                         setActiveTab('trade');
                                     }}
                                     position={pos0 || pos1 || null}
+                                    language={language}
                                 />
                             );
                         })}
@@ -442,9 +445,9 @@ export default function OutcomeMarketsScreen() {
                                                 fontFamily: V2.ui,
                                             }}
                                         >
-                                            <div>{s.name}</div>
+                                            <div>{localizeSideName(s.name, language)}</div>
                                             <div className="font-mono" style={{ fontSize: 12, opacity: 0.85, marginTop: 2 }}>
-                                                {(s.mid * 100).toFixed(1)}¢
+                                                {oddsMultiplier(s.mid)}
                                             </div>
                                         </button>
                                     );
@@ -687,7 +690,7 @@ export default function OutcomeMarketsScreen() {
                                                 ? `${t.outcomeMarkets.sellTab} (${formatCurrency(totalCost, 2)})`
                                                 : t.outcomeMarkets.placeBetCta
                                                     .replace('{amount}', formatCurrency(totalCost, 2))
-                                                    .replace('{side}', selectedSide.name);
+                                                    .replace('{side}', localizeSideName(selectedSide.name, language));
                                         return (
                                             <SlideToConfirm
                                                 color={pal.color}
@@ -963,12 +966,14 @@ function MarketCard({
     selected,
     onClick,
     position,
+    language,
 }: {
     market: OutcomeMarketView;
     grouped: boolean;
     selected: boolean;
     onClick: () => void;
     position: { outcomeId: number; sideIdx: number; amount: number } | null;
+    language: string;
 }) {
     const sideYes = market.sides[0];
     const sideNo = market.sides[1];
@@ -1005,8 +1010,8 @@ function MarketCard({
                     {market.name}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 11 }}>
-                    <SidePill label={sideYes?.name || 'Yes'} pct={sideYes?.mid ?? 0.5} sideIdx={0} />
-                    <SidePill label={sideNo?.name || 'No'} pct={sideNo?.mid ?? 0.5} sideIdx={1} />
+                    <SidePill label={localizeSideName(sideYes?.name || 'Yes', language)} pct={sideYes?.mid ?? 0.5} sideIdx={0} />
+                    <SidePill label={localizeSideName(sideNo?.name || 'No', language)} pct={sideNo?.mid ?? 0.5} sideIdx={1} />
                     {!grouped && (
                         <span
                             style={{
@@ -1031,7 +1036,7 @@ function MarketCard({
                             fontWeight: 700,
                         }}
                     >
-                        ▸ {position.amount.toFixed(0)} {market.sides[position.sideIdx]?.name || ''}
+                        ▸ {position.amount.toFixed(0)} {localizeSideName(market.sides[position.sideIdx]?.name || '', language)}
                     </div>
                 )}
             </div>
@@ -1059,7 +1064,7 @@ function SidePill({ label, pct, sideIdx }: { label: string; pct: number; sideIdx
         >
             {label}
             <span className="font-mono" style={{ opacity: 0.85 }}>
-                {(pct * 100).toFixed(0)}%
+                {oddsMultiplier(pct)}
             </span>
         </span>
     );

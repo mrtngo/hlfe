@@ -17,6 +17,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { SlideToConfirm, V2 } from '@/components/V2Kit';
+import { oddsMultiplier, localizeSideName } from '@/lib/hyperliquid/outcome';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 import { haptic } from '@/lib/haptics';
 import type { OutcomePosition } from '@/hooks/useOutcomePositions';
@@ -34,9 +35,10 @@ export default function OutcomePositionCard({
     /** Open the trade sheet for this outcome (see / add more). */
     onManage?: (p: OutcomePosition) => void;
 }) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { placeOutcomeOrder } = useHyperliquid();
+    const sideLabel = localizeSideName(position.sideName, language);
     const [confirming, setConfirming] = useState(false);
     const [closing, setClosing] = useState(false);
     const [err, setErr] = useState<string | null>(null);
@@ -97,7 +99,7 @@ export default function OutcomePositionCard({
                                     color: palette.color,
                                 }}
                             >
-                                {position.sideName} {(position.mid * 100).toFixed(0)}%
+                                {sideLabel} {oddsMultiplier(position.mid)}
                             </span>
                         </div>
                     </div>
@@ -225,10 +227,10 @@ export default function OutcomePositionCard({
                 usdAmount={closedUsd || 0}
                 formatCurrency={formatCurrency}
                 eyebrow={t.outcomeMarkets.successSell}
-                pillText={`${position.marketName} · ${position.sideName}`}
+                pillText={`${position.marketName} · ${sideLabel}`}
                 summaryTitle={t.outcomeMarkets.sheetSellTitle}
                 summarySub={t.outcomeMarkets.sheetSellSub
-                    .replace('{side}', position.sideName)
+                    .replace('{side}', sideLabel)
                     .replace('{amount}', formatCurrency(closedUsd || 0, 2))}
             />
         </div>
