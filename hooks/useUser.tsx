@@ -255,19 +255,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
         if (clean.length < 2) {
             return { success: false, message: 'El nombre es demasiado corto' };
         }
-        const base = deriveReferralCode(clean);
-        if (base.length < 3) {
+        const code = deriveReferralCode(clean);
+        if (code.length < 3) {
             return { success: false, message: 'El nombre necesita al menos 3 letras o números' };
         }
 
-        // Find a free code: base, then base2, base3, … (kept ≤ 20 chars).
-        let code = base;
-        for (let i = 0; i < 6; i++) {
-            const existing = await db.users.getByReferralCode(code);
-            if (!existing || existing.id === user?.id) break;
-            const suffix = String(i + 2);
-            code = base.slice(0, 20 - suffix.length) + suffix;
-            if (i === 5) code = base.slice(0, 16) + Math.random().toString(36).slice(2, 6);
+        // Names must be unique — the referral code is derived from the name, so
+        // a code collision means the name is taken by someone else.
+        const existing = await db.users.getByReferralCode(code);
+        if (existing && existing.id !== user?.id) {
+            return { success: false, message: 'Ese nombre ya está en uso' };
         }
 
         try {
@@ -278,6 +275,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
             return { success: false, message: 'No se pudo actualizar el nombre' };
         } catch (err: any) {
+            // Unique-constraint race → name was just taken.
+            if (err?.code === '23505') {
+                return { success: false, message: 'Ese nombre ya está en uso' };
+            }
             return { success: false, message: err?.message || 'Error al actualizar' };
         }
     }, [address, user?.id]);
