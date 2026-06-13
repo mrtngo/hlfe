@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useCandleData, type Timeframe } from '@/hooks/useCandleData';
 
 type TfOption = {
@@ -123,7 +123,7 @@ export default function TokenCandleChart({
                         Sin datos
                     </div>
                 ) : (
-                    <Candles candles={sampled} width={width} height={height} liqPrice={liqPrice} />
+                    <AreaLine candles={sampled} width={width} height={height} liqPrice={liqPrice} />
                 )}
             </div>
 
@@ -172,7 +172,7 @@ export default function TokenCandleChart({
     );
 }
 
-function Candles({
+function AreaLine({
     candles,
     width,
     height,
@@ -183,6 +183,7 @@ function Candles({
     height: number;
     liqPrice?: number;
 }) {
+    const gradId = useId();
     if (width === 0 || candles.length === 0) return null;
 
     const padTop = 12;
@@ -191,14 +192,24 @@ function Candles({
     const innerH = height - padTop - padBot;
     const innerW = width - padX * 2;
 
-    const hi = Math.max(...candles.map((c) => c.high));
-    const lo = Math.min(...candles.map((c) => c.low));
+    // Line follows the close price; range is derived from closes for a tight fit.
+    const closes = candles.map((c) => c.close);
+    const hi = Math.max(...closes);
+    const lo = Math.min(...closes);
     const range = hi - lo || 1;
 
-    const cellW = innerW / candles.length;
-    const bodyW = Math.max(2, cellW * 0.64);
+    const up = closes[closes.length - 1] >= closes[0];
+    const stroke = up ? '#22C55E' : '#EF4444';
 
+    const x = (i: number) =>
+        padX + (candles.length === 1 ? innerW / 2 : (i / (candles.length - 1)) * innerW);
     const y = (price: number) => padTop + (1 - (price - lo) / range) * innerH;
+
+    const pts = closes.map((c, i) => [x(i), y(c)] as const);
+    const linePath = pts.map(([px, py], i) => `${i === 0 ? 'M' : 'L'}${px} ${py}`).join(' ');
+    const areaPath =
+        `${linePath} L${pts[pts.length - 1][0]} ${height - padBot}` +
+        ` L${pts[0][0]} ${height - padBot} Z`;
 
     // Liquidation line — pinned to the chart edge when out of the price range.
     const showLiq = typeof liqPrice === 'number' && liqPrice > 0;
@@ -218,6 +229,12 @@ function Candles({
             viewBox={`0 0 ${width} ${height}`}
             style={{ display: 'block' }}
         >
+            <defs>
+                <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={stroke} stopOpacity={0.28} />
+                    <stop offset="100%" stopColor={stroke} stopOpacity={0} />
+                </linearGradient>
+            </defs>
             {/* y-axis grid */}
             {[0.2, 0.4, 0.6, 0.8].map((g) => (
                 <line
@@ -230,36 +247,15 @@ function Candles({
                     strokeWidth={1}
                 />
             ))}
-            {candles.map((c, i) => {
-                const up = c.close >= c.open;
-                const fill = up ? '#22C55E' : '#EF4444';
-                const cx = padX + i * cellW + cellW / 2;
-                const wickTop = y(c.high);
-                const wickBot = y(c.low);
-                const bodyTop = y(Math.max(c.open, c.close));
-                const bodyBot = y(Math.min(c.open, c.close));
-                const bodyH = Math.max(1, bodyBot - bodyTop);
-                return (
-                    <g key={`${c.time}-${i}`}>
-                        <line
-                            x1={cx}
-                            x2={cx}
-                            y1={wickTop}
-                            y2={wickBot}
-                            stroke={fill}
-                            strokeWidth={1.1}
-                        />
-                        <rect
-                            x={cx - bodyW / 2}
-                            y={bodyTop}
-                            width={bodyW}
-                            height={bodyH}
-                            fill={fill}
-                            opacity={0.95}
-                        />
-                    </g>
-                );
-            })}
+            <path d={areaPath} fill={`url(#${gradId})`} stroke="none" />
+            <path
+                d={linePath}
+                fill="none"
+                stroke={stroke}
+                strokeWidth={2}
+                strokeLinejoin="round"
+                strokeLinecap="round"
+            />
             {showLiq && (
                 <g>
                     <line
