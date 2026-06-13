@@ -172,7 +172,7 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                                    <ActionButton label={t.screens.tokenDetail.actions.add} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }} />
+                                    <ActionButton label={t.screens.tokenDetail.actions.add} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(position.side === 'long' ? 'buy' : 'sell'); }} />
                                     <ActionButton label={t.screens.tokenDetail.actions.tp} onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }} />
                                     <ActionButton label={t.screens.tokenDetail.actions.close} onClick={() => setShowCloseSheet(true)} variant="danger" />
                                 </div>
