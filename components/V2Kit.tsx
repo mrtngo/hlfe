@@ -45,7 +45,7 @@ export type IconName =
   | 'settings' | 'cart' | 'repeat' | 'flame' | 'layers' | 'user' | 'clock'
   | 'target' | 'star' | 'sun' | 'moon' | 'eye' | 'sparkle' | 'bolt' | 'sliders'
   | 'coins' | 'search' | 'info' | 'pencil' | 'heart' | 'history' | 'qr'
-  | 'share' | 'logout' | 'copy' | 'news' | 'gift' | 'creditcard' | 'bank';
+  | 'share' | 'logout' | 'copy' | 'news' | 'gift' | 'creditcard' | 'bank' | 'check';
 
 export function Icon({
   name,
@@ -76,6 +76,7 @@ export function Icon({
     chevronRight: <polyline points="9 6 15 12 9 18" />,
     chevronLeft: <polyline points="15 18 9 12 15 6" />,
     chevronsRight: <><polyline points="6 17 11 12 6 7" /><polyline points="13 17 18 12 13 7" /></>,
+    check: <polyline points="20 6 9 17 4 12" />,
     bell: <><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10 21a2 2 0 004 0" /></>,
     home: <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4v-7h-6v7H5a2 2 0 01-2-2z" />,
     chart: <><path d="M3 3v18h18" /><path d="M7 14l4-4 4 4 6-6" /></>,
@@ -461,6 +462,7 @@ export function SlideToConfirm({
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [x, setX] = useState(0);
+  const [max, setMax] = useState(0);
   const [dragging, setDragging] = useState(false);
   const KNOB = 64;
   const PAD = 6;
@@ -471,9 +473,10 @@ export function SlideToConfirm({
       const track = trackRef.current;
       if (!track) return;
       const rect = track.getBoundingClientRect();
-      const max = rect.width - KNOB - PAD * 2;
+      const m = rect.width - KNOB - PAD * 2;
+      setMax(m);
       let nx = clientX - rect.left - KNOB / 2;
-      nx = Math.max(0, Math.min(nx, max));
+      nx = Math.max(0, Math.min(nx, m));
       setX(nx);
     };
     const onMove = (e: PointerEvent) => move(e.clientX);
@@ -481,8 +484,8 @@ export function SlideToConfirm({
       const track = trackRef.current;
       if (track) {
         const rect = track.getBoundingClientRect();
-        const max = rect.width - KNOB - PAD * 2;
-        if (x >= max - 6) {
+        const m = rect.width - KNOB - PAD * 2;
+        if (x >= m - 6) {
           haptic.medium();
           onConfirm();
         }
@@ -498,6 +501,19 @@ export function SlideToConfirm({
     };
   }, [dragging, x, onConfirm]);
 
+  // Progress 0→1 across the track; drives fill opacity and the text wipe.
+  const progress = max > 0 ? Math.min(1, x / max) : 0;
+  // "Armed" — last 10% of travel snaps the track to a near-solid, ready-to-
+  // release state so the gesture's commit point reads unmistakably.
+  const armed = progress >= 0.9;
+  // Fill ramps with progress, then jumps to near-opaque once armed.
+  const fillOpacity = armed ? 0.92 + (progress - 0.9) / 0.1 * 0.08 : 0.14 + progress * 0.26;
+  // Right edge of the knob, in track-local px. Fill spans to here; the label
+  // is clipped to only show the portion the knob hasn't passed yet.
+  const wipe = PAD + x + KNOB;
+  // Snap back smoothly on release; track the finger 1:1 while dragging.
+  const ease = dragging ? 'none' : 'left 0.28s cubic-bezier(0.22,1,0.36,1)';
+
   return (
     <div
       ref={trackRef}
@@ -505,21 +521,47 @@ export function SlideToConfirm({
         marginTop: 22, position: 'relative', height: 60, borderRadius: 18,
         background: disabled ? 'rgba(255,255,255,0.04)' : soft,
         border: `1px solid ${disabled ? V2.hair : border}`,
+        overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         opacity: disabled ? 0.6 : 1, userSelect: 'none', touchAction: 'none',
       }}
     >
-      <span style={{ fontSize: 17, fontWeight: 800, color: disabled ? V2.t3 : color, letterSpacing: '-0.01em', pointerEvents: 'none' }}>{label}</span>
+      {/* Filled trail — grows behind the knob and intensifies toward the end. */}
+      {!disabled && (
+        <div
+          style={{
+            position: 'absolute', left: 0, top: 0, bottom: 0, width: wipe,
+            background: color, opacity: fillOpacity,
+            transition: dragging ? 'opacity 0.12s' : 'width 0.28s cubic-bezier(0.22,1,0.36,1), opacity 0.28s',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      {/* Label — full-width layer so the clip coordinate is in track-space.
+          Text the knob has slid past gets clipped away. */}
+      <div
+        style={{
+          position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          clipPath: disabled ? undefined : `inset(0 0 0 ${wipe}px)`,
+          transition: dragging ? 'none' : 'clip-path 0.28s cubic-bezier(0.22,1,0.36,1)',
+        }}
+      >
+        <span style={{ fontSize: 17, fontWeight: 800, color: disabled ? V2.t3 : color, letterSpacing: '-0.01em' }}>{label}</span>
+      </div>
       {!disabled && (
         <div
           onPointerDown={() => { haptic.light(); setDragging(true); }}
           style={{
             position: 'absolute', left: PAD + x, top: PAD, bottom: PAD, width: KNOB, borderRadius: 14,
-            background: soft, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'grab', touchAction: 'none',
+            background: armed ? color : soft,
+            border: `1px solid ${armed ? color : border}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'grab', touchAction: 'none', zIndex: 2,
+            transition: dragging ? 'background 0.12s, border-color 0.12s' : `${ease}, background 0.2s, border-color 0.2s`,
           }}
         >
-          <Icon name="chevronsRight" size={22} color={color} strokeWidth={2.6} />
+          <Icon name={armed ? 'check' : 'chevronsRight'} size={22} color={armed ? V2.bg : color} strokeWidth={2.6} />
         </div>
       )}
     </div>
