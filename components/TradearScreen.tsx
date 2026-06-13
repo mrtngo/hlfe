@@ -24,9 +24,11 @@ import { ScreenV2, BigMoney, PctBadge, MarketLogo, SliderRow, SlideToConfirm, Ic
 
 interface TradearScreenProps {
     onBack?: () => void;
+    /** Preselected side when entering the screen (e.g. "Bajar" → sell). */
+    initialSide?: 'buy' | 'sell';
 }
 
-export default function TradearScreen({ onBack }: TradearScreenProps) {
+export default function TradearScreen({ onBack, initialSide = 'buy' }: TradearScreenProps) {
     const { formatCurrency } = useCurrency();
     const { proMode, toggleProMode } = usePreferences();
     const {
@@ -67,6 +69,7 @@ export default function TradearScreen({ onBack }: TradearScreenProps) {
                 ticker={ticker}
                 up={up}
                 cl={cl}
+                initialSide={initialSide}
                 onBack={onBack}
                 onPickerOpen={() => setShowPicker(true)}
                 onToggleMode={toggleProMode}
@@ -84,6 +87,7 @@ export default function TradearScreen({ onBack }: TradearScreenProps) {
             market={market}
             ticker={ticker}
             up={up}
+            initialSide={initialSide}
             onBack={onBack}
             onPickerOpen={() => setShowPicker(true)}
             showPicker={showPicker}
@@ -109,6 +113,7 @@ function NormalMode({
     market,
     ticker,
     up,
+    initialSide,
     onBack,
     onPickerOpen,
     showPicker,
@@ -126,6 +131,7 @@ function NormalMode({
     market: any;
     ticker: string;
     up: boolean;
+    initialSide: 'buy' | 'sell';
     onBack?: () => void;
     onPickerOpen: () => void;
     showPicker: boolean;
@@ -141,7 +147,7 @@ function NormalMode({
     formatCurrency: (v: number, dp?: number) => string;
 }) {
     const { t } = useLanguage();
-    const [side, setSide] = useState<'buy' | 'sell'>('buy');
+    const [side, setSide] = useState<'buy' | 'sell'>(initialSide);
     const [showTransfer, setShowTransfer] = useState(false);
     const [balancePct, setBalancePct] = useState<number>(50);
     const [leverage, setLeverage] = useState<number>(2);
@@ -434,6 +440,7 @@ function ProMode({
     ticker,
     up,
     cl,
+    initialSide,
     onBack,
     onPickerOpen,
     onToggleMode,
@@ -447,6 +454,7 @@ function ProMode({
     ticker: string;
     up: boolean;
     cl: string;
+    initialSide: 'buy' | 'sell';
     onBack?: () => void;
     onPickerOpen: () => void;
     onToggleMode: () => void;
@@ -490,7 +498,7 @@ function ProMode({
             </div>
 
             <div style={{ padding: '12px 16px 16px' }}>
-                <AdvancedOrderPanel symbol={market.symbol} />
+                <AdvancedOrderPanel symbol={market.symbol} initialSide={initialSide} />
             </div>
 
             <MarketSelectModal

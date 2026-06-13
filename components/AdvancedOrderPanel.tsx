@@ -14,9 +14,10 @@ type OrderSide = 'buy' | 'sell';
 interface AdvancedOrderPanelProps {
     symbol?: string;
     initialPrice?: number | null;
+    initialSide?: OrderSide;
 }
 
-export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrderPanelProps) {
+export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide = 'buy' }: AdvancedOrderPanelProps) {
     const {
         selectedMarket,
         getMarket,
@@ -39,7 +40,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice }: AdvancedOrd
 
     // Order state
     const [orderType, setOrderType] = useState<OrderType>('limit');
-    const [side, setSide] = useState<OrderSide>('buy');
+    const [side, setSide] = useState<OrderSide>(initialSide);
     const [size, setSize] = useState('');
     const [price, setPrice] = useState('');
     const [leverage, setLeverage] = useState(10);

@@ -12,11 +12,11 @@
  */
 
 import { useState } from 'react';
-import { Loader2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
-import { V2 } from '@/components/V2Kit';
+import { SlideToConfirm, V2 } from '@/components/V2Kit';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 import { haptic } from '@/lib/haptics';
 import type { OutcomePosition } from '@/hooks/useOutcomePositions';
@@ -127,89 +127,91 @@ export default function OutcomePositionCard({
             {err && <div style={{ fontSize: 11.5, color: V2.neg, marginTop: 10 }}>{err}</div>}
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${V2.hair}` }}>
-                {onManage && (
-                    <button
-                        type="button"
-                        onClick={() => {
-                            haptic.light();
-                            onManage(position);
-                        }}
-                        style={{
-                            flex: 1,
-                            padding: '9px 0',
-                            borderRadius: 10,
-                            border: `1px solid ${V2.hair2}`,
-                            background: 'rgba(255,255,255,0.04)',
-                            color: V2.t1,
-                            fontWeight: 700,
-                            fontSize: 13,
-                            cursor: 'pointer',
-                            fontFamily: V2.ui,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 5,
-                        }}
-                    >
-                        <Plus style={{ width: 14, height: 14 }} />
-                        {t.outcomeMarkets.addMore}
-                    </button>
-                )}
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${V2.hair}` }}>
                 {confirming ? (
-                    <button
-                        type="button"
-                        onClick={close}
-                        disabled={closing}
-                        style={{
-                            flex: 1,
-                            padding: '9px 0',
-                            borderRadius: 10,
-                            border: 'none',
-                            background: V2.neg,
-                            color: '#fff',
-                            fontWeight: 800,
-                            fontSize: 13,
-                            cursor: closing ? 'wait' : 'pointer',
-                            fontFamily: V2.ui,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 6,
-                        }}
-                    >
-                        {closing ? (
-                            <>
-                                <Loader2 className="animate-spin" style={{ width: 14, height: 14 }} />
-                                {t.outcomeMarkets.closing}
-                            </>
-                        ) : (
-                            t.outcomeMarkets.confirmClose
-                        )}
-                    </button>
+                    <>
+                        {/* Swipe to close — same gesture as perps */}
+                        <SlideToConfirm
+                            color={V2.neg}
+                            soft={V2.negSoft}
+                            border="rgba(239,68,68,0.3)"
+                            disabled={closing}
+                            label={closing ? t.outcomeMarkets.closing : t.outcomeMarkets.swipeClose}
+                            onConfirm={close}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => { if (!closing) setConfirming(false); }}
+                            style={{
+                                width: '100%',
+                                marginTop: 8,
+                                padding: '8px 0',
+                                borderRadius: 10,
+                                border: `1px solid ${V2.hair2}`,
+                                background: 'transparent',
+                                color: V2.t2,
+                                fontWeight: 700,
+                                fontSize: 13,
+                                cursor: 'pointer',
+                                fontFamily: V2.ui,
+                            }}
+                        >
+                            {t.outcomeMarkets.cancel}
+                        </button>
+                    </>
                 ) : (
-                    <button
-                        type="button"
-                        onClick={() => {
-                            haptic.light();
-                            setConfirming(true);
-                            setErr(null);
-                        }}
-                        style={{
-                            flex: 1,
-                            padding: '9px 0',
-                            borderRadius: 10,
-                            border: `1px solid rgba(239,68,68,0.3)`,
-                            background: V2.negSoft,
-                            color: V2.neg,
-                            fontWeight: 700,
-                            fontSize: 13,
-                            cursor: 'pointer',
-                            fontFamily: V2.ui,
-                        }}
-                    >
-                        {t.outcomeMarkets.close}
-                    </button>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        {onManage && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    haptic.light();
+                                    onManage(position);
+                                }}
+                                style={{
+                                    flex: 1,
+                                    padding: '9px 0',
+                                    borderRadius: 10,
+                                    border: `1px solid ${V2.hair2}`,
+                                    background: 'rgba(255,255,255,0.04)',
+                                    color: V2.t1,
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    cursor: 'pointer',
+                                    fontFamily: V2.ui,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 5,
+                                }}
+                            >
+                                <Plus style={{ width: 14, height: 14 }} />
+                                {t.outcomeMarkets.addMore}
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                haptic.light();
+                                setConfirming(true);
+                                setErr(null);
+                            }}
+                            style={{
+                                flex: 1,
+                                padding: '9px 0',
+                                borderRadius: 10,
+                                border: `1px solid rgba(239,68,68,0.3)`,
+                                background: V2.negSoft,
+                                color: V2.neg,
+                                fontWeight: 700,
+                                fontSize: 13,
+                                cursor: 'pointer',
+                                fontFamily: V2.ui,
+                            }}
+                        >
+                            {t.outcomeMarkets.close}
+                        </button>
+                    </div>
                 )}
             </div>
 

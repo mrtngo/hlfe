@@ -36,7 +36,7 @@ import TokenCandleChart from '@/components/TokenCandleChart';
 import OrderBook from '@/components/OrderBook';
 import OutcomePositionCard from '@/components/OutcomePositionCard';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
-import { Icon, SliderRow, V2 } from '@/components/V2Kit';
+import { Icon, SliderRow, SlideToConfirm, V2 } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
 // Side palette — green for the "positive" side (Yes / Change / first side),
@@ -676,44 +676,29 @@ export default function OutcomeMarketsScreen() {
                                         </div>
                                     )}
 
-                                    {/* CTA */}
-                                    <button
-                                        onClick={handleBet}
-                                        disabled={!canSubmit}
-                                        style={{
-                                            width: '100%',
-                                            padding: 15,
-                                            background: canSubmit
-                                                ? tradeSide === 'sell'
-                                                    ? V2.neg
-                                                    : (SIDE_COLOR[selectedSideIdx as 0 | 1] || SIDE_COLOR[0]).color
-                                                : V2.card,
-                                            border: 'none',
-                                            borderRadius: 14,
-                                            color: canSubmit ? '#fff' : V2.t3,
-                                            fontWeight: 800,
-                                            fontSize: 15,
-                                            cursor: canSubmit ? 'pointer' : 'not-allowed',
-                                            fontFamily: V2.ui,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: 6,
-                                        }}
-                                    >
-                                        {submitting ? (
-                                            <>
-                                                <Loader2 className="animate-spin" style={{ width: 14, height: 14 }} />
-                                                {t.outcomeMarkets.betting}
-                                            </>
-                                        ) : tradeSide === 'sell' ? (
-                                            `${t.outcomeMarkets.sellTab} (${formatCurrency(totalCost, 2)})`
-                                        ) : (
-                                            t.outcomeMarkets.placeBetCta
-                                                .replace('{amount}', formatCurrency(totalCost, 2))
-                                                .replace('{side}', selectedSide.name)
-                                        )}
-                                    </button>
+                                    {/* CTA — swipe to confirm, same gesture as perps */}
+                                    {(() => {
+                                        const pal = tradeSide === 'sell'
+                                            ? { color: V2.neg, soft: V2.negSoft, border: 'rgba(239,68,68,0.3)' }
+                                            : (SIDE_COLOR[selectedSideIdx as 0 | 1] || SIDE_COLOR[0]);
+                                        const label = submitting
+                                            ? t.outcomeMarkets.betting
+                                            : tradeSide === 'sell'
+                                                ? `${t.outcomeMarkets.sellTab} (${formatCurrency(totalCost, 2)})`
+                                                : t.outcomeMarkets.placeBetCta
+                                                    .replace('{amount}', formatCurrency(totalCost, 2))
+                                                    .replace('{side}', selectedSide.name);
+                                        return (
+                                            <SlideToConfirm
+                                                color={pal.color}
+                                                soft={pal.soft}
+                                                border={pal.border}
+                                                label={label}
+                                                disabled={!canSubmit}
+                                                onConfirm={handleBet}
+                                            />
+                                        );
+                                    })()}
                                 </>
                             )}
 

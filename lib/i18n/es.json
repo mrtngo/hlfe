@@ -332,6 +332,8 @@
     "transferHelp": "Mové USDC entre Trade y Predicción. Al instante y gratis.",
     "close": "Cerrar",
     "confirmClose": "¿Confirmar?",
+    "swipeClose": "Deslizá para cerrar",
+    "cancel": "Cancelar",
     "closing": "Cerrando...",
     "addMore": "Agregar",
     "errClose": "No se pudo cerrar la posición",

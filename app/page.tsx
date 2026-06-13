@@ -58,6 +58,8 @@ export default function Home() {
     const { user, loading: userLoading } = useUser();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
+    /** Preselected side for the trade screen ("Bajar" → sell). Resets to buy on generic entry. */
+    const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
     /** Address whose public profile is being viewed. */
     const [profileAddress, setProfileAddress] = useState<string | null>(null);
     /** View to return to from the public profile / search. */
@@ -169,6 +171,12 @@ export default function Home() {
         return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
     };
 
+    // Navigate to the trade screen with a preselected side (defaults to buy).
+    const goTrade = (side: 'buy' | 'sell' = 'buy') => {
+        setTradeSide(side);
+        setView('trading');
+    };
+
     const handleProfileClick = () => {
         if (authenticated) {
             setView('profile');
@@ -236,8 +244,8 @@ export default function Home() {
                                         setSelectedSpotBase(coin);
                                         setView('spotManage');
                                     }}
-                                    onTradeClick={() => setView('trading')}
-                                    onBuyClick={() => setView('trading')}
+                                    onTradeClick={() => goTrade()}
+                                    onBuyClick={() => goTrade()}
                                     onDeposit={() => setView('deposit')}
                                     onOpenPredictions={() => setView('predictions')}
                                 />
@@ -254,16 +262,16 @@ export default function Home() {
                                 <TokenDetail
                                     symbol={detailSymbol || selectedMarket || 'BTC'}
                                     onBack={() => setView('markets')}
-                                    onBuy={() => setView('trading')}
-                                    onTrade={() => setView('trading')}
+                                    onBuy={() => goTrade('buy')}
+                                    onTrade={(side) => goTrade(side ?? 'buy')}
                                 />
                             ) : view === 'trading' ? (
-                                <TradearScreen onBack={() => setView('advanced')} />
+                                <TradearScreen onBack={() => setView('advanced')} initialSide={tradeSide} />
                             ) : view === 'news' ? (
                                 <NewsScreen
                                     onTickerClick={(symbol) => {
                                         setSelectedMarket(symbol);
-                                        setView('trading');
+                                        goTrade();
                                     }}
                                 />
                             ) : view === 'rewards' ? (
@@ -300,7 +308,7 @@ export default function Home() {
                             ) : view === 'portfolio' ? (
                                 <PortfolioScreen
                                     onBack={() => setView('profile')}
-                                    onBuyClick={() => setView('trading')}
+                                    onBuyClick={() => goTrade()}
                                     onOpenPredictions={() => setView('predictions')}
                                     onTokenClick={(symbol) => {
                                         setSelectedMarket(symbol);
@@ -350,7 +358,7 @@ export default function Home() {
                         ) : view === 'spot' ? (
                             <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <ComprarFlow
-                                    onOpenAdvanced={() => setView('trading')}
+                                    onOpenAdvanced={() => goTrade()}
                                     onClose={() => setView('home')}
                                 />
                             </div>
@@ -397,7 +405,7 @@ export default function Home() {
                         ) : (
                             <div className="mt-6" style={{ paddingBottom: '100px' }}>
                                 <AdvancedMenu
-                                    onSelectPerps={() => setView('trading')}
+                                    onSelectPerps={() => goTrade()}
                                     onSelectPredictions={() => setView('predictions')}
                                     onSelectLeaderboard={() => setView('leaderboard')}
                                     onSelectSpot={() => setView('spotReal')}

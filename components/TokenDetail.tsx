@@ -13,7 +13,8 @@ interface TokenDetailProps {
     symbol: string;
     onBack: () => void;
     onBuy?: () => void;
-    onTrade?: () => void;
+    /** Open the trade screen, optionally preselecting a side ("Bajar" → sell). */
+    onTrade?: (side?: 'buy' | 'sell') => void;
 }
 
 const TF_PILLS: { key: string; label: string }[] = [
@@ -224,7 +225,7 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                     Subir <Icon name="arrowUpRight" size={17} color="#05381b" strokeWidth={2.8} />
                 </button>
                 <button
-                    onClick={() => { setSelectedMarket(market.symbol); onTrade?.(); }}
+                    onClick={() => { setSelectedMarket(market.symbol); onTrade?.('sell'); }}
                     style={{ flex: 1, padding: 17, borderRadius: 99, border: 'none', cursor: 'pointer', fontFamily: V2.ui, background: V2.neg, color: '#fff', fontWeight: 800, fontSize: 16, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}
                 >
                     Bajar <Icon name="arrowDownLeft" size={17} color="#fff" strokeWidth={2.8} />
