@@ -1056,7 +1056,8 @@
         "closed": "Cerró {symbol}",
         "opened": "Abrió {symbol}",
         "deposit": "Depósito USDC",
-        "open": "ABIERTA"
+        "open": "ABIERTA",
+        "prediction": "Mercado de predicción"
       },
       "empty": {
         "title": "Nada por acá todavía",

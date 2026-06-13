@@ -13,6 +13,7 @@ import { API_URL } from '@/lib/hyperliquid/client';
 import { cachedFetch } from '@/lib/api-cache';
 import {
     buildMarketViews,
+    cacheOutcomeNames,
     fetchOutcomeMeta,
     type OutcomeMarketView,
     type OutcomeMeta,
@@ -53,7 +54,9 @@ export function useOutcomeMarkets(): Result {
                 },
                 3_000,
             );
-            setMarkets(buildMarketViews(meta, allMids));
+            const views = buildMarketViews(meta, allMids);
+            setMarkets(views);
+            cacheOutcomeNames(views);
             setError(null);
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : String(err));

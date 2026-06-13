@@ -5,7 +5,7 @@ import { History } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useOutcomeMarkets } from '@/hooks/useOutcomeMarkets';
-import { parseCoinRef } from '@/lib/hyperliquid/outcome';
+import { parseCoinRef, readOutcomeNameCache, type CachedOutcome } from '@/lib/hyperliquid/outcome';
 import { useCurrency } from '@/context/CurrencyContext';
 import EmptyState from '@/components/EmptyState';
 import SkeletonRow from '@/components/SkeletonRow';
@@ -41,9 +41,21 @@ export default function OrderHistory() {
     const { markets: outcomeMarkets } = useOutcomeMarkets();
     const [tab, setTab] = useState<Tab>('all');
 
+    // Resolve outcome names: live markets first, then the persisted name cache
+    // (settled markets are dropped from the API, so the cache is the only
+    // source of their names). Keyed by outcomeId.
     const outcomeById = useMemo(() => {
-        const m = new Map<number, (typeof outcomeMarkets)[number]>();
-        for (const om of outcomeMarkets) m.set(om.outcomeId, om);
+        const m = new Map<number, CachedOutcome>();
+        const cache = readOutcomeNameCache();
+        for (const [id, c] of Object.entries(cache)) m.set(Number(id), c);
+        for (const om of outcomeMarkets) {
+            m.set(om.outcomeId, {
+                eventName: om.eventName,
+                name: om.name,
+                questionId: om.questionId,
+                sides: om.sides.map((s) => s.name),
+            });
+        }
         return m;
     }, [outcomeMarkets]);
 
@@ -89,14 +101,15 @@ export default function OrderHistory() {
             const ref = parseCoinRef(rawCoin);
             if (ref) {
                 const om = outcomeById.get(ref.outcomeId);
-                if (om) {
+                if (om && (om.eventName || om.name)) {
                     outcomeLabel =
                         om.questionId != null && om.name !== om.eventName
                             ? `${om.eventName}: ${om.name}`
                             : om.eventName || om.name;
-                    outcomeSide = om.sides[ref.sideIdx]?.name;
+                    outcomeSide = om.sides[ref.sideIdx];
                 } else {
-                    outcomeLabel = `#${ref.outcomeId}`;
+                    // Settled & uncached → name unrecoverable; show a friendly label.
+                    outcomeLabel = t.screens.historial.row.prediction;
                 }
             }
 
@@ -116,7 +129,7 @@ export default function OrderHistory() {
             };
         });
         return fromFills.sort((a, b) => b.time - a.time);
-    }, [fills, outcomeById]);
+    }, [fills, outcomeById, t]);
 
     const summary = useMemo(() => {
         const cutoff = Date.now() - 30 * MS_DAY;

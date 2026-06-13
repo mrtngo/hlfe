@@ -1057,7 +1057,8 @@
         "closed": "Closed {symbol}",
         "opened": "Opened {symbol}",
         "deposit": "USDC deposit",
-        "open": "OPEN"
+        "open": "OPEN",
+        "prediction": "Prediction market"
       },
       "empty": {
         "title": "Nothing here yet",

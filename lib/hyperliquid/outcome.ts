@@ -112,6 +112,49 @@ export function parseCoinRef(coin: string): { outcomeId: number; sideIdx: number
     return { outcomeId, sideIdx };
 }
 
+/**
+ * Local cache of outcome names, keyed by outcomeId. HL drops settled/delisted
+ * outcomes from `outcomeMeta` (and fills carry no name), so once a market
+ * settles its name is unrecoverable from the API. We persist names while the
+ * markets are live so history can still label them after settlement.
+ */
+export interface CachedOutcome {
+    eventName: string;
+    name: string;
+    questionId: number | null;
+    sides: string[];
+}
+
+const OUTCOME_NAME_CACHE_KEY = 'rayo_outcome_names';
+
+export function readOutcomeNameCache(): Record<number, CachedOutcome> {
+    if (typeof window === 'undefined') return {};
+    try {
+        return JSON.parse(localStorage.getItem(OUTCOME_NAME_CACHE_KEY) || '{}');
+    } catch {
+        return {};
+    }
+}
+
+/** Merge live market names into the persistent cache. */
+export function cacheOutcomeNames(markets: OutcomeMarketView[]): void {
+    if (typeof window === 'undefined' || markets.length === 0) return;
+    try {
+        const cache = readOutcomeNameCache();
+        for (const m of markets) {
+            cache[m.outcomeId] = {
+                eventName: m.eventName,
+                name: m.name,
+                questionId: m.questionId,
+                sides: m.sides.map((s) => s.name),
+            };
+        }
+        localStorage.setItem(OUTCOME_NAME_CACHE_KEY, JSON.stringify(cache));
+    } catch {
+        /* quota / serialization — non-fatal */
+    }
+}
+
 /** Fetches `outcomeMeta` from /info. Throws on non-2xx. */
 export async function fetchOutcomeMeta(): Promise<OutcomeMeta> {
     const res = await fetch(`${API_URL}/info`, {
