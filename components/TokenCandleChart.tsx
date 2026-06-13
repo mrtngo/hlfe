@@ -184,6 +184,8 @@ function AreaLine({
     liqPrice?: number;
 }) {
     const gradId = useId();
+    const svgRef = useRef<SVGSVGElement>(null);
+    const [active, setActive] = useState<number | null>(null);
     if (width === 0 || candles.length === 0) return null;
 
     const padTop = 12;
@@ -222,12 +224,53 @@ function AreaLine({
           })}`
         : '';
 
+    // Press-and-scrub: map a pointer x to the nearest data point.
+    const scrubTo = (clientX: number) => {
+        const rect = svgRef.current?.getBoundingClientRect();
+        if (!rect || rect.width === 0) return;
+        const xs = ((clientX - rect.left) * width) / rect.width;
+        const rel = innerW === 0 ? 0 : (xs - padX) / innerW;
+        const i = Math.max(0, Math.min(candles.length - 1, Math.round(rel * (candles.length - 1))));
+        setActive(i);
+    };
+
+    const act = active !== null ? candles[active] : null;
+    const actX = act ? x(active!) : 0;
+    const actY = act ? y(act.close) : 0;
+    const dp = act && act.close < 1 ? 4 : 2;
+    const actPrice = act
+        ? `$${act.close.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp })}`
+        : '';
+    const actDate = act
+        ? new Date(act.time).toLocaleString('es-AR', {
+              day: '2-digit',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+          })
+        : '';
+    // Tooltip horizontal placement, clamped to stay inside the chart.
+    const tipW = 132;
+    const tipLeft = Math.max(4, Math.min(width - tipW - 4, actX - tipW / 2));
+
     return (
+        <div style={{ position: 'relative', width, height }}>
         <svg
+            ref={svgRef}
             width={width}
             height={height}
             viewBox={`0 0 ${width} ${height}`}
-            style={{ display: 'block' }}
+            style={{ display: 'block', touchAction: 'none' }}
+            onPointerDown={(e) => {
+                e.currentTarget.setPointerCapture?.(e.pointerId);
+                scrubTo(e.clientX);
+            }}
+            onPointerMove={(e) => {
+                if (active !== null) scrubTo(e.clientX);
+            }}
+            onPointerUp={() => setActive(null)}
+            onPointerCancel={() => setActive(null)}
+            onPointerLeave={() => setActive(null)}
         >
             <defs>
                 <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -281,6 +324,50 @@ function AreaLine({
                     </text>
                 </g>
             )}
+            {act && (
+                <g pointerEvents="none">
+                    <line
+                        x1={actX}
+                        x2={actX}
+                        y1={padTop}
+                        y2={height - padBot}
+                        stroke="rgba(255,255,255,0.35)"
+                        strokeWidth={1}
+                    />
+                    <circle cx={actX} cy={actY} r={5} fill={stroke} stroke="#0A0C0E" strokeWidth={2} />
+                </g>
+            )}
         </svg>
+        {act && (
+            <div
+                style={{
+                    position: 'absolute',
+                    top: 4,
+                    left: tipLeft,
+                    width: tipW,
+                    pointerEvents: 'none',
+                    background: 'rgba(20,22,25,0.92)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: 8,
+                    padding: '5px 8px',
+                    textAlign: 'center',
+                }}
+            >
+                <div
+                    style={{
+                        fontFamily: 'var(--font-mono), ui-monospace, monospace',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: '#fff',
+                    }}
+                >
+                    {actPrice}
+                </div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 1 }}>
+                    {actDate}
+                </div>
+            </div>
+        )}
+        </div>
     );
 }
