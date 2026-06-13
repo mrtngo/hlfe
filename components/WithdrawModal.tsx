@@ -34,10 +34,12 @@ const WITHDRAWAL_FEE = 1; // $1 Hyperliquid withdrawal fee
 const MIN_WITHDRAWAL = 2; // must cover the fee + something
 const CCTP_FEE_RATE = 0.001; // up to 0.1% fast-transfer fee for bridged chains
 
-// Solana withdraw is a brand-new mint path (untested with real funds), so it's
-// OFF unless explicitly enabled. Mirrors the deposit kill-switch convention but
-// defaults the other way.
-const SOLANA_WITHDRAW_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_WITHDRAW === '1';
+// Solana withdraw (mint-on-Solana via CCTP) is ON by default, with a kill-switch
+// matching the Solana deposit convention: set NEXT_PUBLIC_ENABLE_SOLANA_WITHDRAW=0
+// to pull it instantly (no redeploy) if a live test surfaces the sponsorship /
+// rent issue. ⚠️ This path is still unvalidated on-chain — see memory
+// multichain-withdraw; CCTP burns are irreversible.
+const SOLANA_WITHDRAW_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_WITHDRAW !== '0';
 
 // Destination network order shown in the picker. Arbitrum first (fast, single-leg).
 const EVM_DEST_ORDER: CctpChainKey[] = [
