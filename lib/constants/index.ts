@@ -6,6 +6,8 @@
 export {
     TOKEN_FULL_NAMES,
     getTokenFullName,
+    TOKEN_DESCRIPTIONS,
+    getTokenDescription,
     STOCK_TICKERS,
     isStockTicker,
 } from './tokens';

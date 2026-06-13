@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
-import { getTokenFullName } from '@/lib/constants';
+import { getTokenFullName, getTokenDescription } from '@/lib/constants';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import ClosePositionSheet from '@/components/ClosePositionSheet';
 import { ScreenV2, BigMoney, PctBadge, MarketLogo, Icon, V2 } from '@/components/V2Kit';
@@ -181,7 +181,8 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                     <div style={{ padding: '24px 20px 0' }}>
                         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 10 }}>Acerca de {ticker}</div>
                         <div style={{ fontSize: 14.5, color: V2.t2, lineHeight: 1.5 }}>
-                            {fullName} ({ticker}) opera en Rayo como mercado de futuros perpetuos liquidado en USDC. Operá al alza o a la baja con el multiplicador que elijas.
+                            {getTokenDescription(ticker) ||
+                                `${fullName} (${ticker}) opera en Rayo como mercado de futuros perpetuos liquidado en USDC. Operá al alza o a la baja con el multiplicador que elijas.`}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 20 }}>
                             {stats.map((s) => (
