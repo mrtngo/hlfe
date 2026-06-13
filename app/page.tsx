@@ -45,10 +45,8 @@ export default function Home() {
         selectedMarket,
         setSelectedMarket,
         address,
-        agentWalletEnabled,
         agentSetupNonce,
         builderFeeApproved,
-        builderFeeChecked,
         refreshAccountData,
         refreshUserData,
         refreshMarketData,
@@ -118,36 +116,14 @@ export default function Home() {
         }
     };
 
-    // Auto-prompt setup wizard when entering trading view if setup not complete
-    useEffect(() => {
-        if (view === 'trading' && authenticated) {
-            // Wait for builder fee check to complete before showing wizard
-            // This prevents the modal from flashing/persisting while the async check runs
-            if (BUILDER_CONFIG.enabled && !builderFeeChecked) {
-                return;
-            }
-
-            const needsAgentWallet = !agentWalletEnabled;
-            // Only check builder fee if it's enabled and we've finished checking
-            const needsBuilderFee = BUILDER_CONFIG.enabled && builderFeeChecked && !builderFeeApproved;
-            const setupNeeded = needsAgentWallet || needsBuilderFee;
-
-            // Check if already dismissed this session
-            const dismissed = sessionStorage.getItem('setup_wizard_dismissed');
-
-            if (setupNeeded && !dismissed) {
-                // Prefer the new editorial ApproveAgentModal when agent
-                // setup is the missing piece. Once agent is approved, if
-                // builder fee is still needed, the legacy TradingSetupWizard
-                // takes over (its own initial-step logic auto-skips agent).
-                if (needsAgentWallet) {
-                    setShowAgentModal(true);
-                } else {
-                    setShowSetupWizard(true);
-                }
-            }
-        }
-    }, [view, authenticated, agentWalletEnabled, builderFeeApproved, builderFeeChecked]);
+    // NOTE: We intentionally do NOT proactively prompt agent-wallet / builder-fee
+    // setup when the user enters the trading view. Surfacing a signature/approval
+    // modal before the user has done anything reads as scary "crypto stuff" and
+    // can drive beginners off. Instead, `placeOrder` → `ensureAgentReady()`
+    // provisions and approves the agent silently behind the trade button's
+    // spinner on the first trade (and is a no-op check after that). The only time
+    // an approval modal appears is the recovery path below, when that silent
+    // provisioning genuinely fails.
 
     // Recovery path: silent agent provisioning failed during a trade (e.g. an
     // unrecoverable on-chain agent conflict). The provider bumps agentSetupNonce
