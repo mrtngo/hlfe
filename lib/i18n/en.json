@@ -1075,6 +1075,12 @@
         "copy": "Copy",
         "copied": "Copied",
         "summary": "{count} friends · ${earned} earned"
+      },
+      "editName": {
+        "placeholder": "Your name",
+        "codeHint": "Your code will be:",
+        "save": "Save",
+        "cancel": "Cancel"
       }
     },
     "ajustes": {

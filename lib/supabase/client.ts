@@ -216,7 +216,7 @@ export const db = {
             return data;
         },
 
-        async update(walletAddress: string, updates: Partial<Pick<User, 'username' | 'display_name' | 'avatar_url'>>): Promise<User | null> {
+        async update(walletAddress: string, updates: Partial<Pick<User, 'username' | 'display_name' | 'avatar_url' | 'referral_code'>>): Promise<User | null> {
             const { data, error } = await supabase
                 .from('users')
                 .update({ ...updates, updated_at: new Date().toISOString() })

@@ -10,6 +10,15 @@ import { db } from '@/lib/supabase/client';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ScreenV2, V2Header, IconBtn, SectionHead, Icon, V2, type IconName } from '@/components/V2Kit';
 
+// Preview of the referral code derived from a name (uppercased for display).
+const deriveCodePreview = (name: string): string =>
+    name
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '')
+        .slice(0, 20)
+        .toUpperCase();
+
 interface ProfileScreenProps {
     onOpenSettings?: () => void;
     onOpenPortfolio?: () => void;
@@ -22,12 +31,16 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { address, fills } = useHyperliquid();
-    const { user } = useUser();
+    const { user, updateName } = useUser();
     const { user: privyUser, logout } = usePrivy();
     const [copied, setCopied] = useState(false);
     const [addressCopied, setAddressCopied] = useState(false);
     const [referredCount, setReferredCount] = useState(0);
     const [referralEarnings, setReferralEarnings] = useState(0);
+    const [editingName, setEditingName] = useState(false);
+    const [nameInput, setNameInput] = useState('');
+    const [savingName, setSavingName] = useState(false);
+    const [nameError, setNameError] = useState('');
 
     const copyAddress = async () => {
         if (!address) return;
@@ -89,6 +102,21 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
         }
     };
 
+    const startEditName = () => {
+        setNameInput(user?.display_name || '');
+        setNameError('');
+        setEditingName(true);
+    };
+
+    const saveName = async () => {
+        setSavingName(true);
+        setNameError('');
+        const res = await updateName(nameInput);
+        setSavingName(false);
+        if (res.success) setEditingName(false);
+        else setNameError(res.message);
+    };
+
     const statCells = [
         { l: t.screens.perfil.stats.trades, v: stats.trades.toString() },
         { l: t.screens.perfil.stats.winRate, v: `${stats.winRate.toFixed(0)}%`, c: stats.winRate >= 50 ? V2.pos : undefined, sub: `${stats.wins} ✓` },
@@ -123,7 +151,46 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
             <div style={{ padding: '8px 20px 0' }}>
                 <div className="v2-card" style={{ padding: 22, borderRadius: 20, textAlign: 'center' }}>
                     <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 14px', background: V2.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: V2.accentInk, fontSize: 36 }}>{initial}</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }}>{displayName}</div>
+                    {editingName ? (
+                        <div style={{ marginTop: 2 }}>
+                            <input
+                                autoFocus
+                                value={nameInput}
+                                onChange={(e) => setNameInput(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' && !savingName) saveName(); }}
+                                maxLength={50}
+                                placeholder={t.screens.perfil.editName.placeholder}
+                                style={{ width: '100%', textAlign: 'center', background: 'rgba(0,0,0,0.35)', border: `1px solid ${V2.hair}`, borderRadius: 12, padding: '10px 12px', color: V2.t1, fontSize: 18, fontWeight: 700, fontFamily: V2.ui, outline: 'none' }}
+                            />
+                            <div style={{ fontSize: 11.5, color: nameError ? V2.neg : V2.t3, marginTop: 6, fontFamily: V2.mono, minHeight: 14 }}>
+                                {nameError || (deriveCodePreview(nameInput) ? `${t.screens.perfil.editName.codeHint} ${deriveCodePreview(nameInput)}` : '')}
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                <button
+                                    onClick={() => setEditingName(false)}
+                                    disabled={savingName}
+                                    style={{ flex: 1, padding: '9px 0', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: `1px solid ${V2.hair}`, color: V2.t2, fontWeight: 700, fontSize: 13.5, cursor: 'pointer', fontFamily: V2.ui }}
+                                >
+                                    {t.screens.perfil.editName.cancel}
+                                </button>
+                                <button
+                                    onClick={saveName}
+                                    disabled={savingName}
+                                    style={{ flex: 1, padding: '9px 0', borderRadius: 10, background: V2.accent, border: 'none', color: V2.accentInk, fontWeight: 800, fontSize: 13.5, cursor: 'pointer', fontFamily: V2.ui, opacity: savingName ? 0.6 : 1 }}
+                                >
+                                    {savingName ? '…' : t.screens.perfil.editName.save}
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={startEditName}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: V2.ui, color: V2.t1 }}
+                        >
+                            <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.02em' }}>{displayName}</span>
+                            <Icon name="pencil" size={15} color={V2.t3} />
+                        </button>
+                    )}
                     <button
                         onClick={copyAddress}
                         style={{ marginTop: 4, background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13.5, color: addressCopied ? V2.pos : V2.t3, fontFamily: V2.mono, display: 'inline-flex', alignItems: 'center', gap: 6 }}

@@ -24,6 +24,17 @@ const sanitizeDisplayName = (name: string): string => {
         .slice(0, 50);
 };
 
+// Derive a referral code from a display name: strip accents, keep only
+// [a-z0-9], cap at 20 chars. Displayed uppercased; stored lowercase so the
+// ?ref= lookup (which lowercases) resolves.
+const deriveReferralCode = (name: string): string =>
+    name
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '')
+        .slice(0, 20);
+
 // Validate avatar URL: must be HTTPS from allowed domains
 const isValidAvatarUrl = (url: string): boolean => {
     if (typeof url !== 'string' || !url) return true; // Empty is OK
@@ -56,6 +67,8 @@ interface UserContextType {
     error: string | null;
     updateUsername: (username: string) => Promise<{ success: boolean; message: string }>;
     updateProfile: (updates: { display_name?: string; avatar_url?: string }) => Promise<{ success: boolean; message: string }>;
+    /** Sets the display name and derives the referral code from it (name in CAPS). */
+    updateName: (name: string) => Promise<{ success: boolean; message: string }>;
     refreshUser: () => Promise<void>;
 }
 
@@ -232,6 +245,43 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     }, [address]);
 
+    // Update display name + derive a referral code from it. Ensures the code
+    // is unique by appending a numeric suffix on collision.
+    const updateName = useCallback(async (name: string): Promise<{ success: boolean; message: string }> => {
+        if (!address) {
+            return { success: false, message: 'Wallet not connected' };
+        }
+        const clean = sanitizeDisplayName(name);
+        if (clean.length < 2) {
+            return { success: false, message: 'El nombre es demasiado corto' };
+        }
+        const base = deriveReferralCode(clean);
+        if (base.length < 3) {
+            return { success: false, message: 'El nombre necesita al menos 3 letras o números' };
+        }
+
+        // Find a free code: base, then base2, base3, … (kept ≤ 20 chars).
+        let code = base;
+        for (let i = 0; i < 6; i++) {
+            const existing = await db.users.getByReferralCode(code);
+            if (!existing || existing.id === user?.id) break;
+            const suffix = String(i + 2);
+            code = base.slice(0, 20 - suffix.length) + suffix;
+            if (i === 5) code = base.slice(0, 16) + Math.random().toString(36).slice(2, 6);
+        }
+
+        try {
+            const updatedUser = await db.users.update(address, { display_name: clean, referral_code: code });
+            if (updatedUser) {
+                setUser(updatedUser);
+                return { success: true, message: 'Nombre actualizado' };
+            }
+            return { success: false, message: 'No se pudo actualizar el nombre' };
+        } catch (err: any) {
+            return { success: false, message: err?.message || 'Error al actualizar' };
+        }
+    }, [address, user?.id]);
+
     const refreshUser = useCallback(async () => {
         await fetchOrCreateUser();
     }, [fetchOrCreateUser]);
@@ -243,6 +293,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             error,
             updateUsername,
             updateProfile,
+            updateName,
             refreshUser,
         }}>
             {children}

@@ -1074,6 +1074,12 @@
         "copy": "Copiar",
         "copied": "Copiado",
         "summary": "{count} amigos · ${earned} ganados"
+      },
+      "editName": {
+        "placeholder": "Tu nombre",
+        "codeHint": "Tu código será:",
+        "save": "Guardar",
+        "cancel": "Cancelar"
       }
     },
     "ajustes": {
