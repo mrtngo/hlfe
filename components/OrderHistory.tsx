@@ -4,6 +4,8 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { History } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { useOutcomeMarkets } from '@/hooks/useOutcomeMarkets';
+import { parseCoinRef } from '@/lib/hyperliquid/outcome';
 import { useCurrency } from '@/context/CurrencyContext';
 import EmptyState from '@/components/EmptyState';
 import SkeletonRow from '@/components/SkeletonRow';
@@ -21,6 +23,10 @@ interface OrderHistoryEntry {
     time: number;
     leverage?: number;
     amount?: number;
+    /** Prediction-market fill: human-readable bet name (vs. raw "#2440"). */
+    outcomeLabel?: string;
+    /** Prediction-market side label (e.g. "Sí" / "No"). */
+    outcomeSide?: string;
 }
 
 type Tab = 'all' | 'closed' | 'open' | 'deposits';
@@ -32,7 +38,14 @@ export default function OrderHistory() {
     const { t, language } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { address, fills, userDataLoading, positions } = useHyperliquid();
+    const { markets: outcomeMarkets } = useOutcomeMarkets();
     const [tab, setTab] = useState<Tab>('all');
+
+    const outcomeById = useMemo(() => {
+        const m = new Map<number, (typeof outcomeMarkets)[number]>();
+        for (const om of outcomeMarkets) m.set(om.outcomeId, om);
+        return m;
+    }, [outcomeMarkets]);
 
     const leverageBySymbol = useRef<Record<string, number>>({});
     const initialized = useRef(false);
@@ -59,7 +72,8 @@ export default function OrderHistory() {
 
     const entries = useMemo<OrderHistoryEntry[]>(() => {
         const fromFills = (fills || []).map((fill: any, idx: number) => {
-            const coin = fill.coin?.replace('-PERP', '').replace('xyz:', '') || 'UNKNOWN';
+            const rawCoin = fill.coin || '';
+            const coin = rawCoin.replace('-PERP', '').replace('xyz:', '') || 'UNKNOWN';
             const symbol = `${coin}-USD`;
             const px = parseFloat(fill.px || '0');
             const size = parseFloat(fill.sz || '0');
@@ -67,6 +81,25 @@ export default function OrderHistory() {
             const side: 'long' | 'short' = isBuy ? 'long' : 'short';
             const closedPnl = parseFloat(fill.closedPnl || '0');
             const isClose = closedPnl !== 0;
+
+            // Prediction-market fills carry a "#{outcome}{side}" coin instead of
+            // a ticker. Resolve it to the bet's event + side name.
+            let outcomeLabel: string | undefined;
+            let outcomeSide: string | undefined;
+            const ref = parseCoinRef(rawCoin);
+            if (ref) {
+                const om = outcomeById.get(ref.outcomeId);
+                if (om) {
+                    outcomeLabel =
+                        om.questionId != null && om.name !== om.eventName
+                            ? `${om.eventName}: ${om.name}`
+                            : om.eventName || om.name;
+                    outcomeSide = om.sides[ref.sideIdx]?.name;
+                } else {
+                    outcomeLabel = `#${ref.outcomeId}`;
+                }
+            }
+
             return {
                 id: `${fill.oid || fill.tid || idx}-${fill.time}`,
                 type: isClose ? ('closed' as const) : ('open' as const),
@@ -78,10 +111,12 @@ export default function OrderHistory() {
                 size,
                 time: fill.time || Date.now(),
                 leverage: leverageBySymbol.current[symbol],
+                outcomeLabel,
+                outcomeSide,
             };
         });
         return fromFills.sort((a, b) => b.time - a.time);
-    }, [fills]);
+    }, [fills, outcomeById]);
 
     const summary = useMemo(() => {
         const cutoff = Date.now() - 30 * MS_DAY;
@@ -220,7 +255,10 @@ function HistoryRowV2({
     t: any;
 }) {
     const timeStr = new Date(entry.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const ticker = entry.symbol?.replace(/-USD$/, '').replace(/-PERP$/, '') || '';
+    const isOutcome = !!entry.outcomeLabel;
+    const ticker = isOutcome
+        ? entry.outcomeLabel!
+        : entry.symbol?.replace(/-USD$/, '').replace(/-PERP$/, '') || '';
     const isLong = entry.side === 'long';
     const positive = (entry.pnl || 0) >= 0;
     const isClose = entry.type === 'closed';
@@ -246,10 +284,14 @@ function HistoryRowV2({
             <MarketLogo sym={entry.symbol || 'USDC'} size={38} />
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 15, fontWeight: 700 }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
                         {isClose ? t.screens.historial.row.closed.replace('{symbol}', ticker) : t.screens.historial.row.opened.replace('{symbol}', ticker)}
                     </span>
-                    {entry.side && (
+                    {isOutcome && entry.outcomeSide ? (
+                        <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 5px', borderRadius: 4, background: V2.accentSoft, color: V2.accent }}>
+                            {entry.outcomeSide.toUpperCase()}
+                        </span>
+                    ) : entry.side && (
                         <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 5px', borderRadius: 4, background: isLong ? V2.posSoft : V2.negSoft, color: isLong ? V2.pos : V2.neg }}>
                             {isLong ? 'LONG' : 'SHORT'}{entry.leverage ? ` ${entry.leverage}x` : ''}
                         </span>
