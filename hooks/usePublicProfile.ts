@@ -5,7 +5,7 @@
 // needed — we just query the public /info endpoints for the given address and
 // enrich the display name/avatar from our Supabase users table.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_URL } from '@/lib/hyperliquid/client';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { db, type User } from '@/lib/supabase/client';
@@ -93,7 +93,14 @@ export function usePublicProfile(address: string | null) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    // `markets` gets a fresh reference on every websocket price tick. Read it
+    // through a ref so `load`/the effect stay stable and don't refetch (which
+    // would flicker the screen) on every tick — only on address change.
+    const marketsRef = useRef(markets);
+    marketsRef.current = markets;
+
     const load = useCallback(async (addr: string) => {
+        const markets = marketsRef.current;
         const normalized = addr.toLowerCase();
         setLoading(true);
         setError('');
@@ -139,7 +146,7 @@ export function usePublicProfile(address: string | null) {
         } finally {
             setLoading(false);
         }
-    }, [markets]);
+    }, []);
 
     useEffect(() => {
         if (address) load(address);
