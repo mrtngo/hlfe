@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useUser } from '@/hooks/useUser';
 import { usePrivy } from '@privy-io/react-auth';
 import WelcomeScreen from '@/components/WelcomeScreen';
+import ChooseUsernameScreen from '@/components/ChooseUsernameScreen';
 import OnboardingTutorial from '@/components/OnboardingTutorial';
 import HomeScreen from '@/components/HomeScreen';
 import OrderHistory from '@/components/OrderHistory';
@@ -53,6 +55,7 @@ export default function Home() {
         lastUpdated
     } = useHyperliquid();
     const { ready, authenticated, login } = usePrivy();
+    const { user, loading: userLoading } = useUser();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Address whose public profile is being viewed. */
@@ -197,6 +200,13 @@ export default function Home() {
                 {tutorialOverlay}
             </>
         );
+    }
+
+    // Mandatory username gate: a freshly authenticated account must pick a
+    // username before entering the app. Waits for the user record to load so
+    // it doesn't flash for accounts that already have one.
+    if (ready && authenticated && !userLoading && user && !user.username) {
+        return <ChooseUsernameScreen />;
     }
 
     return (

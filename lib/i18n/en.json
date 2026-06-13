@@ -877,6 +877,19 @@
     }
   },
   "screens": {
+    "chooseUsername": {
+      "title": "Choose your username",
+      "subtitle": "This is how other traders will find you. You can change it later.",
+      "placeholder": "yourusername",
+      "hint": "3–20 chars · letters, numbers and _",
+      "tooShort": "At least 3 characters",
+      "tooLong": "20 characters max",
+      "invalid": "Only letters, numbers and underscore",
+      "taken": "That username is already taken",
+      "continue": "Continue",
+      "saving": "Saving…",
+      "logout": "Log out"
+    },
     "mercados": {
       "title": "Markets.",
       "eyebrow": "EXPLORE",

@@ -876,6 +876,19 @@
     }
   },
   "screens": {
+    "chooseUsername": {
+      "title": "Elegí tu usuario",
+      "subtitle": "Así te van a encontrar otros traders. Lo podés cambiar más tarde.",
+      "placeholder": "tuusuario",
+      "hint": "3–20 caracteres · letras, números y _",
+      "tooShort": "Mínimo 3 caracteres",
+      "tooLong": "Máximo 20 caracteres",
+      "invalid": "Solo letras, números y guion bajo",
+      "taken": "Ese usuario ya está en uso",
+      "continue": "Continuar",
+      "saving": "Guardando…",
+      "logout": "Salir"
+    },
     "mercados": {
       "title": "Mercados.",
       "eyebrow": "EXPLORAR",
