@@ -88,6 +88,62 @@ export function eventAuthorityPda(): PublicKey {
     return PublicKey.findProgramAddressSync([enc('__event_authority')], tmm)[0];
 }
 
+// ── Receive-side PDAs (mint on Solana via MessageTransmitter.receiveMessage) ──
+// Used by the withdraw-to-Solana path. Seeds verified against Circle's V2
+// reference (examples/v2/utilsV2.ts → getReceiveMessagePdasV2). The mint runs
+// on the MessageTransmitter program, which CPIs into TokenMessengerMinter, so
+// these span BOTH programs — note which program each PDA is derived against.
+
+/**
+ * seeds = [b"message_transmitter_authority", receiver] on the MessageTransmitter
+ * program, where `receiver` is the TokenMessengerMinter program id.
+ */
+export function messageTransmitterAuthorityPda(): PublicKey {
+    return PublicKey.findProgramAddressSync(
+        [enc('message_transmitter_authority'), tmm.toBuffer()],
+        mt,
+    )[0];
+}
+
+/** seeds = [b"used_nonce", nonce(32 bytes)] on the MessageTransmitter program. */
+export function usedNoncePda(nonce: Uint8Array): PublicKey {
+    return PublicKey.findProgramAddressSync([enc('used_nonce'), Buffer.from(nonce)], mt)[0];
+}
+
+/** seeds = [b"__event_authority"] on the MessageTransmitter program (its own event CPI authority). */
+export function mtEventAuthorityPda(): PublicKey {
+    return PublicKey.findProgramAddressSync([enc('__event_authority')], mt)[0];
+}
+
+/**
+ * seeds = [b"token_pair", sourceDomain.toString(), remoteToken(32 bytes)] on the
+ * TokenMessengerMinter program. `sourceDomain` is the burn's origin domain
+ * (Arbitrum = 3 for our off-ramp); `remoteToken` is that chain's USDC address as
+ * a 32-byte value (use `evmAddressToBytes32`).
+ */
+export function tokenPairPda(sourceDomain: number, remoteToken: Uint8Array): PublicKey {
+    return PublicKey.findProgramAddressSync(
+        [enc('token_pair'), enc(String(sourceDomain)), Buffer.from(remoteToken)],
+        tmm,
+    )[0];
+}
+
+/** seeds = [b"custody", mint] on the TokenMessengerMinter program. */
+export function custodyTokenAccountPda(mint: PublicKey = SOLANA_USDC_MINT): PublicKey {
+    return PublicKey.findProgramAddressSync([enc('custody'), mint.toBuffer()], tmm)[0];
+}
+
+/**
+ * Decode the CCTP V2 event nonce from a raw message. The nonce is a 32-byte
+ * value at byte offset 12 (mirrors Circle's decodeEventNonceFromMessageV2). It
+ * seeds the `used_nonce` PDA. `messageHex` may be 0x-prefixed.
+ */
+export function decodeNonceFromMessage(messageHex: string): Uint8Array {
+    const hex = messageHex.replace(/^0x/, '');
+    const bytes = Buffer.from(hex, 'hex');
+    return Uint8Array.from(bytes.subarray(12, 12 + 32));
+}
+
 /**
  * Encode an EVM (Arbitrum) recipient address as the 32-byte `mint_recipient`
  * CCTP expects: the 20-byte address left-padded with 12 zero bytes.

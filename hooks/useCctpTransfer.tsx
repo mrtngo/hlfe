@@ -47,6 +47,13 @@ export type CctpStatus =
 interface TransferOptions {
     /** After minting on Arbitrum, forward into the HL bridge → perps balance. */
     autoDeposit?: boolean;
+    /**
+     * Address that receives the minted USDC on the destination chain. Defaults
+     * to the user's own wallet (the deposit case). Withdrawals pass an arbitrary
+     * destination address here. Ignored when `autoDeposit` forwards into the HL
+     * bridge.
+     */
+    mintRecipient?: string;
 }
 
 const VIEM_CHAINS = {
@@ -147,12 +154,19 @@ export function useCctpTransfer() {
 
                 // 3) Burn on the source chain.
                 setStatus('burning');
+                // Where the minted USDC lands on the destination chain. Deposits
+                // mint to the user's own wallet; withdrawals override this with an
+                // arbitrary recipient. autoDeposit always sweeps from the user's
+                // own wallet, so it forces the recipient back to `address`.
+                const mintRecipient =
+                    opts.autoDeposit || !opts.mintRecipient ? address : (opts.mintRecipient as Hex);
+
                 const burn = await sendOnChain(from.chainId, {
                     to: CCTP_V2.tokenMessenger as Hex,
                     data: encodeDepositForBurn({
                         amount,
                         destinationDomain: to.domain,
-                        mintRecipient: address,
+                        mintRecipient,
                         burnToken: from.usdc,
                         maxFee,
                     }),
