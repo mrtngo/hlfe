@@ -8,6 +8,7 @@
 // (SSRF guard).
 
 import { NextRequest, NextResponse } from 'next/server';
+import { corsHeaders } from '@/lib/api/cors';
 
 const ALLOWED_HOSTS = [
     'criptonoticias.com',
@@ -161,7 +162,15 @@ async function extractFromFeed(articleUrl: string, host: string): Promise<Omit<A
     }
 }
 
+export function OPTIONS(request: NextRequest) {
+    return new NextResponse(null, { status: 204, headers: corsHeaders(request, 'GET, OPTIONS') });
+}
+
 export async function GET(req: NextRequest) {
+    const responseHeaders = {
+        ...corsHeaders(req, 'GET, OPTIONS'),
+        'Cache-Control': 'public, max-age=600, stale-while-revalidate=1800',
+    };
     const url = req.nextUrl.searchParams.get('url') || '';
     let host: string;
     try {
@@ -169,15 +178,15 @@ export async function GET(req: NextRequest) {
         if (u.protocol !== 'https:') throw new Error('https only');
         host = u.hostname;
     } catch {
-        return NextResponse.json({ error: 'URL inválida' }, { status: 400 });
+        return NextResponse.json({ error: 'URL inválida' }, { status: 400, headers: responseHeaders });
     }
     if (!ALLOWED_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) {
-        return NextResponse.json({ error: 'Fuente no permitida' }, { status: 403 });
+        return NextResponse.json({ error: 'Fuente no permitida' }, { status: 403, headers: responseHeaders });
     }
 
     const hit = cache.get(url);
     if (hit && Date.now() - hit.at < CACHE_TTL_MS) {
-        return NextResponse.json(hit.data, { headers: CORS });
+        return NextResponse.json(hit.data, { headers: responseHeaders });
     }
 
     let extracted: Omit<ArticleData, 'url'> | null = null;
@@ -201,7 +210,7 @@ export async function GET(req: NextRequest) {
 
     if (!extracted) extracted = await extractFromFeed(url, host);
     if (!extracted) {
-        return NextResponse.json({ error: 'No pudimos cargar el artículo' }, { status: 502, headers: CORS });
+        return NextResponse.json({ error: 'No pudimos cargar el artículo' }, { status: 502, headers: responseHeaders });
     }
 
     const data: ArticleData = { ...extracted, url };
@@ -210,10 +219,5 @@ export async function GET(req: NextRequest) {
         const oldest = cache.keys().next().value;
         if (oldest) cache.delete(oldest);
     }
-    return NextResponse.json(data, { headers: CORS });
+    return NextResponse.json(data, { headers: responseHeaders });
 }
-
-const CORS = {
-    'Cache-Control': 'public, max-age=600, stale-while-revalidate=1800',
-    'Access-Control-Allow-Origin': '*',
-};

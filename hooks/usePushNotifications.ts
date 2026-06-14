@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { usePrivy } from '@privy-io/react-auth';
 import { apiUrl } from '@/lib/api-base';
 
 /**
@@ -47,7 +48,7 @@ function checkIsPWA(): boolean {
 
   return (
     window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as any).standalone === true ||
+    (window.navigator as Navigator & { standalone?: boolean }).standalone === true ||
     document.referrer.includes('android-app://')
   );
 }
@@ -95,6 +96,7 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
 }
 
 export function usePushNotifications(): UsePushNotificationsReturn {
+  const { getAccessToken } = usePrivy();
   const [state, setState] = useState<PushNotificationState>({
     isSupported: false,
     isSubscribed: false,
@@ -261,9 +263,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         subscription = await registration.pushManager.subscribe(options);
         console.log('[Push] New subscription created:', subscription.endpoint);
 
-        // Send subscription to your backend
-        await sendSubscriptionToBackend(subscription, userId);
       }
+
+      // Re-link existing subscriptions too, in case they were created before
+      // server-side Privy ownership was enforced.
+      const accessToken = await getAccessToken();
+      await sendSubscriptionToBackend(subscription, accessToken, userId);
 
       setState(prev => ({
         ...prev,
@@ -282,7 +287,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       }));
       return null;
     }
-  }, [state.isSupported, state.permission, requestPermission]);
+  }, [state.isSupported, state.permission, requestPermission, getAccessToken]);
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async (): Promise<boolean> => {
@@ -294,7 +299,8 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       await state.subscription.unsubscribe();
 
       // Notify backend about unsubscription
-      await removeSubscriptionFromBackend(state.subscription);
+      const accessToken = await getAccessToken();
+      await removeSubscriptionFromBackend(state.subscription, accessToken);
 
       setState(prev => ({
         ...prev,
@@ -313,7 +319,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       }));
       return false;
     }
-  }, [state.subscription]);
+  }, [state.subscription, getAccessToken]);
 
   // Send a test notification (for debugging)
   const sendTestNotification = useCallback(() => {
@@ -343,11 +349,17 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 }
 
 // Helper function to send subscription to backend
-async function sendSubscriptionToBackend(subscription: PushSubscription, userId?: string): Promise<void> {
+async function sendSubscriptionToBackend(
+  subscription: PushSubscription,
+  accessToken: string | null,
+  userId?: string
+): Promise<void> {
   try {
+    if (!accessToken) throw new Error('Missing auth token');
     const response = await fetch(apiUrl('/api/push/subscribe'), {
       method: 'POST',
       headers: {
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -368,11 +380,16 @@ async function sendSubscriptionToBackend(subscription: PushSubscription, userId?
 }
 
 // Helper function to remove subscription from backend
-async function removeSubscriptionFromBackend(subscription: PushSubscription): Promise<void> {
+async function removeSubscriptionFromBackend(
+  subscription: PushSubscription,
+  accessToken: string | null
+): Promise<void> {
   try {
+    if (!accessToken) throw new Error('Missing auth token');
     const response = await fetch(apiUrl('/api/push/unsubscribe'), {
       method: 'POST',
       headers: {
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

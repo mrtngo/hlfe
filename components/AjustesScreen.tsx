@@ -27,8 +27,13 @@ import {
     LogOut,
     Copy,
     Check,
+    FileText,
+    Download,
+    Trash2,
     type LucideIcon,
 } from 'lucide-react';
+import { PRIVACY_POLICY_URL } from '@/lib/compliance/consent';
+import { apiUrl } from '@/lib/api-base';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy, useMfaEnrollment } from '@privy-io/react-auth';
@@ -47,8 +52,8 @@ interface AjustesScreenProps {
 export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScreenProps) {
     const { t, language, setLanguage } = useLanguage();
     const { currency, toggleCurrency } = useCurrency();
-    const { logout, user: privyUser, exportWallet } = usePrivy();
-    const { user } = useUser();
+    const { logout, user: privyUser, exportWallet, getAccessToken } = usePrivy();
+    const { user, exportData, deleteAccount } = useUser();
     const { proMode, toggleProMode } = usePreferences();
     const pushNotifications = usePushNotifications();
     const { address } = useHyperliquid();
@@ -57,6 +62,67 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
     const [dolarBlueOn, setDolarBlueOn] = useState(language === 'es');
     const [walletCopied, setWalletCopied] = useState(false);
     const [secErr, setSecErr] = useState<string | null>(null);
+    const [exporting, setExporting] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const es = language === 'es';
+
+    // Right of access (Art. 8 Ley 1581): download everything we hold as JSON.
+    const handleExportData = async () => {
+        setExporting(true);
+        try {
+            const data = await exportData();
+            if (!data) return;
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rayo-mis-datos-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    // Right of suppression: delete our DB data, then log out of Privy. NOTE:
+    // this does not yet delete the Privy account itself (email + keys) — that
+    // needs a server route with PRIVY_APP_SECRET (see app/api/account/delete).
+    const handleDeleteAccount = async () => {
+        const ok = window.confirm(
+            es
+                ? '¿Eliminar tu cuenta y todos tus datos? Esta acción no se puede deshacer. Asegúrate de haber retirado tus fondos primero.'
+                : 'Delete your account and all your data? This cannot be undone. Make sure you have withdrawn your funds first.'
+        );
+        if (!ok) return;
+        setDeleting(true);
+        try {
+            const done = await deleteAccount();
+            if (!done) {
+                setSecErr(es ? 'No se pudo eliminar la cuenta.' : 'Could not delete account.');
+                return;
+            }
+            // Best-effort: also delete the Privy account (email + keys). No-op if
+            // PRIVY_APP_SECRET isn't configured server-side yet (returns 501).
+            try {
+                if (privyUser?.id) {
+                    const accessToken = await getAccessToken();
+                    await fetch(apiUrl('/api/account/delete'), {
+                        method: 'POST',
+                        headers: {
+                            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ did: privyUser.id }),
+                    });
+                }
+            } catch (e) {
+                console.warn('Privy deletion call failed (DB data already removed):', e);
+            }
+            await logout();
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     // 2FA is opt-in: a user "has" it once they've enrolled a Privy MFA method.
     const twoFaOn = (privyUser?.mfaMethods?.length ?? 0) > 0;
@@ -186,6 +252,30 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
                     <Row icon={HelpCircle} label={t.screens.ajustes.help.center} right={<ChevronIcon />} />
                     <Row icon={Twitter} label={t.screens.ajustes.help.twitter} right={<ChevronIcon />} />
                     <Row icon={MessageSquareWarning} label={t.screens.ajustes.help.feedback} right={<ChevronIcon />} last />
+                </SettingGroup>
+
+                {/* privacidad y datos (Ley 1581) */}
+                <SettingGroup label={es ? 'Privacidad y datos' : 'Privacy & data'}>
+                    <Row
+                        icon={FileText}
+                        label={es ? 'Política de privacidad' : 'Privacy policy'}
+                        onClick={() => window.open(PRIVACY_POLICY_URL, '_blank', 'noopener')}
+                        right={<ChevronIcon />}
+                    />
+                    <Row
+                        icon={Download}
+                        label={exporting ? (es ? 'Preparando…' : 'Preparing…') : (es ? 'Descargar mis datos' : 'Download my data')}
+                        onClick={exporting ? undefined : handleExportData}
+                        right={<ChevronIcon />}
+                    />
+                    <Row
+                        icon={Trash2}
+                        label={deleting ? (es ? 'Eliminando…' : 'Deleting…') : (es ? 'Eliminar mi cuenta' : 'Delete my account')}
+                        warn
+                        onClick={deleting ? undefined : handleDeleteAccount}
+                        right={<ChevronIcon />}
+                        last
+                    />
                 </SettingGroup>
 
                 {/* Sign out */}

@@ -7,37 +7,44 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db, type DeviceToken } from '@/lib/supabase/client';
+import { corsHeaders } from '@/lib/api/cors';
+import { verifyPrivyRequest } from '@/lib/auth/privy';
+import { getSupabaseServiceClient } from '@/lib/supabase/server';
+import type { DeviceToken } from '@/lib/supabase/client';
 
-const CORS = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-};
-
-export function OPTIONS() {
-    return new NextResponse(null, { status: 204, headers: CORS });
+export function OPTIONS(request: NextRequest) {
+    return new NextResponse(null, { status: 204, headers: corsHeaders(request) });
 }
 
 export async function POST(request: NextRequest) {
+    const headers = corsHeaders(request);
     try {
-        const { token, platform, userId, walletAddress } = await request.json();
+        const session = await verifyPrivyRequest(request);
+        const { token, platform } = await request.json();
 
-        if (!token || typeof token !== 'string') {
-            return NextResponse.json({ error: 'Missing token' }, { status: 400, headers: CORS });
+        if (!token || typeof token !== 'string' || token.length > 4096) {
+            return NextResponse.json({ error: 'Invalid token' }, { status: 400, headers });
         }
         const plat: DeviceToken['platform'] =
             platform === 'android' || platform === 'web' ? platform : 'ios';
 
-        const result = await db.deviceTokens.save(token, plat, { userId, walletAddress });
+        const { error } = await getSupabaseServiceClient()
+            .from('device_tokens')
+            .upsert({
+                token,
+                platform: plat,
+                privy_did: session.userId,
+                updated_at: new Date().toISOString(),
+            }, { onConflict: 'token' });
 
-        if (!result) {
-            // Table may not be migrated yet — don't fail the client, just log.
-            console.log('[Push] device token received (table may not exist yet):', token.slice(0, 12));
+        if (error) {
+            console.error('register-device save error:', error);
+            return NextResponse.json({ error: 'Failed to register device' }, { status: 500, headers });
         }
-        return NextResponse.json({ success: true }, { headers: CORS });
+
+        return NextResponse.json({ success: true }, { headers });
     } catch (error) {
         console.error('register-device error:', error);
-        return NextResponse.json({ error: 'Failed to register device' }, { status: 500, headers: CORS });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers });
     }
 }

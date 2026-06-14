@@ -18,7 +18,8 @@
 // description keyword match) and a cheap sentiment hint (up/down keyword
 // match). Both are heuristics — good enough for a feed, not trading signals.
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { corsHeaders } from '@/lib/api/cors';
 
 export interface NewsItem {
     id: string;
@@ -284,7 +285,11 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItem[]> {
     }
 }
 
-export async function GET() {
+export function OPTIONS(request: NextRequest) {
+    return new NextResponse(null, { status: 204, headers: corsHeaders(request, 'GET, OPTIONS') });
+}
+
+export async function GET(request: NextRequest) {
     if (Date.now() - cache.at > CACHE_TTL_MS) {
         const results = await Promise.allSettled(FEEDS.map(fetchFeed));
         const items = results
@@ -312,9 +317,8 @@ export async function GET() {
         { items: cache.items },
         {
             headers: {
+                ...corsHeaders(request, 'GET, OPTIONS'),
                 'Cache-Control': 'public, max-age=120, stale-while-revalidate=300',
-                // The iOS bundle calls this through NEXT_PUBLIC_API_BASE.
-                'Access-Control-Allow-Origin': '*',
             },
         },
     );

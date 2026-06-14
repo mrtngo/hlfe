@@ -19,8 +19,7 @@ import { apiUrl } from '@/lib/api-base';
 let started = false;
 
 interface RegisterOpts {
-    userId?: string | null;
-    walletAddress?: string | null;
+    accessToken?: string | null;
 }
 
 /** Most-recent user binding, so a token that arrives before login still links. */
@@ -30,14 +29,16 @@ let lastToken: string | null = null;
 
 async function postToken(token: string) {
     try {
+        if (!pending.accessToken) return;
         await fetch(apiUrl('/api/push/register-device'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                Authorization: `Bearer ${pending.accessToken}`,
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
                 token,
                 platform: 'ios',
-                userId: pending.userId ?? null,
-                walletAddress: pending.walletAddress ?? null,
             }),
         });
     } catch (e) {
@@ -51,7 +52,7 @@ async function postToken(token: string) {
  * web or before a token has been issued.
  */
 export function linkPushUser(opts: RegisterOpts): void {
-    const changed = opts.userId !== pending.userId || opts.walletAddress !== pending.walletAddress;
+    const changed = opts.accessToken !== pending.accessToken;
     pending = { ...pending, ...opts };
     if (changed && lastToken) void postToken(lastToken);
 }

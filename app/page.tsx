@@ -16,6 +16,7 @@ import AjustesScreen from '@/components/AjustesScreen';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import ApproveAgentModal from '@/components/ApproveAgentModal';
+import PrivacyConsentModal from '@/components/PrivacyConsentModal';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import SpotScreen from '@/components/SpotScreen';
 import SpotBuyScreen from '@/components/SpotBuyScreen';
@@ -40,7 +41,7 @@ import { Icon, V2, type IconName } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
 export default function Home() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const {
         selectedMarket,
         setSelectedMarket,
@@ -52,8 +53,8 @@ export default function Home() {
         refreshMarketData,
         lastUpdated
     } = useHyperliquid();
-    const { ready, authenticated, login } = usePrivy();
-    const { user, loading: userLoading } = useUser();
+    const { ready, authenticated, login, getAccessToken } = usePrivy();
+    const { user, loading: userLoading, needsConsent, recordConsent } = useUser();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Preselected side for the trade screen ("Bajar" → sell). Resets to buy on generic entry. */
@@ -85,10 +86,19 @@ export default function Home() {
     // (DCA runs, fills, deposits) can target the right user. No-op on web.
     useEffect(() => {
         if (!authenticated || !address) return;
-        import('@/lib/native-push')
-            .then(({ linkPushUser }) => linkPushUser({ walletAddress: address }))
-            .catch(() => { /* plugin absent in this build */ });
-    }, [authenticated, address]);
+        let cancelled = false;
+        getAccessToken()
+            .then((accessToken) => {
+                if (cancelled || !accessToken) return;
+                return import('@/lib/native-push')
+                    .then(({ linkPushUser }) => linkPushUser({ accessToken }))
+                    .catch(() => { /* plugin absent in this build */ });
+            })
+            .catch(() => { /* token refresh failed; push can retry later */ });
+        return () => {
+            cancelled = true;
+        };
+    }, [authenticated, address, getAccessToken]);
 
     // Auto-play the tutorial once, right after a first authentication.
     useEffect(() => {
@@ -142,11 +152,6 @@ export default function Home() {
         sessionStorage.setItem('setup_wizard_dismissed', 'true');
     };
 
-    const formatAddress = (addr: string | null) => {
-        if (!addr) return null;
-        return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
-    };
-
     // Navigate to the trade screen with a preselected side (defaults to buy).
     const goTrade = (side: 'buy' | 'sell' = 'buy') => {
         setTradeSide(side);
@@ -195,6 +200,13 @@ export default function Home() {
 
     return (
         <div className="v2-app min-h-screen flex flex-col" style={{ background: '#0A0C0E' }}>
+            {/* Ley 1581 authorization gate — blocks until the user accepts the
+                current privacy-policy version. Lazily provisioned signing is
+                untouched; this is purely the data-protection consent. */}
+            <PrivacyConsentModal
+                open={authenticated && needsConsent}
+                onAccept={async () => { await recordConsent({ locale: language }); }}
+            />
             {/* Main Content - V2 screens are full-bleed; legacy screens are padded */}
             <main className="flex-1 relative">
                 <PullToRefresh onRefresh={async () => {

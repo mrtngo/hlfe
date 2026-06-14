@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { db, User } from '@/lib/supabase/client';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { CURRENT_PRIVACY_POLICY_VERSION, needsConsent as policyNeedsConsent } from '@/lib/compliance/consent';
 
 const REFERRAL_STORAGE_KEY = 'rayo_referral_code';
 
@@ -34,6 +35,13 @@ const deriveReferralCode = (name: string): string =>
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '')
         .slice(0, 20);
+
+type DbErrorLike = { code?: string; message?: string };
+
+function toDbError(err: unknown): DbErrorLike {
+    if (typeof err === 'object' && err !== null) return err as DbErrorLike;
+    return { message: String(err) };
+}
 
 // Validate avatar URL: must be HTTPS from allowed domains
 const isValidAvatarUrl = (url: string): boolean => {
@@ -70,6 +78,15 @@ interface UserContextType {
     /** Sets the display name and derives the referral code from it (name in CAPS). */
     updateName: (name: string) => Promise<{ success: boolean; message: string }>;
     refreshUser: () => Promise<void>;
+    // ── Data-protection (Ley 1581) ──
+    /** True once the user is loaded and hasn't accepted the current policy version. */
+    needsConsent: boolean;
+    /** Record express authorization for the current policy version. */
+    recordConsent: (opts?: { intlTransfer?: boolean; locale?: string }) => Promise<boolean>;
+    /** Right of access: everything we hold about the user, as a plain object. */
+    exportData: () => Promise<Record<string, unknown> | null>;
+    /** Right of suppression: delete the user's DB data (Privy handled separately). */
+    deleteAccount: () => Promise<boolean>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -201,11 +218,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 return { success: true, message: 'Username updated!' };
             }
             return { success: false, message: 'Username already taken' };
-        } catch (err: any) {
-            if (err?.code === '23505') {
+        } catch (err: unknown) {
+            const dbErr = toDbError(err);
+            if (dbErr.code === '23505') {
                 return { success: false, message: 'Username already taken' };
             }
-            return { success: false, message: err?.message || 'Failed to update username' };
+            return { success: false, message: dbErr.message || 'Failed to update username' };
         }
     }, [address]);
 
@@ -240,8 +258,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 return { success: true, message: 'Profile updated!' };
             }
             return { success: false, message: 'Failed to update profile' };
-        } catch (err: any) {
-            return { success: false, message: err?.message || 'Failed to update profile' };
+        } catch (err: unknown) {
+            const dbErr = toDbError(err);
+            return { success: false, message: dbErr.message || 'Failed to update profile' };
         }
     }, [address]);
 
@@ -274,18 +293,49 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 return { success: true, message: 'Nombre actualizado' };
             }
             return { success: false, message: 'No se pudo actualizar el nombre' };
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const dbErr = toDbError(err);
             // Unique-constraint race → name was just taken.
-            if (err?.code === '23505') {
+            if (dbErr.code === '23505') {
                 return { success: false, message: 'Ese nombre ya está en uso' };
             }
-            return { success: false, message: err?.message || 'Error al actualizar' };
+            return { success: false, message: dbErr.message || 'Error al actualizar' };
         }
     }, [address, user?.id]);
 
     const refreshUser = useCallback(async () => {
         await fetchOrCreateUser();
     }, [fetchOrCreateUser]);
+
+    // ── Data-protection (Ley 1581) ──
+    // Only gate once the user row is loaded; never block during the initial
+    // fetch (avoids a flash of the consent modal before we know their status).
+    const needsConsent = !!user && policyNeedsConsent(user.privacy_policy_version);
+
+    const recordConsent = useCallback(async (opts?: { intlTransfer?: boolean; locale?: string }): Promise<boolean> => {
+        if (!address) return false;
+        const ok = await db.consents.record({
+            userId: user?.id ?? null,
+            walletAddress: address,
+            policyVersion: CURRENT_PRIVACY_POLICY_VERSION,
+            intlTransfer: opts?.intlTransfer ?? true,
+            locale: opts?.locale,
+        });
+        if (ok) await fetchOrCreateUser(); // refresh the consent pointer
+        return ok;
+    }, [address, user?.id, fetchOrCreateUser]);
+
+    const exportData = useCallback(async (): Promise<Record<string, unknown> | null> => {
+        if (!address) return null;
+        return db.account.exportData(address);
+    }, [address]);
+
+    const deleteAccount = useCallback(async (): Promise<boolean> => {
+        if (!address) return false;
+        const ok = await db.account.deleteAccount(address);
+        if (ok) setUser(null);
+        return ok;
+    }, [address]);
 
     return (
         <UserContext.Provider value={{
@@ -296,6 +346,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
             updateProfile,
             updateName,
             refreshUser,
+            needsConsent,
+            recordConsent,
+            exportData,
+            deleteAccount,
         }}>
             {children}
         </UserContext.Provider>
@@ -309,4 +363,3 @@ export function useUser() {
     }
     return context;
 }
-

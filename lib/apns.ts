@@ -18,7 +18,7 @@
 
 import http2 from 'node:http2';
 import crypto from 'node:crypto';
-import { db } from '@/lib/supabase/client';
+import { getSupabaseServiceClient } from '@/lib/supabase/server';
 
 const KEY_ID = process.env.APNS_KEY_ID || '';
 const TEAM_ID = process.env.APNS_TEAM_ID || '';
@@ -125,32 +125,50 @@ export async function sendApnsToTokens(
 
 /** Prune tokens APNs reported as dead. */
 async function prune(invalidTokens: string[]) {
-    for (const t of invalidTokens) await db.deviceTokens.remove(t);
+    if (invalidTokens.length === 0) return;
+    await getSupabaseServiceClient()
+        .from('device_tokens')
+        .delete()
+        .in('token', invalidTokens);
 }
 
 /** Push to every registered native device (broadcast — e.g. price alerts). */
 export async function sendApnsToAll(msg: ApnsMessage): Promise<number> {
     if (!apnsConfigured()) return 0;
-    const tokens = (await db.deviceTokens.getAll()).map((t) => t.token);
+    const { data, error } = await getSupabaseServiceClient()
+        .from('device_tokens')
+        .select('token');
+    if (error) {
+        console.error('[apns] failed to fetch device tokens', error);
+        return 0;
+    }
+    const tokens = (data || []).map((t) => t.token);
     const { sent, invalidTokens } = await sendApnsToTokens(tokens, msg);
     await prune(invalidTokens);
     return sent;
 }
 
-/** Push to one user's devices (e.g. a DCA run, a fill). */
-export async function sendApnsToUser(userId: string, msg: ApnsMessage): Promise<number> {
+/** Push to one Privy user's devices (e.g. a DCA run, a fill). */
+export async function sendApnsToUser(privyDid: string, msg: ApnsMessage): Promise<number> {
     if (!apnsConfigured()) return 0;
-    const tokens = (await db.deviceTokens.getByUser(userId)).map((t) => t.token);
+    const { data, error } = await getSupabaseServiceClient()
+        .from('device_tokens')
+        .select('token')
+        .eq('privy_did', privyDid);
+    if (error) {
+        console.error('[apns] failed to fetch user device tokens', error);
+        return 0;
+    }
+    const tokens = (data || []).map((t) => t.token);
     const { sent, invalidTokens } = await sendApnsToTokens(tokens, msg);
     await prune(invalidTokens);
     return sent;
 }
 
-/** Push to the devices linked to a wallet address. */
+/** @deprecated Wallet-address targeting is intentionally disabled until wallet ownership is server-verified. */
 export async function sendApnsToWallet(walletAddress: string, msg: ApnsMessage): Promise<number> {
-    if (!apnsConfigured()) return 0;
-    const tokens = (await db.deviceTokens.getByWallet(walletAddress)).map((t) => t.token);
-    const { sent, invalidTokens } = await sendApnsToTokens(tokens, msg);
-    await prune(invalidTokens);
-    return sent;
+    void walletAddress;
+    void msg;
+    console.warn('[apns] wallet-address targeting is disabled; use sendApnsToUser(privyDid) instead');
+    return 0;
 }

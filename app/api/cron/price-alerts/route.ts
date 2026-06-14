@@ -5,8 +5,23 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import webPush from 'web-push';
-import { supabase } from '@/lib/supabase/client';
+import { getSupabaseServiceClient } from '@/lib/supabase/server';
 import { sendApnsToAll } from '@/lib/apns';
+
+interface PushSubscriptionRow {
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+}
+
+interface PushSendError {
+    statusCode?: number;
+    message?: string;
+}
+
+function isPushSendError(error: unknown): error is PushSendError {
+    return typeof error === 'object' && error !== null;
+}
 
 // VAPID configuration
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
@@ -56,7 +71,7 @@ async function fetchPrices(): Promise<Record<string, number>> {
 
 // Get last alerted prices from Supabase
 async function getLastAlertPrices(): Promise<Record<string, number>> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseServiceClient()
         .from('price_alert_state')
         .select('symbol, last_alert_price');
 
@@ -74,7 +89,7 @@ async function getLastAlertPrices(): Promise<Record<string, number>> {
 
 // Update last alerted price
 async function updateLastAlertPrice(symbol: string, price: number): Promise<void> {
-    const { error } = await supabase
+    const { error } = await getSupabaseServiceClient()
         .from('price_alert_state')
         .upsert({
             symbol,
@@ -88,8 +103,8 @@ async function updateLastAlertPrice(symbol: string, price: number): Promise<void
 }
 
 // Get all push subscriptions
-async function getAllSubscriptions(): Promise<any[]> {
-    const { data, error } = await supabase
+async function getAllSubscriptions(): Promise<PushSubscriptionRow[]> {
+    const { data, error } = await getSupabaseServiceClient()
         .from('push_subscriptions')
         .select('endpoint, p256dh, auth');
 
@@ -102,7 +117,7 @@ async function getAllSubscriptions(): Promise<any[]> {
 }
 
 // Send push notification to all subscribers
-async function sendPushToAll(title: string, body: string, data?: Record<string, any>): Promise<number> {
+async function sendPushToAll(title: string, body: string, data?: Record<string, unknown>): Promise<number> {
     const subscriptions = await getAllSubscriptions();
     let sent = 0;
 
@@ -127,15 +142,16 @@ async function sendPushToAll(title: string, body: string, data?: Record<string, 
                 })
             );
             sent++;
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const pushError = isPushSendError(err) ? err : {};
             // Remove invalid subscriptions
-            if (err.statusCode === 410 || err.statusCode === 404) {
-                await supabase
+            if (pushError.statusCode === 410 || pushError.statusCode === 404) {
+                await getSupabaseServiceClient()
                     .from('push_subscriptions')
                     .delete()
                     .eq('endpoint', sub.endpoint);
             }
-            console.error('[PriceAlerts] Push failed:', err.message);
+            console.error('[PriceAlerts] Push failed:', pushError.message || err);
         }
     }
 
@@ -151,13 +167,18 @@ function formatPrice(price: number, symbol: string): string {
 }
 
 export async function GET(request: NextRequest) {
-    // Verify cron secret (optional but recommended)
+    // Verify cron secret.
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
+    if (!cronSecret && process.env.NODE_ENV === 'production') {
+        console.error('[PriceAlerts] CRON_SECRET is not configured');
+        return NextResponse.json({ error: 'Cron not configured' }, { status: 503 });
+    }
+
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
         console.log('[PriceAlerts] Unauthorized cron request');
-        // Still allow for testing, just log it
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('[PriceAlerts] Cron job started');

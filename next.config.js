@@ -67,9 +67,9 @@ const nextConfig = {
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://auth.privy.io https://*.privy.io",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "img-src 'self' data: blob: https: http:",
+      "img-src 'self' data: blob: https:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://api.hyperliquid.xyz wss://api.hyperliquid.xyz https://api.hyperliquid-testnet.xyz wss://api.hyperliquid-testnet.xyz https://app.hyperliquid.xyz https://app.trade.xyz https://api.rhino.fi https://*.supabase.co https://auth.privy.io https://*.privy.io https://*.privy.systems wss://*.privy.systems https://www.datos.gov.co https://unavatar.io https://wise.com https://raw.githubusercontent.com https://explorer-api.walletconnect.com wss://www.walletlink.org wss://relay.walletconnect.com wss://relay.walletconnect.org https://*.walletconnect.com https://mainnet.base.org https://arb1.arbitrum.io https://mainnet.optimism.io https://polygon-rpc.com https://eth.llamarpc.com https://cloudflare-eth.com https://rpc.ankr.com https://gamma-api.polymarket.com https://clob.polymarket.com https://data-api.polymarket.com wss://ws-subscriptions-clob.polymarket.com https://polygon-bor-rpc.publicnode.com https://iris-api.circle.com https://api.mainnet-beta.solana.com wss://api.mainnet-beta.solana.com",
+      "connect-src 'self' https://www.rayotrade.xyz https://rayotrade.xyz https://api.rayotrade.xyz https://api.hyperliquid.xyz wss://api.hyperliquid.xyz https://api.hyperliquid-testnet.xyz wss://api.hyperliquid-testnet.xyz https://app.hyperliquid.xyz https://app.trade.xyz https://api.rhino.fi https://*.supabase.co https://auth.privy.io https://*.privy.io https://*.privy.systems wss://*.privy.systems https://www.datos.gov.co https://unavatar.io https://wise.com https://raw.githubusercontent.com https://explorer-api.walletconnect.com wss://www.walletlink.org wss://relay.walletconnect.com wss://relay.walletconnect.org https://*.walletconnect.com https://mainnet.base.org https://arb1.arbitrum.io https://mainnet.optimism.io https://polygon-rpc.com https://eth.llamarpc.com https://cloudflare-eth.com https://rpc.ankr.com https://gamma-api.polymarket.com https://clob.polymarket.com https://data-api.polymarket.com wss://ws-subscriptions-clob.polymarket.com https://polygon-bor-rpc.publicnode.com https://iris-api.circle.com https://api.mainnet-beta.solana.com wss://api.mainnet-beta.solana.com",
       "frame-src 'self' https://auth.privy.io https://*.privy.io",
       "frame-ancestors 'none'",
       "form-action 'self'",
@@ -108,39 +108,6 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: cspDirectives.join('; '),
-          },
-        ],
-      },
-      {
-        // CORS for the API route handlers. When this same app is deployed as
-        // the standalone API host (api.rayotrade.xyz) consumed by the iOS
-        // Capacitor bundle, the WKWebView makes cross-origin requests from its
-        // app scheme (capacitor://localhost, or rayo://localhost if a custom
-        // iosScheme is set). These proxy endpoints take no cookies/credentials,
-        // so a wildcard origin is safe and robust to the scheme in use.
-        //
-        // NOTE: `headers()` is ignored by `output: 'export'` (the iOS build),
-        // which is fine — API routes are stripped there anyway. This config
-        // only takes effect on the server-rendered API/web deployment. A
-        // `middleware.ts` would be cleaner for conditional origins but
-        // `output: 'export'` forbids middleware and would break `build:ios`.
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
-          },
-          {
-            key: 'Access-Control-Max-Age',
-            value: '86400',
           },
         ],
       },

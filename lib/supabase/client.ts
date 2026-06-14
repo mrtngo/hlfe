@@ -29,6 +29,9 @@ export interface User {
     referral_earnings: number;
     created_at: string;
     updated_at: string;
+    // Data-protection consent (Ley 1581) — latest accepted policy version + when.
+    privacy_policy_version?: string | null;
+    privacy_consent_at?: string | null;
 }
 
 export interface Trade {
@@ -678,7 +681,11 @@ export const db = {
                 console.error('Error fetching asset categories:', error);
                 return [];
             }
-            return (data || []).map(item => item.category as any).filter(Boolean);
+            return (data || []).flatMap((item) => {
+                const category = item.category as unknown as Category | Category[] | null;
+                if (!category) return [];
+                return Array.isArray(category) ? category : [category];
+            });
         },
     },
 
@@ -973,6 +980,111 @@ export const db = {
 
             if (error) {
                 console.error('Error deleting DCA schedule:', error);
+                return false;
+            }
+            return true;
+        },
+    },
+
+    // ── Data-protection consent (Ley 1581 / Decreto 1377) ──────────────────
+    // Append-only authorization ledger + convenience pointer on the user row.
+    consents: {
+        /**
+         * Record a fresh authorization. Writes an immutable audit row AND
+         * stamps the user's latest accepted version so the gate can check it
+         * with a single field read.
+         */
+        async record(params: {
+            userId: string | null;
+            walletAddress: string;
+            policyVersion: string;
+            intlTransfer?: boolean;
+            locale?: string;
+        }): Promise<boolean> {
+            const { error: insErr } = await supabase.from('data_consents').insert({
+                user_id: params.userId,
+                wallet_address: params.walletAddress.toLowerCase(),
+                policy_version: params.policyVersion,
+                intl_transfer: params.intlTransfer ?? true,
+                locale: params.locale ?? null,
+                user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+            });
+            if (insErr) {
+                console.error('Error recording consent:', insErr);
+                return false;
+            }
+
+            const { error: updErr } = await supabase
+                .from('users')
+                .update({
+                    privacy_policy_version: params.policyVersion,
+                    privacy_consent_at: new Date().toISOString(),
+                })
+                .eq('wallet_address', params.walletAddress.toLowerCase());
+            if (updErr) {
+                // The ledger row is what legally matters; the pointer is best-effort.
+                console.error('Error updating consent pointer on user:', updErr);
+            }
+            return true;
+        },
+    },
+
+    // ── Data-subject rights (acceso / supresión, Art. 8 Ley 1581) ──────────
+    account: {
+        /**
+         * Export everything we hold about a user across our DB, for the
+         * "right of access" / data-portability request. Does NOT include data
+         * held by third parties (Privy, Hyperliquid) — those are listed in the
+         * privacy policy and must be requested from them directly.
+         */
+        async exportData(walletAddress: string): Promise<Record<string, unknown>> {
+            const wallet = walletAddress.toLowerCase();
+            const user = await db.users.getByWallet(wallet);
+            const userId = user?.id ?? null;
+
+            const grab = async (table: string, column: string, value: string | null) => {
+                if (!value) return [];
+                const { data } = await supabase.from(table).select('*').eq(column, value);
+                return data ?? [];
+            };
+
+            return {
+                exported_at: new Date().toISOString(),
+                wallet_address: wallet,
+                profile: user ?? null,
+                trades: await grab('trades', 'user_id', userId),
+                referrals_made: await grab('referrals', 'referrer_id', userId),
+                referral_received: await grab('referrals', 'referred_id', userId),
+                trollbox_messages: await grab('trollbox_messages', 'user_id', userId),
+                price_alerts: await grab('price_alerts', 'user_id', userId),
+                dca_schedules: await grab('dca_schedules', 'wallet_address', wallet),
+                device_tokens: await grab('device_tokens', 'wallet_address', wallet),
+                consents: await grab('data_consents', 'wallet_address', wallet),
+            };
+        },
+
+        /**
+         * Delete the user and all DB rows that reference them. FKs use
+         * ON DELETE CASCADE, so deleting the users row removes trades,
+         * referrals, trollbox messages, device tokens and consents.
+         *
+         * ⚠️ INCOMPLETE on its own: the user's email + wallet keys live in
+         * Privy and are NOT deleted here. The caller must also delete the Privy
+         * account (server-side, with PRIVY_APP_SECRET) — see
+         * app/api/account/delete. Until access control is tightened (Task #4),
+         * this runs client-side under the permissive anon-key RLS.
+         */
+        async deleteAccount(walletAddress: string): Promise<boolean> {
+            const wallet = walletAddress.toLowerCase();
+            const user = await db.users.getByWallet(wallet);
+            // Rows keyed by wallet (no users FK cascade) — clear explicitly first.
+            await supabase.from('dca_schedules').delete().eq('wallet_address', wallet);
+            await supabase.from('device_tokens').delete().eq('wallet_address', wallet);
+
+            if (!user) return true; // nothing else to remove
+            const { error } = await supabase.from('users').delete().eq('id', user.id);
+            if (error) {
+                console.error('Error deleting account:', error);
                 return false;
             }
             return true;

@@ -103,7 +103,7 @@ self.addEventListener('push', (event) => {
         ...data,
         ...payload,
       };
-    } catch (e) {
+    } catch {
       data.body = event.data.text();
     }
   }
@@ -136,15 +136,26 @@ self.addEventListener('notificationclick', (event) => {
   const action = event.action;
   const data = event.notification.data;
 
+  const safeUrl = (value) => {
+    if (typeof value !== 'string' || !value.trim()) return '/';
+    try {
+      const parsed = new URL(value, self.location.origin);
+      if (parsed.origin !== self.location.origin) return '/';
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch {
+      return '/';
+    }
+  };
+
   let targetUrl = '/';
 
   // Handle different actions
   if (action === 'view' && data.url) {
-    targetUrl = data.url;
+    targetUrl = safeUrl(data.url);
   } else if (data.symbol) {
     targetUrl = `/trade?symbol=${data.symbol}`;
   } else if (data.url) {
-    targetUrl = data.url;
+    targetUrl = safeUrl(data.url);
   }
 
   event.waitUntil(
