@@ -4,9 +4,9 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, X, Plus, TrendingUp, TrendingDown } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useCurrency } from '@/context/CurrencyContext';
 import TokenLogo from '@/components/TokenLogo';
 import { getTokenFullName } from '@/lib/constants';
+import { formatUsdPrice } from '@/lib/format/price';
 import type { Market } from '@/hooks/useHyperliquid';
 
 interface MarketSelectModalProps {
@@ -31,7 +31,6 @@ export default function MarketSelectModal({
     excludeSymbols = []
 }: MarketSelectModalProps) {
     const { t, formatPercent } = useLanguage();
-    const { formatCurrency } = useCurrency();
     const [searchQuery, setSearchQuery] = useState('');
     const modalRef = useRef<HTMLDivElement>(null);
     const [isClient, setIsClient] = useState(false);
@@ -232,7 +231,7 @@ export default function MarketSelectModal({
                                             {/* Right: Price + Change */}
                                             <div style={{ textAlign: 'right', flexShrink: 0 }}>
                                                 <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '14px', color: '#fff' }}>
-                                                    {market.price ? formatCurrency(market.price) : '0.00'}
+                                                    {market.price ? `$${formatUsdPrice(market.price, market)}` : '$0.00'}
                                                 </div>
                                                 <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)', fontWeight: 600, color: marketIsPositive ? 'var(--color-positive)' : 'var(--color-negative)' }}>
                                                     {marketIsPositive ? '+' : ''}{(market.change24h || 0).toFixed(2)}%

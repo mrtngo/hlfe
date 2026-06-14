@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { publicClient, WS_URL, API_URL } from './client';
+import { priceDecimalsFromRules } from '@/lib/format/price';
 
 // Conditional logging - only log in development to avoid exposing details in production
 const isDev = process.env.NODE_ENV === 'development';
@@ -48,6 +49,7 @@ export interface Market {
     fundingRate: number;
     openInterest: number;
     szDecimals: number;
+    priceDecimals?: number;
     maxLeverage: number;
     assetIndex: number;
     onlyIsolated: boolean;
@@ -173,6 +175,7 @@ export function useMarketData(): MarketData {
 
                     // Extract HIP-3 metadata from asset object
                     const szDecimals = asset.szDecimals ?? 0;
+                    const priceDecimals = priceDecimalsFromRules(price, szDecimals, false);
                     const maxLeverage = asset.maxLeverage ?? 1;
                     const onlyIsolated = asset.onlyIsolated ?? false;
 
@@ -192,6 +195,7 @@ export function useMarketData(): MarketData {
                         fundingRate,
                         openInterest,
                         szDecimals,
+                        priceDecimals,
                         maxLeverage,
                         assetIndex: i,
                         onlyIsolated: isFromDex ? true : onlyIsolated, // Trade.xyz markets are always isolated
@@ -254,6 +258,7 @@ export function useMarketData(): MarketData {
                             fundingRate: 0,
                             openInterest: 0,
                             szDecimals: 0,
+                            priceDecimals: 2,
                             maxLeverage: 20,
                             assetIndex: 0,
                             onlyIsolated: false,
@@ -270,6 +275,7 @@ export function useMarketData(): MarketData {
                             fundingRate: 0,
                             openInterest: 0,
                             szDecimals: 0,
+                            priceDecimals: 2,
                             maxLeverage: 20,
                             assetIndex: 1,
                             onlyIsolated: false,

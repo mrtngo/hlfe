@@ -9,6 +9,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { MIN_ORDER_NOTIONAL_USD } from '@/lib/constants';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { haptic } from '@/lib/haptics';
+import { formatUsdPrice, priceDecimalsFromMarket } from '@/lib/format/price';
 import TokenLogo from '@/components/TokenLogo';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import TradingChart from '@/components/TradingChart';
@@ -167,7 +168,14 @@ function NormalMode({
     }, [maxLev]);
 
     const price = market.price || 0;
-    const amount = (availableUsd * balancePct) / 100;
+    const displayDecimals = priceDecimalsFromMarket(market);
+    // Fee-safe usable margin. At 100%, keep enough dust for taker + builder
+    // fees so tiny accounts do not pass the UI and then fail on exchange.
+    const feeRate = 0.00045 + (BUILDER_CONFIG.enabled ? BUILDER_CONFIG.fee / 100000 : 0);
+    const maxMarginAfterFees = availableUsd > 0
+        ? availableUsd / (1 + leverage * feeRate)
+        : 0;
+    const amount = (maxMarginAfterFees * balancePct) / 100;
     const positionSize = amount * leverage;
     const tokenSize = price > 0 ? positionSize / price : 0;
     const changeAbs = (price * (market.change24h || 0)) / 100;
@@ -184,7 +192,6 @@ function NormalMode({
         : 0;
 
     // Taker fee (market order) + builder fee, charged on the notional.
-    const feeRate = 0.00045 + (BUILDER_CONFIG.enabled ? BUILDER_CONFIG.fee / 100000 : 0);
     const estFee = positionSize * feeRate;
     const targetPrice = cashout != null
         ? side === 'buy'
@@ -194,7 +201,22 @@ function NormalMode({
 
     // HL's $10 minimum applies to the order's notional (margin × leverage),
     // not the margin alone — validate against the total with a $1 buffer.
-    const canSubmit = positionSize >= MIN_ORDER_NOTIONAL_USD && amount <= availableUsd + 0.01 && !submitting && price > 0;
+    const totalRequired = amount + estFee;
+    const canSubmit = positionSize >= MIN_ORDER_NOTIONAL_USD && totalRequired <= availableUsd + 0.01 && !submitting && price > 0;
+
+    useEffect(() => {
+        if (availableUsd <= 0 || availableUsd >= MIN_ORDER_NOTIONAL_USD) return;
+        if (balancePct !== 50 || leverage !== 2) return;
+
+        for (let lev = 1; lev <= maxLev; lev += 1) {
+            const feeSafeMargin = availableUsd / (1 + lev * feeRate);
+            if (feeSafeMargin * lev >= MIN_ORDER_NOTIONAL_USD) {
+                setBalancePct(100);
+                setLeverage(lev);
+                break;
+            }
+        }
+    }, [availableUsd, balancePct, feeRate, leverage, maxLev]);
 
     const handleConfirm = async () => {
         if (!canSubmit) return;
@@ -250,10 +272,10 @@ function NormalMode({
                     </div>
                 </div>
                 <div style={{ marginTop: 22 }}>
-                    <BigMoney value={price} size={46} decimals={price < 1 ? 4 : 2} />
+                    <BigMoney value={price} size={46} decimals={displayDecimals} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
                         <span style={{ color: up ? V2.pos : V2.neg, fontWeight: 700, fontSize: 16, fontFamily: V2.mono }}>
-                            {up ? '+' : '-'}${Math.abs(changeAbs).toLocaleString('en-US', { maximumFractionDigits: price < 1 ? 4 : 2 })}
+                            {up ? '+' : '-'}${Math.abs(changeAbs).toLocaleString('en-US', { maximumFractionDigits: displayDecimals })}
                         </span>
                         <PctBadge v={market.change24h || 0} />
                     </div>
@@ -313,7 +335,7 @@ function NormalMode({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
                         <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>Precio de liquidación</span>
                         <span style={{ fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: V2.neg }}>
-                            {liqPrice > 0 ? formatCurrency(liqPrice, price < 1 ? 4 : 2) : '—'}
+                            {liqPrice > 0 ? formatCurrency(liqPrice, displayDecimals) : '—'}
                         </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
@@ -481,7 +503,7 @@ function ProMode({
             </div>
 
             <div style={{ padding: '8px 16px', display: 'flex', gap: 16, alignItems: 'baseline', borderBottom: '1px solid #1A1A1A', background: '#000', flexWrap: 'wrap' }}>
-                <div className="tabular-mono" style={{ fontSize: 20, fontWeight: 700, color: '#fff', textShadow: '0 0 24px rgba(250,204,21,0.18)' }}>{formatCurrency(market.price || 0)}</div>
+                <div className="tabular-mono" style={{ fontSize: 20, fontWeight: 700, color: '#fff', textShadow: '0 0 24px rgba(250,204,21,0.18)' }}>${formatUsdPrice(market.price || 0, market)}</div>
                 <div className="tabular-mono" style={{ fontSize: 12, color: cl, fontWeight: 700 }}>{up ? '+' : ''}{(market.change24h || 0).toFixed(2)}%</div>
                 <div className="tabular-mono" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>
                     VOL ${((market.volume24h || 0) / 1_000_000).toFixed(1)}M · OI ${((market.openInterest || 0) / 1_000_000).toFixed(1)}M · FUND {((market.fundingRate || 0) * 100).toFixed(3)}%

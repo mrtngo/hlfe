@@ -6,6 +6,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { Search, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
 import TokenLogo from '@/components/TokenLogo';
 import { getTokenFullName } from '@/lib/constants';
+import { formatUsdPrice } from '@/lib/format/price';
 
 interface MarketOverviewProps {
     onTokenClick?: (symbol: string) => void;
@@ -14,7 +15,7 @@ interface MarketOverviewProps {
 type MarketTab = 'crypto' | 'stocks';
 
 export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {}) {
-    const { t, formatCurrency, formatPercent } = useLanguage();
+    const { t, formatPercent } = useLanguage();
     const { markets = [], selectedMarket, setSelectedMarket } = useHyperliquid();
     const [isExpanded, setIsExpanded] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -78,7 +79,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                             </div>
                             <div className="text-right">
                                 <div className="font-mono font-bold text-base text-white">
-                                    {formatCurrency(currentMarket.price)}
+                                    ${formatUsdPrice(currentMarket.price, currentMarket)}
                                 </div>
                                 <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-positive' : 'text-negative'
                                     }`}>
@@ -185,7 +186,7 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
                                         </div>
                                         <div className="text-right">
                                             <div className="font-mono font-semibold text-sm text-white">
-                                                {formatCurrency(market.price)}
+                                                ${formatUsdPrice(market.price, market)}
                                             </div>
                                             <div className={`flex items-center justify-end gap-1 text-xs ${isPositive ? 'text-positive' : 'text-negative'
                                                 }`}>

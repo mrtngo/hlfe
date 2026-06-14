@@ -7,6 +7,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
+import { formatUsdPrice } from '@/lib/format/price';
 import MiniChart from '@/components/MiniChart';
 import MarketSelectModal from '@/components/MarketSelectModal';
 import DepositModal from '@/components/DepositModal';
@@ -461,7 +462,7 @@ function WatchRowV2({
             </div>
             <div style={{ textAlign: 'right', minWidth: 76 }}>
                 <div style={{ fontSize: 15, fontWeight: 700, fontFamily: V2.mono, fontVariantNumeric: 'tabular-nums', letterSpacing: '-0.02em' }}>
-                    {market.price ? formatCurrency(market.price) : '0'}
+                    {market.price ? `$${formatUsdPrice(market.price, market)}` : '$0.00'}
                 </div>
                 <div style={{ marginTop: 4, display: 'flex', justifyContent: 'flex-end' }}>
                     <PctBadge v={ch} size="sm" />

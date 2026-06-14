@@ -7,6 +7,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
 import { isInCategory, type TokenCategory } from '@/lib/token-categories';
+import { formatUsdPrice } from '@/lib/format/price';
 import TokenLogo from '@/components/TokenLogo';
 import MiniChart from '@/components/MiniChart';
 import DepositModal from '@/components/DepositModal';
@@ -245,7 +246,7 @@ function HomePro({ onTokenClick, onBuyClick, onToggleProMode }: HomeProProps) {
                                             color: 'var(--color-text-secondary)',
                                         }}
                                     >
-                                        {formatCurrency(m.price || 0)}
+                                        ${formatUsdPrice(m.price || 0, m)}
                                     </span>
                                     <span
                                         style={{
@@ -666,7 +667,7 @@ function HomePro({ onTokenClick, onBuyClick, onToggleProMode }: HomeProProps) {
                                                         fontSize: 12,
                                                     }}
                                                 >
-                                                    {formatCurrency(market.price || 0)}
+                                                    ${formatUsdPrice(market.price || 0, market)}
                                                 </span>
                                                 <span
                                                     style={{

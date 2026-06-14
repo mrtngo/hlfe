@@ -54,11 +54,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const formatCurrency = (value: number, decimals?: number): string => {
     const t = translations[language];
+    const absValue = Math.abs(value);
 
     // Auto-detect appropriate decimals for small prices if not explicitly specified
     let targetDecimals = decimals;
     if (targetDecimals === undefined) {
-      const absValue = Math.abs(value);
       if (absValue > 0 && absValue < 0.0001) {
         targetDecimals = 8;
       } else if (absValue > 0 && absValue < 0.01) {
@@ -70,6 +70,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       } else {
         targetDecimals = 2;
       }
+    } else if (targetDecimals === 0 && absValue > 0 && absValue < 1) {
+      targetDecimals = absValue < 0.01 ? 4 : 2;
     }
 
     const formatted = formatNumber(Math.abs(value), targetDecimals);

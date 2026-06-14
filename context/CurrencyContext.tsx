@@ -67,8 +67,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     const formatCurrency = useCallback((value: number, maximumFractionDigits?: number) => {
         // Auto-detect appropriate decimals for small prices if not explicitly specified
         let decimals = maximumFractionDigits;
+        const absValue = Math.abs(value);
         if (decimals === undefined) {
-            const absValue = Math.abs(value);
             if (absValue > 0 && absValue < 0.0001) {
                 decimals = 8; // Very small prices (e.g., $0.00001234)
             } else if (absValue > 0 && absValue < 0.01) {
@@ -80,6 +80,8 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
             } else {
                 decimals = 2; // Normal prices
             }
+        } else if (decimals === 0 && absValue > 0 && absValue < 1) {
+            decimals = absValue < 0.01 ? 4 : 2;
         }
 
         if (currency === 'COP') {

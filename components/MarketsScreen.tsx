@@ -7,6 +7,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { usePreferences } from '@/hooks/usePreferences';
 import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
 import { CATEGORIES, marketMatchesCategory, type TokenCategory } from '@/lib/token-categories';
+import { formatUsdPrice } from '@/lib/format/price';
 import TokenLogo from '@/components/TokenLogo';
 import MiniChart from '@/components/MiniChart';
 import EmptyState from '@/components/EmptyState';
@@ -159,7 +160,7 @@ function MarketsScreen({ onTokenClick, onBack }: MarketsScreenProps) {
                                             </div>
                                         </div>
                                         <div style={{ textAlign: 'right', fontWeight: 600, color: '#E5E5E5' }}>
-                                            ${(m.price || 0).toLocaleString('en-US', { maximumFractionDigits: m.price && m.price < 1 ? 4 : 2 })}
+                                            ${formatUsdPrice(m.price || 0, m)}
                                         </div>
                                         <div style={{ textAlign: 'right', color: cl, fontWeight: 700 }}>
                                             {up ? '+' : ''}{(m.change24h || 0).toFixed(2)}%
@@ -280,7 +281,7 @@ function ListRowV2({ market, last, onClick }: { market: Market; last: boolean; o
             </div>
             <div style={{ textAlign: 'right', minWidth: 86, flexShrink: 0 }}>
                 <div style={{ fontFamily: V2.ui, fontWeight: 700, fontSize: 16, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>
-                    ${price.toLocaleString('en-US', { minimumFractionDigits: price < 10 ? 3 : 2, maximumFractionDigits: price < 10 ? 4 : 2 })}
+                    ${formatUsdPrice(price, market)}
                 </div>
                 <div style={{ marginTop: 5, display: 'flex', justifyContent: 'flex-end' }}>
                     <PctBadge v={ch} size="sm" />

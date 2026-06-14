@@ -6,6 +6,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { AlertCircle, Check, ChevronDown, Zap, X } from 'lucide-react';
 import TradeConfirmSheet from '@/components/TradeConfirmSheet';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
+import { priceDecimalsFromMarket } from '@/lib/format/price';
 
 // Order types
 type OrderType = 'market' | 'limit';
@@ -85,9 +86,9 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
     // Set price from market when switching to limit
     useEffect(() => {
         if (orderType === 'limit' && market?.price && !price) {
-            setPrice(market.price.toFixed(2));
+            setPrice(formatPrice(market.price));
         }
-    }, [orderType, market?.price, price]);
+    }, [orderType, market, price]);
 
     // Clamp leverage when market changes (different maxLeverage)
     useEffect(() => {
@@ -198,9 +199,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
     };
 
     const formatPrice = (p: number) => {
-        if (p >= 1000) return p.toFixed(2);
-        if (p >= 1) return p.toFixed(4);
-        return p.toFixed(6);
+        return p.toFixed(priceDecimalsFromMarket(market));
     };
 
     return (

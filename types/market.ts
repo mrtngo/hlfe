@@ -25,6 +25,8 @@ export interface Market {
     fundingRate: number;
     /** Size decimals for this market */
     szDecimals: number;
+    /** Display/price decimals derived from exchange precision rules */
+    priceDecimals?: number;
     /** Maximum allowed leverage */
     maxLeverage: number;
     /** Whether market only supports isolated margin */

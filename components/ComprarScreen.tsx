@@ -11,6 +11,7 @@ import DepositModal from '@/components/DepositModal';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import DcaScheduleSheet from '@/components/DcaScheduleSheet';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
+import { formatUsdPrice } from '@/lib/format/price';
 import { Loader2, ArrowDown, ArrowUpRight, AlertCircle, CheckCircle2, Sliders, Repeat, ChevronRight, Zap } from 'lucide-react';
 
 interface ComprarScreenProps {
@@ -127,10 +128,7 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
         );
     }
 
-    const formatPrice = (p: number) =>
-        p < 1
-            ? p.toFixed(4)
-            : p.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+    const formatPrice = (p: number, market = selectedMarket) => formatUsdPrice(p, market);
 
     return (
         <div className="relative pb-12">
@@ -553,7 +551,7 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
                                         className="tabular-mono text-[12px] mb-2"
                                         style={{ color: 'var(--color-text-secondary)' }}
                                     >
-                                        ${formatPrice(m.price || 0)}
+                                        ${formatPrice(m.price || 0, m)}
                                     </div>
                                     <div style={{ height: 26 }}>
                                         <MiniChart symbol={m.symbol} isStock={false} />
@@ -619,7 +617,7 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
                                             <div className="flex items-baseline gap-2">
                                                 <span className="font-bold text-[14px]" style={{ color: 'var(--color-text-primary)' }}>{m.name}</span>
                                                 <span className="tabular-mono text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                                                    ${formatPrice(m.price || 0)}
+                                                    ${formatPrice(m.price || 0, m)}
                                                 </span>
                                             </div>
                                         </div>

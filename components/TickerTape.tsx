@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useHyperliquid, type Market } from '@/hooks/useHyperliquid';
-import { useCurrency } from '@/context/CurrencyContext';
+import { formatUsdPrice } from '@/lib/format/price';
 
 interface TickerTapeProps {
     onSymbolClick?: (symbol: string) => void;
@@ -11,7 +11,6 @@ interface TickerTapeProps {
 
 export default function TickerTape({ onSymbolClick, count = 10 }: TickerTapeProps) {
     const { markets } = useHyperliquid();
-    const { formatCurrency } = useCurrency();
 
     const symbols: Market[] = useMemo(
         () =>
@@ -72,7 +71,7 @@ export default function TickerTape({ onSymbolClick, count = 10 }: TickerTapeProp
                         >
                             <span style={{ fontSize: 11, fontWeight: 700 }}>{m.name}</span>
                             <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                                {formatCurrency(m.price || 0)}
+                                ${formatUsdPrice(m.price || 0, m)}
                             </span>
                             <span style={{ fontSize: 11, color: cl, fontWeight: 700 }}>
                                 {up ? '▲' : '▼'} {Math.abs(m.change24h || 0).toFixed(2)}%

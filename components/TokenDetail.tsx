@@ -5,6 +5,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { getTokenFullName, getTokenDescription } from '@/lib/constants';
+import { priceDecimalsFromMarket } from '@/lib/format/price';
 import TokenCandleChart from '@/components/TokenCandleChart';
 import ClosePositionSheet from '@/components/ClosePositionSheet';
 import { ScreenV2, BigMoney, PctBadge, MarketLogo, Icon, V2 } from '@/components/V2Kit';
@@ -61,6 +62,7 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
     }
 
     const price = market.price || 0;
+    const displayDecimals = priceDecimalsFromMarket(market);
     const changeAbs = (price * (market.change24h || 0)) / 100;
 
     const stats = [
@@ -97,10 +99,10 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                     </div>
                 </div>
                 <div style={{ marginTop: 20 }}>
-                    <BigMoney value={price} size={44} decimals={price < 1 ? 4 : 2} />
+                    <BigMoney value={price} size={44} decimals={displayDecimals} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 12 }}>
                         <span style={{ color: up ? V2.pos : V2.neg, fontWeight: 700, fontSize: 16, fontFamily: V2.mono }}>
-                            {up ? '+' : '-'}${Math.abs(changeAbs).toLocaleString('en-US', { maximumFractionDigits: price < 1 ? 4 : 2 })}
+                            {up ? '+' : '-'}${Math.abs(changeAbs).toLocaleString('en-US', { maximumFractionDigits: displayDecimals })}
                         </span>
                         <PctBadge v={market.change24h || 0} />
                     </div>
