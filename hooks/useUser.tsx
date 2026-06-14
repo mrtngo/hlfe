@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
-import { db, User } from '@/lib/supabase/client';
+import { usePrivy } from '@privy-io/react-auth';
+import { User } from '@/lib/supabase/client';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { CURRENT_PRIVACY_POLICY_VERSION, needsConsent as policyNeedsConsent } from '@/lib/compliance/consent';
+import { ApiRequestError, authedJson } from '@/lib/api/authed-fetch';
 
 const REFERRAL_STORAGE_KEY = 'rayo_referral_code';
 const CONSENT_STORAGE_PREFIX = 'rayo_privacy_consent_v';
@@ -40,6 +42,7 @@ const deriveReferralCode = (name: string): string =>
 type DbErrorLike = { code?: string; message?: string };
 
 function toDbError(err: unknown): DbErrorLike {
+    if (err instanceof ApiRequestError) return { code: err.code, message: err.message };
     if (typeof err === 'object' && err !== null) return err as DbErrorLike;
     return { message: String(err) };
 }
@@ -139,6 +142,7 @@ function getAndStoreReferralCode(): string | null {
 
 export function UserProvider({ children }: { children: ReactNode }) {
     const { address, connected } = useHyperliquid();
+    const { getAccessToken } = usePrivy();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -164,40 +168,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setError(null);
 
         try {
-            // Check if user exists
-            let userData = await db.users.getByWallet(address);
+            const referralCode = typeof window !== 'undefined'
+                ? localStorage.getItem(REFERRAL_STORAGE_KEY)
+                : null;
+            const query = new URLSearchParams({ walletAddress: address });
+            if (referralCode && isValidReferralCode(referralCode)) query.set('referralCode', referralCode);
+            const { user: userData } = await authedJson<{ user: User }>(
+                `/api/account/profile?${query.toString()}`,
+                getAccessToken,
+            );
 
-            if (!userData) {
-                // New user - check for referral code
-                const referralCode = typeof window !== 'undefined'
-                    ? localStorage.getItem(REFERRAL_STORAGE_KEY)
-                    : null;
-
-                let referrer: User | null = null;
-
-                if (referralCode && isValidReferralCode(referralCode)) {
-                    // Look up referrer by code
-                    referrer = await db.users.getByReferralCode(referralCode);
-                    if (referrer) {
-                        console.log('🔗 Found referrer:', referrer.username || referrer.wallet_address);
-                    }
-                }
-
-                // Create user with referral info
-                userData = await db.users.create(address, undefined, referrer?.id);
-
-                // Create referral record immediately after user creation (no race condition)
-                if (userData && referrer && referralCode) {
-                    try {
-                        await db.referrals.create(referrer.id, userData.id, referralCode);
-                        console.log('✅ Created referral link');
-                        // Clear stored referral code only after successful creation
-                        localStorage.removeItem(REFERRAL_STORAGE_KEY);
-                    } catch (refErr) {
-                        console.error('Failed to create referral link:', refErr);
-                        // Don't fail user creation if referral fails
-                    }
-                }
+            if (referralCode && userData.referred_by && typeof window !== 'undefined') {
+                localStorage.removeItem(REFERRAL_STORAGE_KEY);
             }
 
             setUser(userData);
@@ -207,7 +189,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoading(false);
         }
-    }, [address, connected]);
+    }, [address, connected, getAccessToken]);
 
     // Auto-fetch user on wallet connection
     useEffect(() => {
@@ -232,7 +214,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
 
         try {
-            const updatedUser = await db.users.update(address, { username: trimmedUsername });
+            const { user: updatedUser } = await authedJson<{ user: User }>(
+                '/api/account/profile',
+                getAccessToken,
+                {
+                    method: 'PATCH',
+                    body: JSON.stringify({ walletAddress: address, username: trimmedUsername }),
+                },
+            );
             if (updatedUser) {
                 setUser(updatedUser);
                 return { success: true, message: 'Username updated!' };
@@ -245,7 +234,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
             return { success: false, message: dbErr.message || 'Failed to update username' };
         }
-    }, [address]);
+    }, [address, getAccessToken]);
 
     // Update profile with sanitization
     const updateProfile = useCallback(async (updates: { display_name?: string; avatar_url?: string }): Promise<{ success: boolean; message: string }> => {
@@ -272,7 +261,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
 
         try {
-            const updatedUser = await db.users.update(address, sanitizedUpdates);
+            const { user: updatedUser } = await authedJson<{ user: User }>(
+                '/api/account/profile',
+                getAccessToken,
+                {
+                    method: 'PATCH',
+                    body: JSON.stringify({ walletAddress: address, ...sanitizedUpdates }),
+                },
+            );
             if (updatedUser) {
                 setUser(updatedUser);
                 return { success: true, message: 'Profile updated!' };
@@ -282,7 +278,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             const dbErr = toDbError(err);
             return { success: false, message: dbErr.message || 'Failed to update profile' };
         }
-    }, [address]);
+    }, [address, getAccessToken]);
 
     // Update display name + derive a referral code from it. Ensures the code
     // is unique by appending a numeric suffix on collision.
@@ -299,15 +295,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
             return { success: false, message: 'El nombre necesita al menos 3 letras o números' };
         }
 
-        // Names must be unique — the referral code is derived from the name, so
-        // a code collision means the name is taken by someone else.
-        const existing = await db.users.getByReferralCode(code);
-        if (existing && existing.id !== user?.id) {
-            return { success: false, message: 'Ese nombre ya está en uso' };
-        }
-
         try {
-            const updatedUser = await db.users.update(address, { display_name: clean, referral_code: code });
+            const { user: updatedUser } = await authedJson<{ user: User }>(
+                '/api/account/profile',
+                getAccessToken,
+                {
+                    method: 'PATCH',
+                    body: JSON.stringify({ walletAddress: address, display_name: clean, referral_code: code }),
+                },
+            );
             if (updatedUser) {
                 setUser(updatedUser);
                 return { success: true, message: 'Nombre actualizado' };
@@ -321,7 +317,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
             return { success: false, message: dbErr.message || 'Error al actualizar' };
         }
-    }, [address, user?.id]);
+    }, [address, getAccessToken]);
 
     const refreshUser = useCallback(async () => {
         await fetchOrCreateUser();
@@ -352,28 +348,49 @@ export function UserProvider({ children }: { children: ReactNode }) {
             }
             : prev);
 
-        const ok = await db.consents.record({
-            userId: user?.id ?? null,
-            walletAddress: address,
-            policyVersion,
-            intlTransfer: opts?.intlTransfer ?? true,
-            locale: opts?.locale,
-        });
-        if (ok) await fetchOrCreateUser(); // refresh the consent pointer
+        try {
+            const { user: updatedUser } = await authedJson<{ user: User }>(
+                '/api/account/consent',
+                getAccessToken,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        walletAddress: address,
+                        policyVersion,
+                        intlTransfer: opts?.intlTransfer ?? true,
+                        locale: opts?.locale,
+                    }),
+                },
+            );
+            setUser(updatedUser);
+        } catch (err) {
+            console.error('Error recording consent:', err);
+        }
         return true;
-    }, [address, user?.id, fetchOrCreateUser]);
+    }, [address, getAccessToken]);
 
     const exportData = useCallback(async (): Promise<Record<string, unknown> | null> => {
         if (!address) return null;
-        return db.account.exportData(address);
-    }, [address]);
+        const { data } = await authedJson<{ data: Record<string, unknown> }>(
+            `/api/account/data?walletAddress=${encodeURIComponent(address)}`,
+            getAccessToken,
+        );
+        return data;
+    }, [address, getAccessToken]);
 
     const deleteAccount = useCallback(async (): Promise<boolean> => {
         if (!address) return false;
-        const ok = await db.account.deleteAccount(address);
-        if (ok) setUser(null);
-        return ok;
-    }, [address]);
+        await authedJson<{ ok: boolean }>(
+            '/api/account/data',
+            getAccessToken,
+            {
+                method: 'DELETE',
+                body: JSON.stringify({ walletAddress: address }),
+            },
+        );
+        setUser(null);
+        return true;
+    }, [address, getAccessToken]);
 
     return (
         <UserContext.Provider value={{

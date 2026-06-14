@@ -7,9 +7,10 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { createHyperliquidClient } from '@/lib/hyperliquid/client';
 import { cachedFetch, apiCache } from '@/lib/api-cache';
-import { db } from '@/lib/supabase/client';
+import { authedJson } from '@/lib/api/authed-fetch';
 import type { Fill, FundingEntry } from '@/types';
 
 interface UserDataState {
@@ -31,6 +32,7 @@ export type UserDataResult = UserDataState & UserDataActions;
  * @param address - User's wallet address (lowercase)
  */
 export function useUserData(address: string | null): UserDataResult {
+    const { getAccessToken } = usePrivy();
     const [fills, setFills] = useState<Fill[]>([]);
     const [funding, setFunding] = useState<FundingEntry[]>([]);
     const [thirtyDayPnl, setThirtyDayPnl] = useState(0);
@@ -143,16 +145,7 @@ export function useUserData(address: string | null): UserDataResult {
     const syncTrades = useCallback(async (): Promise<{ synced: number; totalPnl: number } | null> => {
         if (!address) return null;
 
-        console.log('🔄 [SYNC] Starting trade sync from Hyperliquid fills...');
-
         try {
-            // Get user from database
-            const user = await db.users.getOrCreate(address);
-            if (!user) {
-                console.error('❌ [SYNC] Could not get/create user');
-                return null;
-            }
-
             // Force refresh fills from Hyperliquid
             apiCache.invalidate(`user_fills:${address.toLowerCase()}`);
 
@@ -161,23 +154,25 @@ export function useUserData(address: string | null): UserDataResult {
             const freshFills = await client.info.getUserFills(normalizedAddress);
 
             if (!freshFills || freshFills.length === 0) {
-                console.log('⚠️ [SYNC] No fills found from Hyperliquid');
                 return { synced: 0, totalPnl: 0 };
             }
 
-            console.log(`🔄 [SYNC] Found ${freshFills.length} fills from Hyperliquid`);
-
-            // Sync to database
-            const result = await db.trades.syncFromFills(user.id, freshFills as any[]);
-
-            console.log(`✅ [SYNC] Synced ${result.synced} trades, total PnL: $${result.totalPnl.toFixed(2)}`);
-
-            return result;
+            return authedJson<{ synced: number; totalPnl: number }>(
+                '/api/account/trades/sync',
+                getAccessToken,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        walletAddress: address,
+                        fills: freshFills,
+                    }),
+                },
+            );
         } catch (error) {
             console.error('❌ [SYNC] Failed to sync trades:', error);
             return null;
         }
-    }, [address]);
+    }, [address, getAccessToken]);
 
     return {
         fills,

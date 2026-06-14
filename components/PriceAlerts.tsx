@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Bell, BellPlus, Trash2, TrendingUp, TrendingDown, X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useLanguage } from '@/hooks/useLanguage';
-import { db, PriceAlert } from '@/lib/supabase/client';
+import { PriceAlert } from '@/lib/supabase/client';
 import { useUser } from '@/hooks/useUser';
+import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { authedJson } from '@/lib/api/authed-fetch';
 import TokenLogo from './TokenLogo';
 
 interface PriceAlertsProps {
@@ -16,6 +19,8 @@ interface PriceAlertsProps {
 
 export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = false }: PriceAlertsProps) {
     const { user } = useUser();
+    const { address } = useHyperliquid();
+    const { getAccessToken } = usePrivy();
     const { formatCurrency, formatNumber } = useLanguage();
     const [alerts, setAlerts] = useState<PriceAlert[]>([]);
     const [loading, setLoading] = useState(true);
@@ -30,13 +35,16 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
 
     // Fetch user's alerts
     const fetchAlerts = useCallback(async () => {
-        if (!user?.id) {
+        if (!address) {
             setLoading(false);
             return;
         }
 
         try {
-            const userAlerts = await db.priceAlerts.getByUser(user.id);
+            const { alerts: userAlerts } = await authedJson<{ alerts: PriceAlert[] }>(
+                `/api/price-alerts?walletAddress=${encodeURIComponent(address)}`,
+                getAccessToken,
+            );
             // Filter by symbol if provided
             if (symbol) {
                 setAlerts((userAlerts || []).filter(a => a.symbol === symbol || a.symbol === symbol.replace('-USD', '')));
@@ -48,7 +56,7 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
         } finally {
             setLoading(false);
         }
-    }, [user?.id, symbol]);
+    }, [address, getAccessToken, symbol]);
 
     useEffect(() => {
         fetchAlerts();
@@ -78,7 +86,7 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
 
     // Create new alert
     const handleCreateAlert = async () => {
-        if (!user?.id) {
+        if (!address || !user) {
             setError('Please connect your wallet first');
             return;
         }
@@ -106,7 +114,19 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
 
         try {
             const cleanSymbol = selectedSymbol.replace('-USD', '');
-            const alert = await db.priceAlerts.create(user.id, cleanSymbol, price, direction);
+            const { alert } = await authedJson<{ alert: PriceAlert }>(
+                '/api/price-alerts',
+                getAccessToken,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        walletAddress: address,
+                        symbol: cleanSymbol,
+                        targetPrice: price,
+                        direction,
+                    }),
+                },
+            );
 
             if (alert) {
                 setAlerts(prev => [alert, ...prev]);
@@ -127,10 +147,13 @@ export default function PriceAlerts({ symbol, currentPrice, onClose, isModal = f
     // Delete alert
     const handleDeleteAlert = async (alertId: string) => {
         try {
-            const success = await db.priceAlerts.delete(alertId);
-            if (success) {
-                setAlerts(prev => prev.filter(a => a.id !== alertId));
-            }
+            if (!address) return;
+            await authedJson<{ ok: boolean }>(
+                `/api/price-alerts?walletAddress=${encodeURIComponent(address)}&id=${encodeURIComponent(alertId)}`,
+                getAccessToken,
+                { method: 'DELETE' },
+            );
+            setAlerts(prev => prev.filter(a => a.id !== alertId));
         } catch (err) {
             console.error('Error deleting alert:', err);
         }

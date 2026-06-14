@@ -1,14 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
+import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { db, User } from '@/lib/supabase/client';
+import { User } from '@/lib/supabase/client';
+import { authedJson } from '@/lib/api/authed-fetch';
 import { Gift, Copy, Check, Users, DollarSign, Share2, UserPlus } from 'lucide-react';
 
 export default function ReferralPage() {
     const { t } = useLanguage();
     const { user } = useUser();
+    const { address } = useHyperliquid();
+    const { getAccessToken } = usePrivy();
     const [copied, setCopied] = useState(false);
     const [referredUsers, setReferredUsers] = useState<User[]>([]);
     const [totalEarnings, setTotalEarnings] = useState(0);
@@ -20,16 +25,16 @@ export default function ReferralPage() {
 
     useEffect(() => {
         const fetchReferralData = async () => {
-            if (!user?.id) return;
+            if (!user?.id || !address) return;
 
             setLoading(true);
             try {
-                const [users, earnings] = await Promise.all([
-                    db.referrals.getReferredUsers(user.id),
-                    db.referrals.getTotalEarnings(user.id),
-                ]);
-                setReferredUsers(users);
-                setTotalEarnings(earnings);
+                const data = await authedJson<{ referredUsers: User[]; totalEarned: number }>(
+                    `/api/referrals?walletAddress=${encodeURIComponent(address)}`,
+                    getAccessToken,
+                );
+                setReferredUsers(data.referredUsers);
+                setTotalEarnings(data.totalEarned);
             } catch (err) {
                 console.error('Error fetching referral data:', err);
             } finally {
@@ -38,7 +43,7 @@ export default function ReferralPage() {
         };
 
         fetchReferralData();
-    }, [user?.id]);
+    }, [address, getAccessToken, user?.id]);
 
     const copyReferralLink = async () => {
         if (referralLink) {

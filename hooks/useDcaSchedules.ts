@@ -1,13 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { db, type DcaSchedule, type DcaScheduleInput } from '@/lib/supabase/client';
-import { useUser } from '@/hooks/useUser';
+import { usePrivy } from '@privy-io/react-auth';
+import { type DcaSchedule, type DcaScheduleInput } from '@/lib/supabase/client';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { authedJson } from '@/lib/api/authed-fetch';
 
 export function useDcaSchedules() {
-    const { user } = useUser();
     const { address } = useHyperliquid();
+    const { getAccessToken } = usePrivy();
     const [schedules, setSchedules] = useState<DcaSchedule[]>([]);
     const [loading, setLoading] = useState(false);
 
@@ -18,12 +19,15 @@ export function useDcaSchedules() {
         }
         setLoading(true);
         try {
-            const data = await db.dcaSchedules.listByWallet(address);
+            const { schedules: data } = await authedJson<{ schedules: DcaSchedule[] }>(
+                `/api/dca-schedules?walletAddress=${encodeURIComponent(address)}`,
+                getAccessToken,
+            );
             setSchedules(data);
         } finally {
             setLoading(false);
         }
-    }, [address]);
+    }, [address, getAccessToken]);
 
     useEffect(() => { refresh(); }, [refresh]);
 
@@ -31,32 +35,51 @@ export function useDcaSchedules() {
         async (
             partial: Omit<DcaScheduleInput, 'user_id' | 'wallet_address'>,
         ): Promise<DcaSchedule | null> => {
-            if (!address || !user?.id) {
+            if (!address) {
                 console.warn('Cannot create DCA schedule without authenticated user');
                 return null;
             }
-            const created = await db.dcaSchedules.create({
-                ...partial,
-                user_id: user.id,
-                wallet_address: address,
-            });
+            const { schedule: created } = await authedJson<{ schedule: DcaSchedule }>(
+                '/api/dca-schedules',
+                getAccessToken,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        walletAddress: address,
+                        ...partial,
+                    }),
+                },
+            );
             if (created) await refresh();
             return created;
         },
-        [address, user, refresh],
+        [address, getAccessToken, refresh],
     );
 
     const setActive = useCallback(async (id: string, active: boolean) => {
-        const ok = await db.dcaSchedules.setActive(id, active);
-        if (ok) await refresh();
-        return ok;
-    }, [refresh]);
+        if (!address) return false;
+        await authedJson<{ ok: boolean }>(
+            '/api/dca-schedules',
+            getAccessToken,
+            {
+                method: 'PATCH',
+                body: JSON.stringify({ walletAddress: address, id, isActive: active }),
+            },
+        );
+        await refresh();
+        return true;
+    }, [address, getAccessToken, refresh]);
 
     const remove = useCallback(async (id: string) => {
-        const ok = await db.dcaSchedules.delete(id);
-        if (ok) await refresh();
-        return ok;
-    }, [refresh]);
+        if (!address) return false;
+        await authedJson<{ ok: boolean }>(
+            `/api/dca-schedules?walletAddress=${encodeURIComponent(address)}&id=${encodeURIComponent(id)}`,
+            getAccessToken,
+            { method: 'DELETE' },
+        );
+        await refresh();
+        return true;
+    }, [address, getAccessToken, refresh]);
 
     return { schedules, loading, refresh, create, setActive, remove };
 }

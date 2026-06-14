@@ -1,4 +1,6 @@
 
+const DEBUG_SIGNING = process.env.NODE_ENV === 'development';
+
 export class BrowserWallet {
     private provider: any;
     private walletClient: any; // wagmi wallet client
@@ -59,15 +61,16 @@ export class BrowserWallet {
         // Auto detect the primaryType from the types object
         const primaryType = Object.keys(restTypes)[0] || 'Agent';
 
-        console.log('Signing typed data:', { domain, types: restTypes, primaryType, message: value });
-        console.log('Connection ID (Action Hash):', value.connectionId);
+        if (DEBUG_SIGNING) {
+            console.debug('Signing typed data', { primaryType, hasConnectionId: Boolean(value.connectionId) });
+        }
 
         // Use wagmi wallet client if available (better compatibility with Privy)
         // But we need to use the provider's eth_signTypedData_v4 directly to match SDK's exact format
         if (this.walletClient) {
             try {
                 const currentAddress = await this.getAddress();
-                console.log('Signing with wagmi wallet client, address:', currentAddress);
+                if (DEBUG_SIGNING) console.debug('Signing with wagmi wallet client');
                 
                 // Get the underlying provider from wagmi wallet client
                 // The SDK constructs the exact message format, so we need to use eth_signTypedData_v4 directly
@@ -94,7 +97,7 @@ export class BrowserWallet {
                         params: [currentAddress, msgParams],
                     });
                     
-                    console.log('Signature from provider via wagmi:', signature);
+                    if (DEBUG_SIGNING) console.debug('Signature created via wagmi provider');
                     return signature;
                 } else {
                     // Fall back to wagmi's signTypedData
@@ -105,7 +108,7 @@ export class BrowserWallet {
                         message: value,
                     });
                     
-                    console.log('Signature from wagmi:', signature);
+                    if (DEBUG_SIGNING) console.debug('Signature created via wagmi');
                     return signature;
                 }
             } catch (error) {

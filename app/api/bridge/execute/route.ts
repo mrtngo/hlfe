@@ -156,11 +156,11 @@ export async function POST(request: NextRequest) {
             recipient: recipient || depositor,
         });
 
-        console.log('User quote result:', JSON.stringify(userQuoteResult, null, 2));
+        console.log('Rhino user quote received', { hasError: Boolean(userQuoteResult.error) });
 
         if (userQuoteResult.error) {
             return NextResponse.json(
-                { error: `Quote error: ${JSON.stringify(userQuoteResult.error)}` },
+                { error: 'Quote error' },
                 { status: 400 }
             );
         }
@@ -170,11 +170,11 @@ export async function POST(request: NextRequest) {
         // Step 3: Commit the quote to get commitment ID
         const commitmentResult = await rhinoSdk.api.bridge.commitQuote(quoteId);
 
-        console.log('Commitment result:', JSON.stringify(commitmentResult, null, 2));
+        console.log('Rhino quote committed', { quoteId, hasError: Boolean(commitmentResult.error) });
 
         if (commitmentResult.error) {
             return NextResponse.json(
-                { error: `Commitment error: ${JSON.stringify(commitmentResult.error)}` },
+                { error: 'Commitment error' },
                 { status: 400 }
             );
         }

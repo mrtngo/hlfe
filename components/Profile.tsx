@@ -5,8 +5,9 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { db, User } from '@/lib/supabase/client';
+import { User } from '@/lib/supabase/client';
 import { clearAgentWallet } from '@/lib/agent-wallet';
+import { authedJson } from '@/lib/api/authed-fetch';
 import { LogOut, Copy, Check, User as UserIcon, Loader2, AlertCircle, Gift, Globe, Zap, Share2, RefreshCw, TrendingUp, ArrowLeftRight, Bell, Book, ExternalLink, MessageSquare, HelpCircle, Scale, Repeat } from 'lucide-react';
 import { DOCS_URL } from '@/lib/constants';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -17,7 +18,7 @@ import DcaSchedulesList from './DcaSchedulesList';
 export default function Profile() {
     const { t, language, setLanguage } = useLanguage();
     const { address, account, builderFeeApproved, approveBuilderFee, agentWalletEnabled, setupAgentWallet, syncTrades, dexAbstractionEnabled, dexAbstractionLoading, enableDexAbstraction, fills } = useHyperliquid();
-    const { logout, exportWallet, user: privyUser } = usePrivy();
+    const { logout, exportWallet, user: privyUser, getAccessToken } = usePrivy();
     const { user, loading: userLoading, updateUsername } = useUser();
     const pushNotifications = usePushNotifications();
 
@@ -63,15 +64,15 @@ export default function Profile() {
 
     useEffect(() => {
         const fetchReferralData = async () => {
-            if (!user?.id) return;
+            if (!user?.id || !address) return;
             setLoadingReferrals(true);
             try {
-                const [users, earnings] = await Promise.all([
-                    db.referrals.getReferredUsers(user.id),
-                    db.referrals.getTotalEarnings(user.id),
-                ]);
-                setReferredUsers(users);
-                setTotalEarnings(earnings);
+                const data = await authedJson<{ referredUsers: User[]; totalEarned: number }>(
+                    `/api/referrals?walletAddress=${encodeURIComponent(address)}`,
+                    getAccessToken,
+                );
+                setReferredUsers(data.referredUsers);
+                setTotalEarnings(data.totalEarned);
             } catch (err) {
                 console.error('Error fetching referral data:', err);
             } finally {
@@ -79,7 +80,7 @@ export default function Profile() {
             }
         };
         fetchReferralData();
-    }, [user?.id]);
+    }, [address, getAccessToken, user?.id]);
 
     const saveUsername = async () => {
         if (!tempUsername.trim()) {

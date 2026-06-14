@@ -347,7 +347,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const lowercasedAddress = connectedWallet.address.toLowerCase();
                 setAddress(lowercasedAddress);
                 setIsConnected(true);
-                console.log('Connected wallet address:', lowercasedAddress, 'Type:', connectedWallet.walletClientType || 'external');
+                console.log('Wallet connected', { type: connectedWallet.walletClientType || 'external' });
             }
         } else {
             setAddress(null);
@@ -1329,19 +1329,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 reduce_only: reduceOnly || false
             };
 
-            // orderToWire formats the price and size correctly according to Hyperliquid requirements
-            console.log('📝 Order Request before orderToWire:', JSON.stringify(orderRequest, null, 2));
-
             // For HIP-3 DEX assets (Trade.xyz), use 110000 + index offset
             // For spot assets use 10000 + index
             const wireAssetIndex = isTradeXyzAsset ? 110000 + assetIndex : (isSpot ? 10000 + assetIndex : assetIndex);
-            console.log('📝 Asset Index:', assetIndex, 'Wire Asset Index:', wireAssetIndex, 'Asset Name:', assetName);
             const wireOrder = orderToWire(orderRequest, wireAssetIndex);
-
-            console.log('📝 Market szDecimals:', market?.szDecimals);
-            console.log('📝 Original size:', size, 'Rounded size:', roundedSize);
-            console.log('📝 Formatted price:', formattedPrice, 'Formatted size:', formattedSize);
-            console.log('📝 Wire order:', JSON.stringify(wireOrder, null, 2));
 
             // Build action payload with optional builder fee (mainnet only)
             // Builder codes allow Rayo to receive a small fee on each trade
@@ -1364,7 +1355,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     b: BUILDER_CONFIG.address.toLowerCase(),
                     f: BUILDER_CONFIG.fee
                 };
-                console.log('💰 Builder fee enabled:', actionPayload.builder);
             }
 
             // 4. Sign action
@@ -1383,8 +1373,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // `agentWalletEnabled` React flag (see leverage note above).
             if (agent && agentSigner && isApproved) {
                 // Use agent wallet - no user signature needed!
-                console.log('✅ Using approved agent wallet - NO signature prompt needed!');
-                console.log('Agent address:', agent.address);
+                console.log('✅ Using approved agent wallet - no signature prompt needed');
                 usingAgentWallet = true;
 
                 // Create a BrowserWallet-like interface for the agent
@@ -1394,7 +1383,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     signTypedData: async (domain: any, types: any, value: any) => {
                         // Remove EIP712Domain from types if present
                         const { EIP712Domain, ...restTypes } = types;
-                        console.log('🔐 Signing with agent wallet (no user prompt)');
                         return await agentSigner.signTypedData(domain, restTypes, value);
                     },
                 };
@@ -1432,14 +1420,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
             }
 
-            console.log('=== DEBUG: Action Before Signing ===');
-            console.log('Action Payload:', JSON.stringify(actionPayload, null, 2));
-            console.log('Vault Address:', null);
-            console.log('Nonce:', nonce);
-            console.log('IS_TESTNET:', IS_TESTNET);
-            console.log('Wire Order:', JSON.stringify(wireOrder, null, 2));
-            console.log('===================================');
-
             // Sign with either agent wallet (no prompt) or user wallet (prompt)
             const signature = await signL1Action(
                 browserWallet as any,
@@ -1455,10 +1435,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 console.log('✅ Order signed with user wallet');
             }
 
-            console.log('Connected wallet address:', address);
-            console.log('Action payload:', actionPayload);
-            console.log('Signature:', signature);
-
             // 5. Send to API
             const payload = {
                 action: actionPayload,
@@ -1473,14 +1449,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 throw new Error(`Rate limited. Please wait ${waitTime} seconds before trying again.`);
             }
 
-            console.log('📤 Sending order to API:', JSON.stringify(payload, null, 2));
+            console.log('📤 Sending order to API');
 
             // For Trade.xyz assets, include dex parameter as query string
             const exchangeUrl = isTradeXyzAsset
                 ? `${API_URL}/exchange?dex=xyz`
                 : `${API_URL}/exchange`;
 
-            console.log('📤 Endpoint:', exchangeUrl, 'isTradeXyzAsset:', isTradeXyzAsset);
+            console.log('📤 Exchange endpoint selected:', { isTradeXyzAsset });
 
             const response = await fetch(exchangeUrl, {
                 method: 'POST',
@@ -2053,9 +2029,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const wireAssetIndex = isTradeXyzAsset ? 110000 + assetIndex : assetIndex;
             const wireOrder = orderToWire(orderRequest, wireAssetIndex);
 
-            console.log('📝 Trigger order request:', JSON.stringify(orderRequest, null, 2));
-            console.log('📝 Wire order from SDK:', JSON.stringify(wireOrder, null, 2));
-
             // Sign and send order
             const actionPayload = {
                 type: 'order',
@@ -2066,9 +2039,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // CRITICAL: Trigger orders MUST use user wallet, NOT agent wallet
             // Hyperliquid requires user signature for trigger orders (SL/TP)
             // We bypass agent wallet for this specific transaction without disabling it
-            console.log('🎯 Placing trigger order with USER wallet (bypassing agent wallet)');
-            console.log('User address:', address);
-            console.log('Trigger type:', triggerType, 'Price:', triggerPrice, 'Size:', roundedSize);
+            console.log('🎯 Placing trigger order with user wallet', { triggerType });
 
             // Get user's wallet provider (bypass agent wallet for trigger orders)
             let signingProvider = null;
@@ -2090,10 +2061,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const lowercasedAddress = address.toLowerCase();
             const browserWallet = new BrowserWallet(lowercasedAddress, signingProvider);
 
-            console.log('📝 Trigger Order Wire:', JSON.stringify(wireOrder, null, 2));
-            console.log('📝 Action Payload:', JSON.stringify(actionPayload, null, 2));
-            console.log('📝 Signing with USER address (NOT agent):', lowercasedAddress);
-
             const nonce = Date.now();
             const signature = await signL1Action(
                 browserWallet as any,
@@ -2103,12 +2070,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 !IS_TESTNET
             );
 
-            console.log('✅ Signature created');
-            console.log('📝 Signature:', signature);
+            console.log('✅ Trigger order signature created');
 
             // Double-check the signer address
             const walletAddress = await browserWallet.getAddress();
-            console.log('📝 Wallet address used for signing:', walletAddress);
+            if (walletAddress !== lowercasedAddress) {
+                console.warn('Trigger order signer address differed from expected wallet');
+            }
 
             const payload = {
                 action: actionPayload,
@@ -2124,7 +2092,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 ? `${API_URL}/exchange?dex=xyz`
                 : `${API_URL}/exchange`;
 
-            console.log('📤 Endpoint:', exchangeUrl, 'isTradeXyzAsset:', isTradeXyzAsset);
+            console.log('📤 Trigger endpoint selected:', { isTradeXyzAsset });
 
             const response = await fetch(exchangeUrl, {
                 method: 'POST',
@@ -2690,7 +2658,6 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 console.log('🪙 HIP-4 agent check:', {
                     agentWalletEnabled,
                     hasAgent: !!agent,
-                    agentAddr: agent?.address,
                     hasSigner: !!agentSigner,
                     isApproved,
                 });
@@ -2714,9 +2681,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             );
                         },
                     };
-                    console.log(
-                        `🪙 HIP-4 signing as agent ${agent.address}`,
-                    );
+                    console.log('🪙 HIP-4 signing with approved agent');
                 } else {
                     return {
                         filled: false,

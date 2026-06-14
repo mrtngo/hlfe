@@ -468,9 +468,7 @@ export async function approveAgentWallet(
             validAgentName = 'Rayo Agent';
         }
         
-        console.log('🔐 Approving agent via SDK...');
-        console.log('Agent address:', agentAddress.toLowerCase());
-        console.log('Agent name:', validAgentName, `(${validAgentName.length} chars)`);
+        console.log('🔐 Approving agent via SDK', { agentNameLength: validAgentName.length });
         
         // Use SDK's approveAgent method - it will use our custom wallet for signing
         const approveRequest = {
@@ -524,4 +522,3 @@ export function getAgentSigner(agent?: AgentWallet | null): ethers.Wallet | null
         return null;
     }
 }
-

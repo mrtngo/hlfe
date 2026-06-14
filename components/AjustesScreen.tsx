@@ -84,9 +84,8 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
         }
     };
 
-    // Right of suppression: delete our DB data, then log out of Privy. NOTE:
-    // this does not yet delete the Privy account itself (email + keys) — that
-    // needs a server route with PRIVY_APP_SECRET (see app/api/account/delete).
+    // Right of suppression: delete our DB data, then best-effort delete the
+    // Privy account (email + keys) via the server route.
     const handleDeleteAccount = async () => {
         const ok = window.confirm(
             es
@@ -96,6 +95,7 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
         if (!ok) return;
         setDeleting(true);
         try {
+            await requireMfa();
             const done = await deleteAccount();
             if (!done) {
                 setSecErr(es ? 'No se pudo eliminar la cuenta.' : 'Could not delete account.');

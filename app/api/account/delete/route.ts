@@ -1,10 +1,9 @@
 /**
  * Account deletion — Privy side (right of suppression, Art. 8 Ley 1581).
  *
- * The client deletes our Supabase rows directly (db.account.deleteAccount), but
- * the user's email + embedded-wallet keys live in Privy and can only be removed
- * server-side with the app secret. This route does that via Privy's REST API —
- * no extra dependency, just fetch.
+ * Supabase account rows are deleted via app/api/account/data. The user's email
+ * + embedded-wallet keys live in Privy and can only be removed server-side
+ * with the app secret. This route does that via Privy's REST API.
  *
  * Requires env:
  *   NEXT_PUBLIC_PRIVY_APP_ID  (already used by the client)

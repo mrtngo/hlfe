@@ -11,7 +11,7 @@ export interface VerifiedPrivySession {
 
 let cachedClient: PrivyClient | null = null;
 
-function getPrivyClient(): PrivyClient {
+export function getPrivyClient(): PrivyClient {
     const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
     const appSecret = process.env.PRIVY_APP_SECRET;
 
@@ -52,5 +52,57 @@ export async function verifyPrivyRequest(request: NextRequest): Promise<Verified
         userId: verified.user_id,
         sessionId: verified.session_id,
         appId: verified.app_id,
+    };
+}
+
+function normalizeWalletAddress(walletAddress: string): string {
+    const normalized = walletAddress.trim().toLowerCase();
+    if (!/^0x[a-f0-9]{40}$/.test(normalized)) {
+        throw new Error('Invalid wallet address.');
+    }
+    return normalized;
+}
+
+function hasAddress(value: unknown): value is { address: string } {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        'address' in value &&
+        typeof (value as { address?: unknown }).address === 'string'
+    );
+}
+
+function linkedWalletAddresses(user: unknown): string[] {
+    if (typeof user !== 'object' || user === null) {
+        return [];
+    }
+
+    const linkedAccounts = 'linked_accounts' in user && Array.isArray((user as { linked_accounts?: unknown }).linked_accounts)
+        ? (user as { linked_accounts: unknown[] }).linked_accounts
+        : [];
+    const primaryWallet = 'wallet' in user ? [(user as { wallet?: unknown }).wallet] : [];
+
+    return [...linkedAccounts, ...primaryWallet]
+        .filter(hasAddress)
+        .map((account) => account.address.trim().toLowerCase())
+        .filter((address) => /^0x[a-f0-9]{40}$/.test(address));
+}
+
+export async function verifyPrivyWalletRequest(
+    request: NextRequest,
+    walletAddress: string,
+): Promise<VerifiedPrivySession & { walletAddress: string }> {
+    const session = await verifyPrivyRequest(request);
+    const normalizedWallet = normalizeWalletAddress(walletAddress);
+    const privyUser = await getPrivyClient().users()._get(session.userId);
+    const addresses = linkedWalletAddresses(privyUser);
+
+    if (!addresses.includes(normalizedWallet)) {
+        throw new Error('Wallet does not belong to the authenticated session.');
+    }
+
+    return {
+        ...session,
+        walletAddress: normalizedWallet,
     };
 }

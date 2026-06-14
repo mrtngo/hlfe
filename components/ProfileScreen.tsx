@@ -6,7 +6,7 @@ import { useUser } from '@/hooks/useUser';
 import { usePrivy } from '@privy-io/react-auth';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
-import { db } from '@/lib/supabase/client';
+import { authedJson } from '@/lib/api/authed-fetch';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ScreenV2, V2Header, IconBtn, SectionHead, Icon, V2, type IconName } from '@/components/V2Kit';
 
@@ -32,7 +32,7 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
     const { formatCurrency } = useCurrency();
     const { address, fills } = useHyperliquid();
     const { user, updateName } = useUser();
-    const { user: privyUser, logout } = usePrivy();
+    const { user: privyUser, logout, getAccessToken } = usePrivy();
     const [copied, setCopied] = useState(false);
     const [addressCopied, setAddressCopied] = useState(false);
     const [referredCount, setReferredCount] = useState(0);
@@ -53,22 +53,22 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
     useEffect(() => {
         let alive = true;
         async function loadReferrals() {
-            if (!user?.id) return;
+            if (!user?.id || !address) return;
             try {
-                const [referred, earnings] = await Promise.all([
-                    db.referrals.getReferredUsers(user.id),
-                    db.referrals.getTotalEarnings(user.id),
-                ]);
+                const data = await authedJson<{ referredUsers: unknown[]; totalEarned: number }>(
+                    `/api/referrals?walletAddress=${encodeURIComponent(address)}`,
+                    getAccessToken,
+                );
                 if (!alive) return;
-                setReferredCount(referred.length);
-                setReferralEarnings(earnings || user.referral_earnings || 0);
+                setReferredCount(data.referredUsers.length);
+                setReferralEarnings(data.totalEarned || user.referral_earnings || 0);
             } catch {
                 if (alive) setReferralEarnings(user.referral_earnings || 0);
             }
         }
         loadReferrals();
         return () => { alive = false; };
-    }, [user?.id, user?.referral_earnings]);
+    }, [address, getAccessToken, user?.id, user?.referral_earnings]);
 
     const stats = useMemo(() => {
         const allFills = fills || [];

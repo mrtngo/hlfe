@@ -93,18 +93,15 @@ export async function POST(request: NextRequest) {
     // Commit the quote to get transaction data
     const commitResult = await rhino.api.bridge.commitQuote(quoteId);
 
-    // Debug: Log the full response structure
-    console.log('Rhino commitQuote response:', JSON.stringify(commitResult, null, 2));
+    console.log('Rhino quote committed', { quoteId, hasError: Boolean(commitResult.error) });
 
     if (commitResult.error) {
-      throw new Error(JSON.stringify(commitResult.error));
+      throw new Error('Bridge quote commitment failed');
     }
 
     // The SDK response might have different structure
     // Try to extract transaction data from various possible locations
     const txData = commitResult.data || commitResult;
-    console.log('Transaction data structure:', JSON.stringify(txData, null, 2));
-
     return NextResponse.json({
       commitment: txData,
     });

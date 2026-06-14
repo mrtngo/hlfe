@@ -11,9 +11,11 @@
 //   The breakdown is surfaced so the number isn't a black box.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
-import { db, type User } from '@/lib/supabase/client';
+import { type User } from '@/lib/supabase/client';
+import { authedJson } from '@/lib/api/authed-fetch';
 
 const POINTS_PER_REFERRAL = 500;
 const VOLUME_PER_POINT = 10; // $10 of volume = 1 pt
@@ -42,30 +44,31 @@ function startOfWeek(): number {
 
 export function useRewards() {
     const { user } = useUser();
-    const { fills } = useHyperliquid();
+    const { address, fills } = useHyperliquid();
+    const { getAccessToken } = usePrivy();
     const [referredUsers, setReferredUsers] = useState<User[]>([]);
     const [totalEarned, setTotalEarned] = useState(0);
     const [loading, setLoading] = useState(true);
 
     const load = useCallback(async () => {
-        if (!user?.id) {
+        if (!user?.id || !address) {
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const [referred, earnings] = await Promise.all([
-                db.referrals.getReferredUsers(user.id),
-                db.referrals.getTotalEarnings(user.id),
-            ]);
-            setReferredUsers(referred);
-            setTotalEarned(earnings || user.referral_earnings || 0);
+            const data = await authedJson<{ referredUsers: User[]; totalEarned: number }>(
+                `/api/referrals?walletAddress=${encodeURIComponent(address)}`,
+                getAccessToken,
+            );
+            setReferredUsers(data.referredUsers);
+            setTotalEarned(data.totalEarned || user.referral_earnings || 0);
         } catch {
             setTotalEarned(user.referral_earnings || 0);
         } finally {
             setLoading(false);
         }
-    }, [user?.id, user?.referral_earnings]);
+    }, [address, getAccessToken, user?.id, user?.referral_earnings]);
 
     useEffect(() => {
         load();

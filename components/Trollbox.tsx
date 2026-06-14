@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { db, TrollboxMessage } from '@/lib/supabase/client';
+import { useUser } from '@/hooks/useUser';
+import { TrollboxMessage } from '@/lib/supabase/client';
+import { apiUrl } from '@/lib/api-base';
+import { authedJson } from '@/lib/api/authed-fetch';
 import { Send, MessageSquare, X, User, Clock, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -33,11 +37,12 @@ function getUserColor(userId: string): string {
 export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
     const { t } = useLanguage();
     const { address } = useHyperliquid();
+    const { getAccessToken } = usePrivy();
+    const { user: currentUser } = useUser();
     const [messages, setMessages] = useState<TrollboxMessage[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSending, setIsSending] = useState(false);
-    const [currentUser, setCurrentUser] = useState<any>(null);
     const [onlineCount, setOnlineCount] = useState(0);
     const [showScrollButton, setShowScrollButton] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -86,7 +91,9 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
     // Fetch messages function
     const fetchMessages = async () => {
         try {
-            const recent = await db.trollbox.getRecent(100);
+            const response = await fetch(apiUrl('/api/trollbox?limit=100'));
+            if (!response.ok) throw new Error('Failed to fetch messages');
+            const { messages: recent } = await response.json() as { messages: TrollboxMessage[] };
             setMessages(recent);
 
             // Count unique users in last 5 minutes for "online" indicator
@@ -109,15 +116,6 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
             try {
                 await fetchMessages();
 
-                // Fetch current user details if logged in
-                if (address) {
-                    let user = await db.users.getByWallet(address);
-                    if (!user) {
-                        // Auto-create user if doesn't exist
-                        user = await db.users.create(address);
-                    }
-                    setCurrentUser(user);
-                }
             } catch (error) {
                 console.error('Failed to initialize Trollbox:', error);
             } finally {
@@ -137,7 +135,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                 clearInterval(pollIntervalRef.current);
             }
         };
-    }, [address, isOpen]);
+    }, [isOpen]);
 
     const handleSendMessage = async (e?: React.FormEvent) => {
         e?.preventDefault();
@@ -145,14 +143,17 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
 
         setIsSending(true);
         try {
-            const sent = await db.trollbox.sendMessage(currentUser.id, newMessage.trim());
-            if (sent) {
-                setNewMessage('');
-                // Immediately fetch new messages to show the sent message
-                await fetchMessages();
-                // Always scroll to bottom when user sends a message
-                setTimeout(() => scrollToBottom(), 100);
-            }
+            await authedJson<{ message: TrollboxMessage }>(
+                '/api/trollbox',
+                getAccessToken,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ walletAddress: address, content: newMessage.trim() }),
+                },
+            );
+            setNewMessage('');
+            await fetchMessages();
+            setTimeout(() => scrollToBottom(), 100);
         } catch (error) {
             console.error('Failed to send message:', error);
         } finally {
