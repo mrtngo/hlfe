@@ -107,12 +107,13 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     const [net, setNet] = useState<Network | null>(null);
     const [copied, setCopied] = useState(false);
     const [detected, setDetected] = useState<bigint>(BigInt(0));
+    const [baseline, setBaseline] = useState<bigint | null>(null);
     const [sweepAmount, setSweepAmount] = useState('');
 
     // Direct Arbitrum → HL bridge forward (no CCTP needed).
     const [arbStatus, setArbStatus] = useState<'idle' | 'depositing' | 'success' | 'error'>('idle');
     const [arbError, setArbError] = useState('');
-    const attemptedRef = useRef(false);
+    const baselineRef = useRef<bigint | null>(null);
 
     const evmWallet =
         evmWallets.find((w) => w.walletClientType === 'privy') ?? evmWallets?.[0];
@@ -153,7 +154,8 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
         setArbError('');
         setSweepAmount('');
         setDetected(BigInt(0));
-        attemptedRef.current = false;
+        setBaseline(null);
+        baselineRef.current = null;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [evm.reset, sol.reset]);
 
@@ -196,7 +198,6 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
         if (flow.inProgress || flow.status === 'success' || flow.status === 'error') return;
 
         let cancelled = false;
-        const minUnits = BigInt(net.min) * BigInt(10 ** USDC_DECIMALS);
 
         const readBalance = async (): Promise<bigint> => {
             if (net.key === 'solana') {
@@ -232,11 +233,19 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
             try {
                 const bal = await readBalance();
                 if (cancelled) return;
-                setDetected(bal);
-                if (bal >= minUnits && !attemptedRef.current) {
-                    attemptedRef.current = true;
-                    runSweep(bal);
+                if (baselineRef.current === null) {
+                    baselineRef.current = bal;
+                    setBaseline(bal);
+                    setDetected(BigInt(0));
+                    return;
                 }
+                if (bal < baselineRef.current) {
+                    baselineRef.current = bal;
+                    setBaseline(bal);
+                    setDetected(BigInt(0));
+                    return;
+                }
+                setDetected(bal - baselineRef.current);
             } catch {
                 /* no ATA yet / transient RPC error — keep watching */
             }
@@ -248,7 +257,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
             cancelled = true;
             clearInterval(id);
         };
-    }, [net, depositAddress, flow.inProgress, flow.status, runSweep]);
+    }, [net, depositAddress, flow.inProgress, flow.status]);
 
     // Refresh the HL balance once the sweep lands.
     useEffect(() => {
@@ -277,6 +286,27 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     };
 
     const detectedNum = Number(formatUnits(detected, USDC_DECIMALS));
+    const baselineNum = Number(formatUnits(baseline ?? BigInt(0), USDC_DECIMALS));
+    const minUnitsForNet = net ? BigInt(net.min) * BigInt(10 ** USDC_DECIMALS) : BigInt(0);
+    const canCreditDetected = net ? detected >= minUnitsForNet : false;
+    const pendingEvmDeposit = evm.pending?.autoDeposit ? evm.pending : null;
+    const pendingSolanaDeposit = sol.pending;
+    const pendingDepositAmount = pendingSolanaDeposit?.amountStr || pendingEvmDeposit?.amountStr || '';
+
+    const resumePending = () => {
+        haptic.medium();
+        if (pendingSolanaDeposit) {
+            const solNet = NETWORKS.find((n) => n.key === 'solana');
+            if (solNet) setNet(solNet);
+            void sol.resumePendingDeposit();
+            return;
+        }
+        if (pendingEvmDeposit) {
+            const pendingNet = NETWORKS.find((n) => n.key === pendingEvmDeposit.fromKey);
+            if (pendingNet) setNet(pendingNet);
+            void evm.resumePendingTransfer();
+        }
+    };
 
     // ════════════════════════════════════════════════════════════════════════
     // Stage A — network list
@@ -296,6 +326,33 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 10, fontSize: 15, color: V2.t2 }}>
                         Vas a enviar <UsdcPill /> por
                     </div>
+
+                    {(pendingEvmDeposit || pendingSolanaDeposit) && (
+                        <button
+                            onClick={resumePending}
+                            style={{
+                                marginTop: 18,
+                                width: '100%',
+                                padding: '14px 16px',
+                                borderRadius: 16,
+                                background: V2.accentSoft,
+                                border: `1px solid ${V2.accent}`,
+                                color: V2.t1,
+                                cursor: 'pointer',
+                                fontFamily: V2.ui,
+                                textAlign: 'left',
+                            }}
+                        >
+                            <div style={{ fontSize: 14, fontWeight: 800, color: V2.accent }}>
+                                Reanudar depósito pendiente
+                            </div>
+                            <div style={{ marginTop: 4, fontSize: 12.5, color: V2.t2, lineHeight: 1.45 }}>
+                                {pendingDepositAmount
+                                    ? `Hay ${Number(pendingDepositAmount).toLocaleString('en-US', { maximumFractionDigits: 6 })} USDC en proceso.`
+                                    : 'Hay un depósito CCTP pendiente.'}
+                            </div>
+                        </button>
+                    )}
 
                     <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {NETWORKS.map((n) => (
@@ -327,7 +384,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                     </div>
 
                     <div style={{ marginTop: 18, fontSize: 12.5, color: V2.t3, lineHeight: 1.5, textAlign: 'center' }}>
-                        El USDC que envíes se acredita solo a tu balance en menos de un minuto.
+                        Te avisamos cuando detectemos fondos nuevos para acreditarlos a tu balance.
                     </div>
                 </div>
             </ScreenV2>
@@ -460,11 +517,36 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                                 <span style={{ position: 'relative', width: 8, height: 8, borderRadius: '50%', background: V2.accent }} />
                             </span>
                             <span style={{ fontSize: 12.5, color: V2.t3, fontWeight: 600 }}>
-                                {detected > BigInt(0) && detectedNum < net.min
+                                {canCreditDetected
+                                    ? `Detectamos $${detectedNum.toLocaleString('en-US', { maximumFractionDigits: 2 })} nuevos`
+                                    : detected > BigInt(0) && detectedNum < net.min
                                     ? `Detectamos $${detectedNum.toLocaleString('en-US', { maximumFractionDigits: 2 })} — el mínimo es $${net.min}`
-                                    : 'Esperando tu envío · se acredita solo'}
+                                    : baseline && baselineNum > 0
+                                      ? 'Esperando fondos nuevos'
+                                      : 'Esperando tu envío'}
                             </span>
                         </div>
+
+                        {canCreditDetected && (
+                            <button
+                                onClick={() => runSweep(detected)}
+                                style={{
+                                    marginTop: 16,
+                                    width: '100%',
+                                    padding: 16,
+                                    borderRadius: 16,
+                                    border: 'none',
+                                    background: V2.accent,
+                                    color: V2.accentInk,
+                                    fontWeight: 800,
+                                    fontSize: 15,
+                                    cursor: 'pointer',
+                                    fontFamily: V2.ui,
+                                }}
+                            >
+                                Acreditar ${detectedNum.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC
+                            </button>
+                        )}
 
                         {flow.status === 'error' && (
                             <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 12, background: V2.negSoft, border: '1px solid rgba(239,68,68,0.2)' }}>

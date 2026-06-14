@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useWallets, useSendTransaction } from '@privy-io/react-auth';
 import { createPublicClient, http, parseUnits, type Hex } from 'viem';
 import { mainnet, avalanche, optimism, arbitrum, base, polygon } from 'viem/chains';
@@ -21,6 +21,12 @@ import {
 } from '@/lib/cctp/client';
 import { HYPERLIQUID_BRIDGE_ADDRESS } from '@/lib/constants/bridge';
 import { makeSendOnChain } from '@/lib/cctp/evm-send';
+import {
+    clearPendingCctpTransfer,
+    loadPendingCctpTransfer,
+    savePendingCctpTransfer,
+    type PendingCctpTransfer,
+} from '@/lib/cctp/pending';
 
 /**
  * Native USDC transfer across chains via Circle CCTP V2 (Fast).
@@ -31,7 +37,7 @@ import { makeSendOnChain } from '@/lib/cctp/evm-send';
  *
  * With `{ autoDeposit: true }` (deposits → Arbitrum), it then forwards the
  * freshly-minted USDC straight into the Hyperliquid bridge so the funds land in
- * the user's perps balance — no second tap. The forward is sponsored + silent.
+ * the user's perps balance. The forward is sponsored + silent.
  */
 
 export type CctpStatus =
@@ -75,6 +81,11 @@ export function useCctpTransfer() {
     const [burnTxHash, setBurnTxHash] = useState('');
     const [mintTxHash, setMintTxHash] = useState('');
     const [depositTxHash, setDepositTxHash] = useState('');
+    const [pending, setPending] = useState<PendingCctpTransfer | null>(null);
+
+    useEffect(() => {
+        setPending(loadPendingCctpTransfer(activeWallet?.address));
+    }, [activeWallet?.address]);
 
     const reset = useCallback(() => {
         setStatus('idle');
@@ -83,6 +94,123 @@ export function useCctpTransfer() {
         setMintTxHash('');
         setDepositTxHash('');
     }, []);
+
+    const rememberPending = useCallback((next: PendingCctpTransfer) => {
+        const saved = savePendingCctpTransfer(next);
+        setPending(saved);
+        return saved;
+    }, []);
+
+    const clearRememberedPending = useCallback((id?: string) => {
+        clearPendingCctpTransfer(id);
+        setPending(null);
+    }, []);
+
+    const finishBurnedTransfer = useCallback(
+        async (initialPending: PendingCctpTransfer) => {
+            if (!activeWallet?.address) {
+                setError('Conecta tu wallet para continuar');
+                setStatus('error');
+                return;
+            }
+            if (!initialPending.burnTxHash) {
+                setError('No encontramos la transacción de burn para reanudar.');
+                setStatus('error');
+                return;
+            }
+
+            const burnHash = initialPending.burnTxHash;
+            let current = initialPending;
+            const updatePending = (patch: Partial<PendingCctpTransfer>) => {
+                current = rememberPending({ ...current, ...patch });
+                return current;
+            };
+
+            const from = CCTP_CHAINS[current.fromKey];
+            const to = CCTP_CHAINS[current.toKey];
+            const address = activeWallet.address as Hex;
+            const sendOnChain = makeSendOnChain(activeWallet as never, sendTransaction as never);
+
+            try {
+                setBurnTxHash(burnHash);
+                if (current.mintTxHash) setMintTxHash(current.mintTxHash);
+                if (current.depositTxHash) setDepositTxHash(current.depositTxHash);
+
+                setStatus('attesting');
+                const att = await pollAttestation(from.domain, burnHash);
+
+                if (!current.mintTxHash) {
+                    setStatus('minting');
+                    const mint = await sendOnChain(to.chainId, {
+                        to: CCTP_V2.messageTransmitter as Hex,
+                        data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
+                        value: BigInt(0),
+                    });
+                    setMintTxHash(mint.hash);
+                    updatePending({ mintTxHash: mint.hash });
+                }
+
+                if (current.autoDeposit) {
+                    if (current.toKey !== 'arbitrum' || !current.balanceBefore) {
+                        throw new Error('No pudimos reanudar el depósito: falta el balance inicial seguro.');
+                    }
+
+                    setStatus('depositing');
+                    const destPub = createPublicClient({
+                        chain: VIEM_CHAINS[current.toKey],
+                        transport: http(),
+                    });
+                    const balanceBefore = BigInt(current.balanceBefore);
+
+                    if (current.mintTxHash) {
+                        try {
+                            await destPub.waitForTransactionReceipt({ hash: current.mintTxHash as Hex });
+                        } catch {
+                            /* receipt poll failed — balance polling below is authoritative */
+                        }
+                    }
+
+                    let latest = balanceBefore;
+                    for (let i = 0; i < 20; i++) {
+                        try {
+                            latest = (await destPub.readContract({
+                                address: to.usdc,
+                                abi: ERC20_ABI,
+                                functionName: 'balanceOf',
+                                args: [address],
+                            })) as bigint;
+                        } catch {
+                            /* transient read error — keep polling */
+                        }
+                        if (latest - balanceBefore > BigInt(0)) break;
+                        await new Promise((r) => setTimeout(r, 2000));
+                    }
+
+                    const minted = latest - balanceBefore;
+                    if (minted <= BigInt(0)) {
+                        throw new Error(
+                            'El USDC llegó a Arbitrum, pero no pudimos medir el monto nuevo con seguridad. No movimos fondos existentes; reintenta la acreditación cuando el balance se actualice.',
+                        );
+                    }
+
+                    const deposit = await sendOnChain(to.chainId, {
+                        to: to.usdc,
+                        data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, minted),
+                        value: BigInt(0),
+                    });
+                    setDepositTxHash(deposit.hash);
+                    updatePending({ depositTxHash: deposit.hash });
+                }
+
+                clearRememberedPending(current.id);
+                setStatus('success');
+            } catch (e) {
+                setError(e instanceof Error ? e.message : 'Algo salió mal al reanudar la transferencia');
+                setStatus('error');
+            }
+        },
+        [activeWallet, clearRememberedPending, rememberPending, sendTransaction],
+    );
 
     const transfer = useCallback(
         async (
@@ -119,6 +247,40 @@ export function useCctpTransfer() {
             }
 
             const maxFee = fastMaxFee(amount);
+            const wantAutoDeposit = !!opts.autoDeposit && toKey === 'arbitrum';
+            const destPub = createPublicClient({
+                chain: VIEM_CHAINS[toKey],
+                transport: http(),
+            });
+            let balanceBefore: bigint | undefined;
+
+            if (wantAutoDeposit) {
+                try {
+                    balanceBefore = (await destPub.readContract({
+                        address: to.usdc,
+                        abi: ERC20_ABI,
+                        functionName: 'balanceOf',
+                        args: [address],
+                    })) as bigint;
+                } catch {
+                    setError('No pudimos leer tu balance inicial en Arbitrum. Reintentá antes de quemar USDC.');
+                    setStatus('error');
+                    return;
+                }
+            }
+
+            let pendingTransfer = rememberPending({
+                id: `${Date.now()}:${fromKey}:${toKey}`,
+                fromKey,
+                toKey,
+                amountStr,
+                walletAddress: address,
+                autoDeposit: wantAutoDeposit,
+                mintRecipient: opts.mintRecipient,
+                balanceBefore: balanceBefore?.toString(),
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+            });
 
             // Switches the wallet's active chain before each send so Privy
             // computes the nonce against the right chain (see evm-send.ts).
@@ -174,99 +336,34 @@ export function useCctpTransfer() {
                 });
                 const burnHash = burn.hash;
                 setBurnTxHash(burnHash);
-
-                // 4) Wait for Circle's signed attestation.
-                setStatus('attesting');
-                const att = await pollAttestation(from.domain, burnHash);
-
-                // 5) Mint on the destination chain.
-                setStatus('minting');
-
-                // For auto-deposit we forward exactly what arrives, so snapshot
-                // the destination USDC balance BEFORE the mint and diff after.
-                const wantAutoDeposit = !!opts.autoDeposit && toKey === 'arbitrum';
-                const destPub = createPublicClient({
-                    chain: VIEM_CHAINS[toKey],
-                    transport: http(),
-                });
-                let balanceBefore = BigInt(0);
-                if (wantAutoDeposit) {
-                    try {
-                        balanceBefore = (await destPub.readContract({
-                            address: to.usdc,
-                            abi: ERC20_ABI,
-                            functionName: 'balanceOf',
-                            args: [address],
-                        })) as bigint;
-                    } catch {
-                        balanceBefore = BigInt(0);
-                    }
-                }
-
-                const mint = await sendOnChain(to.chainId, {
-                    to: CCTP_V2.messageTransmitter as Hex,
-                    data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
-                    value: BigInt(0),
-                });
-                setMintTxHash(mint.hash);
-
-                // 6) Forward into the Hyperliquid bridge → perps balance. Silent
-                //    + sponsored, so the user never signs or pays gas for it.
-                if (wantAutoDeposit) {
-                    setStatus('depositing');
-
-                    try {
-                        await destPub.waitForTransactionReceipt({ hash: mint.hash as Hex });
-                    } catch {
-                        /* receipt poll failed — fall through to balance polling */
-                    }
-
-                    // Forward only the newly-minted amount (balance delta), so any
-                    // pre-existing Arbitrum USDC stays in the wallet. The mint can
-                    // take a moment to reflect even after the receipt, so poll.
-                    let latest = balanceBefore;
-                    for (let i = 0; i < 10; i++) {
-                        try {
-                            latest = (await destPub.readContract({
-                                address: to.usdc,
-                                abi: ERC20_ABI,
-                                functionName: 'balanceOf',
-                                args: [address],
-                            })) as bigint;
-                        } catch {
-                            /* transient read error — keep polling */
-                        }
-                        if (latest - balanceBefore > BigInt(0)) break;
-                        await new Promise((r) => setTimeout(r, 2000));
-                    }
-
-                    let minted = latest - balanceBefore;
-                    // Couldn't observe a delta — sweep whatever USDC is there
-                    // (the mint definitely added funds) rather than guess a number.
-                    if (minted <= BigInt(0)) minted = latest;
-
-                    if (minted <= BigInt(0)) {
-                        throw new Error(
-                            'El USDC llegó a Arbitrum pero no pudimos confirmar el monto para acreditarlo. Revisa tu balance e intenta el depósito a Hyperliquid manualmente.',
-                        );
-                    }
-
-                    const deposit = await sendOnChain(to.chainId, {
-                        to: to.usdc,
-                        data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, minted),
-                        value: BigInt(0),
-                    });
-                    setDepositTxHash(deposit.hash);
-                }
-
-                setStatus('success');
+                pendingTransfer = rememberPending({ ...pendingTransfer, burnTxHash });
+                await finishBurnedTransfer(pendingTransfer);
             } catch (e) {
+                if (!pendingTransfer.burnTxHash) clearRememberedPending(pendingTransfer.id);
                 setError(e instanceof Error ? e.message : 'Algo salió mal en la transferencia');
                 setStatus('error');
             }
         },
-        [activeWallet, sendTransaction],
+        [activeWallet, clearRememberedPending, finishBurnedTransfer, rememberPending, sendTransaction],
     );
+
+    const resumePendingTransfer = useCallback(async () => {
+        const current = loadPendingCctpTransfer(activeWallet?.address);
+        if (!current) return;
+        setPending(current);
+        setError('');
+        setBurnTxHash(current.burnTxHash || '');
+        setMintTxHash(current.mintTxHash || '');
+        setDepositTxHash(current.depositTxHash || '');
+        if (!current.burnTxHash) {
+            await transfer(current.fromKey, current.toKey, current.amountStr, {
+                autoDeposit: current.autoDeposit,
+                mintRecipient: current.mintRecipient,
+            });
+            return;
+        }
+        await finishBurnedTransfer(current);
+    }, [activeWallet?.address, finishBurnedTransfer, transfer]);
 
     const inProgress = useMemo(
         () =>
@@ -283,7 +380,10 @@ export function useCctpTransfer() {
         burnTxHash,
         mintTxHash,
         depositTxHash,
+        pending,
         transfer,
+        resumePendingTransfer,
+        clearPendingTransfer: clearRememberedPending,
         reset,
     };
 }

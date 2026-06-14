@@ -35,7 +35,6 @@ import NewsScreen from '@/components/NewsScreen';
 import RewardsScreen from '@/components/RewardsScreen';
 import PublicProfileScreen from '@/components/PublicProfileScreen';
 import TraderSearchScreen from '@/components/TraderSearchScreen';
-import BridgeModal from '@/components/BridgeModal';
 import Trollbox from '@/components/Trollbox';
 import { Icon, V2, type IconName } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
@@ -67,8 +66,6 @@ export default function Home() {
     const [selectedSpotBase, setSelectedSpotBase] = useState<string | undefined>(undefined);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [showAgentModal, setShowAgentModal] = useState(false);
-    const [showBolsillosDeposit, setShowBolsillosDeposit] = useState(false);
-    const [showBridgeModal, setShowBridgeModal] = useState(false);
     const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
 
     // Pre-login welcome gate + animated tutorial (v2 onboarding redesign).
@@ -387,7 +384,7 @@ export default function Home() {
                             <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <BolsillosScreen
                                     onBack={() => setView('home')}
-                                    onDeposit={() => setShowBridgeModal(true)}
+                                    onDeposit={() => setView('deposit')}
                                 />
                             </div>
                         ) : (
@@ -480,23 +477,6 @@ export default function Home() {
 
             {/* Trollbox Component */}
             <Trollbox isOpen={isTrollboxOpen} onClose={() => setIsTrollboxOpen(false)} />
-
-            {/* Bolsillos empty-state deposit shortcut (legacy modal) */}
-            <DepositModal
-                isOpen={showBolsillosDeposit}
-                onClose={() => setShowBolsillosDeposit(false)}
-            />
-
-            {/* New editorial Bridge modal — Rhino flow with the redesigned shell */}
-            <BridgeModal
-                open={showBridgeModal}
-                onClose={() => setShowBridgeModal(false)}
-                onComplete={() => {
-                    /* The modal handles its own success state; nothing extra here. */
-                }}
-            />
-
-
 
             {/* Trading Setup Wizard - legacy modal kept for the builder-fee step */}
             <TradingSetupWizard

@@ -4,7 +4,7 @@
  * Why this exists
  * ───────────────
  * The Next.js app exposes route handlers at `/api/*` for things the client
- * can't do directly (Rhino bridge, push subscribe, cron). When we build for
+ * can't do directly (push subscribe, cron). When we build for
  * iOS Capacitor, those route handlers are stripped
  * by `scripts/build-ios.sh` (static export has no server runtime), so the
  * compiled bundle running inside WKWebView cannot reach `/api/*` on its own
@@ -63,9 +63,9 @@ function resolveBase(): string {
  * Build a fully-qualified URL for an API route.
  *
  * Examples:
- *   apiUrl('/api/bridge')      → '/api/bridge'                        (web)
- *   apiUrl('/api/bridge')      → 'https://www.rayotrade.xyz/api/...'  (iOS)
- *   apiUrl('/api/bridge?x=1')  → preserves query string
+ *   apiUrl('/api/news')        → '/api/news'                          (web)
+ *   apiUrl('/api/news')        → 'https://www.rayotrade.xyz/api/...'  (iOS)
+ *   apiUrl('/api/news?x=1')    → preserves query string
  */
 export function apiUrl(path: string): string {
     if (!path.startsWith('/')) path = '/' + path;

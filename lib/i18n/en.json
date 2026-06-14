@@ -232,7 +232,7 @@
     "rowGas": "Gas on {chain}",
     "rowFee": "Bridge fee",
     "rowEta": "Estimated time",
-    "trust": "Your money travels through Rhino.fi — the same bridge professional traders use. Audited and insured.",
+    "trust": "Your USDC moves through Circle CCTP and credits into Hyperliquid.",
     "reviewCta": "Confirm · deposit ${amount}",
     "progressTitle": "Bridging.",
     "progressSub": "on the way",

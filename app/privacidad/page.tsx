@@ -102,7 +102,6 @@ export default function PrivacidadPage() {
                     <li style={li}><strong>Privy</strong> — autenticación e inicio de sesión.</li>
                     <li style={li}><strong>Supabase</strong> — base de datos y almacenamiento.</li>
                     <li style={li}><strong>Hyperliquid</strong> — ejecución de operaciones y mercados de predicción.</li>
-                    <li style={li}><strong>Rhino.fi</strong> — transferencias entre redes (bridge).</li>
                     <li style={li}>Proveedores de notificaciones push.</li>
                 </ul>
 

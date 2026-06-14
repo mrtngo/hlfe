@@ -104,6 +104,7 @@ export function useWithdrawToChain() {
     const [phase, setPhase] = useState<WithdrawStatus>('idle');
     const [error, setError] = useState('');
     const [withdrawDone, setWithdrawDone] = useState(false); // leg 1 succeeded → funds safe on Arbitrum
+    const [withdrawBalanceBefore, setWithdrawBalanceBefore] = useState('');
     const [burnTxHash, setBurnTxHash] = useState('');
     const [mintTxHash, setMintTxHash] = useState('');
     const lastArgs = useRef<RunArgs | null>(null);
@@ -112,6 +113,7 @@ export function useWithdrawToChain() {
         setPhase('idle');
         setError('');
         setWithdrawDone(false);
+        setWithdrawBalanceBefore('');
         setBurnTxHash('');
         setMintTxHash('');
         evm.reset();
@@ -261,15 +263,20 @@ export function useWithdrawToChain() {
                 const owner = ownArbAddress();
                 const pub = createPublicClient({ chain: arbitrum, transport: http() });
                 let balanceBefore = BigInt(0);
-                try {
-                    balanceBefore = (await pub.readContract({
-                        address: CCTP_CHAINS.arbitrum.usdc,
-                        abi: ERC20_ABI,
-                        functionName: 'balanceOf',
-                        args: [owner],
-                    })) as bigint;
-                } catch {
-                    balanceBefore = BigInt(0);
+                if (withdrawDone && withdrawBalanceBefore) {
+                    balanceBefore = BigInt(withdrawBalanceBefore);
+                } else {
+                    try {
+                        balanceBefore = (await pub.readContract({
+                            address: CCTP_CHAINS.arbitrum.usdc,
+                            abi: ERC20_ABI,
+                            functionName: 'balanceOf',
+                            args: [owner],
+                        })) as bigint;
+                    } catch {
+                        balanceBefore = BigInt(0);
+                    }
+                    setWithdrawBalanceBefore(balanceBefore.toString());
                 }
 
                 if (!withdrawDone) {
@@ -308,13 +315,17 @@ export function useWithdrawToChain() {
                 setPhase('error');
             }
         },
-        [address, withdraw, ownArbAddress, waitForArbitrumDelta, bridgeArbitrumToSolana, evm, withdrawDone],
+        [address, withdraw, ownArbAddress, waitForArbitrumDelta, bridgeArbitrumToSolana, evm, withdrawDone, withdrawBalanceBefore],
     );
 
     /** Retry only the bridge leg — funds are already safe on Arbitrum. */
     const retryBridge = useCallback(async () => {
+        if (evm.pending) {
+            await evm.resumePendingTransfer();
+            return;
+        }
         if (lastArgs.current) await run(lastArgs.current);
-    }, [run]);
+    }, [evm, run]);
 
     // Unified status: while leg 2 runs on an EVM chain, surface the CCTP sub-status.
     const status: WithdrawStatus = useMemo(() => {

@@ -12,7 +12,7 @@
 // gas-sponsorship interaction (see lib/cctp/solana-deposit.ts) is the most
 // likely first-test failure point.
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSendTransaction, useWallets as useEvmWallets } from '@privy-io/react-auth';
 import {
     useWallets as useSolanaWallets,
@@ -30,6 +30,12 @@ import { encodeReceiveMessage, encodeTransfer, pollAttestation } from '@/lib/cct
 import { HYPERLIQUID_BRIDGE_ADDRESS } from '@/lib/constants/bridge';
 import { SOLANA_DOMAIN } from '@/lib/cctp/solana';
 import { makeSendOnChain } from '@/lib/cctp/evm-send';
+import {
+    clearPendingSolanaDeposit,
+    loadPendingSolanaDeposit,
+    savePendingSolanaDeposit,
+    type PendingSolanaDeposit,
+} from '@/lib/cctp/pending';
 
 export type SolanaDepositStatus =
     | 'idle'
@@ -69,6 +75,14 @@ export function useSolanaDeposit() {
     const [burnSig, setBurnSig] = useState('');
     const [mintTxHash, setMintTxHash] = useState('');
     const [depositTxHash, setDepositTxHash] = useState('');
+    const [pending, setPending] = useState<PendingSolanaDeposit | null>(null);
+
+    const evmWallet = evmWallets.find((w) => w.walletClientType === 'privy') ?? evmWallets?.[0];
+    const evmAddress = evmWallet?.address;
+
+    useEffect(() => {
+        setPending(loadPendingSolanaDeposit(evmAddress));
+    }, [evmAddress]);
 
     const reset = useCallback(() => {
         setStatus('idle');
@@ -78,6 +92,117 @@ export function useSolanaDeposit() {
         setDepositTxHash('');
     }, []);
 
+    const rememberPending = useCallback((next: PendingSolanaDeposit) => {
+        const saved = savePendingSolanaDeposit(next);
+        setPending(saved);
+        return saved;
+    }, []);
+
+    const clearRememberedPending = useCallback((id?: string) => {
+        clearPendingSolanaDeposit(id);
+        setPending(null);
+    }, []);
+
+    const finishBurnedDeposit = useCallback(
+        async (initialPending: PendingSolanaDeposit) => {
+            const evmWalletForSend = evmWallets.find((w) => w.walletClientType === 'privy') ?? evmWallets?.[0];
+            if (!evmWalletForSend?.address) {
+                setError('No encontramos tu dirección de Arbitrum para acreditar el depósito.');
+                setStatus('error');
+                return;
+            }
+            if (!initialPending.burnSig) {
+                setError('No encontramos la transacción de Solana para reanudar.');
+                setStatus('error');
+                return;
+            }
+
+            const burnSignature = initialPending.burnSig;
+            let current = initialPending;
+            const updatePending = (patch: Partial<PendingSolanaDeposit>) => {
+                current = rememberPending({ ...current, ...patch });
+                return current;
+            };
+
+            const arbDest = CCTP_CHAINS.arbitrum;
+            const sendOnChain = makeSendOnChain(evmWalletForSend as never, sendTransaction as never);
+
+            try {
+                setBurnSig(burnSignature);
+                if (current.mintTxHash) setMintTxHash(current.mintTxHash);
+                if (current.depositTxHash) setDepositTxHash(current.depositTxHash);
+
+                setStatus('attesting');
+                const att = await pollAttestation(SOLANA_DOMAIN, burnSignature);
+
+                if (!current.mintTxHash) {
+                    setStatus('minting');
+                    const mint = await sendOnChain(arbDest.chainId, {
+                        to: CCTP_V2.messageTransmitter as Hex,
+                        data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
+                        value: BigInt(0),
+                    });
+                    setMintTxHash(mint.hash);
+                    updatePending({ mintTxHash: mint.hash });
+                }
+
+                if (!current.balanceBefore) {
+                    throw new Error('No pudimos reanudar el depósito: falta el balance inicial seguro.');
+                }
+
+                setStatus('depositing');
+                const destPub = createPublicClient({ chain: arbitrum, transport: http() });
+                const balanceBefore = BigInt(current.balanceBefore);
+
+                if (current.mintTxHash) {
+                    try {
+                        await destPub.waitForTransactionReceipt({ hash: current.mintTxHash as Hex });
+                    } catch {
+                        /* balance polling below is authoritative */
+                    }
+                }
+
+                let latest = balanceBefore;
+                for (let i = 0; i < 20; i++) {
+                    try {
+                        latest = (await destPub.readContract({
+                            address: arbDest.usdc,
+                            abi: ERC20_ABI,
+                            functionName: 'balanceOf',
+                            args: [current.evmAddress as Hex],
+                        })) as bigint;
+                    } catch {
+                        /* transient */
+                    }
+                    if (latest - balanceBefore > BigInt(0)) break;
+                    await new Promise((r) => setTimeout(r, 2000));
+                }
+
+                const minted = latest - balanceBefore;
+                if (minted <= BigInt(0)) {
+                    throw new Error(
+                        'El USDC llegó a Arbitrum, pero no pudimos medir el monto nuevo con seguridad. No movimos fondos existentes; reintenta la acreditación cuando el balance se actualice.',
+                    );
+                }
+
+                const dep = await sendOnChain(arbDest.chainId, {
+                    to: arbDest.usdc,
+                    data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, minted),
+                    value: BigInt(0),
+                });
+                setDepositTxHash(dep.hash);
+                updatePending({ depositTxHash: dep.hash });
+
+                clearRememberedPending(current.id);
+                setStatus('success');
+            } catch (e) {
+                setError(e instanceof Error ? e.message : 'Algo salió mal al reanudar el depósito desde Solana');
+                setStatus('error');
+            }
+        },
+        [clearRememberedPending, evmWallets, rememberPending, sendTransaction],
+    );
+
     const deposit = useCallback(
         async (amountStr: string) => {
             setError('');
@@ -86,28 +211,47 @@ export function useSolanaDeposit() {
             setDepositTxHash('');
 
             const solWallet = solWallets?.[0];
-            const evmWallet = evmWallets.find((w) => w.walletClientType === 'privy') ?? evmWallets?.[0];
-            const evmAddress = evmWallet?.address;
+            const evmWalletForSend = evmWallets.find((w) => w.walletClientType === 'privy') ?? evmWallets?.[0];
+            const evmAddressForSend = evmWalletForSend?.address;
 
             if (!solWallet?.address) {
                 setError('No encontramos tu wallet de Solana. Vuelve a iniciar sesión.');
                 setStatus('error');
                 return;
             }
-            if (!evmAddress) {
+            if (!evmAddressForSend) {
                 setError('No encontramos tu dirección de Arbitrum para acreditar el depósito.');
                 setStatus('error');
                 return;
             }
 
             const arbDest = CCTP_CHAINS.arbitrum;
-            // Ensure the EVM wallet is actively on Arbitrum before the mint /
-            // forward, so a stale nonce from a prior EVM-chain deposit can't
-            // leak in (see lib/cctp/evm-send.ts).
-            const sendOnChain = makeSendOnChain(evmWallet as never, sendTransaction as never);
-
             try {
                 const connection = new Connection(SOLANA_RPC, 'confirmed');
+                const destPub = createPublicClient({ chain: arbitrum, transport: http() });
+                let balanceBefore: bigint;
+                try {
+                    balanceBefore = (await destPub.readContract({
+                        address: arbDest.usdc,
+                        abi: ERC20_ABI,
+                        functionName: 'balanceOf',
+                        args: [evmAddressForSend as Hex],
+                    })) as bigint;
+                } catch {
+                    setError('No pudimos leer tu balance inicial en Arbitrum. Reintentá antes de quemar USDC.');
+                    setStatus('error');
+                    return;
+                }
+
+                let pendingDeposit = rememberPending({
+                    id: `${Date.now()}:solana-deposit`,
+                    amountStr,
+                    solAddress: solWallet.address,
+                    evmAddress: evmAddressForSend,
+                    balanceBefore: balanceBefore.toString(),
+                    createdAt: Date.now(),
+                    updatedAt: Date.now(),
+                });
 
                 // 1) Build + send the Solana burn (dynamic import keeps Anchor
                 //    out of the main bundle).
@@ -116,7 +260,7 @@ export function useSolanaDeposit() {
                 const { transaction } = await buildSolanaDepositForBurnTx({
                     connection,
                     owner: new PublicKey(solWallet.address),
-                    evmRecipient: evmAddress,
+                    evmRecipient: evmAddressForSend,
                     amountUsdc: amountStr,
                 });
 
@@ -128,85 +272,49 @@ export function useSolanaDeposit() {
                 });
                 const sig = await toBase58Signature((sent as { signature: unknown }).signature);
                 setBurnSig(sig);
-
-                // 2) Wait for Circle's attestation (Solana source domain = 5).
-                setStatus('attesting');
-                const att = await pollAttestation(SOLANA_DOMAIN, sig);
-
-                // 3) receiveMessage on Arbitrum (sponsored, silent).
-                setStatus('minting');
-                const destPub = createPublicClient({ chain: arbitrum, transport: http() });
-                let balanceBefore = BigInt(0);
-                try {
-                    balanceBefore = (await destPub.readContract({
-                        address: arbDest.usdc,
-                        abi: ERC20_ABI,
-                        functionName: 'balanceOf',
-                        args: [evmAddress as Hex],
-                    })) as bigint;
-                } catch {
-                    balanceBefore = BigInt(0);
-                }
-
-                const mint = await sendOnChain(arbDest.chainId, {
-                    to: CCTP_V2.messageTransmitter as Hex,
-                    data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
-                    value: BigInt(0),
-                });
-                setMintTxHash(mint.hash);
-
-                // 4) Forward the freshly-minted USDC into the HL bridge → perps.
-                setStatus('depositing');
-                try {
-                    await destPub.waitForTransactionReceipt({ hash: mint.hash as Hex });
-                } catch {
-                    /* fall through to balance polling */
-                }
-
-                let latest = balanceBefore;
-                for (let i = 0; i < 10; i++) {
-                    try {
-                        latest = (await destPub.readContract({
-                            address: arbDest.usdc,
-                            abi: ERC20_ABI,
-                            functionName: 'balanceOf',
-                            args: [evmAddress as Hex],
-                        })) as bigint;
-                    } catch {
-                        /* transient */
-                    }
-                    if (latest - balanceBefore > BigInt(0)) break;
-                    await new Promise((r) => setTimeout(r, 2000));
-                }
-
-                let minted = latest - balanceBefore;
-                if (minted <= BigInt(0)) minted = latest;
-                if (minted <= BigInt(0)) {
-                    throw new Error(
-                        'El USDC llegó a Arbitrum pero no pudimos confirmar el monto para acreditarlo. Revisa tu balance e intenta el depósito manualmente.',
-                    );
-                }
-
-                const dep = await sendOnChain(arbDest.chainId, {
-                    to: arbDest.usdc,
-                    data: encodeTransfer(HYPERLIQUID_BRIDGE_ADDRESS, minted),
-                    value: BigInt(0),
-                });
-                setDepositTxHash(dep.hash);
-
-                setStatus('success');
+                pendingDeposit = rememberPending({ ...pendingDeposit, burnSig: sig });
+                await finishBurnedDeposit(pendingDeposit);
             } catch (e) {
+                const current = loadPendingSolanaDeposit(evmAddressForSend);
+                if (!current?.burnSig) clearRememberedPending(current?.id);
                 setError(e instanceof Error ? e.message : 'Algo salió mal en el depósito desde Solana');
                 setStatus('error');
             }
         },
-        [solWallets, evmWallets, signAndSendTransaction, sendTransaction],
+        [clearRememberedPending, evmWallets, finishBurnedDeposit, rememberPending, signAndSendTransaction, solWallets],
     );
+
+    const resumePendingDeposit = useCallback(async () => {
+        const current = loadPendingSolanaDeposit(evmAddress);
+        if (!current) return;
+        setPending(current);
+        setError('');
+        setBurnSig(current.burnSig || '');
+        setMintTxHash(current.mintTxHash || '');
+        setDepositTxHash(current.depositTxHash || '');
+        if (!current.burnSig) {
+            await deposit(current.amountStr);
+            return;
+        }
+        await finishBurnedDeposit(current);
+    }, [deposit, evmAddress, finishBurnedDeposit]);
 
     const inProgress = useMemo(
         () => ['building', 'burning', 'attesting', 'minting', 'depositing'].includes(status),
         [status],
     );
 
-    return { status, inProgress, error, burnSig, mintTxHash, depositTxHash, deposit, reset };
+    return {
+        status,
+        inProgress,
+        error,
+        burnSig,
+        mintTxHash,
+        depositTxHash,
+        pending,
+        deposit,
+        resumePendingDeposit,
+        clearPendingDeposit: clearRememberedPending,
+        reset,
+    };
 }
