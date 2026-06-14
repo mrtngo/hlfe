@@ -6,6 +6,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { CURRENT_PRIVACY_POLICY_VERSION, needsConsent as policyNeedsConsent } from '@/lib/compliance/consent';
 
 const REFERRAL_STORAGE_KEY = 'rayo_referral_code';
+const CONSENT_STORAGE_PREFIX = 'rayo_privacy_consent_v';
 
 // Validate referral code format: alphanumeric, underscore, hyphen, 3-20 chars
 const isValidReferralCode = (code: string): boolean =>
@@ -41,6 +42,20 @@ type DbErrorLike = { code?: string; message?: string };
 function toDbError(err: unknown): DbErrorLike {
     if (typeof err === 'object' && err !== null) return err as DbErrorLike;
     return { message: String(err) };
+}
+
+function consentStorageKey(walletAddress: string): string {
+    return `${CONSENT_STORAGE_PREFIX}:${walletAddress.toLowerCase()}`;
+}
+
+function readLocalConsent(walletAddress: string | null | undefined): string | null {
+    if (!walletAddress || typeof window === 'undefined') return null;
+    return localStorage.getItem(consentStorageKey(walletAddress));
+}
+
+function writeLocalConsent(walletAddress: string, policyVersion: string): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(consentStorageKey(walletAddress), policyVersion);
 }
 
 // Validate avatar URL: must be HTTPS from allowed domains
@@ -127,11 +142,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [localConsentVersion, setLocalConsentVersion] = useState<string | null>(null);
 
     // Check for referral code on mount
     useEffect(() => {
         getAndStoreReferralCode();
     }, []);
+
+    useEffect(() => {
+        setLocalConsentVersion(readLocalConsent(address));
+    }, [address]);
 
     // Fetch or create user when wallet connects
     const fetchOrCreateUser = useCallback(async () => {
@@ -310,19 +330,37 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // ── Data-protection (Ley 1581) ──
     // Only gate once the user row is loaded; never block during the initial
     // fetch (avoids a flash of the consent modal before we know their status).
-    const needsConsent = !!user && policyNeedsConsent(user.privacy_policy_version);
+    const needsConsent =
+        !!user &&
+        policyNeedsConsent(user.privacy_policy_version) &&
+        policyNeedsConsent(localConsentVersion);
 
     const recordConsent = useCallback(async (opts?: { intlTransfer?: boolean; locale?: string }): Promise<boolean> => {
         if (!address) return false;
+        const policyVersion = CURRENT_PRIVACY_POLICY_VERSION;
+
+        // Hide the gate immediately for this wallet. The Supabase write below
+        // remains the durable audit path, but the app should not brick if the
+        // newly-added consent migration has not reached an environment yet.
+        writeLocalConsent(address, policyVersion);
+        setLocalConsentVersion(policyVersion);
+        setUser((prev) => prev
+            ? {
+                ...prev,
+                privacy_policy_version: policyVersion,
+                privacy_consent_at: new Date().toISOString(),
+            }
+            : prev);
+
         const ok = await db.consents.record({
             userId: user?.id ?? null,
             walletAddress: address,
-            policyVersion: CURRENT_PRIVACY_POLICY_VERSION,
+            policyVersion,
             intlTransfer: opts?.intlTransfer ?? true,
             locale: opts?.locale,
         });
         if (ok) await fetchOrCreateUser(); // refresh the consent pointer
-        return ok;
+        return true;
     }, [address, user?.id, fetchOrCreateUser]);
 
     const exportData = useCallback(async (): Promise<Record<string, unknown> | null> => {

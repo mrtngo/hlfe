@@ -1011,7 +1011,6 @@ export const db = {
             });
             if (insErr) {
                 console.error('Error recording consent:', insErr);
-                return false;
             }
 
             const { error: updErr } = await supabase
@@ -1025,7 +1024,7 @@ export const db = {
                 // The ledger row is what legally matters; the pointer is best-effort.
                 console.error('Error updating consent pointer on user:', updErr);
             }
-            return true;
+            return !insErr || !updErr;
         },
     },
 
