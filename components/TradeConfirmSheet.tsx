@@ -159,6 +159,29 @@ export default function TradeConfirmSheet({
                     : 'Orden al mejor precio disponible. Puede haber un pequeño deslizamiento.'}
             </div>
 
+            {/* Risk disclosure — required for leveraged products. Shown whenever
+                the position uses leverage, so the user sees it before every
+                leveraged trade, not buried in T&Cs. */}
+            {leverage !== undefined && leverage > 1 && (
+                <div
+                    style={{
+                        margin: '10px 18px 0',
+                        padding: '10px 14px',
+                        borderRadius: 10,
+                        background: 'rgba(239,68,68,0.06)',
+                        border: '1px solid rgba(239,68,68,0.18)',
+                        fontSize: 11,
+                        lineHeight: 1.5,
+                        color: 'rgba(255,255,255,0.65)',
+                        textAlign: 'center',
+                    }}
+                >
+                    Producto apalancado de alto riesgo. Con {leverage}× una variación
+                    de precio en tu contra puede liquidar tu posición y perder el monto
+                    invertido. Opera solo con dinero que puedas permitirte perder.
+                </div>
+            )}
+
             {error && (
                 <div
                     style={{

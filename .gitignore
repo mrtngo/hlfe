@@ -58,3 +58,7 @@ design_handoff_onboarding/
 
 # Claude Design handoff bundles
 /rayo/
+
+# Compliance / legal working docs — kept local, NOT committed (sensitive
+# legal-strategy material for Colombian counsel; not for the public repo).
+docs/compliance/
