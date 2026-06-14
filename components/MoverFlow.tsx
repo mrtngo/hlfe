@@ -49,6 +49,11 @@ const POCKET_PALETTE = {
     },
 } as const;
 
+function formatMoveAmount(value: number): string {
+    const floored = Math.floor(Math.max(0, value) * 1_000_000) / 1_000_000;
+    return floored.toFixed(6).replace(/\.?0+$/, '');
+}
+
 interface MoverFlowProps {
     open: boolean;
     onClose: () => void;
@@ -121,9 +126,9 @@ export default function MoverFlow({
 
     const setQuick = (label: string) => {
         if (label === 'half') {
-            setAmount(Math.floor(fromAvailable / 2).toString());
+            setAmount(formatMoveAmount(fromAvailable / 2));
         } else if (label === 'all') {
-            setAmount(Math.floor(fromAvailable).toString());
+            setAmount(formatMoveAmount(fromAvailable));
         } else {
             setAmount(label);
         }
@@ -1202,7 +1207,7 @@ function PocketPick({
                             color: 'rgba(255,255,255,0.55)',
                         }}
                     >
-                        ${available.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                        ${available.toLocaleString('en-US', { maximumFractionDigits: available < 1 ? 4 : 2 })}
                     </div>
                 </div>
             </div>

@@ -10,6 +10,7 @@ import MiniChart from '@/components/MiniChart';
 import DepositModal from '@/components/DepositModal';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import DcaScheduleSheet from '@/components/DcaScheduleSheet';
+import TransferModal from '@/components/TransferModal';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
 import { formatUsdPrice } from '@/lib/format/price';
 import { Loader2, ArrowDown, ArrowUpRight, AlertCircle, CheckCircle2, Sliders, Repeat, ChevronRight, Zap } from 'lucide-react';
@@ -51,6 +52,7 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
     const [amountUsd, setAmountUsd] = useState<string>('');
     const [showAll, setShowAll] = useState(false);
     const [showDepositModal, setShowDepositModal] = useState(false);
+    const [showTransferModal, setShowTransferModal] = useState(false);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [showDcaSheet, setShowDcaSheet] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -83,6 +85,7 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
     );
 
     const availableUsd = account?.availableMargin ?? 0;
+    const spotUsd = account?.spotBalance ?? 0;
     const amountNum = parseFloat(amountUsd || '0');
     const price = selectedMarket?.price || 0;
     const tokenAmount = price > 0 ? amountNum / price : 0;
@@ -429,11 +432,19 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
                                 <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--color-brand-primary)' }} />
                                 <span>{t.buy.depositFirst}</span>
                             </div>
-                            <button onClick={() => setShowDepositModal(true)}
+                            {spotUsd > 0 ? (
+                                <button onClick={() => setShowTransferModal(true)}
+                                    className="cta-brand w-full py-4 rounded-2xl text-[15px] font-bold flex items-center justify-center gap-2 tracking-tight">
+                                    <ArrowDown className="w-5 h-5" strokeWidth={2.5} />
+                                    {t.buy.moveSpotToTradeCta.replace('{amount}', formatUsdPrice(spotUsd))}
+                                </button>
+                            ) : (
+                                <button onClick={() => setShowDepositModal(true)}
                                 className="cta-brand w-full py-4 rounded-2xl text-[15px] font-bold flex items-center justify-center gap-2 tracking-tight">
-                                <ArrowDown className="w-5 h-5" strokeWidth={2.5} />
-                                {t.buy.noBalanceCta}
-                            </button>
+                                    <ArrowDown className="w-5 h-5" strokeWidth={2.5} />
+                                    {t.buy.noBalanceCta}
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <button onClick={handleSubmit} disabled={!canSubmit}
@@ -662,6 +673,17 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
                 </motion.button>
 
                 <DepositModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
+                <TransferModal
+                    isOpen={showTransferModal}
+                    onClose={() => {
+                        setShowTransferModal(false);
+                        refreshAccountData();
+                    }}
+                    defaultToPerp={true}
+                    spotLabel={t.outcomeMarkets.spotBalanceLabel}
+                    perpLabel={t.outcomeMarkets.perpBalanceLabel}
+                    helpText={t.transfer.perpPrompt}
+                />
                 <TradingSetupWizard isOpen={showSetupWizard} onClose={() => setShowSetupWizard(false)} />
                 {selectedMarket && (
                     <DcaScheduleSheet

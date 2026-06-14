@@ -27,6 +27,11 @@ import { useHyperliquidAccount } from '@/hooks/useHyperliquidAccount';
 
 export type { Market };
 
+function formatUsdClassAmount(amount: number): string {
+    const floored = Math.floor(Math.max(0, amount) * 1_000_000) / 1_000_000;
+    return floored.toFixed(6).replace(/\.?0+$/, '');
+}
+
 /** Spot balance entry returned by Hyperliquid's spotClearinghouseState. */
 export interface SpotBalance {
     coin: string;
@@ -2385,7 +2390,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const nonce = Date.now();
                 const hyperliquidChain = IS_TESTNET ? 'Testnet' : 'Mainnet';
                 const toPerp = direction === 'spot-to-perp';
-                const amountStr = amount.toFixed(2);
+                const amountStr = formatUsdClassAmount(amount);
 
                 const action = {
                     type: 'usdClassTransfer',

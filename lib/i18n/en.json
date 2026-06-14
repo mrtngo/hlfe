@@ -365,7 +365,8 @@
     "advancedLink": "Looking for charts and limit orders?",
     "advancedLinkCta": "Open advanced mode",
     "priceLabel": "Current price",
-    "depositFirst": "You need USDC in your account to buy."
+    "depositFirst": "You need USDC in your account to buy.",
+    "moveSpotToTradeCta": "Move {amount} USDC to Trade"
   },
   "dca": {
     "title": "Recurring Buys",

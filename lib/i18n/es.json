@@ -365,7 +365,8 @@
     "advancedLink": "¿Buscas gráficos y órdenes límite?",
     "advancedLinkCta": "Abrir modo avanzado",
     "priceLabel": "Precio actual",
-    "depositFirst": "Necesitas USDC en tu cuenta para comprar."
+    "depositFirst": "Necesitas USDC en tu cuenta para comprar.",
+    "moveSpotToTradeCta": "Mover {amount} USDC a Trade"
   },
   "dca": {
     "title": "Compras Programadas",

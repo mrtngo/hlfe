@@ -383,7 +383,7 @@ function NormalMode({
                 {/* Funds-in-the-wrong-pocket nudge: perps trade from the Trade
                     (perp) balance — if it's empty but money sits in Predicción
                     (spot), prompt a one-tap move. */}
-                {availableUsd < MIN_ORDER_NOTIONAL_USD && spotBalance >= MIN_ORDER_NOTIONAL_USD && (
+                {availableUsd < MIN_ORDER_NOTIONAL_USD && spotBalance > 0 && (
                     <button
                         onClick={() => { haptic.light(); setShowTransfer(true); }}
                         style={{

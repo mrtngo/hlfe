@@ -28,6 +28,11 @@ interface TransferModalProps {
     helpText?: string;
 }
 
+function formatTransferAmount(value: number): string {
+    const floored = Math.floor(Math.max(0, value) * 1_000_000) / 1_000_000;
+    return floored.toFixed(6).replace(/\.?0+$/, '');
+}
+
 export default function TransferModal({
     isOpen,
     onClose,
@@ -342,7 +347,7 @@ export default function TransferModal({
                             <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{t.order.amount}:</span>
                             <span
                                 style={{ color: 'white', cursor: 'pointer', textDecoration: 'underline' }}
-                                onClick={() => setAmount(toPerp ? spotBalance.toString() : availableBalance.toString())}
+                                onClick={() => setAmount(formatTransferAmount(sourceBalance))}
                             >
                                 {t.order.max}: {formatCurrency(sourceBalance)}
                             </span>
@@ -357,7 +362,7 @@ export default function TransferModal({
                                     setSuccess(false);
                                 }}
                                 placeholder="0.00"
-                                step="0.01"
+                                step="0.000001"
                                 min="0"
                                 style={{
                                     width: '100%',
