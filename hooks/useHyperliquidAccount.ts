@@ -12,6 +12,7 @@ import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { cachedFetch } from '@/lib/api-cache';
 import type { Position, Order, AccountState, Market } from '@/types';
 import { DEFAULT_ACCOUNT_STATE } from '@/types';
+import { logger } from '@/lib/logger';
 
 /** Cached fetch for spotMetaAndAssetCtxs. The universe is near-static and
  *  prices are good enough for NAV between refreshes; hammering /info on
@@ -200,7 +201,7 @@ export function useHyperliquidAccount(
             });
 
             if (tpOrder || slOrder) {
-                console.log(`[Matching] Matched trigger orders for ${pos.symbol}:`, {
+                logger.debug(`[Matching] Matched trigger orders for ${pos.symbol}:`, {
                     tp: tpOrder ? tpOrder.triggerPx : 'none',
                     sl: slOrder ? slOrder.triggerPx : 'none'
                 });
@@ -225,7 +226,7 @@ export function useHyperliquidAccount(
         // Skip if rate limited
         if (rateLimited && retryAfter && Date.now() < retryAfter) {
             const waitTime = Math.ceil((retryAfter - Date.now()) / 1000);
-            console.log(`⏸️ Rate limited, waiting ${waitTime}s before retry...`);
+            logger.debug(`⏸️ Rate limited, waiting ${waitTime}s before retry...`);
             return;
         }
 
@@ -234,7 +235,7 @@ export function useHyperliquidAccount(
 
         try {
             const normalizedAddress = address.toLowerCase();
-            console.log('🔍 Fetching account data for address:', normalizedAddress);
+            logger.debug('🔍 Fetching account data for address:', normalizedAddress);
 
             const client = createHyperliquidClient();
             await client.connect();
@@ -309,9 +310,9 @@ export function useHyperliquidAccount(
 
             setTriggerOrders(activeTriggerOrders);
             triggerOrdersRef.current = activeTriggerOrders;
-            console.log(`📊 [Init] Found ${activeTriggerOrders.length} trigger orders for ${normalizedAddress}`);
+            logger.debug(`📊 [Init] Found ${activeTriggerOrders.length} trigger orders for ${normalizedAddress}`);
             if (activeTriggerOrders.length > 0) {
-                console.log('📊 Active Triggers:', activeTriggerOrders.map(o => ({
+                logger.debug('📊 Active Triggers:', activeTriggerOrders.map(o => ({
                     coin: o.coin,
                     px: o.triggerPx,
                     type: typeof o.orderType === 'string' ? o.orderType : JSON.stringify(o.orderType)
@@ -321,7 +322,7 @@ export function useHyperliquidAccount(
             // Store active limit orders (non-trigger)
             const activeLimitOrders = allOpenOrders.filter((o: any) => !o.isTrigger) || [];
             setOpenOrders(activeLimitOrders);
-            console.log(`📊 [Init] Found ${activeLimitOrders.length} limit orders for ${normalizedAddress}`);
+            logger.debug(`📊 [Init] Found ${activeLimitOrders.length} limit orders for ${normalizedAddress}`);
 
             const mainMargin = userState?.marginSummary || {};
             let perpPositions = userState?.assetPositions?.map(p => parsePosition(p, markets)).filter(Boolean) as Position[] || [];
@@ -374,7 +375,7 @@ export function useHyperliquidAccount(
                 const spotState = await spotStateResponse.json();
                 if (spotState?.balances) {
                     setSpotBalances(spotState.balances);
-                    console.log('✅ Fetched Spot balances:', spotState.balances.length);
+                    logger.debug('✅ Fetched Spot balances:', spotState.balances.length);
                 }
             }
 
@@ -428,7 +429,7 @@ export function useHyperliquidAccount(
     const refreshAccountData = useCallback(async () => {
         if (!address) return;
 
-        console.log('🔄 [REFRESH] Forcing account data refresh...');
+        logger.debug('🔄 [REFRESH] Forcing account data refresh...');
 
         try {
             const normalizedAddress = address.toLowerCase();
@@ -643,7 +644,7 @@ export function useHyperliquidAccount(
                     // Update trigger orders ref for position matching
                     const activeTriggers = ordersData.filter((o: any) => o.isTrigger);
                     if (activeTriggers.length !== triggerOrdersRef.current.length) {
-                        console.log(`📊 [WS] Trigger orders updated: ${activeTriggers.length} active`);
+                        logger.debug(`📊 [WS] Trigger orders updated: ${activeTriggers.length} active`);
                         triggerOrdersRef.current = activeTriggers;
                         setTriggerOrders(activeTriggers);
                     }

@@ -25,6 +25,7 @@ import { db } from '@/lib/supabase/client';
 import { useUserData } from '@/hooks/useUserData';
 import { useHyperliquidAccount } from '@/hooks/useHyperliquidAccount';
 import { buildUsdClassTransferAction, splitEvmSignature } from '@/lib/hyperliquid/transfers';
+import { logger } from '@/lib/logger';
 
 export type { Market };
 
@@ -348,7 +349,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const lowercasedAddress = connectedWallet.address.toLowerCase();
                 setAddress(lowercasedAddress);
                 setIsConnected(true);
-                console.log('Wallet connected', { type: connectedWallet.walletClientType || 'external' });
+                logger.debug('Wallet connected', { type: connectedWallet.walletClientType || 'external' });
             }
         } else {
             setAddress(null);
@@ -400,7 +401,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 } catch (err: any) {
                     // User rejected request
                     if (err.code === 4001) {
-                        console.log('Please connect to MetaMask/Rabby.');
+                        logger.debug('Please connect to MetaMask/Rabby.');
                     } else {
                         console.error(err);
                         alert('Error connecting wallet: ' + err.message);
@@ -484,7 +485,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Check if the error is "Extra agent already used"
                 if (approvalError.message?.includes('Extra agent already used') ||
                     approvalError.message?.includes('already used')) {
-                    console.log('⚠️ Agent already registered on-chain, checking existing agents...');
+                    logger.debug('⚠️ Agent already registered on-chain, checking existing agents...');
 
                     // Check if there's an existing agent on-chain
                     const existingAgent = await checkExistingAgent(address);
@@ -554,7 +555,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const maxFee = await response.json();
-            console.log('📊 Builder fee approval status:', { maxFee, requiredFee: BUILDER_CONFIG.fee });
+            logger.debug('📊 Builder fee approval status:', { maxFee, requiredFee: BUILDER_CONFIG.fee });
 
             // maxFee is returned as a number in tenths of basis points
             // User is approved if their max fee >= our required fee
@@ -635,7 +636,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 nonce
             };
 
-            console.log('📝 ApproveBuilderFee action:', action);
+            logger.debug('📝 ApproveBuilderFee action:', action);
 
             // Sign the action
             const signature = await signUserSignedAction(
@@ -668,7 +669,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const result = await response.json();
-            console.log('✅ Builder fee approval result:', result);
+            logger.debug('✅ Builder fee approval result:', result);
 
             if (result.status === 'err') {
                 throw new Error(result.response || 'Failed to approve builder fee');
@@ -786,7 +787,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 type: 'agentEnableDexAbstraction'
             };
 
-            console.log('📝 AgentEnableDexAbstraction action:', action);
+            logger.debug('📝 AgentEnableDexAbstraction action:', action);
 
             // Sign as L1 action (same as order placement)
             const signature = await signL1Action(
@@ -813,7 +814,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const result = await response.json();
-            console.log('✅ DEX abstraction result:', result);
+            logger.debug('✅ DEX abstraction result:', result);
 
             if (result.status === 'err') {
                 throw new Error(result.response || 'Failed to enable DEX abstraction');
@@ -873,9 +874,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             await ensureAgentReady();
 
             // 1. Get asset index
-            console.log('placeOrder called with symbol:', symbol);
-            console.log('markets array:', markets.map(m => m.symbol));
-            console.log('markets length:', (markets || []).length);
+            logger.debug('placeOrder called with symbol:', symbol);
+            logger.debug('markets array:', markets.map(m => m.symbol));
+            logger.debug('markets length:', (markets || []).length);
             if ((markets || []).length === 0) {
                 throw new Error('Markets not loaded yet. Please wait a moment and try again.');
             }
@@ -900,7 +901,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             if (isSpot) {
                 // Fetch spot metadata to find asset index
-                console.log('📊 Spot market detected, fetching spot meta...');
+                logger.debug('📊 Spot market detected, fetching spot meta...');
                 const spotMetaResponse = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -989,13 +990,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 referencePrice = spotCtx?.markPx ? parseFloat(spotCtx.markPx) : null;
                 actualSzDecimals = spotMeta.tokens.find((t: any) => t.name === baseCoin)?.szDecimals;
 
-                console.log(
+                logger.debug(
                     `🔎 Spot pair resolution: baseCoin=${baseCoin}, ownedTokenIndex=${ownedBalance?.token ?? '(none)'}, arrayIdx=${pairIndex}, canonicalIndex=${assetIndex}, pairName=${resolvedPair.name}`,
                 );
-                console.log(`✅ Found spot asset at index ${assetIndex}: ${assetName}, price: ${referencePrice}`);
+                logger.debug(`✅ Found spot asset at index ${assetIndex}: ${assetName}, price: ${referencePrice}`);
             } else if (isTradeXyzAsset) {
                 // For Trade.xyz assets, fetch meta and asset contexts from DEX endpoint
-                console.log('📊 Trade.xyz asset detected, fetching DEX meta...');
+                logger.debug('📊 Trade.xyz asset detected, fetching DEX meta...');
                 const dexMetaResponse = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1017,8 +1018,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Trade.xyz assets have "xyz:" prefix in the meta
                 assetName = `xyz:${baseCoin}`;
 
-                console.log('Looking for Trade.xyz asset:', assetName);
-                console.log('Available Trade.xyz assets:', meta.universe?.map((u: any) => u.name) || []);
+                logger.debug('Looking for Trade.xyz asset:', assetName);
+                logger.debug('Available Trade.xyz assets:', meta.universe?.map((u: any) => u.name) || []);
 
                 assetIndex = meta.universe?.findIndex((u: any) => u.name === assetName) ?? -1;
 
@@ -1029,14 +1030,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Get szDecimals from fresh DEX meta (not cached market data)
                 const dexAssetMeta = meta.universe[assetIndex];
                 actualSzDecimals = dexAssetMeta?.szDecimals;
-                console.log('📊 Trade.xyz DEX meta szDecimals:', actualSzDecimals, 'vs cached market:', market.szDecimals);
+                logger.debug('📊 Trade.xyz DEX meta szDecimals:', actualSzDecimals, 'vs cached market:', market.szDecimals);
 
                 // Get current reference price from asset context for accurate market orders
                 const assetCtx = assetCtxs?.[assetIndex];
                 if (assetCtx?.markPx) {
                     referencePrice = parseFloat(assetCtx.markPx);
-                    console.log('📊 Trade.xyz reference price (markPx):', referencePrice);
-                    console.log('📊 Market price before update:', market.price);
+                    logger.debug('📊 Trade.xyz reference price (markPx):', referencePrice);
+                    logger.debug('📊 Market price before update:', market.price);
                     // Update market price with reference price for more accurate orders
                     if (referencePrice > 0) {
                         market.price = referencePrice;
@@ -1053,8 +1054,8 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // Our market symbols are like SOL-USD, BTC-USD
                 assetName = `${baseCoin}-PERP`;
 
-                console.log('Looking for core asset:', assetName);
-                console.log('Available core assets:', meta.universe.map((u: any) => u.name));
+                logger.debug('Looking for core asset:', assetName);
+                logger.debug('Available core assets:', meta.universe.map((u: any) => u.name));
 
                 assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
 
@@ -1063,7 +1064,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
             }
 
-            console.log(`✅ Found asset at index ${assetIndex}: ${assetName}`);
+            logger.debug(`✅ Found asset at index ${assetIndex}: ${assetName}`);
 
             // 2. Update leverage if specified (MUST be done BEFORE placing order)
             // Hyperliquid has default leverage per asset (e.g., 20x for BTC/ETH)
@@ -1074,9 +1075,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // and pollutes the console. Skip entirely for spot.
             const targetLeverage = leverage || 1;
             if (isSpot) {
-                console.log(`⏭️  Skipping leverage update for spot asset ${assetName}`);
+                logger.debug(`⏭️  Skipping leverage update for spot asset ${assetName}`);
             } else {
-            console.log(`📊 Setting leverage to ${targetLeverage}x for ${assetName}`);
+            logger.debug(`📊 Setting leverage to ${targetLeverage}x for ${assetName}`);
 
             try {
                 // Import SDK signing utilities for leverage update
@@ -1156,12 +1157,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     });
 
                     const leverageResult = await leverageResponse.json();
-                    console.log(`📊 Leverage update result:`, leverageResult);
+                    logger.debug(`📊 Leverage update result:`, leverageResult);
 
                     if (leverageResult.status === 'err') {
                         console.warn(`⚠️ Leverage update failed: ${leverageResult.response}. Proceeding with order anyway.`);
                     } else {
-                        console.log(`✅ Leverage set to ${targetLeverage}x`);
+                        logger.debug(`✅ Leverage set to ${targetLeverage}x`);
                     }
                 }
             } catch (leverageError) {
@@ -1192,7 +1193,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     throw new Error('Invalid price: Market price must be greater than 0');
                 }
 
-                console.log('💰 Price calculation:', {
+                logger.debug('💰 Price calculation:', {
                     isTradeXyzAsset,
                     referencePrice,
                     marketPrice: market?.price,
@@ -1211,7 +1212,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                         finalPx = referencePrice * (1 - stockSlippage);
                     }
                     const slippageDollars = Math.abs(finalPx - referencePrice);
-                    console.log('💰 Trade.xyz stock order with 1% max slippage:', {
+                    logger.debug('💰 Trade.xyz stock order with 1% max slippage:', {
                         referencePrice,
                         limitPrice: finalPx,
                         maxSlippage: stockSlippage * 100 + '%',
@@ -1243,7 +1244,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     }
 
                     const slippageDollars = Math.abs(finalPx - currentPrice);
-                    console.log(`💰 Market order with ${(slippagePercent * 100).toFixed(1)}% max slippage:`, {
+                    logger.debug(`💰 Market order with ${(slippagePercent * 100).toFixed(1)}% max slippage:`, {
                         currentPrice,
                         limitPrice: finalPx,
                         slippagePercent: (slippagePercent * 100).toFixed(1) + '%',
@@ -1282,20 +1283,20 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 tickSize = 0.0001; // Small coins: fractions of cents
             }
 
-            console.log('📊 Tick size calculation:', { currentPriceLevel, tickSize, assetName });
+            logger.debug('📊 Tick size calculation:', { currentPriceLevel, tickSize, assetName });
 
             // Round price to valid tick size
             finalPx = Math.round(finalPx / tickSize) * tickSize;
             // Clean up floating point precision issues
             finalPx = parseFloat(finalPx.toFixed(Math.max(0, -Math.floor(Math.log10(tickSize)))));
 
-            console.log('📊 Price after tick size rounding:', finalPx);
+            logger.debug('📊 Price after tick size rounding:', finalPx);
 
             // Round size based on asset's szDecimals (HIP-3 markets have specific precision requirements)
             // For Trade.xyz assets, use szDecimals from fresh DEX meta (actualSzDecimals)
             // For core assets, use cached market.szDecimals
             const szDecimalsToUse = actualSzDecimals ?? market?.szDecimals;
-            console.log('📊 Using szDecimals for size rounding:', szDecimalsToUse);
+            logger.debug('📊 Using szDecimals for size rounding:', szDecimalsToUse);
 
             let roundedSize = size;
             if (szDecimalsToUse !== undefined) {
@@ -1374,7 +1375,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // `agentWalletEnabled` React flag (see leverage note above).
             if (agent && agentSigner && isApproved) {
                 // Use agent wallet - no user signature needed!
-                console.log('✅ Using approved agent wallet - no signature prompt needed');
+                logger.debug('✅ Using approved agent wallet - no signature prompt needed');
                 usingAgentWallet = true;
 
                 // Create a BrowserWallet-like interface for the agent
@@ -1388,7 +1389,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     },
                 };
             } else {
-                console.log('⚠️ Agent wallet not available, using user wallet:', {
+                logger.debug('⚠️ Agent wallet not available, using user wallet:', {
                     agentWalletEnabled,
                     hasAgent: !!agent,
                     hasSigner: !!agentSigner,
@@ -1403,11 +1404,11 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                 if (embeddedWallet) {
                     signingProvider = await embeddedWallet.getEthereumProvider();
-                    console.log('⚠️ Using user wallet - signature prompt required');
+                    logger.debug('⚠️ Using user wallet - signature prompt required');
                 } else {
                     if (typeof window !== 'undefined' && (window as any).ethereum) {
                         signingProvider = (window as any).ethereum;
-                        console.log('⚠️ Using external wallet - signature prompt required');
+                        logger.debug('⚠️ Using external wallet - signature prompt required');
                     } else {
                         throw new Error('No wallet found. Please connect a wallet (MetaMask or Privy embedded wallet).');
                     }
@@ -1431,9 +1432,9 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             );
 
             if (usingAgentWallet) {
-                console.log('✅ Order signed with agent wallet - no user prompt!');
+                logger.debug('✅ Order signed with agent wallet - no user prompt!');
             } else {
-                console.log('✅ Order signed with user wallet');
+                logger.debug('✅ Order signed with user wallet');
             }
 
             // 5. Send to API
@@ -1450,14 +1451,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 throw new Error(`Rate limited. Please wait ${waitTime} seconds before trying again.`);
             }
 
-            console.log('📤 Sending order to API');
+            logger.debug('📤 Sending order to API');
 
             // For Trade.xyz assets, include dex parameter as query string
             const exchangeUrl = isTradeXyzAsset
                 ? `${API_URL}/exchange?dex=xyz`
                 : `${API_URL}/exchange`;
 
-            console.log('📤 Exchange endpoint selected:', { isTradeXyzAsset });
+            logger.debug('📤 Exchange endpoint selected:', { isTradeXyzAsset });
 
             const response = await fetch(exchangeUrl, {
                 method: 'POST',
@@ -1467,7 +1468,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify(payload),
             });
 
-            console.log('📥 API Response status:', response.status, response.statusText);
+            logger.debug('📥 API Response status:', response.status, response.statusText);
 
             if (response.status === 429) {
                 // Rate limited - set rate limit state and throw user-friendly error
@@ -1487,7 +1488,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const result = await response.json();
-            console.log('📥 API Response body:', JSON.stringify(result, null, 2));
+            logger.debug('📥 API Response body:', JSON.stringify(result, null, 2));
 
             if (result.status === 'err') {
                 console.error('❌ Order failed:', result.response);
@@ -1509,7 +1510,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             if (result.status === 'ok') {
-                console.log('✅ Order successful:', JSON.stringify(result.response, null, 2));
+                logger.debug('✅ Order successful:', JSON.stringify(result.response, null, 2));
 
                 // Check if there are any errors in the order statuses
                 let orderFilled = false;
@@ -1532,7 +1533,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             throw new Error(status.error);
                         }
                         if (status.resting) {
-                            console.log('✅ Order resting with ID:', status.resting.oid);
+                            logger.debug('✅ Order resting with ID:', status.resting.oid);
                             orderId = status.resting.oid.toString(); // Ensure string
                         }
                         if (status.filled) {
@@ -1555,7 +1556,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const improvement = isBuy
                                 ? finalPx - filledPrice  // For buys, lower is better
                                 : filledPrice - finalPx; // For sells, higher is better
-                            console.log('✅ Order FILLED at market price:', {
+                            logger.debug('✅ Order FILLED at market price:', {
                                 limitPrice: finalPx,
                                 actualFillPrice: filledPrice,
                                 filledSize: filledSize,
@@ -1723,7 +1724,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
 
                 // Record trade to database (async, don't block UI)
-                console.log('🔍 Trade recording check:', {
+                logger.debug('🔍 Trade recording check:', {
                     orderFilled,
                     type,
                     address,
@@ -1731,13 +1732,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 });
 
                 if ((orderFilled || type === 'market') && address) {
-                    console.log('🚀 Starting trade recording...');
+                    logger.debug('🚀 Starting trade recording...');
                     (async () => {
                         try {
                             // Get user from database
-                            console.log('🔍 Looking up user:', address);
+                            logger.debug('🔍 Looking up user:', address);
                             const userData = await db.users.getByWallet(address);
-                            console.log('👤 User data:', userData);
+                            logger.debug('👤 User data:', userData);
 
                             if (!userData) {
                                 console.warn('⚠️ Could not find user in database for trade recording. Creating user...');
@@ -1746,7 +1747,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     console.error('❌ Failed to create user for trade recording');
                                     return;
                                 }
-                                console.log('✅ Created new user:', newUser);
+                                logger.debug('✅ Created new user:', newUser);
                             }
 
                             const user = userData || await db.users.getByWallet(address);
@@ -1767,7 +1768,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             const isClosing = reduceOnly || isClosingPosition;
                             const hasPnl = realizedPnl !== undefined && realizedPnl !== null;
 
-                            console.log('📝 Creating trade record:', {
+                            logger.debug('📝 Creating trade record:', {
                                 user_id: user.id,
                                 symbol,
                                 side: originalPosition?.side || (isBuy ? 'long' : 'short'),
@@ -1795,10 +1796,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     tid: orderId || `sim-${Date.now()}`, // Fallback if no ID found
                                     fee: orderFee || 0
                                 });
-                                console.log('📊 Closed trade result:', result);
+                                logger.debug('📊 Closed trade result:', result);
                             } else if (isClosing) {
                                 // Closing but no PnL calculated - still record as closed with estimated PnL
-                                console.log('⚠️ Closing trade but no PnL - recording anyway');
+                                logger.debug('⚠️ Closing trade but no PnL - recording anyway');
                                 const result = await db.trades.create({
                                     user_id: user.id,
                                     symbol: symbol,
@@ -1811,7 +1812,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     tid: orderId || `sim-${Date.now()}`,
                                     fee: orderFee || 0
                                 });
-                                console.log('📊 Closed trade (no PnL) result:', result);
+                                logger.debug('📊 Closed trade (no PnL) result:', result);
                             } else {
                                 // For opening trades, record as an open trade
                                 const result = await db.trades.create({
@@ -1826,14 +1827,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                     tid: orderId || `sim-${Date.now()}`,
                                     fee: orderFee || 0
                                 });
-                                console.log('📊 Open trade result:', result);
+                                logger.debug('📊 Open trade result:', result);
                             }
                         } catch (err) {
                             console.error('❌ Failed to record trade to database:', err);
                         }
                     })();
                 } else {
-                    console.log('⏭️ Skipping trade recording:', {
+                    logger.debug('⏭️ Skipping trade recording:', {
                         reason: !address ? 'no address' : (!orderFilled && type !== 'market') ? 'not filled' : 'unknown'
                     });
                 }
@@ -1923,7 +1924,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             if (isTradeXyzAsset) {
                 // Fetch HIP-3 DEX meta from special endpoint (same pattern as regular orders)
-                console.log('📊 Fetching Trade.xyz meta for trigger order...');
+                logger.debug('📊 Fetching Trade.xyz meta for trigger order...');
                 const dexMetaResponse = await fetch(`${API_URL}/info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1942,7 +1943,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                 // Trade.xyz assets have "xyz:" prefix
                 assetName = `xyz:${baseCoin}`;
-                console.log('Looking for Trade.xyz asset:', assetName);
+                logger.debug('Looking for Trade.xyz asset:', assetName);
 
                 assetIndex = meta.universe?.findIndex((u: any) => u.name === assetName) ?? -1;
 
@@ -1955,7 +1956,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 meta = await client.info.perpetuals.getMeta();
                 assetName = `${baseCoin}-PERP`;
 
-                console.log('Looking for core asset:', assetName);
+                logger.debug('Looking for core asset:', assetName);
                 assetIndex = meta.universe.findIndex((u: any) => u.name === assetName);
 
                 if (assetIndex === -1) {
@@ -1963,7 +1964,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 }
             }
 
-            console.log(`✅ Found asset at index ${assetIndex}: ${assetName} (isTradeXyz: ${isTradeXyzAsset})`);
+            logger.debug(`✅ Found asset at index ${assetIndex}: ${assetName} (isTradeXyz: ${isTradeXyzAsset})`);
 
             // Find current position to determine side
             const position = positions.find(p => p.symbol === symbol);
@@ -2006,7 +2007,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     : triggerPrice * (1 - SLIPPAGE); // Selling: allow lower price
             }
 
-            console.log('📊 Trigger order prices:', { triggerPrice, limitPrice, slippage: SLIPPAGE, isBuy });
+            logger.debug('📊 Trigger order prices:', { triggerPrice, limitPrice, slippage: SLIPPAGE, isBuy });
 
             // Build order request using the same pattern as regular orders
             // This ensures proper formatting with orderToWire
@@ -2040,7 +2041,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             // CRITICAL: Trigger orders MUST use user wallet, NOT agent wallet
             // Hyperliquid requires user signature for trigger orders (SL/TP)
             // We bypass agent wallet for this specific transaction without disabling it
-            console.log('🎯 Placing trigger order with user wallet', { triggerType });
+            logger.debug('🎯 Placing trigger order with user wallet', { triggerType });
 
             // Get user's wallet provider (bypass agent wallet for trigger orders)
             let signingProvider = null;
@@ -2048,10 +2049,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             if (embeddedWallet) {
                 signingProvider = await embeddedWallet.getEthereumProvider();
-                console.log('✅ Using Privy embedded wallet');
+                logger.debug('✅ Using Privy embedded wallet');
             } else if (typeof window !== 'undefined' && (window as any).ethereum) {
                 signingProvider = (window as any).ethereum;
-                console.log('✅ Using external wallet (MetaMask/etc)');
+                logger.debug('✅ Using external wallet (MetaMask/etc)');
             }
 
             if (!signingProvider) {
@@ -2071,7 +2072,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 !IS_TESTNET
             );
 
-            console.log('✅ Trigger order signature created');
+            logger.debug('✅ Trigger order signature created');
 
             // Double-check the signer address
             const walletAddress = await browserWallet.getAddress();
@@ -2086,14 +2087,14 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 vaultAddress: null,
             };
 
-            console.log('📤 Sending trigger order to API...');
+            logger.debug('📤 Sending trigger order to API...');
 
             // For Trade.xyz assets, include dex parameter as query string
             const exchangeUrl = isTradeXyzAsset
                 ? `${API_URL}/exchange?dex=xyz`
                 : `${API_URL}/exchange`;
 
-            console.log('📤 Trigger endpoint selected:', { isTradeXyzAsset });
+            logger.debug('📤 Trigger endpoint selected:', { isTradeXyzAsset });
 
             const response = await fetch(exchangeUrl, {
                 method: 'POST',
@@ -2101,7 +2102,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 body: JSON.stringify(payload),
             });
 
-            console.log('📥 API Response status:', response.status);
+            logger.debug('📥 API Response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -2110,7 +2111,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const result = await response.json();
-            console.log('📥 Trigger order API result:', JSON.stringify(result, null, 2));
+            logger.debug('📥 Trigger order API result:', JSON.stringify(result, null, 2));
 
             // Check for success - Hyperliquid returns status: 'ok' and response.type: 'order'
             // But actual order status is in response.data.statuses array
@@ -2135,15 +2136,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
                     // Check for resting status (success)
                     if (orderStatus?.resting) {
-                        console.log('✅ Trigger order placed successfully! Order ID:', orderStatus.resting.oid);
+                        logger.debug('✅ Trigger order placed successfully! Order ID:', orderStatus.resting.oid);
                     } else if (orderStatus?.filled) {
-                        console.log('✅ Trigger order filled immediately!');
+                        logger.debug('✅ Trigger order filled immediately!');
                     } else {
-                        console.log('📝 Order status:', JSON.stringify(orderStatus));
+                        logger.debug('📝 Order status:', JSON.stringify(orderStatus));
                     }
                 }
 
-                console.log('✅ Trigger order placed successfully!');
+                logger.debug('✅ Trigger order placed successfully!');
                 // Refresh orders to show the new trigger order
                 setTimeout(() => refreshAccountData(), 500);
 
@@ -2174,7 +2175,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
         setLoading(true);
         try {
-            console.log(`🗑️ Cancelling order ${orderId} for ${symbol}`);
+            logger.debug(`🗑️ Cancelling order ${orderId} for ${symbol}`);
 
             // 1. Get asset index
             // The symbol passed might be "BTC-PERP", "BTC", or "HYPE/USDC"
@@ -2255,7 +2256,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             const isApproved = isAgentApproved(address);
 
             if (agentWalletEnabled && agent && agentSigner && isApproved) {
-                console.log('🤖 Signing cancellation with Agent Wallet');
+                logger.debug('🤖 Signing cancellation with Agent Wallet');
                 signingWallet = {
                     address: agent.address,
                     getAddress: async () => agent.address.toLowerCase(),
@@ -2265,7 +2266,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     },
                 };
             } else {
-                console.log('👤 Signing cancellation with User Wallet');
+                logger.debug('👤 Signing cancellation with User Wallet');
                 const embeddedWallet = wallets.find(wallet => wallet.walletClientType === 'privy');
                 let signingProvider = null;
 
@@ -2300,7 +2301,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const result = await response.json();
-            console.log('✅ Cancellation result:', result);
+            logger.debug('✅ Cancellation result:', result);
 
             if (result.status === 'err') {
                 throw new Error(result.response || 'Failed to cancel order');
@@ -2642,7 +2643,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const agent = await getAgentWallet(address);
                 const agentSigner = agent ? getAgentSigner(agent) : null;
                 const isApproved = isAgentApproved(address);
-                console.log('🪙 HIP-4 agent check:', {
+                logger.debug('🪙 HIP-4 agent check:', {
                     agentWalletEnabled,
                     hasAgent: !!agent,
                     hasSigner: !!agentSigner,
@@ -2668,7 +2669,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                             );
                         },
                     };
-                    console.log('🪙 HIP-4 signing with approved agent');
+                    logger.debug('🪙 HIP-4 signing with approved agent');
                 } else {
                     return {
                         filled: false,
@@ -2781,7 +2782,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
         setLoading(true);
         try {
-            console.log(`🏦 Initiating withdrawal of ${amount} USDC to ${destination}`);
+            logger.debug(`🏦 Initiating withdrawal of ${amount} USDC to ${destination}`);
 
             const nonce = Date.now();
             const withdrawAction = {
@@ -2871,7 +2872,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
 
             const result = await response.json();
             if (result.status === 'ok' || result.response?.type === 'default') {
-                console.log('✅ Withdrawal successful');
+                logger.debug('✅ Withdrawal successful');
                 setTimeout(() => refreshAccountData(), 2000);
                 return result;
             } else {

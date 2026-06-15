@@ -10,6 +10,7 @@ import { parseCoinRef, readOutcomeNameCache, localizeSideName, type CachedOutcom
 import { useCurrency } from '@/context/CurrencyContext';
 import { listMoneyMovements } from '@/lib/api/money-movements';
 import type { MoneyMovementKind, MoneyMovementRecord, MoneyMovementStatus } from '@/lib/money-movements/types';
+import { movementAmountPrefix, movementStatusLabel, movementTitle, movementTxHash } from '@/lib/money-movements/display';
 import EmptyState from '@/components/EmptyState';
 import SkeletonRow from '@/components/SkeletonRow';
 import { ScreenV2, V2Header, IconBtn, MarketLogo, Icon, V2 } from '@/components/V2Kit';
@@ -169,11 +170,6 @@ export default function OrderHistory() {
             };
         });
         const fromMovements = movements.map((movement) => {
-            const txHash =
-                movement.deposit_tx_hash ||
-                movement.withdraw_tx_hash ||
-                movement.mint_tx_hash ||
-                movement.burn_tx_hash;
             return {
                 id: movement.id,
                 type: 'deposit' as const,
@@ -184,7 +180,7 @@ export default function OrderHistory() {
                 movementStatus: movement.status,
                 sourceChain: movement.source_chain,
                 destinationChain: movement.destination_chain,
-                txHash,
+                txHash: movementTxHash(movement),
                 errorMessage: movement.error_message,
             };
         });
@@ -342,15 +338,10 @@ function HistoryRowV2({
         const isFailed = status === 'failed' || status === 'cancelled';
         const isDone = status === 'completed';
         const asset = entry.asset || 'USDC';
-        const title =
-            entry.movementKind === 'withdrawal'
-                ? `Retiro ${asset}`
-                : entry.movementKind === 'internal_transfer'
-                    ? `Movimiento ${asset}`
-                    : t.screens.historial.row.deposit;
+        const title = movementTitle(entry.movementKind, asset, t.screens.historial.row.deposit);
         const statusLabel = movementStatusLabel(status);
         const route = [entry.sourceChain, entry.destinationChain].filter(Boolean).join(' → ');
-        const amountPrefix = entry.movementKind === 'withdrawal' ? '-' : '+';
+        const amountPrefix = movementAmountPrefix(entry.movementKind);
         const amountColor = isFailed ? V2.neg : isDone ? V2.pos : V2.accent;
         const softBg = isFailed ? V2.negSoft : isDone ? V2.posSoft : V2.accentSoft;
         const rowBg = isFailed ? 'color-mix(in srgb, var(--color-negative) 6%, transparent)' : 'color-mix(in srgb, var(--color-brand-primary) 5%, transparent)';
@@ -418,19 +409,4 @@ function HistoryRowV2({
             )}
         </div>
     );
-}
-
-function movementStatusLabel(status: MoneyMovementStatus): string {
-    switch (status) {
-        case 'completed': return 'completado';
-        case 'failed': return 'falló';
-        case 'cancelled': return 'cancelado';
-        case 'burning': return 'enviando';
-        case 'attesting': return 'confirmando';
-        case 'minting': return 'recibiendo';
-        case 'depositing': return 'acreditando';
-        case 'withdrawing': return 'retirando';
-        case 'awaiting_user': return 'pendiente';
-        default: return 'pendiente';
-    }
 }

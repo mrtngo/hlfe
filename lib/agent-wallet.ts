@@ -9,6 +9,7 @@ import { createHyperliquidClient, IS_TESTNET, API_URL } from './hyperliquid/clie
 import { BrowserWallet } from './hyperliquid/browser-wallet';
 import { signL1Action } from './vendor/hyperliquid/index.mjs';
 import { Hyperliquid } from './vendor/hyperliquid/index.js';
+import { logger } from './logger';
 
 const AGENT_WALLET_KEY = 'hyperliquid_agent_wallet';
 const AGENT_APPROVAL_KEY = 'hyperliquid_agent_approved';
@@ -260,7 +261,7 @@ export async function getAgentWallet(userAddress?: string): Promise<AgentWallet 
 
         // Legacy unencrypted format - migrate it if userAddress is provided
         if (parsed.privateKey && userAddress) {
-            console.log('Migrating legacy unencrypted agent wallet to encrypted format...');
+            logger.debug('Migrating legacy unencrypted agent wallet to encrypted format...');
             const legacyWallet = parsed as AgentWallet;
             await saveAgentWallet(legacyWallet, userAddress);
             return legacyWallet;
@@ -366,7 +367,7 @@ export function clearAgentWallet(): void {
     try {
         localStorage.removeItem(AGENT_WALLET_KEY);
         localStorage.removeItem(AGENT_APPROVAL_KEY);
-        console.log('🗑️ Agent wallet cleared');
+        logger.debug('🗑️ Agent wallet cleared');
     } catch (e) {
         console.error('Failed to clear agent wallet:', e);
     }
@@ -391,7 +392,7 @@ export async function checkExistingAgent(userAddress: string): Promise<{ hasAgen
         }
         
         const agents = await response.json();
-        console.log('📋 Existing agents:', agents);
+        logger.debug('📋 Existing agents:', agents);
         
         // agents is an array of { address, name } objects
         if (Array.isArray(agents) && agents.length > 0) {
@@ -468,7 +469,7 @@ export async function approveAgentWallet(
             validAgentName = 'Rayo Agent';
         }
         
-        console.log('🔐 Approving agent via SDK', { agentNameLength: validAgentName.length });
+        logger.debug('🔐 Approving agent via SDK', { agentNameLength: validAgentName.length });
         
         // Use SDK's approveAgent method - it will use our custom wallet for signing
         const approveRequest = {
@@ -478,20 +479,20 @@ export async function approveAgentWallet(
         
         const result = await client.exchange.approveAgent(approveRequest);
         
-        console.log('📥 SDK Response:', JSON.stringify(result, null, 2));
+        logger.debug('📥 SDK Response:', JSON.stringify(result, null, 2));
         
         // Check if successful
         if (result && result.status === 'ok') {
             // Mark as approved
             setAgentApproved(userAddress);
-            console.log('✅ Agent wallet approved successfully!');
+            logger.debug('✅ Agent wallet approved successfully!');
             return true;
         } else if (result && result.status === 'err') {
             throw new Error(result.response || 'Failed to approve agent');
         } else {
             // If no status field, assume success (some SDK methods don't return status)
             setAgentApproved(userAddress);
-            console.log('✅ Agent wallet approved successfully!');
+            logger.debug('✅ Agent wallet approved successfully!');
             return true;
         }
     } catch (error: any) {

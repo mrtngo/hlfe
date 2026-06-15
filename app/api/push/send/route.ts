@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
 import webPush from 'web-push';
 import { getSupabaseServiceClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 interface PushSubscriptionRow {
   endpoint: string;
@@ -203,7 +204,7 @@ export async function POST(request: NextRequest) {
               .from('push_subscriptions')
               .delete()
               .eq('endpoint', sub.endpoint);
-            console.log('[Push] Removed invalid subscription:', sub.endpoint.slice(0, 50));
+            logger.debug('[Push] Removed invalid subscription:', sub.endpoint.slice(0, 50));
           }
           return { success: false, endpoint: sub.endpoint, error: pushError.message || 'Push send failed' };
         }
@@ -215,7 +216,7 @@ export async function POST(request: NextRequest) {
     ).length;
     const failed = results.length - sent;
 
-    console.log(`[Push] Sent ${sent}/${subscriptions.length} notifications`);
+    logger.debug(`[Push] Sent ${sent}/${subscriptions.length} notifications`);
 
     return NextResponse.json({
       success: true,

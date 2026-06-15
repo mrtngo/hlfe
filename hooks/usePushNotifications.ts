@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { usePrivy } from '@privy-io/react-auth';
 import { apiUrl } from '@/lib/api-base';
+import { logger } from '@/lib/logger';
 
 /**
  * Web Push (Service Worker + PushManager) does not work inside Capacitor's
@@ -74,7 +75,7 @@ function checkPushSupport(): boolean {
   const hasNotification = 'Notification' in window;
 
   // Log for debugging
-  console.log('[Push] Support check:', { hasServiceWorker, hasPushManager, hasNotification });
+  logger.debug('[Push] Support check:', { hasServiceWorker, hasPushManager, hasNotification });
 
   return hasServiceWorker && hasPushManager && hasNotification;
 }
@@ -118,7 +119,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
       const isSecure = typeof window !== 'undefined' && window.isSecureContext;
 
       // Log for debugging on iOS
-      console.log('[Push] Init:', { isSupported, isIOS, isPWA, isSecure, userAgent: navigator.userAgent });
+      logger.debug('[Push] Init:', { isSupported, isIOS, isPWA, isSecure, userAgent: navigator.userAgent });
 
       let permission: NotificationPermission = 'default';
       let subscription: PushSubscription | null = null;
@@ -164,7 +165,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: '/',
         });
-        console.log('[Push] Service worker registered:', registration.scope);
+        logger.debug('[Push] Service worker registered:', registration.scope);
 
         // Check for updates
         registration.addEventListener('updatefound', () => {
@@ -172,7 +173,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[Push] New service worker available');
+                logger.debug('[Push] New service worker available');
               }
             });
           }
@@ -261,7 +262,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
         };
 
         subscription = await registration.pushManager.subscribe(options);
-        console.log('[Push] New subscription created:', subscription.endpoint);
+        logger.debug('[Push] New subscription created:', subscription.endpoint);
 
       }
 
@@ -324,7 +325,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
   // Send a test notification (for debugging)
   const sendTestNotification = useCallback(() => {
     if (state.permission !== 'granted') {
-      console.log('[Push] Cannot send test notification - permission not granted');
+      logger.debug('[Push] Cannot send test notification - permission not granted');
       return;
     }
 
@@ -372,7 +373,7 @@ async function sendSubscriptionToBackend(
       throw new Error('Failed to save subscription');
     }
 
-    console.log('[Push] Subscription saved to backend');
+    logger.debug('[Push] Subscription saved to backend');
   } catch (err) {
     console.error('[Push] Failed to send subscription to backend:', err);
     // Don't throw - subscription still works locally
@@ -401,7 +402,7 @@ async function removeSubscriptionFromBackend(
       throw new Error('Failed to remove subscription');
     }
 
-    console.log('[Push] Subscription removed from backend');
+    logger.debug('[Push] Subscription removed from backend');
   } catch (err) {
     console.error('[Push] Failed to remove subscription from backend:', err);
   }

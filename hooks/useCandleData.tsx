@@ -2,14 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { IS_TESTNET, API_URL } from '@/lib/hyperliquid/client';
+import { createLogger } from '@/lib/logger';
 
-// Conditional logging - only in development
-const isDev = process.env.NODE_ENV === 'development';
-const log = {
-    info: (...args: any[]) => isDev && console.log(...args),
-    warn: (...args: any[]) => isDev && console.warn(...args),
-    error: (...args: any[]) => isDev && console.error(...args),
-};
+const log = createLogger('candles');
 
 export interface CandleData {
     time: number;
@@ -244,4 +239,3 @@ export function useCandleData(
 
     return { candles, loading, error };
 }
-

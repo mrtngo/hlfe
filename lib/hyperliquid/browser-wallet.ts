@@ -1,4 +1,6 @@
 
+import { logger } from '@/lib/logger';
+
 const DEBUG_SIGNING = process.env.NODE_ENV === 'development';
 
 export class BrowserWallet {
@@ -143,7 +145,7 @@ export class BrowserWallet {
             console.warn('Using current wallet address for signing');
         }
 
-        console.log('Signing with provider, address:', currentAddress);
+        logger.debug('Signing with provider, address:', currentAddress);
 
         try {
             const signature = await this.provider.request({

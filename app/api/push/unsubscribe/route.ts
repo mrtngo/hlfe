@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { corsHeaders } from '@/lib/api/cors';
 import { verifyPrivyRequest } from '@/lib/auth/privy';
 import { getSupabaseServiceClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 export function OPTIONS(request: NextRequest) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(request) });
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to remove subscription' }, { status: 500, headers });
     }
 
-    console.log('[Push] Subscription removed:', endpoint.slice(0, 50));
+    logger.debug('[Push] Subscription removed:', endpoint.slice(0, 50));
 
     return NextResponse.json({ success: true }, { headers });
   } catch (error) {

@@ -1,6 +1,8 @@
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+const debugEnabled =
+    process.env.NODE_ENV !== 'production' ||
+    process.env.NEXT_PUBLIC_DEBUG_LOGS === '1';
 
-const isDev = process.env.NODE_ENV !== 'production';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 function scrub(value: unknown): unknown {
     if (!value || typeof value !== 'object') return value;
@@ -15,15 +17,24 @@ function scrub(value: unknown): unknown {
     );
 }
 
-function write(level: LogLevel, scope: string, args: unknown[]) {
-    if (level === 'debug' && !isDev) return;
+function write(level: LogLevel, scope: string | null, args: unknown[]) {
+    if ((level === 'debug' || level === 'info') && !debugEnabled) return;
+
     const payload = args.map(scrub);
-    const prefix = `[${scope}]`;
-    if (level === 'error') console.error(prefix, ...payload);
-    else if (level === 'warn') console.warn(prefix, ...payload);
-    else if (level === 'info' && isDev) console.info(prefix, ...payload);
-    else if (level === 'debug') console.debug(prefix, ...payload);
+    const scopedPayload = scope ? [`[${scope}]`, ...payload] : payload;
+
+    if (level === 'error') console.error(...scopedPayload);
+    else if (level === 'warn') console.warn(...scopedPayload);
+    else if (level === 'info') console.info(...scopedPayload);
+    else console.debug(...scopedPayload);
 }
+
+export const logger = {
+    debug: (...args: unknown[]) => write('debug', null, args),
+    info: (...args: unknown[]) => write('info', null, args),
+    warn: (...args: unknown[]) => write('warn', null, args),
+    error: (...args: unknown[]) => write('error', null, args),
+};
 
 export function createLogger(scope: string) {
     return {

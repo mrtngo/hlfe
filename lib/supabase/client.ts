@@ -1,4 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 // Supabase configuration
 // Get these from: https://supabase.com/dashboard/project/YOUR_PROJECT/settings/api
@@ -294,7 +295,7 @@ export const db = {
         },
 
         async create(trade: Omit<Trade, 'id' | 'opened_at' | 'closed_at'>): Promise<Trade | null> {
-            console.log('📝 Attempting to create trade:', trade);
+            logger.debug('📝 Attempting to create trade:', trade);
             const { data, error } = await supabase
                 .from('trades')
                 .insert({
@@ -308,12 +309,12 @@ export const db = {
                 console.error('❌ Error creating trade:', error.message, error.code, error.details, error.hint);
                 return null;
             }
-            console.log('✅ Trade created successfully:', data);
+            logger.debug('✅ Trade created successfully:', data);
             return data;
         },
 
         async deleteAllByUser(userId: string): Promise<boolean> {
-            console.log('🗑️ Deleting all trades for user:', userId);
+            logger.debug('🗑️ Deleting all trades for user:', userId);
             const { error } = await supabase
                 .from('trades')
                 .delete()
@@ -323,7 +324,7 @@ export const db = {
                 console.error('❌ Error deleting trades:', error);
                 return false;
             }
-            console.log('✅ All trades deleted for user');
+            logger.debug('✅ All trades deleted for user');
             return true;
         },
 
@@ -338,7 +339,7 @@ export const db = {
             tid?: number | string;
             dir?: string;
         }>): Promise<{ synced: number; totalPnl: number }> {
-            console.log('🔄 Syncing trades from fills for user:', userId, 'fills count:', fills.length);
+            logger.debug('🔄 Syncing trades from fills for user:', userId, 'fills count:', fills.length);
 
             // Get existing trade IDs (tids) to avoid duplicates
             // We use the 'tid' column which stores the Hyperliquid trade ID
@@ -403,7 +404,7 @@ export const db = {
                 }
             }
 
-            console.log(`✅ Synced ${synced} new trades, total PnL processed: $${totalPnl.toFixed(2)}`);
+            logger.debug(`✅ Synced ${synced} new trades, total PnL processed: $${totalPnl.toFixed(2)}`);
             return { synced, totalPnl };
         },
     },

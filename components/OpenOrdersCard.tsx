@@ -5,6 +5,7 @@ import { X, Clock, TrendingUp, TrendingDown } from 'lucide-react';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { logger } from '@/lib/logger';
 import TokenLogo from './TokenLogo';
 
 interface OpenOrder {
@@ -40,12 +41,12 @@ export default function OpenOrdersCard({ order, onCancel }: OpenOrdersCardProps)
     const handleCancel = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (!order.oid) {
-            console.log('No order ID found');
+            logger.debug('No order ID found');
             return;
         }
 
         try {
-            console.log(`🗑️ Cancelling order ${order.oid} for ${rawCoin}`);
+            logger.debug(`🗑️ Cancelling order ${order.oid} for ${rawCoin}`);
             // Pass the raw coin name (e.g., "BTC" or "xyz:AAPL") 
             await cancelOrder(rawCoin, order.oid.toString());
             // Refresh to update the orders list

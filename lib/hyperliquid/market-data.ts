@@ -3,14 +3,9 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { publicClient, WS_URL, API_URL } from './client';
 import { priceDecimalsFromRules } from '@/lib/format/price';
+import { createLogger } from '@/lib/logger';
 
-// Conditional logging - only log in development to avoid exposing details in production
-const isDev = process.env.NODE_ENV === 'development';
-const log = {
-    info: (...args: any[]) => isDev && console.log(...args),
-    warn: (...args: any[]) => isDev && console.warn(...args),
-    error: (...args: any[]) => isDev && console.error(...args),
-};
+const log = createLogger('market-data');
 
 // Known Trade.xyz (Hyperunit) stock tickers
 export const TRADEXYZ_ASSETS = ['XYZ100', 'NVDA', 'MSFT', 'TSLA', 'GOOGL', 'AMZN', 'COIN', 'HOOD', 'PYPL', 'AAPL', 'META', 'NFLX'];

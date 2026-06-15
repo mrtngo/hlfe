@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import webPush from 'web-push';
 import { getSupabaseServiceClient } from '@/lib/supabase/server';
 import { sendApnsToAll } from '@/lib/apns';
+import { logger } from '@/lib/logger';
 
 interface PushSubscriptionRow {
     endpoint: string;
@@ -177,11 +178,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-        console.log('[PriceAlerts] Unauthorized cron request');
+        logger.debug('[PriceAlerts] Unauthorized cron request');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('[PriceAlerts] Cron job started');
+    logger.debug('[PriceAlerts] Cron job started');
 
     try {
         // Fetch current and last prices
@@ -196,13 +197,13 @@ export async function GET(request: NextRequest) {
             const lastPrice = lastPrices[symbol];
 
             if (!currentPrice || !lastPrice) {
-                console.log(`[PriceAlerts] Missing price for ${symbol}: current=${currentPrice}, last=${lastPrice}`);
+                logger.debug(`[PriceAlerts] Missing price for ${symbol}: current=${currentPrice}, last=${lastPrice}`);
                 continue;
             }
 
             const priceDist = Math.abs(currentPrice - lastPrice);
 
-            console.log(`[PriceAlerts] ${symbol}: ${currentPrice} vs last alerted ${lastPrice} (dist: ${priceDist.toFixed(2)}, threshold: ${config.threshold})`);
+            logger.debug(`[PriceAlerts] ${symbol}: ${currentPrice} vs last alerted ${lastPrice} (dist: ${priceDist.toFixed(2)}, threshold: ${config.threshold})`);
 
             // Only trigger if we moved at least one full threshold distance from the last alert
             if (priceDist >= config.threshold) {
@@ -215,7 +216,7 @@ export async function GET(request: NextRequest) {
                 const title = `${directionIcon} ${config.displayName} ${formatPrice(crossedLevel, symbol)} Crossed!`;
                 const body = `${config.displayName} is now ${formatPrice(currentPrice, symbol)}. Next level: ${formatPrice(crossedLevel + (direction > 0 ? config.threshold : -config.threshold), symbol)}`;
 
-                console.log(`[PriceAlerts] Sending alert: ${title}`);
+                logger.debug(`[PriceAlerts] Sending alert: ${title}`);
 
                 const data = { symbol: `${symbol}-USD`, url: `/trade?symbol=${symbol}-USD` };
                 // Web Push (browser/PWA) + native APNs (iOS app) — both broadcast.

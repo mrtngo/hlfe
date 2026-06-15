@@ -3,6 +3,8 @@
  * Used for generating deposit addresses for BTC, ETH, SOL, etc.
  */
 
+import { logger } from '@/lib/logger';
+
 export const UNIT_API_URL = 'https://api.hyperunit.xyz';
 
 export interface UnitDepositResponse {
@@ -35,7 +37,7 @@ export async function generateDepositAddress(
         }
 
         const url = `${UNIT_API_URL}/gen/${sourceChain}/hyperliquid/${cleanAsset}/${userAddress}`;
-        console.log(`📡 Generating Hyperunit deposit address: ${url}`);
+        logger.debug(`📡 Generating Hyperunit deposit address: ${url}`);
 
         const response = await fetch(url);
         if (!response.ok) {

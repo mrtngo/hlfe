@@ -7,6 +7,7 @@ import { Search, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide
 import TokenLogo from '@/components/TokenLogo';
 import { getTokenFullName } from '@/lib/constants';
 import { formatUsdPrice } from '@/lib/format/price';
+import { logger } from '@/lib/logger';
 
 interface MarketOverviewProps {
     onTokenClick?: (symbol: string) => void;
@@ -51,8 +52,8 @@ export default function MarketOverview({ onTokenClick }: MarketOverviewProps = {
     const stockMarketsCount = (markets || []).filter(m => m.isStock === true).length;
     const isolatedMarketsCount = (markets || []).filter(m => m.onlyIsolated === true).length;
     if (activeTab === 'stocks' && markets && markets.length > 0) {
-        console.log(`📊 Stocks tab: ${stockMarketsCount} identified stock markets, ${isolatedMarketsCount} isolated markets total`);
-        console.log('📊 All isolated markets:', markets.filter(m => m.onlyIsolated === true).map(m => ({ name: m.name, isStock: m.isStock })));
+        logger.debug(`📊 Stocks tab: ${stockMarketsCount} identified stock markets, ${isolatedMarketsCount} isolated markets total`);
+        logger.debug('📊 All isolated markets:', markets.filter(m => m.onlyIsolated === true).map(m => ({ name: m.name, isStock: m.isStock })));
     }
 
     return (

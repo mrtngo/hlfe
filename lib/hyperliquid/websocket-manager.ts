@@ -1,14 +1,9 @@
 'use client';
 
 import { WS_URL, IS_TESTNET } from './client';
+import { createLogger } from '@/lib/logger';
 
-// Conditional logging - only in development
-const isDev = process.env.NODE_ENV === 'development';
-const log = {
-    info: (...args: any[]) => isDev && console.log(...args),
-    warn: (...args: any[]) => isDev && console.warn(...args),
-    error: (...args: any[]) => isDev && console.error(...args),
-};
+const log = createLogger('hyperliquid-ws');
 
 export interface WebSocketCallbacks {
     onPriceUpdate?: (coin: string, price: number) => void;
@@ -501,4 +496,3 @@ class HyperliquidWebSocketManager {
 
 // Singleton instance
 export const wsManager = new HyperliquidWebSocketManager();
-

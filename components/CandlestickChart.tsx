@@ -13,6 +13,7 @@ import {
 } from 'lightweight-charts';
 import { useCandleData, type Timeframe } from '@/hooks/useCandleData';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
+import { logger } from '@/lib/logger';
 
 // Rayo theme colors
 const RAYO_YELLOW = '#FFD60A';
@@ -68,7 +69,7 @@ export default function CandlestickChart({
     // DEBUG: Log position data for TP/SL lines
     useEffect(() => {
         if (currentPosition) {
-            console.log(`[Chart Debug] ${marketSymbol} Position:`, {
+            logger.debug(`[Chart Debug] ${marketSymbol} Position:`, {
                 side: currentPosition.side,
                 entry: currentPosition.entryPrice,
                 tp: currentPosition.takeProfitPrice,
@@ -243,7 +244,7 @@ export default function CandlestickChart({
 
             // Take Profit price line
             if (currentPosition.takeProfitPrice && currentPosition.takeProfitPrice > 0) {
-                console.log(`[Chart] Drawing TP line at ${currentPosition.takeProfitPrice}`);
+                logger.debug(`[Chart] Drawing TP line at ${currentPosition.takeProfitPrice}`);
                 const tpLine = candleSeriesRef.current.createPriceLine({
                     price: currentPosition.takeProfitPrice,
                     color: '#22D3EE', // Cyan for TP
@@ -257,7 +258,7 @@ export default function CandlestickChart({
 
             // Stop Loss price line
             if (currentPosition.stopLossPrice && currentPosition.stopLossPrice > 0) {
-                console.log(`[Chart] Drawing SL line at ${currentPosition.stopLossPrice}`);
+                logger.debug(`[Chart] Drawing SL line at ${currentPosition.stopLossPrice}`);
                 const slLine = candleSeriesRef.current.createPriceLine({
                     price: currentPosition.stopLossPrice,
                     color: '#F97316', // Orange for SL

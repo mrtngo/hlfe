@@ -20,6 +20,7 @@ import {
 } from '@/lib/agent-wallet';
 import { BUILDER_CONFIG, API_URL, IS_TESTNET } from '@/lib/hyperliquid/client';
 import type { ActionResult } from '@/types';
+import { logger } from '@/lib/logger';
 
 interface AgentWalletState {
     agentWalletEnabled: boolean;
@@ -92,7 +93,7 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
             }
 
             const maxFee = await response.json();
-            console.log('📊 Builder fee approval status:', { maxFee, requiredFee: BUILDER_CONFIG.fee });
+            logger.debug('📊 Builder fee approval status:', { maxFee, requiredFee: BUILDER_CONFIG.fee });
 
             // maxFee is returned as a number in tenths of basis points
             // User is approved if their max fee >= our required fee
@@ -171,7 +172,7 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
                 // Check if the error is "Extra agent already used"
                 if (approvalError.message?.includes('Extra agent already used') ||
                     approvalError.message?.includes('already used')) {
-                    console.log('⚠️ Agent already registered on-chain, checking existing agents...');
+                    logger.debug('⚠️ Agent already registered on-chain, checking existing agents...');
 
                     // Check if there's an existing agent on-chain
                     const existingAgent = await checkExistingAgent(address);
@@ -257,7 +258,7 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
                 nonce
             };
 
-            console.log('📝 ApproveBuilderFee action:', action);
+            logger.debug('📝 ApproveBuilderFee action:', action);
 
             // Sign the action
             const signature = await signUserSignedAction(
@@ -290,7 +291,7 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
             }
 
             const result = await response.json();
-            console.log('✅ Builder fee approval result:', result);
+            logger.debug('✅ Builder fee approval result:', result);
 
             if (result.status === 'err') {
                 return { success: false, message: result.response || 'Failed to approve builder fee' };

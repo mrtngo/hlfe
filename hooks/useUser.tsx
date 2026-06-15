@@ -6,6 +6,7 @@ import { User } from '@/lib/supabase/client';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { CURRENT_PRIVACY_POLICY_VERSION, needsConsent as policyNeedsConsent } from '@/lib/compliance/consent';
 import { ApiRequestError, authedJson } from '@/lib/api/authed-fetch';
+import { logger } from '@/lib/logger';
 
 const REFERRAL_STORAGE_KEY = 'rayo_referral_code';
 const CONSENT_STORAGE_PREFIX = 'rayo_privacy_consent_v';
@@ -120,7 +121,7 @@ function getAndStoreReferralCode(): string | null {
     if (refCode && isValidReferralCode(refCode)) {
         // Store in localStorage for later use (after wallet connect)
         localStorage.setItem(REFERRAL_STORAGE_KEY, refCode);
-        console.log('📎 Stored referral code:', refCode);
+        logger.debug('📎 Stored referral code:', refCode);
         return refCode;
     } else if (refCode) {
         console.warn('⚠️ Invalid referral code format:', refCode);
