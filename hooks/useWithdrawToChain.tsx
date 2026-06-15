@@ -309,6 +309,7 @@ export function useWithdrawToChain() {
                 setPhase('approving');
                 await evm.transfer('arbitrum', destChain, settled, {
                     mintRecipient: destAddress,
+                    movementKind: 'withdrawal',
                 });
             } catch (e) {
                 setError(e instanceof Error ? e.message : 'No se pudo completar el retiro.');

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useWallets, useSendTransaction } from '@privy-io/react-auth';
+import { usePrivy, useWallets, useSendTransaction } from '@privy-io/react-auth';
 import { createPublicClient, http, parseUnits, type Hex } from 'viem';
 import { mainnet, avalanche, optimism, arbitrum, base, polygon } from 'viem/chains';
 import {
@@ -27,6 +27,9 @@ import {
     savePendingCctpTransfer,
     type PendingCctpTransfer,
 } from '@/lib/cctp/pending';
+import { recordMoneyMovement, updateMoneyMovement } from '@/lib/api/money-movements';
+import type { MoneyMovementKind, MoneyMovementStatus } from '@/lib/money-movements/types';
+import { createLogger } from '@/lib/logger';
 
 /**
  * Native USDC transfer across chains via Circle CCTP V2 (Fast).
@@ -60,7 +63,10 @@ interface TransferOptions {
      * bridge.
      */
     mintRecipient?: string;
+    movementKind?: MoneyMovementKind;
 }
+
+const log = createLogger('cctp');
 
 const VIEM_CHAINS = {
     ethereum: mainnet,
@@ -73,6 +79,7 @@ const VIEM_CHAINS = {
 
 export function useCctpTransfer() {
     const { wallets } = useWallets();
+    const { getAccessToken } = usePrivy();
     const { sendTransaction } = useSendTransaction();
     const activeWallet = wallets?.[0];
 
@@ -106,6 +113,66 @@ export function useCctpTransfer() {
         setPending(null);
     }, []);
 
+    const syncMovement = useCallback(
+        async (
+            pendingTransfer: PendingCctpTransfer,
+            status: MoneyMovementStatus,
+            patch: {
+                burnTxHash?: string | null;
+                mintTxHash?: string | null;
+                depositTxHash?: string | null;
+                errorMessage?: string | null;
+            } = {},
+        ) => {
+            try {
+                if (!activeWallet?.address) return;
+                await updateMoneyMovement(getAccessToken, {
+                    walletAddress: activeWallet.address,
+                    externalId: pendingTransfer.id,
+                    status,
+                    amount: pendingTransfer.amountStr,
+                    ...patch,
+                    metadata: {
+                        autoDeposit: pendingTransfer.autoDeposit,
+                        mintRecipient: pendingTransfer.mintRecipient,
+                    },
+                });
+            } catch (error) {
+                log.warn('movement sync failed', { error: error instanceof Error ? error.message : String(error) });
+            }
+        },
+        [activeWallet?.address, getAccessToken],
+    );
+
+    const ensureMovement = useCallback(
+        async (pendingTransfer: PendingCctpTransfer, kind: MoneyMovementKind) => {
+            try {
+                if (!activeWallet?.address) return;
+                await recordMoneyMovement(getAccessToken, {
+                    walletAddress: activeWallet.address,
+                    externalId: pendingTransfer.id,
+                    kind,
+                    provider: 'circle_cctp',
+                    status: pendingTransfer.burnTxHash ? 'attesting' : 'pending',
+                    amount: pendingTransfer.amountStr,
+                    asset: 'USDC',
+                    sourceChain: pendingTransfer.fromKey,
+                    destinationChain: pendingTransfer.toKey,
+                    destinationAddress: pendingTransfer.mintRecipient,
+                    burnTxHash: pendingTransfer.burnTxHash,
+                    mintTxHash: pendingTransfer.mintTxHash,
+                    depositTxHash: pendingTransfer.depositTxHash,
+                    metadata: {
+                        autoDeposit: pendingTransfer.autoDeposit,
+                    },
+                });
+            } catch (error) {
+                log.warn('movement record failed', { error: error instanceof Error ? error.message : String(error) });
+            }
+        },
+        [activeWallet?.address, getAccessToken],
+    );
+
     const finishBurnedTransfer = useCallback(
         async (initialPending: PendingCctpTransfer) => {
             if (!activeWallet?.address) {
@@ -132,15 +199,18 @@ export function useCctpTransfer() {
             const sendOnChain = makeSendOnChain(activeWallet as never, sendTransaction as never);
 
             try {
+                await ensureMovement(current, current.autoDeposit ? 'deposit' : 'withdrawal');
                 setBurnTxHash(burnHash);
                 if (current.mintTxHash) setMintTxHash(current.mintTxHash);
                 if (current.depositTxHash) setDepositTxHash(current.depositTxHash);
 
                 setStatus('attesting');
+                await syncMovement(current, 'attesting', { burnTxHash: burnHash });
                 const att = await pollAttestation(from.domain, burnHash);
 
                 if (!current.mintTxHash) {
                     setStatus('minting');
+                    await syncMovement(current, 'minting');
                     const mint = await sendOnChain(to.chainId, {
                         to: CCTP_V2.messageTransmitter as Hex,
                         data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
@@ -148,6 +218,7 @@ export function useCctpTransfer() {
                     });
                     setMintTxHash(mint.hash);
                     updatePending({ mintTxHash: mint.hash });
+                    await syncMovement(current, 'minting', { mintTxHash: mint.hash });
                 }
 
                 if (current.autoDeposit) {
@@ -156,6 +227,7 @@ export function useCctpTransfer() {
                     }
 
                     setStatus('depositing');
+                    await syncMovement(current, 'depositing');
                     const destPub = createPublicClient({
                         chain: VIEM_CHAINS[current.toKey],
                         transport: http(),
@@ -200,16 +272,20 @@ export function useCctpTransfer() {
                     });
                     setDepositTxHash(deposit.hash);
                     updatePending({ depositTxHash: deposit.hash });
+                    await syncMovement(current, 'depositing', { depositTxHash: deposit.hash });
                 }
 
+                await syncMovement(current, 'completed');
                 clearRememberedPending(current.id);
                 setStatus('success');
             } catch (e) {
-                setError(e instanceof Error ? e.message : 'Algo salió mal al reanudar la transferencia');
+                const message = e instanceof Error ? e.message : 'Algo salió mal al reanudar la transferencia';
+                await syncMovement(current, 'failed', { errorMessage: message });
+                setError(message);
                 setStatus('error');
             }
         },
-        [activeWallet, clearRememberedPending, rememberPending, sendTransaction],
+        [activeWallet, clearRememberedPending, ensureMovement, rememberPending, sendTransaction, syncMovement],
     );
 
     const transfer = useCallback(
@@ -281,6 +357,10 @@ export function useCctpTransfer() {
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
             });
+            await ensureMovement(
+                pendingTransfer,
+                opts.movementKind ?? (wantAutoDeposit ? 'deposit' : 'withdrawal'),
+            );
 
             // Switches the wallet's active chain before each send so Privy
             // computes the nonce against the right chain (see evm-send.ts).
@@ -316,6 +396,7 @@ export function useCctpTransfer() {
 
                 // 3) Burn on the source chain.
                 setStatus('burning');
+                await syncMovement(pendingTransfer, 'burning');
                 // Where the minted USDC lands on the destination chain. Deposits
                 // mint to the user's own wallet; withdrawals override this with an
                 // arbitrary recipient. autoDeposit always sweeps from the user's
@@ -337,14 +418,17 @@ export function useCctpTransfer() {
                 const burnHash = burn.hash;
                 setBurnTxHash(burnHash);
                 pendingTransfer = rememberPending({ ...pendingTransfer, burnTxHash });
+                await syncMovement(pendingTransfer, 'attesting', { burnTxHash });
                 await finishBurnedTransfer(pendingTransfer);
             } catch (e) {
                 if (!pendingTransfer.burnTxHash) clearRememberedPending(pendingTransfer.id);
-                setError(e instanceof Error ? e.message : 'Algo salió mal en la transferencia');
+                const message = e instanceof Error ? e.message : 'Algo salió mal en la transferencia';
+                await syncMovement(pendingTransfer, 'failed', { errorMessage: message });
+                setError(message);
                 setStatus('error');
             }
         },
-        [activeWallet, clearRememberedPending, finishBurnedTransfer, rememberPending, sendTransaction],
+        [activeWallet, clearRememberedPending, ensureMovement, finishBurnedTransfer, rememberPending, sendTransaction, syncMovement],
     );
 
     const resumePendingTransfer = useCallback(async () => {

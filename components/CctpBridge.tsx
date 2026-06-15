@@ -83,7 +83,7 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
               mintTx: evm.mintTxHash,
               depositTx: evm.depositTxHash,
               reset: evm.reset,
-              run: () => evm.transfer(fromKey as CctpChainKey, 'arbitrum', amount, { autoDeposit: true }),
+              run: () => evm.transfer(fromKey as CctpChainKey, 'arbitrum', amount, { autoDeposit: true, movementKind: 'deposit' }),
           };
 
     const from = sourceMeta(fromKey);

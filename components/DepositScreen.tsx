@@ -186,7 +186,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                 }
                 return;
             }
-            evm.transfer(net.key, 'arbitrum', amountStr, { autoDeposit: true });
+            evm.transfer(net.key, 'arbitrum', amountStr, { autoDeposit: true, movementKind: 'deposit' });
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
         [net, sol.deposit, evm.transfer, sendTransaction, evmWallet],

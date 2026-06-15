@@ -10,23 +10,22 @@ import { isInCategory, type TokenCategory } from '@/lib/token-categories';
 import { formatUsdPrice } from '@/lib/format/price';
 import TokenLogo from '@/components/TokenLogo';
 import MiniChart from '@/components/MiniChart';
-import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import ProToggle from '@/components/ProToggle';
 
 interface HomeProProps {
     onTokenClick?: (symbol: string) => void;
     onBuyClick?: () => void;
+    onDeposit?: () => void;
     onToggleProMode: () => void;
 }
 
-function HomePro({ onTokenClick, onBuyClick, onToggleProMode }: HomeProProps) {
+function HomePro({ onTokenClick, onBuyClick, onDeposit, onToggleProMode }: HomeProProps) {
     const { t, language } = useLanguage();
     const { currency, toggleCurrency, formatCurrency } = useCurrency();
     const { account, positions, markets, thirtyDayPnl, address, setSelectedMarket } = useHyperliquid();
     const [now, setNow] = useState<Date | null>(null);
     const [selectedCategory, setSelectedCategory] = useState<TokenCategory>('l1');
-    const [showDepositModal, setShowDepositModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
     useEffect(() => {
@@ -437,7 +436,7 @@ function HomePro({ onTokenClick, onBuyClick, onToggleProMode }: HomeProProps) {
                 </button>
                 <button
                     type="button"
-                    onClick={() => setShowDepositModal(true)}
+                    onClick={onDeposit}
                     style={{
                         padding: '14px 10px',
                         background: 'transparent',
@@ -813,7 +812,6 @@ function HomePro({ onTokenClick, onBuyClick, onToggleProMode }: HomeProProps) {
                 </div>
             </div>
 
-            <DepositModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
             <WithdrawModal isOpen={showWithdrawModal} onClose={() => setShowWithdrawModal(false)} />
         </div>
     );

@@ -19,6 +19,43 @@ interface TradingChartProps {
     symbol?: string;
 }
 
+interface TradingChartTooltipProps {
+    active?: boolean;
+    payload?: Array<{
+        payload: {
+            timestamp: number;
+            price: number;
+        };
+    }>;
+    formatCurrency: (value: number) => string;
+}
+
+function TradingChartTooltip({ active, payload, formatCurrency }: TradingChartTooltipProps) {
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        const date = new Date(data.timestamp * 1000);
+        const dateStr = date.toLocaleDateString('en-US', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        });
+        const timeStr = date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+
+        return (
+            <div className="bg-bg-tertiary px-4 py-2 rounded-xl shadow-lg border border-white/10">
+                <p className="text-xs text-coffee-medium mb-1">{dateStr} at {timeStr}</p>
+                <p className="text-lg font-bold text-white">{formatCurrency(data.price)}</p>
+            </div>
+        );
+    }
+
+    return null;
+}
+
 export default function TradingChart({ symbol }: TradingChartProps = {}) {
     const router = useRouter();
     const { t, formatCurrency } = useLanguage();
@@ -121,32 +158,6 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
     const yDomainMin = minPrice - (priceRange * 0.02);
     const yDomainMax = maxPrice + (priceRange * 0.02);
 
-    // Custom tooltip - shows price and date
-    const CustomTooltip = ({ active, payload }: any) => {
-        if (active && payload && payload.length) {
-            const data = payload[0].payload;
-            const date = new Date(data.timestamp * 1000);
-            const dateStr = date.toLocaleDateString('en-US', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-            });
-            const timeStr = date.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            });
-
-            return (
-                <div className="bg-bg-tertiary px-4 py-2 rounded-xl shadow-lg border border-white/10">
-                    <p className="text-xs text-coffee-medium mb-1">{dateStr} at {timeStr}</p>
-                    <p className="text-lg font-bold text-white">{formatCurrency(data.price)}</p>
-                </div>
-            );
-        }
-        return null;
-    };
-
     return (
         <div id="trading-chart" className="h-full flex flex-col min-w-0">
             <div className="mt-20 flex items-center justify-between">
@@ -230,7 +241,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             <YAxis hide domain={[yDomainMin, yDomainMax]} />
                             {/* No grid, no visible axes - clean minimal chart */}
                             <Tooltip
-                                content={<CustomTooltip />}
+                                content={<TradingChartTooltip formatCurrency={formatCurrency} />}
                                 cursor={{ stroke: CHART_BRAND, strokeWidth: 1, strokeDasharray: '5 5' }}
                             />
                             {/* Area fill with Rayo Yellow gradient */}

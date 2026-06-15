@@ -4,6 +4,7 @@
 const isCapacitorBuild = process.env.CAPACITOR_BUILD === 'true';
 
 const nextConfig = {
+  outputFileTracingRoot: __dirname,
   // Allow running a parallel dev server in a different build dir
   // (e.g. previewing on port 3001 while the main 3000 instance keeps
   // running). Set NEXT_DIST_DIR=.next-3001 to opt in.

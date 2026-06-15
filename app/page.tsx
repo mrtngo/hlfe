@@ -29,7 +29,6 @@ import MarketsScreen from '@/components/MarketsScreen';
 import TokenDetail from '@/components/TokenDetail';
 import PortfolioScreen from '@/components/PortfolioScreen';
 import BolsillosScreen from '@/components/BolsillosScreen';
-import DepositModal from '@/components/DepositModal';
 import DepositScreen from '@/components/DepositScreen';
 import NewsScreen from '@/components/NewsScreen';
 import RewardsScreen from '@/components/RewardsScreen';

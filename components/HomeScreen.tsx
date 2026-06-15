@@ -42,6 +42,7 @@ export default function HomeScreen({ onTokenClick, onSpotHoldingClick, onBuyClic
                 <HomePro
                     onTokenClick={onTokenClick}
                     onBuyClick={onBuyClick}
+                    onDeposit={onDeposit}
                     onToggleProMode={toggleProMode}
                 />
             ) : (

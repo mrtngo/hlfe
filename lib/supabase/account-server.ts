@@ -115,6 +115,7 @@ export async function exportAccountData(walletAddress: string): Promise<Record<s
         referral_received: await grab('referrals', 'referred_id', userId),
         trollbox_messages: await grab('trollbox_messages', 'user_id', userId),
         price_alerts: await grab('price_alerts', 'user_id', userId),
+        money_movements: await grab('money_movements', 'user_id', userId),
         dca_schedules: await grab('dca_schedules', 'wallet_address', walletAddress),
         device_tokens: await grab('device_tokens', 'wallet_address', walletAddress),
         consents: await grab('data_consents', 'wallet_address', walletAddress),

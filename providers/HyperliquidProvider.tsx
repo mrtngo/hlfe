@@ -24,13 +24,9 @@ import { apiCache } from '@/lib/api-cache';
 import { db } from '@/lib/supabase/client';
 import { useUserData } from '@/hooks/useUserData';
 import { useHyperliquidAccount } from '@/hooks/useHyperliquidAccount';
+import { buildUsdClassTransferAction, splitEvmSignature } from '@/lib/hyperliquid/transfers';
 
 export type { Market };
-
-function formatUsdClassAmount(amount: number): string {
-    const floored = Math.floor(Math.max(0, amount) * 1_000_000) / 1_000_000;
-    return floored.toFixed(6).replace(/\.?0+$/, '');
-}
 
 /** Spot balance entry returned by Hyperliquid's spotClearinghouseState. */
 export interface SpotBalance {
@@ -2388,18 +2384,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             try {
                 const provider = await activeWallet.getEthereumProvider();
                 const nonce = Date.now();
-                const hyperliquidChain = IS_TESTNET ? 'Testnet' : 'Mainnet';
-                const toPerp = direction === 'spot-to-perp';
-                const amountStr = formatUsdClassAmount(amount);
-
-                const action = {
-                    type: 'usdClassTransfer',
-                    hyperliquidChain,
-                    signatureChainId: '0xa4b1',
-                    amount: amountStr,
-                    toPerp,
+                const { action, message } = buildUsdClassTransferAction({
+                    amount,
+                    direction,
                     nonce,
-                };
+                    isTestnet: IS_TESTNET,
+                });
 
                 const domain = {
                     name: 'HyperliquidSignTransaction',
@@ -2429,20 +2419,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                                 ],
                             },
                             primaryType: 'HyperliquidTransaction:UsdClassTransfer',
-                            message: {
-                                hyperliquidChain,
-                                amount: amountStr,
-                                toPerp,
-                                nonce,
-                            },
+                            message,
                         }),
                     ],
                 });
 
-                const sig = (signature as string).slice(2);
-                const r = '0x' + sig.slice(0, 64);
-                const s = '0x' + sig.slice(64, 128);
-                const v = parseInt(sig.slice(128, 130), 16);
+                const sig = splitEvmSignature(signature as string);
 
                 const response = await fetch(`${API_URL}/exchange`, {
                     method: 'POST',
@@ -2450,7 +2432,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                     body: JSON.stringify({
                         action,
                         nonce,
-                        signature: { r, s, v },
+                        signature: sig,
                     }),
                 });
 

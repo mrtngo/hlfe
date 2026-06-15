@@ -13,7 +13,7 @@
 // likely first-test failure point.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSendTransaction, useWallets as useEvmWallets } from '@privy-io/react-auth';
+import { usePrivy, useSendTransaction, useWallets as useEvmWallets } from '@privy-io/react-auth';
 import {
     useWallets as useSolanaWallets,
     useSignAndSendTransaction,
@@ -36,6 +36,9 @@ import {
     savePendingSolanaDeposit,
     type PendingSolanaDeposit,
 } from '@/lib/cctp/pending';
+import { recordMoneyMovement, updateMoneyMovement } from '@/lib/api/money-movements';
+import type { MoneyMovementStatus } from '@/lib/money-movements/types';
+import { createLogger } from '@/lib/logger';
 
 export type SolanaDepositStatus =
     | 'idle'
@@ -49,6 +52,8 @@ export type SolanaDepositStatus =
 
 const SOLANA_RPC =
     process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
+
+const log = createLogger('solana-deposit');
 
 /** Normalize Privy's returned Solana signature (bytes or string) to a base58 tx id. */
 async function toBase58Signature(sig: unknown): Promise<string> {
@@ -69,6 +74,7 @@ export function useSolanaDeposit() {
     const { signAndSendTransaction } = useSignAndSendTransaction();
     const { wallets: evmWallets } = useEvmWallets();
     const { sendTransaction } = useSendTransaction();
+    const { getAccessToken } = usePrivy();
 
     const [status, setStatus] = useState<SolanaDepositStatus>('idle');
     const [error, setError] = useState('');
@@ -103,6 +109,63 @@ export function useSolanaDeposit() {
         setPending(null);
     }, []);
 
+    const ensureMovement = useCallback(
+        async (pendingDeposit: PendingSolanaDeposit) => {
+            try {
+                await recordMoneyMovement(getAccessToken, {
+                    walletAddress: pendingDeposit.evmAddress,
+                    externalId: pendingDeposit.id,
+                    kind: 'deposit',
+                    provider: 'circle_cctp',
+                    status: pendingDeposit.burnSig ? 'attesting' : 'pending',
+                    amount: pendingDeposit.amountStr,
+                    asset: 'USDC',
+                    sourceChain: 'solana',
+                    destinationChain: 'arbitrum',
+                    destinationAddress: pendingDeposit.evmAddress,
+                    burnTxHash: pendingDeposit.burnSig,
+                    mintTxHash: pendingDeposit.mintTxHash,
+                    depositTxHash: pendingDeposit.depositTxHash,
+                    metadata: {
+                        solAddress: pendingDeposit.solAddress,
+                    },
+                });
+            } catch (error) {
+                log.warn('movement record failed', { error: error instanceof Error ? error.message : String(error) });
+            }
+        },
+        [getAccessToken],
+    );
+
+    const syncMovement = useCallback(
+        async (
+            pendingDeposit: PendingSolanaDeposit,
+            status: MoneyMovementStatus,
+            patch: {
+                burnTxHash?: string | null;
+                mintTxHash?: string | null;
+                depositTxHash?: string | null;
+                errorMessage?: string | null;
+            } = {},
+        ) => {
+            try {
+                await updateMoneyMovement(getAccessToken, {
+                    walletAddress: pendingDeposit.evmAddress,
+                    externalId: pendingDeposit.id,
+                    status,
+                    amount: pendingDeposit.amountStr,
+                    ...patch,
+                    metadata: {
+                        solAddress: pendingDeposit.solAddress,
+                    },
+                });
+            } catch (error) {
+                log.warn('movement sync failed', { error: error instanceof Error ? error.message : String(error) });
+            }
+        },
+        [getAccessToken],
+    );
+
     const finishBurnedDeposit = useCallback(
         async (initialPending: PendingSolanaDeposit) => {
             const evmWalletForSend = evmWallets.find((w) => w.walletClientType === 'privy') ?? evmWallets?.[0];
@@ -128,15 +191,18 @@ export function useSolanaDeposit() {
             const sendOnChain = makeSendOnChain(evmWalletForSend as never, sendTransaction as never);
 
             try {
+                await ensureMovement(current);
                 setBurnSig(burnSignature);
                 if (current.mintTxHash) setMintTxHash(current.mintTxHash);
                 if (current.depositTxHash) setDepositTxHash(current.depositTxHash);
 
                 setStatus('attesting');
+                await syncMovement(current, 'attesting', { burnTxHash: burnSignature });
                 const att = await pollAttestation(SOLANA_DOMAIN, burnSignature);
 
                 if (!current.mintTxHash) {
                     setStatus('minting');
+                    await syncMovement(current, 'minting');
                     const mint = await sendOnChain(arbDest.chainId, {
                         to: CCTP_V2.messageTransmitter as Hex,
                         data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
@@ -144,6 +210,7 @@ export function useSolanaDeposit() {
                     });
                     setMintTxHash(mint.hash);
                     updatePending({ mintTxHash: mint.hash });
+                    await syncMovement(current, 'minting', { mintTxHash: mint.hash });
                 }
 
                 if (!current.balanceBefore) {
@@ -151,6 +218,7 @@ export function useSolanaDeposit() {
                 }
 
                 setStatus('depositing');
+                await syncMovement(current, 'depositing');
                 const destPub = createPublicClient({ chain: arbitrum, transport: http() });
                 const balanceBefore = BigInt(current.balanceBefore);
 
@@ -192,15 +260,19 @@ export function useSolanaDeposit() {
                 });
                 setDepositTxHash(dep.hash);
                 updatePending({ depositTxHash: dep.hash });
+                await syncMovement(current, 'depositing', { depositTxHash: dep.hash });
 
+                await syncMovement(current, 'completed');
                 clearRememberedPending(current.id);
                 setStatus('success');
             } catch (e) {
-                setError(e instanceof Error ? e.message : 'Algo salió mal al reanudar el depósito desde Solana');
+                const message = e instanceof Error ? e.message : 'Algo salió mal al reanudar el depósito desde Solana';
+                await syncMovement(current, 'failed', { errorMessage: message });
+                setError(message);
                 setStatus('error');
             }
         },
-        [clearRememberedPending, evmWallets, rememberPending, sendTransaction],
+        [clearRememberedPending, ensureMovement, evmWallets, rememberPending, sendTransaction, syncMovement],
     );
 
     const deposit = useCallback(
@@ -252,6 +324,7 @@ export function useSolanaDeposit() {
                     createdAt: Date.now(),
                     updatedAt: Date.now(),
                 });
+                await ensureMovement(pendingDeposit);
 
                 // 1) Build + send the Solana burn (dynamic import keeps Anchor
                 //    out of the main bundle).
@@ -273,15 +346,18 @@ export function useSolanaDeposit() {
                 const sig = await toBase58Signature((sent as { signature: unknown }).signature);
                 setBurnSig(sig);
                 pendingDeposit = rememberPending({ ...pendingDeposit, burnSig: sig });
+                await syncMovement(pendingDeposit, 'attesting', { burnTxHash: sig });
                 await finishBurnedDeposit(pendingDeposit);
             } catch (e) {
                 const current = loadPendingSolanaDeposit(evmAddressForSend);
                 if (!current?.burnSig) clearRememberedPending(current?.id);
-                setError(e instanceof Error ? e.message : 'Algo salió mal en el depósito desde Solana');
+                const message = e instanceof Error ? e.message : 'Algo salió mal en el depósito desde Solana';
+                if (current) await syncMovement(current, 'failed', { errorMessage: message });
+                setError(message);
                 setStatus('error');
             }
         },
-        [clearRememberedPending, evmWallets, finishBurnedDeposit, rememberPending, signAndSendTransaction, solWallets],
+        [clearRememberedPending, ensureMovement, evmWallets, finishBurnedDeposit, rememberPending, signAndSendTransaction, solWallets, syncMovement],
     );
 
     const resumePendingDeposit = useCallback(async () => {
