@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-// Marketing landing served at the apex domain (rayotrade.xyz) via middleware.
+// Marketing landing served at the apex domain (rayotrade.xyz) via proxy.
 // The app itself lives on app.rayotrade.xyz. Pure server component — no client
 // providers needed; the only action is a link to the app.
 

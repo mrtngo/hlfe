@@ -9,9 +9,9 @@ import type { NextRequest } from 'next/server';
 // Only the root path is rewritten (matcher below), so shared pages like
 // /privacidad and /soporte resolve normally on every host.
 //
-// NOTE: middleware is unsupported under `output: 'export'`, so scripts/build-ios.sh
+// NOTE: proxy is unsupported under `output: 'export'`, so scripts/build-ios.sh
 // moves this file aside during the static iOS export.
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
     const host = (req.headers.get('host') || '').split(':')[0].toLowerCase();
 
     const isMarketingHost = host === 'rayotrade.xyz' || host === 'www.rayotrade.xyz';
