@@ -148,6 +148,8 @@ export default function PrivacidadPage() {
 
                 <p style={{ ...meta, marginTop: 40 }}>
                     <Link href="/soporte" style={a}>Soporte</Link>
+                    {' · '}
+                    <Link href="/legal/terminos" style={a}>Términos y Riesgos</Link>
                 </p>
             </div>
         </main>

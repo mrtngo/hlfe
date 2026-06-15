@@ -85,6 +85,8 @@ export default function SoportePage() {
 
                 <p style={{ color: 'var(--color-text-tertiary)', fontSize: 'var(--text-sm)', marginTop: 40 }}>
                     <Link href="/privacidad" style={a}>Política de Privacidad</Link>
+                    {' · '}
+                    <Link href="/legal/terminos" style={a}>Términos y Riesgos</Link>
                 </p>
             </div>
         </main>

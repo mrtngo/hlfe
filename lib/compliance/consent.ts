@@ -10,9 +10,8 @@
 // Keep in sync with docs/compliance/02-politica-tratamiento-datos.md (§11).
 export const CURRENT_PRIVACY_POLICY_VERSION = '1.0';
 
-// Public URLs the consent UI links to. Replace with the live, lawyer-approved
-// pages before launch.
-export const PRIVACY_POLICY_URL = '/legal/privacidad';
+// Public URLs the consent UI links to.
+export const PRIVACY_POLICY_URL = '/privacidad';
 export const TERMS_URL = '/legal/terminos';
 
 /**

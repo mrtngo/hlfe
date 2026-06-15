@@ -11,6 +11,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Icon, V2 } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
+import { PRIVACY_POLICY_URL, TERMS_URL } from '@/lib/compliance/consent';
 
 interface WelcomeScreenProps {
     /** Trigger Privy auth (email / Google / wallet). */
@@ -433,13 +434,23 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
                     }}
                 >
                     {t.onboarding.welcome.agreePre}
-                    <span style={{ color: V2.t2, fontWeight: 600 }}>
+                    <a
+                        href={TERMS_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: V2.t2, fontWeight: 600, textDecoration: 'none' }}
+                    >
                         {t.onboarding.welcome.terms}
-                    </span>
+                    </a>
                     {t.onboarding.welcome.agreeMid}
-                    <span style={{ color: V2.t2, fontWeight: 600 }}>
+                    <a
+                        href={PRIVACY_POLICY_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ color: V2.t2, fontWeight: 600, textDecoration: 'none' }}
+                    >
                         {t.onboarding.welcome.privacy}
-                    </span>
+                    </a>
                     {t.onboarding.welcome.agreePost}
                 </div>
             </div>
