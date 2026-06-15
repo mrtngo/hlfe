@@ -30,6 +30,7 @@ import TokenDetail from '@/components/TokenDetail';
 import PortfolioScreen from '@/components/PortfolioScreen';
 import BolsillosScreen from '@/components/BolsillosScreen';
 import DepositScreen from '@/components/DepositScreen';
+import DesktopPredictions from '@/components/DesktopPredictions';
 import DesktopTerminal from '@/components/DesktopTerminal';
 import NewsScreen from '@/components/NewsScreen';
 import RewardsScreen from '@/components/RewardsScreen';
@@ -180,6 +181,7 @@ export default function Home() {
     const isV2View = V2_VIEWS.includes(view);
     const DESKTOP_TERMINAL_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'advanced'];
     const showDesktopTerminal = ready && authenticated && isDesktopTerminal && DESKTOP_TERMINAL_VIEWS.includes(view);
+    const showDesktopPredictions = ready && authenticated && isDesktopTerminal && view === 'predictions';
     const hideMobileFooter = ready && authenticated && isDesktopTerminal;
 
     const tutorialOverlay = showTutorial ? (
@@ -234,6 +236,15 @@ export default function Home() {
                             onOpenPredictions={() => setView('predictions')}
                             onOpenProfile={() => setView('profile')}
                             onOpenSettings={() => setView('settings')}
+                        />
+                    ) : showDesktopPredictions ? (
+                        <DesktopPredictions
+                            onOpenDeposit={() => setView('deposit')}
+                            onOpenHistory={() => setView('history')}
+                            onOpenNews={() => setView('news')}
+                            onOpenProfile={() => setView('profile')}
+                            onOpenSettings={() => setView('settings')}
+                            onOpenTerminal={() => setView('home')}
                         />
                     ) : isV2View ? (
                         <div
