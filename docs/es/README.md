@@ -19,6 +19,7 @@ Rayo es una **plataforma descentralizada de trading de futuros perpetuos** que t
 - 🎯 [Cómo Operar](trading-guide.md)
 - ⚠️ [Riesgos y Advertencias](risks.md)
 - 💎 [Beneficios vs Mercados Tradicionales](benefits.md)
+- 🏗️ [Infraestructura y modelo de cumplimiento](infrastructure.md)
 - ❓ [Preguntas Frecuentes](faq.md)
 - 🇬🇧 [English Documentation](../)
 

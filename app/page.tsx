@@ -30,6 +30,7 @@ import TokenDetail from '@/components/TokenDetail';
 import PortfolioScreen from '@/components/PortfolioScreen';
 import BolsillosScreen from '@/components/BolsillosScreen';
 import DepositScreen from '@/components/DepositScreen';
+import DesktopTerminal from '@/components/DesktopTerminal';
 import NewsScreen from '@/components/NewsScreen';
 import RewardsScreen from '@/components/RewardsScreen';
 import PublicProfileScreen from '@/components/PublicProfileScreen';
@@ -66,6 +67,7 @@ export default function Home() {
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [showAgentModal, setShowAgentModal] = useState(false);
     const [isTrollboxOpen, setIsTrollboxOpen] = useState(false);
+    const [isDesktopTerminal, setIsDesktopTerminal] = useState(false);
 
     // Pre-login welcome gate + animated tutorial (v2 onboarding redesign).
     // `guest` lets users browse without auth; `rayo_onboarded` persists that the
@@ -76,6 +78,15 @@ export default function Home() {
     useEffect(() => {
         if (typeof window === 'undefined') return;
         setGuest(localStorage.getItem('rayo_guest') === 'true');
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const query = window.matchMedia('(min-width: 1024px) and (pointer: fine)');
+        const syncDesktop = () => setIsDesktopTerminal(query.matches);
+        syncDesktop();
+        query.addEventListener('change', syncDesktop);
+        return () => query.removeEventListener('change', syncDesktop);
     }, []);
 
     // Link the native push token to this wallet once authenticated, so pushes
@@ -167,6 +178,9 @@ export default function Home() {
     // container + live-sync chip.
     const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'traderSearch', 'publicProfile', 'predictions'];
     const isV2View = V2_VIEWS.includes(view);
+    const DESKTOP_TERMINAL_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'advanced'];
+    const showDesktopTerminal = ready && authenticated && isDesktopTerminal && DESKTOP_TERMINAL_VIEWS.includes(view);
+    const hideMobileFooter = ready && authenticated && isDesktopTerminal;
 
     const tutorialOverlay = showTutorial ? (
         <OnboardingTutorial onClose={closeTutorial} onDeposit={handleTutorialDeposit} />
@@ -195,7 +209,7 @@ export default function Home() {
     }
 
     return (
-        <div className="v2-app min-h-screen flex flex-col" style={{ background: '#0A0C0E' }}>
+        <div className="v2-app min-h-screen flex flex-col" style={{ background: 'var(--v2-bg)' }}>
             {/* Ley 1581 authorization gate — blocks until the user accepts the
                 current privacy-policy version. Lazily provisioned signing is
                 untouched; this is purely the data-protection consent. */}
@@ -212,7 +226,16 @@ export default function Home() {
                         refreshMarketData()
                     ]);
                 }}>
-                    {isV2View ? (
+                    {showDesktopTerminal ? (
+                        <DesktopTerminal
+                            onOpenDeposit={() => setView('deposit')}
+                            onOpenHistory={() => setView('history')}
+                            onOpenNews={() => setView('news')}
+                            onOpenPredictions={() => setView('predictions')}
+                            onOpenProfile={() => setView('profile')}
+                            onOpenSettings={() => setView('settings')}
+                        />
+                    ) : isV2View ? (
                         <div
                             className="mx-auto w-full max-w-[480px]"
                             style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom))' }}
@@ -410,7 +433,7 @@ export default function Home() {
 
             {/* Footer Navigation — V2 floating glassy pill with bolt indicator.
                 Always visible, on every screen. */}
-            {(() => {
+            {!hideMobileFooter && (() => {
                 const tabs: { id: string; label: string; icon: IconName; on: boolean; onClick: () => void; domId?: string }[] = [
                     { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home', onClick: () => setView('home') },
                     { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },

@@ -19,6 +19,7 @@ Rayo is a **decentralized perpetual futures trading platform** that gives you:
 - 🎯 [How to Trade](trading-guide.md)
 - ⚠️ [Risks & Disclaimers](risks.md)
 - 💎 [Benefits vs Traditional Markets](benefits.md)
+- 🏗️ [Infrastructure and Compliance Model](infrastructure.md)
 - ❓ [FAQ](faq.md)
 - 🇪🇸 [Documentación en Español](es/)
 

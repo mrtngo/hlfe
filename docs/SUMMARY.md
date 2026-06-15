@@ -14,6 +14,7 @@
 * [Fees](fees.md)
 * [FAQ](faq.md)
 * [Technical Documentation](technical.md)
+* [Infrastructure and Compliance Model](infrastructure.md)
 
 ## Español
 
@@ -29,3 +30,4 @@
 * [Comisiones](es/fees.md)
 * [Preguntas Frecuentes](es/faq.md)
 * [Documentación Técnica](es/technical.md)
+* [Infraestructura y modelo de cumplimiento](es/infrastructure.md)
