@@ -260,7 +260,7 @@ export const db = {
                 console.error('Error searching users:', error);
                 return [];
             }
-            return data || [];
+            return (data || []) as User[];
         },
 
         async getByReferralCode(code: string): Promise<User | null> {

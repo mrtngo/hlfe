@@ -343,6 +343,7 @@ export default function Home() {
                             <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <ComprarFlow
                                     onOpenAdvanced={() => goTrade()}
+                                    onDeposit={() => setView('deposit')}
                                     onClose={() => setView('home')}
                                 />
                             </div>
@@ -350,6 +351,7 @@ export default function Home() {
                             <div className="mt-6 max-w-2xl mx-auto" id="spot-buy-panel" style={{ paddingBottom: '100px' }}>
                                 <SpotBuyScreen
                                     initialBase={selectedSpotBase}
+                                    onDeposit={() => setView('deposit')}
                                     onClose={() => {
                                         setSelectedSpotBase(undefined);
                                         setView('home');
@@ -361,6 +363,7 @@ export default function Home() {
                             <div className="mt-6 max-w-2xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
                                 <SpotScreen
                                     initialBase={selectedSpotBase}
+                                    onDeposit={() => setView('deposit')}
                                     onClose={() => {
                                         setSelectedSpotBase(undefined);
                                         setView('spotReal');

@@ -22,11 +22,11 @@ import { MIN_NOTIONAL_VALUE, getTokenFullName } from '@/lib/constants';
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
 import MarketSelectModal from '@/components/MarketSelectModal';
-import DepositModal from '@/components/DepositModal';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 
 interface ComprarFlowProps {
     onOpenAdvanced?: () => void;
+    onDeposit?: () => void;
     onClose?: () => void;
 }
 
@@ -44,7 +44,7 @@ type PaymentMethod = {
     disabled?: boolean;
 };
 
-export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProps) {
+export default function ComprarFlow({ onOpenAdvanced, onDeposit, onClose }: ComprarFlowProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { ready, authenticated, login } = usePrivy();
@@ -74,7 +74,6 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
     const [limitPrice, setLimitPrice] = useState<string>('');
     const [orderResting, setOrderResting] = useState<boolean>(false);
     const [showPicker, setShowPicker] = useState<boolean>(!initialSymbol);
-    const [showDepositModal, setShowDepositModal] = useState(false);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string>('');
@@ -270,6 +269,7 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
                     limitPrice={limitPrice}
                     setLimitPrice={setLimitPrice}
                     marketPrice={price}
+                    onDeposit={onDeposit}
                     onOpenPicker={() => setShowPicker(true)}
                     onPad={handleNumberPad}
                     onQuick={setQuick}
@@ -344,10 +344,6 @@ export default function ComprarFlow({ onOpenAdvanced, onClose }: ComprarFlowProp
                 title={t.buy.selectAsset}
                 subtitle={t.markets.search}
             />
-            <DepositModal
-                isOpen={showDepositModal}
-                onClose={() => setShowDepositModal(false)}
-            />
             <TradingSetupWizard
                 isOpen={showSetupWizard}
                 onClose={() => setShowSetupWizard(false)}
@@ -391,6 +387,7 @@ function StepAmount({
     setLimitPrice,
     marketPrice,
     onOpenPicker,
+    onDeposit,
     onPad,
     onQuick,
     onNext,
@@ -411,6 +408,7 @@ function StepAmount({
     setLimitPrice: (v: string) => void;
     marketPrice: number;
     onOpenPicker: () => void;
+    onDeposit?: () => void;
     onPad: (k: string) => void;
     onQuick: (v: number) => void;
     onNext: () => void;
@@ -820,16 +818,24 @@ function StepAmount({
                     </div>
                 )}
                 {amountNum > availableUsd && (
-                    <div
+                    <button
+                        type="button"
+                        onClick={onDeposit}
                         style={{
                             marginTop: 10,
+                            width: '100%',
                             textAlign: 'center',
                             fontSize: 11,
+                            fontWeight: 700,
                             color: 'var(--color-negative)',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
                         }}
                     >
-                        {t.buy.insufficientBalance}
-                    </div>
+                        {t.buy.insufficientBalance} · {t.buy.noBalanceCta}
+                    </button>
                 )}
             </div>
         </div>

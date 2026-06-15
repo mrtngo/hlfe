@@ -11,7 +11,6 @@ import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
-import DepositModal from '@/components/DepositModal';
 import TradeConfirmSheet from '@/components/TradeConfirmSheet';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 
@@ -37,13 +36,14 @@ function roundSize(size: number, szDecimals: number): number {
 
 interface SpotBuyScreenProps {
     onClose?: () => void;
+    onDeposit?: () => void;
     /** Open the full spot screen (sell, Spot↔Perp transfer, slippage). */
     onManage?: () => void;
     /** Optional base ticker to preselect. */
     initialBase?: string;
 }
 
-export default function SpotBuyScreen({ onClose, onManage, initialBase }: SpotBuyScreenProps) {
+export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBase }: SpotBuyScreenProps) {
     const { formatCurrency } = useCurrency();
     const { ready, authenticated, login } = usePrivy();
     const {
@@ -70,7 +70,6 @@ export default function SpotBuyScreen({ onClose, onManage, initialBase }: SpotBu
     const [showSuccess, setShowSuccess] = useState(false);
     const [confirmError, setConfirmError] = useState('');
     const [showSetupWizard, setShowSetupWizard] = useState(false);
-    const [showDeposit, setShowDeposit] = useState(false);
     const [filled, setFilled] = useState<{
         tokenAmount: number;
         usdAmount: number;
@@ -167,7 +166,7 @@ export default function SpotBuyScreen({ onClose, onManage, initialBase }: SpotBu
             return;
         }
         if (insufficient) {
-            setShowDeposit(true);
+            onDeposit?.();
             return;
         }
         setConfirmError('');
@@ -542,7 +541,7 @@ export default function SpotBuyScreen({ onClose, onManage, initialBase }: SpotBu
                     {insufficient && (
                         <button
                             type="button"
-                            onClick={() => setShowDeposit(true)}
+                            onClick={onDeposit}
                             style={{
                                 marginTop: 10,
                                 width: '100%',
@@ -610,7 +609,6 @@ export default function SpotBuyScreen({ onClose, onManage, initialBase }: SpotBu
                 isOpen={showSetupWizard}
                 onClose={() => setShowSetupWizard(false)}
             />
-            <DepositModal isOpen={showDeposit} onClose={() => setShowDeposit(false)} />
         </div>
     );
 }

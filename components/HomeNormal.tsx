@@ -10,7 +10,6 @@ import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constan
 import { formatUsdPrice } from '@/lib/format/price';
 import MiniChart from '@/components/MiniChart';
 import MarketSelectModal from '@/components/MarketSelectModal';
-import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 import ProToggle from '@/components/ProToggle';
 import {
@@ -66,7 +65,6 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
     const { user } = useUser();
     const [now, setNow] = useState<Date | null>(null);
     const [picker, setPicker] = useState<null | 'search' | 'watch'>(null);
-    const [showDepositModal, setShowDepositModal] = useState(false);
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
     const [moverCat, setMoverCat] = useState<'crypto' | 'stocks'>('crypto');
 
@@ -203,7 +201,7 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                 {/* actions */}
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
                     <button
-                        onClick={() => (onDeposit ? onDeposit() : setShowDepositModal(true))}
+                        onClick={onDeposit}
                         style={{ flex: 1, padding: 14, borderRadius: 14, border: 'none', background: V2.accent, color: V2.accentInk, fontWeight: 800, fontSize: 15, cursor: 'pointer', fontFamily: V2.ui }}
                     >
                         {t.common.deposit}
@@ -378,7 +376,6 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                 subtitle={t.home.tapToAddTokens}
                 excludeSymbols={picker === 'watch' ? watchlist : []}
             />
-            <DepositModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
             <WithdrawModal isOpen={showWithdrawModal} onClose={() => setShowWithdrawModal(false)} />
         </ScreenV2>
     );

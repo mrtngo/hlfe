@@ -24,13 +24,13 @@ import {
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
-import DepositModal from '@/components/DepositModal';
 import TransferModal from '@/components/TransferModal';
 import TradeConfirmSheet from '@/components/TradeConfirmSheet';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
 
 interface SpotScreenProps {
     onClose?: () => void;
+    onDeposit?: () => void;
     /** Optional base ticker to preselect (e.g. clicked from a holdings row). */
     initialBase?: string;
 }
@@ -50,7 +50,7 @@ function roundSize(size: number, szDecimals: number): number {
     return Math.floor(size * factor) / factor;
 }
 
-export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
+export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScreenProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { ready, authenticated, login } = usePrivy();
@@ -92,7 +92,6 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
         avgPrice: number;
     } | null>(null);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
-    const [showDepositModal, setShowDepositModal] = useState(false);
     const [transferModal, setTransferModal] = useState<{
         open: boolean;
         /** true = Spot→Perp, false = Perp→Spot. */
@@ -1009,7 +1008,7 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
                         if (canTransferFromPerp) {
                             setTransferModal({ open: true, toPerp: false });
                         } else {
-                            setShowDepositModal(true);
+                            onDeposit?.();
                         }
                     }}
                     style={{
@@ -1110,10 +1109,6 @@ export default function SpotScreen({ onClose, initialBase }: SpotScreenProps) {
             <TradingSetupWizard
                 isOpen={showSetupWizard}
                 onClose={() => setShowSetupWizard(false)}
-            />
-            <DepositModal
-                isOpen={showDepositModal}
-                onClose={() => setShowDepositModal(false)}
             />
             <TransferModal
                 isOpen={transferModal.open}

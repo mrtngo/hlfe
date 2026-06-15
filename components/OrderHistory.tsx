@@ -2,11 +2,14 @@
 
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { History } from 'lucide-react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useOutcomeMarkets } from '@/hooks/useOutcomeMarkets';
 import { parseCoinRef, readOutcomeNameCache, localizeSideName, type CachedOutcome } from '@/lib/hyperliquid/outcome';
 import { useCurrency } from '@/context/CurrencyContext';
+import { listMoneyMovements } from '@/lib/api/money-movements';
+import type { MoneyMovementKind, MoneyMovementRecord, MoneyMovementStatus } from '@/lib/money-movements/types';
 import EmptyState from '@/components/EmptyState';
 import SkeletonRow from '@/components/SkeletonRow';
 import { ScreenV2, V2Header, IconBtn, MarketLogo, Icon, V2 } from '@/components/V2Kit';
@@ -23,6 +26,13 @@ interface OrderHistoryEntry {
     time: number;
     leverage?: number;
     amount?: number;
+    asset?: string;
+    movementKind?: MoneyMovementKind;
+    movementStatus?: MoneyMovementStatus;
+    sourceChain?: string | null;
+    destinationChain?: string | null;
+    txHash?: string | null;
+    errorMessage?: string | null;
     /** Prediction-market fill: human-readable bet name (vs. raw "#2440"). */
     outcomeLabel?: string;
     /** Prediction-market side label (e.g. "Sí" / "No"). */
@@ -38,8 +48,11 @@ export default function OrderHistory() {
     const { t, language } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { address, fills, userDataLoading, positions } = useHyperliquid();
+    const { getAccessToken } = usePrivy();
     const { markets: outcomeMarkets } = useOutcomeMarkets();
     const [tab, setTab] = useState<Tab>('all');
+    const [movements, setMovements] = useState<MoneyMovementRecord[]>([]);
+    const [movementsLoading, setMovementsLoading] = useState(false);
 
     // Resolve outcome names: live markets first, then the persisted name cache
     // (settled markets are dropped from the API, so the cache is the only
@@ -81,6 +94,33 @@ export default function OrderHistory() {
             localStorage.setItem(LEVERAGE_STORAGE_KEY, JSON.stringify(leverageBySymbol.current));
         }
     }, [positions]);
+
+    useEffect(() => {
+        let alive = true;
+
+        async function loadMovements() {
+            if (!address) {
+                setMovements([]);
+                return;
+            }
+            setMovementsLoading(true);
+            try {
+                const rows = await listMoneyMovements(getAccessToken, address);
+                if (alive) setMovements(rows);
+            } catch {
+                if (alive) setMovements([]);
+            } finally {
+                if (alive) setMovementsLoading(false);
+            }
+        }
+
+        loadMovements();
+        const id = setInterval(loadMovements, 30_000);
+        return () => {
+            alive = false;
+            clearInterval(id);
+        };
+    }, [address, getAccessToken]);
 
     const entries = useMemo<OrderHistoryEntry[]>(() => {
         const fromFills = (fills || []).map((fill: any, idx: number) => {
@@ -128,8 +168,28 @@ export default function OrderHistory() {
                 outcomeSide,
             };
         });
-        return fromFills.sort((a, b) => b.time - a.time);
-    }, [fills, outcomeById, t, language]);
+        const fromMovements = movements.map((movement) => {
+            const txHash =
+                movement.deposit_tx_hash ||
+                movement.withdraw_tx_hash ||
+                movement.mint_tx_hash ||
+                movement.burn_tx_hash;
+            return {
+                id: movement.id,
+                type: 'deposit' as const,
+                time: new Date(movement.created_at).getTime(),
+                amount: Number(movement.amount || 0),
+                asset: movement.asset,
+                movementKind: movement.kind,
+                movementStatus: movement.status,
+                sourceChain: movement.source_chain,
+                destinationChain: movement.destination_chain,
+                txHash,
+                errorMessage: movement.error_message,
+            };
+        });
+        return [...fromFills, ...fromMovements].sort((a, b) => b.time - a.time);
+    }, [fills, movements, outcomeById, t, language]);
 
     const summary = useMemo(() => {
         const cutoff = Date.now() - 30 * MS_DAY;
@@ -237,7 +297,7 @@ export default function OrderHistory() {
 
             {/* Groups */}
             <div style={{ padding: '20px 20px 0' }}>
-                {userDataLoading ? (
+                {userDataLoading || movementsLoading ? (
                     <SkeletonRow count={6} height={64} />
                 ) : grouped.length === 0 ? (
                     <EmptyState icon={History} title={t.screens.historial.empty.title} body={t.screens.historial.empty.body} cta={t.screens.historial.empty.cta} />
@@ -278,16 +338,49 @@ function HistoryRowV2({
     const isOpen = entry.type === 'open';
 
     if (entry.type === 'deposit') {
+        const status = entry.movementStatus || 'completed';
+        const isFailed = status === 'failed' || status === 'cancelled';
+        const isDone = status === 'completed';
+        const asset = entry.asset || 'USDC';
+        const title =
+            entry.movementKind === 'withdrawal'
+                ? `Retiro ${asset}`
+                : entry.movementKind === 'internal_transfer'
+                    ? `Movimiento ${asset}`
+                    : t.screens.historial.row.deposit;
+        const statusLabel = movementStatusLabel(status);
+        const route = [entry.sourceChain, entry.destinationChain].filter(Boolean).join(' → ');
+        const amountPrefix = entry.movementKind === 'withdrawal' ? '-' : '+';
+        const amountColor = isFailed ? V2.neg : isDone ? V2.pos : V2.accent;
+        const softBg = isFailed ? V2.negSoft : isDone ? V2.posSoft : V2.accentSoft;
+        const rowBg = isFailed ? 'color-mix(in srgb, var(--color-negative) 6%, transparent)' : 'color-mix(in srgb, var(--color-brand-primary) 5%, transparent)';
+        const rowBorder = isFailed ? 'color-mix(in srgb, var(--color-negative) 18%, transparent)' : 'color-mix(in srgb, var(--color-brand-primary) 14%, transparent)';
         return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', borderRadius: 14, background: 'rgba(250,204,21,0.05)', border: '1px solid rgba(250,204,21,0.14)' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 11, background: V2.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Icon name="plus" size={17} color={V2.accent} strokeWidth={2.6} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 15px', borderRadius: 14, background: rowBg, border: `1px solid ${rowBorder}` }}>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: softBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Icon name={entry.movementKind === 'withdrawal' ? 'arrowDownLeft' : 'plus'} size={17} color={amountColor} strokeWidth={2.6} />
                 </div>
-                <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700 }}>{t.screens.historial.row.deposit}</div>
-                    <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 1 }}>{timeStr}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 15, fontWeight: 700 }}>{title}</span>
+                        <span style={{ fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 4, background: softBg, color: amountColor, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                            {statusLabel}
+                        </span>
+                    </div>
+                    <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {route ? `${route} · ` : ''}{timeStr}
+                        {entry.txHash ? ` · ${entry.txHash.slice(0, 8)}…${entry.txHash.slice(-6)}` : ''}
+                    </div>
+                    {entry.errorMessage && (
+                        <div style={{ fontSize: 11.5, color: V2.neg, marginTop: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {entry.errorMessage}
+                        </div>
+                    )}
                 </div>
-                <div style={{ fontFamily: V2.mono, fontWeight: 700, color: V2.accent }}>+{formatCurrency(entry.amount || 0)}</div>
+                <div style={{ fontFamily: V2.mono, fontWeight: 700, color: amountColor, textAlign: 'right' }}>
+                    {amountPrefix}{formatCurrency(entry.amount || 0)}
+                    <div style={{ fontSize: 10.5, color: V2.t3, marginTop: 2 }}>{asset}</div>
+                </div>
             </div>
         );
     }
@@ -325,4 +418,19 @@ function HistoryRowV2({
             )}
         </div>
     );
+}
+
+function movementStatusLabel(status: MoneyMovementStatus): string {
+    switch (status) {
+        case 'completed': return 'completado';
+        case 'failed': return 'falló';
+        case 'cancelled': return 'cancelado';
+        case 'burning': return 'enviando';
+        case 'attesting': return 'confirmando';
+        case 'minting': return 'recibiendo';
+        case 'depositing': return 'acreditando';
+        case 'withdrawing': return 'retirando';
+        case 'awaiting_user': return 'pendiente';
+        default: return 'pendiente';
+    }
 }

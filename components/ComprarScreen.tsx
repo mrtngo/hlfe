@@ -7,7 +7,6 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import TokenLogo from '@/components/TokenLogo';
 import MiniChart from '@/components/MiniChart';
-import DepositModal from '@/components/DepositModal';
 import TradingSetupWizard from '@/components/TradingSetupWizard';
 import DcaScheduleSheet from '@/components/DcaScheduleSheet';
 import TransferModal from '@/components/TransferModal';
@@ -17,12 +16,13 @@ import { Loader2, ArrowDown, ArrowUpRight, AlertCircle, CheckCircle2, Sliders, R
 
 interface ComprarScreenProps {
     onOpenAdvanced: () => void;
+    onDeposit?: () => void;
 }
 
 const QUICK_AMOUNTS = [25, 50, 100, 250];
 const FEATURED_SYMBOLS = ['BTC', 'ETH', 'SOL', 'DOGE', 'AVAX', 'XRP', 'ADA', 'BNB'];
 
-export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
+export default function ComprarScreen({ onOpenAdvanced, onDeposit }: ComprarScreenProps) {
     const { t } = useLanguage();
     const { ready, authenticated, login } = usePrivy();
     const {
@@ -51,7 +51,6 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
 
     const [amountUsd, setAmountUsd] = useState<string>('');
     const [showAll, setShowAll] = useState(false);
-    const [showDepositModal, setShowDepositModal] = useState(false);
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [showSetupWizard, setShowSetupWizard] = useState(false);
     const [showDcaSheet, setShowDcaSheet] = useState(false);
@@ -439,7 +438,7 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
                                     {t.buy.moveSpotToTradeCta.replace('{amount}', formatUsdPrice(spotUsd))}
                                 </button>
                             ) : (
-                                <button onClick={() => setShowDepositModal(true)}
+                                <button onClick={onDeposit}
                                 className="cta-brand w-full py-4 rounded-2xl text-[15px] font-bold flex items-center justify-center gap-2 tracking-tight">
                                     <ArrowDown className="w-5 h-5" strokeWidth={2.5} />
                                     {t.buy.noBalanceCta}
@@ -672,7 +671,6 @@ export default function ComprarScreen({ onOpenAdvanced }: ComprarScreenProps) {
                     </span>
                 </motion.button>
 
-                <DepositModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
                 <TransferModal
                     isOpen={showTransferModal}
                     onClose={() => {
