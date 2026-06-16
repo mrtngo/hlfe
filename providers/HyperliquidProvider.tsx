@@ -26,6 +26,7 @@ import { useUserData } from '@/hooks/useUserData';
 import { useHyperliquidAccount } from '@/hooks/useHyperliquidAccount';
 import { buildUsdClassTransferAction, splitEvmSignature } from '@/lib/hyperliquid/transfers';
 import { logger } from '@/lib/logger';
+import { CHUNK_RECOVERY_MESSAGE, recoverFromChunkLoadError } from '@/lib/chunk-recovery';
 
 export type { Market };
 
@@ -1868,6 +1869,10 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 name: error?.name,
                 stack: error?.stack?.split('\n').slice(0, 5),
             });
+
+            if (recoverFromChunkLoadError(error)) {
+                throw new Error(CHUNK_RECOVERY_MESSAGE);
+            }
 
             // Provide more specific error messages
             const errorMessage = error?.message || 'Unknown error';

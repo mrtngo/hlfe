@@ -1,10 +1,10 @@
 // Rayo Service Worker - Push Notifications & Caching
-const CACHE_NAME = 'rayo-v1';
+const CACHE_NAME = 'rayo-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache for offline support
 const STATIC_ASSETS = [
-  '/',
+  OFFLINE_URL,
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
@@ -51,14 +51,34 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const url = new URL(event.request.url);
+
+  // Next.js build assets are immutable and deployment-specific. Caching them
+  // in our own runtime cache can leave users with an old app shell requesting
+  // chunks that no longer exist after a deploy.
+  if (url.origin === self.location.origin && url.pathname.startsWith('/_next/')) {
+    return;
+  }
+
   // For API calls, always go to network
   if (event.request.url.includes('/api/') || event.request.url.includes('hyperliquid')) {
+    return;
+  }
+
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
     return;
   }
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
+        if (!response.ok || response.type === 'opaque') {
+          return response;
+        }
+
         // Clone the response for caching
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then((cache) => {

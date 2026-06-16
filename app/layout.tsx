@@ -6,6 +6,7 @@ import { PrivyProvider } from '@/providers/PrivyProvider';
 import { UserProvider } from '@/hooks/useUser';
 import { CurrencyProvider } from '@/context/CurrencyContext';
 import CapacitorInit from '@/components/CapacitorInit';
+import ChunkRecoveryGuard from '@/components/ChunkRecoveryGuard';
 
 // Rayo Typography System - Variable Fonts
 import "@fontsource-variable/plus-jakarta-sans";
@@ -72,6 +73,7 @@ export default function RootLayout({
         } as React.CSSProperties}>
             <body className="min-h-screen bg-background font-sans antialiased font-inter">
                 <CapacitorInit />
+                <ChunkRecoveryGuard />
                 <PrivyProvider>
                     <LanguageProvider>
                         <CurrencyProvider>
@@ -87,4 +89,3 @@ export default function RootLayout({
         </html>
     );
 }
-
