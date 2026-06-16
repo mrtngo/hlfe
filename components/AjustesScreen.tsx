@@ -63,6 +63,7 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
     const [walletCopied, setWalletCopied] = useState(false);
     const [secErr, setSecErr] = useState<string | null>(null);
     const [exporting, setExporting] = useState(false);
+    const [exportingTax, setExportingTax] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const es = language === 'es';
 
@@ -81,6 +82,45 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
             URL.revokeObjectURL(url);
         } finally {
             setExporting(false);
+        }
+    };
+
+    const handleExportTaxHistory = async () => {
+        if (!address) return;
+        setSecErr(null);
+        setExportingTax(true);
+        try {
+            await requireMfa();
+            const accessToken = await getAccessToken();
+            if (!accessToken) throw new Error(es ? 'No se pudo autenticar la descarga.' : 'Could not authenticate the download.');
+
+            const response = await fetch(apiUrl(`/api/account/tax-export?walletAddress=${encodeURIComponent(address)}`), {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if (!response.ok) {
+                const payload = await response.json().catch(() => null);
+                throw new Error(
+                    payload && typeof payload.error === 'string'
+                        ? payload.error
+                        : (es ? 'No se pudo preparar el historial.' : 'Could not prepare the history export.'),
+                );
+            }
+
+            const blob = await response.blob();
+            const disposition = response.headers.get('content-disposition') || '';
+            const match = disposition.match(/filename="([^"]+)"/i);
+            const filename = match?.[1] || `rayo-historial-impuestos-${new Date().toISOString().slice(0, 10)}.zip`;
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            if (error instanceof Error && error.message === t.screens.ajustes.security.twoFaCancelled) return;
+            setSecErr(error instanceof Error ? error.message : (es ? 'No se pudo exportar el historial.' : 'Could not export history.'));
+        } finally {
+            setExportingTax(false);
         }
     };
 
@@ -266,6 +306,13 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
                         icon={Download}
                         label={exporting ? (es ? 'Preparando…' : 'Preparing…') : (es ? 'Descargar mis datos' : 'Download my data')}
                         onClick={exporting ? undefined : handleExportData}
+                        right={<ChevronIcon />}
+                    />
+                    <Row
+                        icon={FileText}
+                        label={exportingTax ? (es ? 'Armando ZIP…' : 'Building ZIP…') : (es ? 'Exportar historial para impuestos' : 'Export tax history')}
+                        sub={es ? 'CSV + JSON de Rayo, Hyperliquid y movimientos' : 'CSV + JSON for Rayo, Hyperliquid and movements'}
+                        onClick={exportingTax ? undefined : handleExportTaxHistory}
                         right={<ChevronIcon />}
                     />
                     <Row
