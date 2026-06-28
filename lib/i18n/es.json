@@ -740,6 +740,8 @@
     "estTimeBridged": "Llega en ~5-8 minutos · {{chain}}",
     "fundsSafe": "Tus fondos están seguros en tu wallet de Arbitrum. Podés reintentar el envío.",
     "retryBridge": "Reintentar envío",
+    "pendingBridge": "Hay un envío pendiente de Circle. Podés completarlo sin iniciar otro retiro.",
+    "completePendingBridge": "Completar envío pendiente",
     "stepWithdraw": "Retirando a Arbitrum",
     "stepSettling": "Esperando llegada (~5 min)",
     "stepApproving": "Aprobando",

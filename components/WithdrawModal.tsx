@@ -114,6 +114,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const status = wd.status;
     const isSuccess = status === 'success';
     const isError = status === 'error';
+    const canResumePendingBridge = wd.hasPendingBridge && !wd.inProgress && !isSuccess && !isError;
 
     const handleType = (v: string) => {
         let c = v.replace(/[^0-9.]/g, '');
@@ -352,8 +353,19 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                             </>
                         )}
 
+                        {canResumePendingBridge && (
+                            <>
+                                <div style={{ marginTop: 10, fontSize: 12, color: V2.t2, textAlign: 'center', lineHeight: 1.45 }}>
+                                    {t.withdraw.pendingBridge || 'Hay un envío pendiente de Circle. Podés completarlo sin iniciar otro retiro.'}
+                                </div>
+                                <button onClick={() => wd.retryBridge()} style={{ ...ctaBtn, marginTop: 12, background: V2.accent, color: V2.accentInk }}>
+                                    {t.withdraw.completePendingBridge || 'Completar envío pendiente'}
+                                </button>
+                            </>
+                        )}
+
                         {/* CTA */}
-                        {!(isError && wd.withdrawDone) && (
+                        {!(isError && wd.withdrawDone) && !canResumePendingBridge && (
                             <button
                                 onClick={handleWithdraw}
                                 disabled={!canSubmit}

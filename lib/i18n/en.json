@@ -741,6 +741,8 @@
     "estTimeBridged": "Arrives in ~5-8 minutes · {{chain}}",
     "fundsSafe": "Your funds are safe in your Arbitrum wallet. You can retry the bridge.",
     "retryBridge": "Retry bridge",
+    "pendingBridge": "There is a pending Circle transfer. You can complete it without starting another withdrawal.",
+    "completePendingBridge": "Complete pending transfer",
     "stepWithdraw": "Withdrawing to Arbitrum",
     "stepSettling": "Waiting for arrival (~5 min)",
     "stepApproving": "Approving",

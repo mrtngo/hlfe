@@ -322,6 +322,7 @@ export function useWithdrawToChain() {
     /** Retry only the bridge leg — funds are already safe on Arbitrum. */
     const retryBridge = useCallback(async () => {
         if (evm.pending) {
+            setPhase('attesting');
             await evm.resumePendingTransfer();
             return;
         }
@@ -331,9 +332,12 @@ export function useWithdrawToChain() {
     // Unified status: while leg 2 runs on an EVM chain, surface the CCTP sub-status.
     const status: WithdrawStatus = useMemo(() => {
         const isEvmBridge =
-            lastArgs.current &&
-            lastArgs.current.destChain !== 'solana' &&
-            lastArgs.current.destChain !== 'arbitrum';
+            Boolean(evm.pending) ||
+            Boolean(
+                lastArgs.current &&
+                    lastArgs.current.destChain !== 'solana' &&
+                    lastArgs.current.destChain !== 'arbitrum',
+            );
         if (
             isEvmBridge &&
             ['approving', 'burning', 'attesting', 'minting', 'depositing', 'success', 'error'].includes(
@@ -357,6 +361,7 @@ export function useWithdrawToChain() {
         inProgress,
         error: error || evm.error,
         withdrawDone,
+        hasPendingBridge: Boolean(evm.pending),
         burnTxHash: burnTxHash || evm.burnTxHash,
         mintTxHash: mintTxHash || evm.mintTxHash,
         run,

@@ -81,7 +81,10 @@ export function useCctpTransfer() {
     const { wallets } = useWallets();
     const { getAccessToken } = usePrivy();
     const { sendTransaction } = useSendTransaction();
-    const activeWallet = wallets?.[0];
+    // Rayo's funding address is the Privy embedded EVM wallet. Use it
+    // consistently so HL withdrawals settle into the same wallet that CCTP
+    // later approves/burns from.
+    const activeWallet = wallets.find((w) => w.walletClientType === 'privy') ?? wallets?.[0];
 
     const [status, setStatus] = useState<CctpStatus>('idle');
     const [error, setError] = useState('');
