@@ -119,6 +119,13 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const canResumePendingBridge = wd.hasPendingBridge && !wd.inProgress && !isSuccess && !isError;
     const canManualRecover = isBridged && destChain !== 'solana' && !wd.inProgress && !isSuccess;
     const manualHashValid = /^0x[0-9a-fA-F]{64}$/.test(manualBurnTxHash.trim());
+    const canBridgeExistingArbitrum =
+        isBridged &&
+        destChain !== 'solana' &&
+        amountNum > 0 &&
+        addressValid &&
+        !wd.inProgress &&
+        !isSuccess;
 
     const handleType = (v: string) => {
         let c = v.replace(/[^0-9.]/g, '');
@@ -166,6 +173,13 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
         haptic.medium();
         setError('');
         await wd.recoverBridge(manualBurnTxHash.trim(), destChain as CctpChainKey);
+    };
+
+    const handleBridgeExistingArbitrum = async () => {
+        if (!canBridgeExistingArbitrum) return;
+        haptic.medium();
+        setError('');
+        await wd.bridgeFromArbitrumWallet(amount, destChain as CctpChainKey, destAddress.trim());
     };
 
     const handleBackdrop = () => {
@@ -382,6 +396,19 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
 
                         {canManualRecover && !canResumePendingBridge && (
                             <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: V2.card, border: `1px solid ${V2.hair}` }}>
+                                <div style={{ fontSize: 12, color: V2.t2, lineHeight: 1.45, marginBottom: 10 }}>
+                                    {t.withdraw.bridgeExistingHint || 'Si el USDC ya llegó a tu wallet de Arbitrum, podés enviarlo a la red elegida sin retirar de nuevo.'}
+                                </div>
+                                <button
+                                    onClick={handleBridgeExistingArbitrum}
+                                    disabled={!canBridgeExistingArbitrum}
+                                    style={{ ...ctaBtn, marginBottom: 12, padding: 12, borderRadius: 12, background: canBridgeExistingArbitrum ? V2.accent : 'rgba(255,255,255,0.05)', color: canBridgeExistingArbitrum ? V2.accentInk : V2.t3 }}
+                                >
+                                    {t.withdraw.bridgeExisting || 'Enviar desde Arbitrum'}
+                                </button>
+
+                                <div style={{ height: 1, background: V2.hair, margin: '2px 0 12px' }} />
+
                                 <div style={{ fontSize: 12, color: V2.t2, lineHeight: 1.45, marginBottom: 10 }}>
                                     {t.withdraw.manualRecoveryHint || 'Si el envío quedó pendiente, pegá el hash de burn en Arbitrum para completar el minteo.'}
                                 </div>

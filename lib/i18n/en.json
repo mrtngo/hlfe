@@ -743,6 +743,8 @@
     "retryBridge": "Retry bridge",
     "pendingBridge": "There is a pending Circle transfer. You can complete it without starting another withdrawal.",
     "completePendingBridge": "Complete pending transfer",
+    "bridgeExistingHint": "If USDC already arrived in your Arbitrum wallet, you can send it to the selected network without withdrawing again.",
+    "bridgeExisting": "Send from Arbitrum",
     "manualRecoveryHint": "If the transfer is pending, paste the Arbitrum burn hash to complete the mint.",
     "bridgeHashLabel": "Bridge hash",
     "bridgeHashPlaceholder": "0x...",

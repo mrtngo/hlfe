@@ -342,6 +342,18 @@ export function useWithdrawToChain() {
         [evm],
     );
 
+    const bridgeFromArbitrumWallet = useCallback(
+        async (amount: string, destChain: CctpChainKey, destAddress: string) => {
+            setError('');
+            setPhase('approving');
+            await evm.transfer('arbitrum', destChain, amount, {
+                mintRecipient: destAddress,
+                movementKind: 'withdrawal',
+            });
+        },
+        [evm],
+    );
+
     // Unified status: while leg 2 runs on an EVM chain, surface the CCTP sub-status.
     const status: WithdrawStatus = useMemo(() => {
         const isEvmBridge =
@@ -382,6 +394,7 @@ export function useWithdrawToChain() {
         run,
         retryBridge,
         recoverBridge,
+        bridgeFromArbitrumWallet,
         reset,
     };
 }

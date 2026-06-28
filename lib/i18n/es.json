@@ -742,6 +742,8 @@
     "retryBridge": "Reintentar envío",
     "pendingBridge": "Hay un envío pendiente de Circle. Podés completarlo sin iniciar otro retiro.",
     "completePendingBridge": "Completar envío pendiente",
+    "bridgeExistingHint": "Si el USDC ya llegó a tu wallet de Arbitrum, podés enviarlo a la red elegida sin retirar de nuevo.",
+    "bridgeExisting": "Enviar desde Arbitrum",
     "manualRecoveryHint": "Si el envío quedó pendiente, pegá el hash de burn en Arbitrum para completar el minteo.",
     "bridgeHashLabel": "Hash del bridge",
     "bridgeHashPlaceholder": "0x...",
