@@ -329,10 +329,25 @@ export function useWithdrawToChain() {
         if (lastArgs.current) await run(lastArgs.current);
     }, [evm, run]);
 
+    const recoverBridge = useCallback(
+        async (burnTxHash: string, destChain: CctpChainKey) => {
+            setError('');
+            setPhase('attesting');
+            await evm.recoverBurnedTransfer({
+                fromKey: 'arbitrum',
+                toKey: destChain,
+                burnTxHash,
+            });
+        },
+        [evm],
+    );
+
     // Unified status: while leg 2 runs on an EVM chain, surface the CCTP sub-status.
     const status: WithdrawStatus = useMemo(() => {
         const isEvmBridge =
             Boolean(evm.pending) ||
+            phase === 'attesting' ||
+            phase === 'minting' ||
             Boolean(
                 lastArgs.current &&
                     lastArgs.current.destChain !== 'solana' &&
@@ -366,6 +381,7 @@ export function useWithdrawToChain() {
         mintTxHash: mintTxHash || evm.mintTxHash,
         run,
         retryBridge,
+        recoverBridge,
         reset,
     };
 }

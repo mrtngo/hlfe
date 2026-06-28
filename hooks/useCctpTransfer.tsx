@@ -66,6 +66,12 @@ interface TransferOptions {
     movementKind?: MoneyMovementKind;
 }
 
+interface RecoverBurnedTransferArgs {
+    fromKey: CctpChainKey;
+    toKey: CctpChainKey;
+    burnTxHash: string;
+}
+
 const log = createLogger('cctp');
 
 const VIEM_CHAINS = {
@@ -452,6 +458,49 @@ export function useCctpTransfer() {
         await finishBurnedTransfer(current);
     }, [activeWallet?.address, finishBurnedTransfer, transfer]);
 
+    const recoverBurnedTransfer = useCallback(
+        async ({ fromKey, toKey, burnTxHash }: RecoverBurnedTransferArgs) => {
+            setError('');
+            setBurnTxHash(burnTxHash);
+            setMintTxHash('');
+            setDepositTxHash('');
+
+            if (!activeWallet?.address) {
+                setError('Conecta tu wallet para continuar');
+                setStatus('error');
+                return;
+            }
+
+            if (!/^0x[0-9a-fA-F]{64}$/.test(burnTxHash.trim())) {
+                setError('Hash de transacción inválido.');
+                setStatus('error');
+                return;
+            }
+
+            const from = CCTP_CHAINS[fromKey];
+            const to = CCTP_CHAINS[toKey];
+            const sendOnChain = makeSendOnChain(activeWallet as never, sendTransaction as never);
+
+            try {
+                setStatus('attesting');
+                const att = await pollAttestation(from.domain, burnTxHash.trim());
+
+                setStatus('minting');
+                const mint = await sendOnChain(to.chainId, {
+                    to: CCTP_V2.messageTransmitter as Hex,
+                    data: encodeReceiveMessage(att.message as Hex, att.attestation as Hex),
+                    value: BigInt(0),
+                });
+                setMintTxHash(mint.hash);
+                setStatus('success');
+            } catch (e) {
+                setError(e instanceof Error ? e.message : 'No pudimos completar el envío pendiente.');
+                setStatus('error');
+            }
+        },
+        [activeWallet, sendTransaction],
+    );
+
     const inProgress = useMemo(
         () =>
             ['approving', 'burning', 'attesting', 'minting', 'depositing'].includes(
@@ -470,6 +519,7 @@ export function useCctpTransfer() {
         pending,
         transfer,
         resumePendingTransfer,
+        recoverBurnedTransfer,
         clearPendingTransfer: clearRememberedPending,
         reset,
     };

@@ -76,6 +76,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const [amount, setAmount] = useState('');
     const [destChain, setDestChain] = useState<WithdrawDestChain>('arbitrum');
     const [destAddress, setDestAddress] = useState('');
+    const [manualBurnTxHash, setManualBurnTxHash] = useState('');
     const [error, setError] = useState('');
     const [mounted, setMounted] = useState(false);
 
@@ -88,6 +89,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
             setAmount('');
             setDestChain('arbitrum');
             setDestAddress('');
+            setManualBurnTxHash('');
             setError('');
             wd.reset();
         }
@@ -115,6 +117,8 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
     const isSuccess = status === 'success';
     const isError = status === 'error';
     const canResumePendingBridge = wd.hasPendingBridge && !wd.inProgress && !isSuccess && !isError;
+    const canManualRecover = isBridged && destChain !== 'solana' && !wd.inProgress && !isSuccess;
+    const manualHashValid = /^0x[0-9a-fA-F]{64}$/.test(manualBurnTxHash.trim());
 
     const handleType = (v: string) => {
         let c = v.replace(/[^0-9.]/g, '');
@@ -150,6 +154,18 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
             return;
         }
         await wd.run({ amount, destChain, destAddress: destAddress.trim() });
+    };
+
+    const handleManualRecover = async () => {
+        if (!canManualRecover) return;
+        if (!manualHashValid) {
+            haptic.error();
+            setError(t.withdraw.invalidBridgeHash || 'Hash de bridge inválido.');
+            return;
+        }
+        haptic.medium();
+        setError('');
+        await wd.recoverBridge(manualBurnTxHash.trim(), destChain as CctpChainKey);
     };
 
     const handleBackdrop = () => {
@@ -362,6 +378,33 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                                     {t.withdraw.completePendingBridge || 'Completar envío pendiente'}
                                 </button>
                             </>
+                        )}
+
+                        {canManualRecover && !canResumePendingBridge && (
+                            <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: V2.card, border: `1px solid ${V2.hair}` }}>
+                                <div style={{ fontSize: 12, color: V2.t2, lineHeight: 1.45, marginBottom: 10 }}>
+                                    {t.withdraw.manualRecoveryHint || 'Si el envío quedó pendiente, pegá el hash de burn en Arbitrum para completar el minteo.'}
+                                </div>
+                                <div style={{ fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 700, color: V2.t3, marginBottom: 8 }}>
+                                    {t.withdraw.bridgeHashLabel || 'Hash del bridge'}
+                                </div>
+                                <input
+                                    value={manualBurnTxHash}
+                                    onChange={(e) => { setManualBurnTxHash(e.target.value); setError(''); }}
+                                    placeholder={t.withdraw.bridgeHashPlaceholder || '0x...'}
+                                    spellCheck={false}
+                                    autoCapitalize="off"
+                                    autoCorrect="off"
+                                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${manualBurnTxHash && !manualHashValid ? 'rgba(239,68,68,0.4)' : V2.hair}`, background: 'rgba(255,255,255,0.025)', outline: 'none', color: V2.t1, fontSize: 12, fontFamily: V2.mono }}
+                                />
+                                <button
+                                    onClick={handleManualRecover}
+                                    disabled={!manualHashValid}
+                                    style={{ ...ctaBtn, marginTop: 10, padding: 12, borderRadius: 12, background: manualHashValid ? V2.accent : 'rgba(255,255,255,0.05)', color: manualHashValid ? V2.accentInk : V2.t3 }}
+                                >
+                                    {t.withdraw.completeWithHash || 'Completar con hash'}
+                                </button>
+                            </div>
                         )}
 
                         {/* CTA */}
