@@ -28,7 +28,7 @@ const config: CapacitorConfig = {
       // bound prevents flicker on cold launches.
       launchShowDuration: 3000,
       launchAutoHide: false,
-      backgroundColor: '#000000',
+      backgroundColor: '#0A0C0E',
       // No spinner — splash artwork already has the brand mark.
       showSpinner: false,
       iosSpinnerStyle: 'small',
@@ -37,7 +37,7 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'DARK',
-      backgroundColor: '#000000',
+      backgroundColor: '#0A0C0E',
       overlaysWebView: false,
     },
     PushNotifications: {
