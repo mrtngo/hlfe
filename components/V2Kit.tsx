@@ -1,13 +1,13 @@
 'use client';
 
 // ============================================================================
-// Rayo V2 — "Serious redesign" shared kit.
+// Delos V2 — "Serious redesign" shared kit.
 //
-// Ported from the Claude Design handoff (rayo/project/v2/shared.jsx +
-// inicio-shared.jsx). Cooler near-black, Hanken Grotesk UI font, JetBrains
-// mono numerals, brand-yellow accent. These primitives are the building
-// blocks every re-skinned V2 screen composes from — keep them in sync with
-// the `--v2-*` CSS variables in app/globals.css.
+// Ported from the Claude Design handoff (project/v2/shared.jsx +
+// inicio-shared.jsx). Cool marble-dark, Hanken Grotesk UI font, JetBrains
+// mono numerals, Apollonian gold accent, Cormorant Garamond serif wordmark.
+// These primitives are the building blocks every re-skinned V2 screen composes
+// from — keep them in sync with the `--v2-*` CSS variables in app/globals.css.
 // ============================================================================
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -17,7 +17,7 @@ import { haptic } from '@/lib/haptics';
 // ---- Design tokens (inline-style mirror of the --v2-* CSS vars) ------------
 export const V2 = {
   bg: '#0A0C0E',
-  bgGlow: 'radial-gradient(120% 60% at 50% -10%, rgba(250,204,21,0.06) 0%, transparent 55%)',
+  bgGlow: 'radial-gradient(120% 60% at 50% -10%, rgba(227,179,76,0.06) 0%, transparent 55%)',
   card: 'rgba(255,255,255,0.025)',
   cardSolid: '#111417',
   hair: 'rgba(255,255,255,0.07)',
@@ -26,14 +26,15 @@ export const V2 = {
   neg: '#EF4444',
   posSoft: 'rgba(34,197,94,0.14)',
   negSoft: 'rgba(239,68,68,0.14)',
-  accent: '#FACC15',
-  accentSoft: 'rgba(250,204,21,0.13)',
-  accentInk: '#1A1304', // ink on top of the yellow accent
+  accent: '#E3B34C',
+  accentSoft: 'rgba(227,179,76,0.13)',
+  accentInk: '#1C1608', // warm near-black ink on top of the gold accent
   t1: '#FFFFFF',
   t2: 'rgba(255,255,255,0.62)',
   t3: 'rgba(255,255,255,0.40)',
   ui: 'var(--font-ui), -apple-system, system-ui, sans-serif',
   mono: 'var(--font-mono), ui-monospace, monospace',
+  serif: "var(--font-serif), 'Cormorant Garamond', Georgia, serif",
 } as const;
 
 // ============================================================================
@@ -112,6 +113,87 @@ export function Icon({
     bank: <><line x1="3" y1="21" x2="21" y2="21" /><line x1="3" y1="10" x2="21" y2="10" /><polyline points="5 6 12 3 19 6" /><line x1="4" y1="10" x2="4" y2="21" /><line x1="20" y1="10" x2="20" y2="21" /><line x1="8" y1="14" x2="8" y2="17" /><line x1="12" y1="14" x2="12" y2="17" /><line x1="16" y1="14" x2="16" y2="17" /></>,
   };
   return <svg {...props}>{paths[name] ?? null}</svg>;
+}
+
+// ============================================================================
+// DelosSun — the Apollonian sun brand mark (12 rays, alternating length).
+// Replaces the old lightning bolt as the primary Delos glyph.
+// ============================================================================
+export function DelosSun({
+  size = 24,
+  color = V2.accent,
+  style,
+  className,
+}: {
+  size?: number;
+  color?: string;
+  style?: React.CSSProperties;
+  className?: string;
+}) {
+  const rays = [];
+  for (let k = 0; k < 12; k++) {
+    const a = (k * Math.PI) / 6;
+    const long = k % 2 === 0;
+    const r1 = 6.4;
+    const r2 = long ? 11.2 : 9.2;
+    rays.push(
+      <line
+        key={k}
+        x1={(12 + Math.cos(a) * r1).toFixed(2)}
+        y1={(12 + Math.sin(a) * r1).toFixed(2)}
+        x2={(12 + Math.cos(a) * r2).toFixed(2)}
+        y2={(12 + Math.sin(a) * r2).toFixed(2)}
+        stroke={color}
+        strokeWidth={long ? 1.9 : 1.4}
+        strokeLinecap="round"
+      />
+    );
+  }
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden className={className} style={style}>
+      <circle cx="12" cy="12" r="4.6" fill={color} />
+      {rays}
+    </svg>
+  );
+}
+
+// ============================================================================
+// DelosWordmark — gold sun tile + Cormorant serif "Delos" lockup.
+// ============================================================================
+export function DelosWordmark({
+  size = 30,
+  tile = true,
+  color = V2.t1,
+}: {
+  size?: number;
+  tile?: boolean;
+  color?: string;
+}) {
+  const tileSize = Math.round(size * 1.33);
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: size * 0.33 }}>
+      {tile && (
+        <div
+          style={{
+            width: tileSize,
+            height: tileSize,
+            borderRadius: tileSize * 0.3,
+            background: V2.accent,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 6px 20px -4px rgba(227,179,76,0.6)',
+            flexShrink: 0,
+          }}
+        >
+          <DelosSun size={tileSize * 0.6} color={V2.accentInk} />
+        </div>
+      )}
+      <span style={{ fontFamily: V2.serif, fontSize: size, fontWeight: 600, letterSpacing: '0.05em', color }}>
+        Delos
+      </span>
+    </div>
+  );
 }
 
 // ============================================================================

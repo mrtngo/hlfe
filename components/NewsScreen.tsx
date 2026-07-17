@@ -236,7 +236,7 @@ function TickerChip({
                 fontSize: 10.5, fontWeight: 800, padding: '4px 9px 4px 4px', borderRadius: 99,
                 fontFamily: V2.ui, cursor: tradeable ? 'pointer' : 'default',
                 background: tradeable ? V2.accentSoft : 'rgba(255,255,255,0.05)',
-                border: tradeable ? '1px solid rgba(250,204,21,0.3)' : '1px solid transparent',
+                border: tradeable ? '1px solid rgba(227,179,76,0.3)' : '1px solid transparent',
                 color: tradeable ? V2.accent : V2.t2,
             }}
         >

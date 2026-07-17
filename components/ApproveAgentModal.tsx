@@ -215,7 +215,7 @@ export default function ApproveAgentModal({
                                 y1="1"
                                 x2="100%"
                                 y2="1"
-                                stroke="#FACC15"
+                                stroke="#E3B34C"
                                 strokeWidth="1.5"
                                 strokeDasharray="2 4"
                                 opacity="0.4"
@@ -239,16 +239,16 @@ export default function ApproveAgentModal({
                                         borderRadius: 18,
                                         margin: '0 auto 8px',
                                         background:
-                                            'linear-gradient(135deg, #FEE082, #E8B713)',
+                                            'linear-gradient(135deg, #F2D389, #C8952E)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         fontWeight: 600,
-                                        color: '#1A1304',
+                                        color: '#1C1608',
                                         fontSize: 26,
                                         fontStyle: 'italic',
                                         boxShadow:
-                                            '0 8px 24px -6px rgba(250,204,21,0.4)',
+                                            '0 8px 24px -6px rgba(227,179,76,0.4)',
                                     }}
                                 >
                                     {userInitial}
@@ -275,8 +275,8 @@ export default function ApproveAgentModal({
                                     width: 36,
                                     height: 36,
                                     borderRadius: 12,
-                                    background: 'rgba(250,204,21,0.18)',
-                                    border: '1px solid rgba(250,204,21,0.4)',
+                                    background: 'rgba(227,179,76,0.18)',
+                                    border: '1px solid rgba(227,179,76,0.4)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -287,7 +287,7 @@ export default function ApproveAgentModal({
                                     style={{
                                         width: 14,
                                         height: 14,
-                                        color: '#FACC15',
+                                        color: '#E3B34C',
                                     }}
                                 />
                             </div>
@@ -301,8 +301,8 @@ export default function ApproveAgentModal({
                                         borderRadius: 18,
                                         margin: '0 auto 8px',
                                         background:
-                                            'linear-gradient(135deg, rgba(250,204,21,0.2), rgba(250,204,21,0.05))',
-                                        border: '1px solid rgba(250,204,21,0.3)',
+                                            'linear-gradient(135deg, rgba(227,179,76,0.2), rgba(227,179,76,0.05))',
+                                        border: '1px solid rgba(227,179,76,0.3)',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
@@ -312,7 +312,7 @@ export default function ApproveAgentModal({
                                         style={{
                                             width: 26,
                                             height: 26,
-                                            color: '#FACC15',
+                                            color: '#E3B34C',
                                             strokeWidth: 2,
                                         }}
                                     />
@@ -321,7 +321,7 @@ export default function ApproveAgentModal({
                                     style={{
                                         fontSize: 11,
                                         fontWeight: 700,
-                                        color: '#FACC15',
+                                        color: '#E3B34C',
                                     }}
                                 >
                                     {t.agent.agentLabel}
@@ -355,7 +355,7 @@ export default function ApproveAgentModal({
                             <span
                                 style={{
                                     fontStyle: 'italic',
-                                    color: '#FACC15',
+                                    color: '#E3B34C',
                                 }}
                             >
                                 {t.agent.headlineEm}
@@ -468,10 +468,10 @@ export default function ApproveAgentModal({
                             width: '100%',
                             padding: 16,
                             background:
-                                'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                                'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                             border: 'none',
                             borderRadius: 16,
-                            color: '#1A1304',
+                            color: '#1C1608',
                             fontWeight: 800,
                             fontSize: 14,
                             cursor: 'pointer',
@@ -481,7 +481,7 @@ export default function ApproveAgentModal({
                             justifyContent: 'center',
                             gap: 6,
                             boxShadow:
-                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 32px -8px rgba(250,204,21,0.45)',
+                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 32px -8px rgba(227,179,76,0.45)',
                         }}
                     >
                         {t.agent.ctaActivate}{' '}
@@ -539,7 +539,7 @@ export default function ApproveAgentModal({
                         <span
                             style={{
                                 fontStyle: 'italic',
-                                color: '#FACC15',
+                                color: '#E3B34C',
                             }}
                         >
                             {t.agent.signingHeadlineEm}
@@ -573,7 +573,7 @@ export default function ApproveAgentModal({
                         <div
                             style={{
                                 fontSize: 12,
-                                color: '#FACC15',
+                                color: '#E3B34C',
                                 fontStyle: 'italic',
                                 marginBottom: 10,
                             }}
@@ -616,7 +616,7 @@ export default function ApproveAgentModal({
                     >
                         <Loader2
                             className="animate-spin"
-                            style={{ width: 14, height: 14, color: '#FACC15' }}
+                            style={{ width: 14, height: 14, color: '#E3B34C' }}
                         />
                         <span
                             style={{
@@ -694,7 +694,7 @@ export default function ApproveAgentModal({
                             letterSpacing: '-0.025em',
                         }}
                     >
-                        <span style={{ fontStyle: 'italic', color: '#FACC15' }}>
+                        <span style={{ fontStyle: 'italic', color: '#E3B34C' }}>
                             {t.agent.successTitle}
                         </span>
                     </div>
@@ -747,10 +747,10 @@ export default function ApproveAgentModal({
                             width: '100%',
                             padding: 16,
                             background:
-                                'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                                'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                             border: 'none',
                             borderRadius: 16,
-                            color: '#1A1304',
+                            color: '#1C1608',
                             fontWeight: 800,
                             fontSize: 14,
                             cursor: 'pointer',
@@ -760,7 +760,7 @@ export default function ApproveAgentModal({
                             justifyContent: 'center',
                             gap: 6,
                             boxShadow:
-                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 32px -8px rgba(250,204,21,0.45)',
+                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 32px -8px rgba(227,179,76,0.45)',
                         }}
                     >
                         {t.agent.successCta}{' '}
@@ -906,16 +906,16 @@ export default function ApproveAgentModal({
                             width: '100%',
                             padding: 16,
                             background:
-                                'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                                'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                             border: 'none',
                             borderRadius: 16,
-                            color: '#1A1304',
+                            color: '#1C1608',
                             fontWeight: 800,
                             fontSize: 14,
                             cursor: 'pointer',
                             fontFamily: 'inherit',
                             boxShadow:
-                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 32px -8px rgba(250,204,21,0.45)',
+                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 32px -8px rgba(227,179,76,0.45)',
                         }}
                     >
                         {t.agent.errorRetry}
@@ -989,8 +989,8 @@ function PulsingFingerprint() {
                 borderRadius: 36,
                 margin: '20px auto',
                 background:
-                    'radial-gradient(circle at center, rgba(250,204,21,0.2) 0%, rgba(250,204,21,0.04) 60%, transparent 100%)',
-                border: '1px solid rgba(250,204,21,0.25)',
+                    'radial-gradient(circle at center, rgba(227,179,76,0.2) 0%, rgba(227,179,76,0.04) 60%, transparent 100%)',
+                border: '1px solid rgba(227,179,76,0.25)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -1002,7 +1002,7 @@ function PulsingFingerprint() {
                 style={{
                     width: 56,
                     height: 56,
-                    color: '#FACC15',
+                    color: '#E3B34C',
                     strokeWidth: 1.6,
                 }}
             />
@@ -1012,7 +1012,7 @@ function PulsingFingerprint() {
                     position: 'absolute',
                     inset: -8,
                     borderRadius: 40,
-                    border: '2px solid rgba(250,204,21,0.15)',
+                    border: '2px solid rgba(227,179,76,0.15)',
                     animation: 'rayoRingPulse 2s ease-out infinite',
                 }}
             />
@@ -1020,10 +1020,10 @@ function PulsingFingerprint() {
                 @keyframes rayoPulseGlow {
                     0%,
                     100% {
-                        box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.15);
+                        box-shadow: 0 0 0 0 rgba(227, 179, 76, 0.15);
                     }
                     50% {
-                        box-shadow: 0 0 0 12px rgba(250, 204, 21, 0.05);
+                        box-shadow: 0 0 0 12px rgba(227, 179, 76, 0.05);
                     }
                 }
                 @keyframes rayoRingPulse {

@@ -1,7 +1,7 @@
 'use client';
 
 export const CHUNK_RECOVERY_MESSAGE =
-    'Actualizamos Rayo. Recargando para cargar la ultima version antes de operar.';
+    'Actualizamos Delos. Recargando para cargar la ultima version antes de operar.';
 
 const RECOVERY_KEY = 'rayo:chunk-recovery-at';
 const RECOVERY_COOLDOWN_MS = 10_000;

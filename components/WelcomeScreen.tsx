@@ -1,15 +1,15 @@
 'use client';
 
-// Rayo v2 — Welcome / pre-login screen.
+// Delos v2 — Welcome / pre-login screen.
 // Full-bleed dark hero: brand lockup, ambient bolts + glow, value prop,
 // live auto-scrolling ticker (from real market data), and auth actions.
 // Recreated from design_handoff_onboarding/v2/welcome.jsx with real tokens,
 // V2Kit Icon, i18n and a guest escape hatch.
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Icon, V2 } from '@/components/V2Kit';
+import { Icon, V2, DelosSun } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '@/lib/compliance/consent';
 
@@ -110,7 +110,7 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
                     width: 460,
                     height: 460,
                     background:
-                        'radial-gradient(circle, rgba(250,204,21,0.16) 0%, rgba(250,204,21,0.04) 40%, transparent 68%)',
+                        'radial-gradient(circle, rgba(227,179,76,0.16) 0%, rgba(227,179,76,0.04) 40%, transparent 68%)',
                     animation: 'wkglow 5s ease-in-out infinite',
                     pointerEvents: 'none',
                 }}
@@ -130,30 +130,23 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
                     WebkitMaskImage: 'radial-gradient(120% 80% at 50% 30%, #000 0%, transparent 72%)',
                 }}
             />
-            {/* ambient bolts */}
+            {/* ambient suns */}
             {BOLTS.map((b, i) => (
-                <svg
+                <DelosSun
                     key={i}
                     className="wkbolt"
-                    width={b.s}
-                    height={b.s * 1.3}
-                    viewBox="0 0 24 24"
-                    aria-hidden
+                    size={b.s * 1.15}
+                    color={V2.accent}
                     style={{
                         position: 'absolute',
                         left: `${b.l}%`,
                         top: `${b.t}%`,
+                        opacity: b.o,
                         ['--wr' as string]: '0deg',
                         animation: `wkfloat ${4 + b.d}s ease-in-out ${b.d}s infinite`,
                         pointerEvents: 'none',
-                    }}
-                >
-                    <polygon
-                        points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
-                        fill={V2.accent}
-                        opacity={b.o}
-                    />
-                </svg>
+                    } as React.CSSProperties}
+                />
             ))}
 
             {/* top: brand lockup */}
@@ -168,24 +161,19 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
             >
                 <div
                     style={{
-                        width: 38,
-                        height: 38,
-                        borderRadius: 11,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 12,
                         background: V2.accent,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: '0 6px 20px -4px rgba(250,204,21,0.6)',
+                        boxShadow: '0 6px 20px -4px rgba(227,179,76,0.6)',
                     }}
                 >
-                    <svg width="18" height="22" viewBox="0 0 24 24">
-                        <polygon
-                            points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
-                            fill="#1A1304"
-                        />
-                    </svg>
+                    <DelosSun size={24} color={V2.accentInk} />
                 </div>
-                <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em' }}>Rayo</span>
+                <span style={{ fontFamily: V2.serif, fontSize: 30, fontWeight: 600, letterSpacing: '0.05em' }}>Delos</span>
             </div>
 
             {/* center: value prop */}
@@ -209,7 +197,7 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
                         padding: '6px 12px',
                         borderRadius: 99,
                         background: V2.accentSoft,
-                        border: '1px solid rgba(250,204,21,0.22)',
+                        border: '1px solid rgba(227,179,76,0.22)',
                         width: 'fit-content',
                         marginBottom: 20,
                     }}
@@ -220,7 +208,7 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
                             height: 6,
                             borderRadius: '50%',
                             background: V2.accent,
-                            boxShadow: '0 0 8px #FACC15',
+                            boxShadow: '0 0 8px #E3B34C',
                         }}
                     />
                     <span
@@ -370,11 +358,11 @@ export default function WelcomeScreen({ onLogin, onGuest, onTutorial }: WelcomeS
                         cursor: 'pointer',
                         fontFamily: V2.ui,
                         background: V2.accent,
-                        color: '#1A1304',
+                        color: '#1C1608',
                         fontWeight: 800,
                         fontSize: 16,
                         letterSpacing: '-0.01em',
-                        boxShadow: '0 14px 32px -8px rgba(250,204,21,0.5)',
+                        boxShadow: '0 14px 32px -8px rgba(227,179,76,0.5)',
                     }}
                 >
                     {t.onboarding.welcome.createAccount}

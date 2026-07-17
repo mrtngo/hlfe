@@ -8,29 +8,31 @@ import { CurrencyProvider } from '@/context/CurrencyContext';
 import CapacitorInit from '@/components/CapacitorInit';
 import ChunkRecoveryGuard from '@/components/ChunkRecoveryGuard';
 
-// Rayo Typography System - Variable Fonts
+// Delos Typography System - Variable Fonts
 import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
 // Fraunces — editorial serif with optical sizing & soft axes (for display moments)
 import "@fontsource-variable/fraunces";
-// Hanken Grotesk — V2 "serious redesign" primary UI typeface
+// Hanken Grotesk — Delos primary UI typeface
 import "@fontsource-variable/hanken-grotesk";
+// Cormorant Garamond — Delos serif wordmark / brand lockup
+import "@fontsource-variable/cormorant-garamond";
 
 export const metadata: Metadata = {
-    title: 'Rayo - Trade at the Speed of Light',
-    description: 'Fast, simple, and secure on-chain trading. Trade futures with lightning speed.',
-    keywords: 'trading, crypto, futures, leverage, bitcoin, ethereum, on-chain, defi',
-    authors: [{ name: 'Rayo' }],
+    title: 'Delos - Trading, refined',
+    description: 'Fast, simple, and secure on-chain trading. Stocks, crypto, gold and indexes — long or short with leverage.',
+    keywords: 'trading, crypto, futures, leverage, bitcoin, ethereum, on-chain, defi, stocks',
+    authors: [{ name: 'Delos' }],
     manifest: '/manifest.json',
     openGraph: {
-        title: 'Rayo - Trade at the Speed of Light',
+        title: 'Delos - Trading, refined',
         description: 'Fast, simple, and secure on-chain trading',
         type: 'website',
     },
     appleWebApp: {
         capable: true,
-        title: 'Rayo',
+        title: 'Delos',
         statusBarStyle: 'black-translucent',
     },
     icons: {
@@ -53,7 +55,7 @@ export const viewport = {
     maximumScale: 1,
     userScalable: false,
     viewportFit: 'cover',
-    themeColor: '#000000',
+    themeColor: '#0A0C0E',
 };
 
 export default function RootLayout({
@@ -67,9 +69,10 @@ export default function RootLayout({
             '--font-inter': '"Inter Variable", sans-serif',
             '--font-jetbrains': '"JetBrains Mono Variable", monospace',
             '--font-display': '"Fraunces Variable", "Plus Jakarta Sans Variable", serif',
-            // V2 "serious redesign" — Hanken Grotesk UI font + JetBrains mono
+            // Delos V2 — Hanken Grotesk UI font + JetBrains mono + Cormorant serif wordmark
             '--font-ui': '"Hanken Grotesk Variable", -apple-system, system-ui, sans-serif',
             '--font-mono': '"JetBrains Mono Variable", ui-monospace, monospace',
+            '--font-serif': '"Cormorant Garamond Variable", "Cormorant Garamond", Georgia, serif',
         } as React.CSSProperties}>
             <body className="min-h-screen bg-background font-sans antialiased font-inter">
                 <CapacitorInit />

@@ -5,11 +5,11 @@ import type { Metadata } from 'next';
 // providers needed; the only action is a link to the app.
 
 export const metadata: Metadata = {
-    title: 'Rayo — Invertí en cripto y acciones, simple y en segundos',
+    title: 'Delos — Invertí en cripto y acciones, simple y en segundos',
     description:
-        'Rayo es la forma más simple de invertir en cripto y acciones desde LATAM. Comprá al alza o a la baja, depositá USDC desde cualquier red y operá en segundos. Tu plata, on-chain.',
+        'Delos es la forma más simple de invertir en cripto y acciones desde LATAM. Comprá al alza o a la baja, depositá USDC desde cualquier red y operá en segundos. Tu plata, on-chain.',
     openGraph: {
-        title: 'Rayo — Invertí en cripto y acciones',
+        title: 'Delos — Invertí en cripto y acciones',
         description:
             'La forma más simple de invertir en cripto y acciones desde LATAM. Sin claves raras, en segundos.',
         type: 'website',
@@ -19,10 +19,11 @@ export const metadata: Metadata = {
 
 const APP_URL = 'https://app.rayotrade.xyz';
 
-const ACCENT = '#FACC15';
+const ACCENT = '#E3B34C';
 const BG = '#0A0C0E';
 const UI = 'var(--font-ui, -apple-system, system-ui, sans-serif)';
 const MONO = 'var(--font-mono, ui-monospace, monospace)';
+const SERIF = 'var(--font-serif, "Cormorant Garamond", Georgia, serif)';
 
 const FEATURES = [
     {
@@ -65,7 +66,7 @@ export default function LandingPage() {
                 aria-hidden
                 style={{
                     position: 'absolute', top: 0, left: 0, right: 0, height: 700, pointerEvents: 'none',
-                    background: 'radial-gradient(120% 60% at 50% -10%, rgba(250,204,21,0.10) 0%, transparent 55%)',
+                    background: 'radial-gradient(120% 60% at 50% -10%, rgba(227,179,76,0.10) 0%, transparent 55%)',
                 }}
             />
 
@@ -74,14 +75,14 @@ export default function LandingPage() {
                 <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '26px 0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <Bolt size={24} />
-                        <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em' }}>Rayo</span>
+                        <span style={{ fontFamily: SERIF, fontSize: 26, fontWeight: 600, letterSpacing: '0.04em' }}>Delos</span>
                     </div>
                     <a href={APP_URL} style={navCta}>Abrir app</a>
                 </header>
 
                 {/* Hero */}
                 <section style={{ padding: '60px 0 70px', textAlign: 'center', maxWidth: 760, margin: '0 auto' }}>
-                    <div style={{ display: 'inline-block', fontSize: 12, fontWeight: 800, letterSpacing: '0.18em', color: ACCENT, textTransform: 'uppercase', padding: '6px 12px', borderRadius: 99, background: 'rgba(250,204,21,0.1)', border: '1px solid rgba(250,204,21,0.22)' }}>
+                    <div style={{ display: 'inline-block', fontSize: 12, fontWeight: 800, letterSpacing: '0.18em', color: ACCENT, textTransform: 'uppercase', padding: '6px 12px', borderRadius: 99, background: 'rgba(227,179,76,0.1)', border: '1px solid rgba(227,179,76,0.22)' }}>
                         Hecho para LATAM
                     </div>
                     <h1 style={{ fontSize: 'clamp(40px, 7vw, 68px)', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.04, margin: '24px 0 0' }}>
@@ -142,15 +143,15 @@ export default function LandingPage() {
                     <div
                         style={{
                             borderRadius: 28, padding: 'clamp(36px, 6vw, 64px) 24px', textAlign: 'center',
-                            background: 'linear-gradient(160deg, rgba(250,204,21,0.14), rgba(250,204,21,0.03))',
-                            border: '1px solid rgba(250,204,21,0.25)',
+                            background: 'linear-gradient(160deg, rgba(227,179,76,0.14), rgba(227,179,76,0.03))',
+                            border: '1px solid rgba(227,179,76,0.25)',
                         }}
                     >
                         <h2 style={{ fontSize: 'clamp(28px, 5vw, 44px)', fontWeight: 800, letterSpacing: '-0.03em', margin: 0 }}>
                             Tu primera operación te espera.
                         </h2>
                         <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.62)', margin: '14px auto 28px', maxWidth: 440 }}>
-                            Abrí Rayo en el navegador y empezá ahora mismo. Gratis.
+                            Abrí Delos en el navegador y empezá ahora mismo. Gratis.
                         </p>
                         <a href={APP_URL} style={primaryCta}>
                             Abrir app <span style={{ fontSize: 18 }}>↗</span>
@@ -162,7 +163,7 @@ export default function LandingPage() {
                 <footer style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '28px 0 50px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
                         <Bolt size={18} />
-                        <span style={{ fontSize: 15, fontWeight: 800 }}>Rayo</span>
+                        <span style={{ fontFamily: SERIF, fontSize: 20, fontWeight: 600, letterSpacing: '0.04em' }}>Delos</span>
                         <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', marginLeft: 6 }}>
                             © {new Date().getFullYear()}
                         </span>
@@ -179,9 +180,29 @@ export default function LandingPage() {
 }
 
 function Bolt({ size = 20 }: { size?: number }) {
+    const rays = [];
+    for (let k = 0; k < 12; k++) {
+        const a = (k * Math.PI) / 6;
+        const long = k % 2 === 0;
+        const r1 = 6.4;
+        const r2 = long ? 11.2 : 9.2;
+        rays.push(
+            <line
+                key={k}
+                x1={(12 + Math.cos(a) * r1).toFixed(2)}
+                y1={(12 + Math.sin(a) * r1).toFixed(2)}
+                x2={(12 + Math.cos(a) * r2).toFixed(2)}
+                y2={(12 + Math.sin(a) * r2).toFixed(2)}
+                stroke={ACCENT}
+                strokeWidth={long ? 1.9 : 1.4}
+                strokeLinecap="round"
+            />
+        );
+    }
     return (
-        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden style={{ filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.5))' }}>
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={ACCENT} />
+        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden style={{ filter: 'drop-shadow(0 0 6px rgba(227,179,76,0.5))' }}>
+            <circle cx="12" cy="12" r="4.6" fill={ACCENT} />
+            {rays}
         </svg>
     );
 }
@@ -195,7 +216,7 @@ const primaryCta: React.CSSProperties = {
     display: 'inline-flex', alignItems: 'center', gap: 8,
     fontSize: 16, fontWeight: 800, color: '#0A0C0E', background: ACCENT,
     padding: '15px 28px', borderRadius: 99, textDecoration: 'none',
-    boxShadow: '0 10px 40px -12px rgba(250,204,21,0.6)',
+    boxShadow: '0 10px 40px -12px rgba(227,179,76,0.6)',
 };
 
 const secondaryCta: React.CSSProperties = {

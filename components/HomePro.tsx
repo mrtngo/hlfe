@@ -115,8 +115,8 @@ function HomePro({ onTokenClick, onBuyClick, onDeposit, onToggleProMode }: HomeP
                 style={{
                     position: 'relative',
                     padding: '12px 16px 10px',
-                    borderBottom: '1px solid rgba(250,204,21,0.25)',
-                    background: 'linear-gradient(180deg, rgba(250,204,21,0.04), transparent)',
+                    borderBottom: '1px solid rgba(227,179,76,0.25)',
+                    background: 'linear-gradient(180deg, rgba(227,179,76,0.04), transparent)',
                 }}
             >
                 <div
@@ -348,7 +348,7 @@ function HomePro({ onTokenClick, onBuyClick, onDeposit, onToggleProMode }: HomeP
                             color: '#fff',
                             letterSpacing: '-0.04em',
                             lineHeight: 1,
-                            textShadow: '0 0 30px rgba(250,204,21,0.15)',
+                            textShadow: '0 0 30px rgba(227,179,76,0.15)',
                         }}
                     >
                         {intPart.toLocaleString('en-US')}
@@ -397,10 +397,10 @@ function HomePro({ onTokenClick, onBuyClick, onDeposit, onToggleProMode }: HomeP
                     style={{
                         padding: '14px 14px',
                         background:
-                            'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                            'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                         border: 'none',
                         borderRadius: 6,
-                        color: '#1A1304',
+                        color: '#1C1608',
                         fontFamily: 'inherit',
                         fontWeight: 800,
                         fontSize: 13,
@@ -409,12 +409,12 @@ function HomePro({ onTokenClick, onBuyClick, onDeposit, onToggleProMode }: HomeP
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         boxShadow:
-                            '0 1px 0 rgba(255,255,255,0.4) inset, 0 8px 24px -8px rgba(250,204,21,0.5)',
+                            '0 1px 0 rgba(255,255,255,0.4) inset, 0 8px 24px -8px rgba(227,179,76,0.5)',
                         cursor: 'pointer',
                     }}
                 >
                     <span>{t.homeRedesign.pro.comprar}</span>
-                    <ArrowUpRight size={15} strokeWidth={2.6} color="#1A1304" />
+                    <ArrowUpRight size={15} strokeWidth={2.6} color="#1C1608" />
                 </button>
                 <button
                     type="button"
@@ -775,7 +775,7 @@ function HomePro({ onTokenClick, onBuyClick, onDeposit, onToggleProMode }: HomeP
                                         ? '1px solid var(--color-brand-primary)'
                                         : '1px solid #1F1F1F',
                                     background: active
-                                        ? 'rgba(250,204,21,0.06)'
+                                        ? 'rgba(227,179,76,0.06)'
                                         : 'rgba(255,255,255,0.015)',
                                     borderRadius: 4,
                                     textAlign: 'center',
@@ -898,9 +898,9 @@ function DataBlock({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    background: accent ? 'rgba(250,204,21,0.06)' : 'transparent',
+                    background: accent ? 'rgba(227,179,76,0.06)' : 'transparent',
                     borderBottom: accent
-                        ? '1px solid rgba(250,204,21,0.2)'
+                        ? '1px solid rgba(227,179,76,0.2)'
                         : 'none',
                 }}
             >

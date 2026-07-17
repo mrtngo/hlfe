@@ -20,7 +20,7 @@ interface PortfolioScreenProps {
     onOpenPredictions?: () => void;
 }
 
-const ALLOC_COLORS = ['#FACC15', '#22C55E', '#60A5FA', '#A78BFA', '#FB7185', '#F97316', '#10B981'];
+const ALLOC_COLORS = ['#E3B34C', '#22C55E', '#60A5FA', '#A78BFA', '#FB7185', '#F97316', '#10B981'];
 
 export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick, onOpenPredictions }: PortfolioScreenProps) {
     const { t } = useLanguage();

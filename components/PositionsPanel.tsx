@@ -76,8 +76,8 @@ export default function PositionsPanel() {
                     className="flex-1 overflow-y-auto p-4 rounded-3xl"
                     style={{
                         background: 'linear-gradient(135deg, rgba(20, 20, 25, 0.95) 0%, rgba(15, 15, 20, 0.98) 100%)',
-                        border: '2px solid rgba(250, 204, 21, 0.3)',
-                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(250, 204, 21, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                        border: '2px solid rgba(227, 179, 76, 0.3)',
+                        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(227, 179, 76, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
                     }}
                 >
                     <button
@@ -85,7 +85,7 @@ export default function PositionsPanel() {
                         className="w-full flex items-center justify-between mb-6 pb-4 border-b border-white/10 bg-transparent cursor-pointer"
                     >
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(250, 204, 21, 0.3)' }}>
+                            <div className="w-10 h-10 rounded-xl bg-brand/20 flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(227, 179, 76, 0.3)' }}>
                                 <TrendingUp className="w-5 h-5 text-brand" />
                             </div>
                             <div className="text-left">

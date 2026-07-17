@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Términos y Riesgos · Rayo',
+    title: 'Términos y Riesgos · Delos',
     description:
-        'Términos de uso, advertencias de riesgo y condiciones para usar Rayo.',
+        'Términos de uso, advertencias de riesgo y condiciones para usar Delos.',
 };
 
 const updated = '15 de junio de 2026';
@@ -41,37 +41,37 @@ export default function TerminosPage() {
     return (
         <main style={page}>
             <div style={wrap}>
-                <Link href="/" style={brand}>Rayo</Link>
+                <Link href="/" style={brand}>Delos</Link>
 
                 <h1 style={h1}>Términos de Uso y Advertencia de Riesgo</h1>
                 <p style={meta}>Última actualización: {updated}</p>
 
                 <div style={notice}>
                     <p style={{ ...p, marginBottom: 0, color: 'var(--color-text-primary)' }}>
-                        Rayo permite acceder a productos cripto y derivados apalancados de alto riesgo.
+                        Delos permite acceder a productos cripto y derivados apalancados de alto riesgo.
                         Puedes perder la totalidad de tus fondos. No uses dinero que no puedas permitirte perder.
                     </p>
                 </div>
 
                 <p style={p}>
-                    Estos términos regulan el uso de Rayo (&laquo;Rayo&raquo;, &laquo;la app&raquo;,
+                    Estos términos regulan el uso de Delos (&laquo;Delos&raquo;, &laquo;la app&raquo;,
                     &laquo;nosotros&raquo;), operada por <strong>Martín Gutiérrez</strong>. Al usar la app
                     aceptas estos términos, nuestra{' '}
                     <Link href="/privacidad" style={a}>Política de Privacidad</Link> y las advertencias de
-                    riesgo de esta página. Si no estás de acuerdo, no uses Rayo.
+                    riesgo de esta página. Si no estás de acuerdo, no uses Delos.
                 </p>
 
-                <h2 style={h2}>1. Qué es Rayo</h2>
+                <h2 style={h2}>1. Qué es Delos</h2>
                 <p style={p}>
-                    Rayo es una interfaz móvil y web para consultar mercados, conectar una wallet y enviar
-                    instrucciones hacia protocolos y proveedores externos. Rayo no es una bolsa, banco,
+                    Delos es una interfaz móvil y web para consultar mercados, conectar una wallet y enviar
+                    instrucciones hacia protocolos y proveedores externos. Delos no es una bolsa, banco,
                     comisionista, asesor financiero ni entidad regulada para prestar asesoría de inversión.
                 </p>
 
                 <h2 style={h2}>2. No custodia</h2>
                 <p style={p}>
-                    Rayo está diseñado como una experiencia no-custodial. Tus fondos y llaves pertenecen a tu
-                    wallet y a los protocolos externos que decides usar. Rayo no promete recuperar fondos,
+                    Delos está diseñado como una experiencia no-custodial. Tus fondos y llaves pertenecen a tu
+                    wallet y a los protocolos externos que decides usar. Delos no promete recuperar fondos,
                     revertir transacciones ni reemplazar pérdidas causadas por errores, liquidaciones, fallos de
                     terceros o actividad on-chain.
                 </p>
@@ -80,7 +80,7 @@ export default function TerminosPage() {
                 <p style={p}>
                     Algunas funciones dependen de terceros como Privy, Supabase, Hyperliquid, Circle CCTP,
                     Hyperunit, proveedores RPC, wallets y redes blockchain. Sus servicios pueden fallar,
-                    cambiar, suspenderse o tener errores. Al usar Rayo aceptas que esas dependencias externas
+                    cambiar, suspenderse o tener errores. Al usar Delos aceptas que esas dependencias externas
                     están fuera de nuestro control.
                 </p>
 
@@ -96,30 +96,30 @@ export default function TerminosPage() {
 
                 <h2 style={h2}>5. Riesgos técnicos</h2>
                 <p style={p}>
-                    Usar Rayo implica riesgos de contratos inteligentes, bugs, congestión de red, fallos de RPC,
+                    Usar Delos implica riesgos de contratos inteligentes, bugs, congestión de red, fallos de RPC,
                     problemas de wallets, errores de firma, ataques de phishing, puentes cross-chain, demoras de
                     confirmación y disponibilidad limitada. Debes revisar cada operación antes de confirmarla.
                 </p>
 
                 <h2 style={h2}>6. Sin asesoría financiera</h2>
                 <p style={p}>
-                    La información mostrada en Rayo es informativa y educativa. No constituye recomendación de
+                    La información mostrada en Delos es informativa y educativa. No constituye recomendación de
                     inversión, asesoría financiera, legal, contable ni tributaria. Tú decides si una operación es
                     adecuada para ti y asumes toda responsabilidad por tus decisiones.
                 </p>
 
                 <h2 style={h2}>7. Elegibilidad y jurisdicción</h2>
                 <p style={p}>
-                    Solo puedes usar Rayo si eres mayor de edad y si el uso de productos cripto, derivados,
+                    Solo puedes usar Delos si eres mayor de edad y si el uso de productos cripto, derivados,
                     perpetuos, mercados de predicción y proveedores externos es legal en tu jurisdicción. No debes
-                    usar Rayo si estás en un país, región o condición donde dicho uso esté prohibido o restringido.
+                    usar Delos si estás en un país, región o condición donde dicho uso esté prohibido o restringido.
                 </p>
 
                 <h2 style={h2}>8. Uso prohibido</h2>
                 <ul>
-                    <li style={li}>No uses Rayo para fraude, lavado de activos, evasión de sanciones o actividad ilegal.</li>
+                    <li style={li}>No uses Delos para fraude, lavado de activos, evasión de sanciones o actividad ilegal.</li>
                     <li style={li}>No intentes explotar, interferir, copiar o dañar la app o sus servicios.</li>
-                    <li style={li}>No uses Rayo si no entiendes los riesgos de wallet, blockchain y apalancamiento.</li>
+                    <li style={li}>No uses Delos si no entiendes los riesgos de wallet, blockchain y apalancamiento.</li>
                 </ul>
 
                 <h2 style={h2}>9. Comisiones e impuestos</h2>
@@ -131,14 +131,14 @@ export default function TerminosPage() {
 
                 <h2 style={h2}>10. Disponibilidad</h2>
                 <p style={p}>
-                    Rayo puede estar temporalmente no disponible por mantenimiento, errores, incidentes,
+                    Delos puede estar temporalmente no disponible por mantenimiento, errores, incidentes,
                     limitaciones de terceros o eventos de mercado. No garantizamos disponibilidad continua,
                     ejecución perfecta ni ausencia de errores.
                 </p>
 
                 <h2 style={h2}>11. Limitación de responsabilidad</h2>
                 <p style={p}>
-                    En la máxima medida permitida por la ley, Rayo no será responsable por pérdidas de trading,
+                    En la máxima medida permitida por la ley, Delos no será responsable por pérdidas de trading,
                     liquidaciones, pérdida de llaves, errores del usuario, fallos de terceros, fallos de mercado,
                     fallos de puentes, cambios regulatorios o daños indirectos derivados del uso de la app.
                 </p>
@@ -146,7 +146,7 @@ export default function TerminosPage() {
                 <h2 style={h2}>12. Cambios</h2>
                 <p style={p}>
                     Podemos actualizar estos términos. La versión vigente estará publicada en esta página. El uso
-                    continuado de Rayo después de una actualización implica aceptación de los términos actualizados.
+                    continuado de Delos después de una actualización implica aceptación de los términos actualizados.
                 </p>
 
                 <h2 style={h2}>13. Contacto</h2>

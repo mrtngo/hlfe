@@ -5,7 +5,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { ComposedChart, Line, Area, Tooltip, ResponsiveContainer, YAxis } from 'recharts';
 
-// Rayo Lightning Yellow
+// Delos Lightning Yellow
 const RAYO_YELLOW = '#FFD60A';
 
 interface PortfolioDataPoint {

@@ -2,15 +2,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Política de Privacidad · Rayo',
+    title: 'Política de Privacidad · Delos',
     description:
-        'Cómo Rayo recopila, usa y protege tus datos. Rayo es no-custodial y no realiza rastreo publicitario.',
+        'Cómo Delos recopila, usa y protege tus datos. Delos es no-custodial y no realiza rastreo publicitario.',
 };
 
 const updated = '6 de junio de 2026';
 
 // Plain, readable legal page. No app chrome — just the policy text so it's
-// crawlable and reviewable. Styled with the Rayo design tokens.
+// crawlable and reviewable. Styled with the Delos design tokens.
 const page: React.CSSProperties = {
     minHeight: '100vh',
     background: 'var(--color-bg-primary)',
@@ -36,22 +36,22 @@ export default function PrivacidadPage() {
     return (
         <main style={page}>
             <div style={wrap}>
-                <Link href="/" style={brand}>Rayo</Link>
+                <Link href="/" style={brand}>Delos</Link>
 
                 <h1 style={h1}>Política de Privacidad</h1>
                 <p style={meta}>Última actualización: {updated}</p>
 
                 <p style={p}>
-                    Rayo (&laquo;Rayo&raquo;, &laquo;la app&raquo;, &laquo;nosotros&raquo;) es operada de forma
+                    Delos (&laquo;Delos&raquo;, &laquo;la app&raquo;, &laquo;nosotros&raquo;) es operada de forma
                     individual por <strong>Martín Gutiérrez</strong>. Esta política explica qué datos
-                    recopilamos, cómo los usamos y qué derechos tienes. Al usar Rayo, aceptas esta política.
+                    recopilamos, cómo los usamos y qué derechos tienes. Al usar Delos, aceptas esta política.
                     Para cualquier consulta escríbenos a{' '}
                     <a href="mailto:support@rayotrade.xyz" style={a}>support@rayotrade.xyz</a>.
                 </p>
 
                 <h2 style={h2}>1. Quiénes somos</h2>
                 <p style={p}>
-                    Rayo es una aplicación para comprar criptomonedas y operar mercados financieros. Rayo es{' '}
+                    Delos es una aplicación para comprar criptomonedas y operar mercados financieros. Delos es{' '}
                     <strong>no-custodial</strong>: no tenemos control ni custodia de tus fondos ni de tus llaves
                     privadas. Tú mantienes el control de tu wallet en todo momento.
                 </p>
@@ -94,7 +94,7 @@ export default function PrivacidadPage() {
 
                 <h2 style={h2}>4. Proveedores y terceros</h2>
                 <p style={p}>
-                    Para funcionar, Rayo se apoya en proveedores que procesan ciertos datos en nuestro nombre.
+                    Para funcionar, Delos se apoya en proveedores que procesan ciertos datos en nuestro nombre.
                     Compartimos solo lo necesario para prestar el servicio, y cada proveedor tiene su propia
                     política de privacidad:
                 </p>
@@ -131,7 +131,7 @@ export default function PrivacidadPage() {
 
                 <h2 style={h2}>9. Menores de edad</h2>
                 <p style={p}>
-                    Rayo no está dirigida a menores. No debes usar la app si no tienes la mayoría de edad legal
+                    Delos no está dirigida a menores. No debes usar la app si no tienes la mayoría de edad legal
                     en tu país.
                 </p>
 

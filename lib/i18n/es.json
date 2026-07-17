@@ -45,6 +45,7 @@
     "signIn": "Iniciar Sesión",
     "news": "Noticias",
     "rewards": "Premios",
+    "academy": "Academia",
     "predictions": "Predice"
   },
   "advanced": {
@@ -212,7 +213,7 @@
     "native": "NATIVA",
     "seeMore": "Ver otras redes",
     "max": "MÁX {balance}",
-    "previewTitle": "Vas a recibir en Rayo",
+    "previewTitle": "Vas a recibir en Delos",
     "live": "EN VIVO",
     "previewFee": "Comisión bridge",
     "free": "gratis",
@@ -224,7 +225,7 @@
     "reviewSub": "paso 2 de 2",
     "reviewFrom": "desde",
     "reviewTo": "hacia",
-    "reviewDestination": "Rayo · Perps",
+    "reviewDestination": "Delos · Perps",
     "youReceive": "Vas a recibir",
     "tokenOn": "{token} en {chain}",
     "rowSend": "Enviás",
@@ -243,7 +244,7 @@
     "stepApprovedSub": "Confirmando en {chain}",
     "stepBridging": "Bridging",
     "stepBridgingSub": "Esperando confirmación en Arbitrum",
-    "stepDelivered": "Llega a Rayo",
+    "stepDelivered": "Llega a Delos",
     "stepDeliveredPending": "Pendiente",
     "stepDeliveredDone": "Acreditado en Perps",
     "progressCta": "Cerrar y avisar cuando llegue",
@@ -636,11 +637,11 @@
     "agentInstruction": "Aprueba una vez para habilitar la firma automática. Firmarás UNA transacción para aprobar al agente, luego todos los trades futuros se firmarán automáticamente.",
     "disableAgent": "Desactivar trading 1-Tap",
     "builderFee": "Tarifa de Constructor",
-    "builderFeeDesc": "Apoya a Rayo con una tarifa de {{fee}} bps en los trades",
+    "builderFeeDesc": "Apoya a Delos con una tarifa de {{fee}} bps en los trades",
     "approved": "Aprobado",
     "approving": "Aprobando...",
-    "builderFeeSuccess": "¡Tarifa de constructor aprobada! Gracias por apoyar a Rayo.",
-    "builderFeeInstruction": "Aprueba una vez para habilitar las tarifas de trading. Se cobrará una pequeña tarifa de {{fee}} puntos básicos ({{percent}}%) en cada trade para apoyar el desarrollo de Rayo.",
+    "builderFeeSuccess": "¡Tarifa de constructor aprobada! Gracias por apoyar a Delos.",
+    "builderFeeInstruction": "Aprueba una vez para habilitar las tarifas de trading. Se cobrará una pequeña tarifa de {{fee}} puntos básicos ({{percent}}%) en cada trade para apoyar el desarrollo de Delos.",
     "security": "Seguridad",
     "support": "Ayuda y Soporte",
     "poweredBy": "Potenciado por Hyperliquid",
@@ -654,11 +655,11 @@
     "tabMultiChain": "Multi-Cadena",
     "tabTransfer": "Transferir",
     "title": "Depositar USDC",
-    "instruction": "Envía USDC desde la Red Rayo a esta dirección.",
+    "instruction": "Envía USDC desde la Red Delos a esta dirección.",
     "walletAddressLabel": "Tu dirección de depósito",
     "connectWallet": "Inicia sesión para ver tu dirección",
     "warningTitle": "Importante: Solo USDC",
-    "warningText": "Solo envía USDC en la red Rayo. El envío de cualquier otro activo o a través de otra red resultará en una pérdida permanente.",
+    "warningText": "Solo envía USDC en la red Delos. El envío de cualquier otro activo o a través de otra red resultará en una pérdida permanente.",
     "copyAddress": "Copiar Dirección de Depósito",
     "addressCopied": "¡Copiado!",
     "networkNote": "Solo envía USDC en la red Arbitrum",
@@ -678,7 +679,7 @@
     "confirmBridge": "Confirmar Puente",
     "bridgeSuccess": "¡Puente completado!",
     "fromArbitrum": "Depositar desde Arbitrum",
-    "sendUsdcFromArbitrum": "Envía USDC desde Arbitrum directamente a Rayo.",
+    "sendUsdcFromArbitrum": "Envía USDC desde Arbitrum directamente a Delos.",
     "minDeposit": "Depósito mín: 10 USDC",
     "connectToBridge": "Inicia sesión para usar el puente",
     "switchToArbitrum": "Cambiar a Arbitrum",
@@ -688,7 +689,7 @@
     "minRequired": "Se requiere un mínimo de 10 USDC",
     "processing": "Procesando...",
     "approveUsdc": "Aprobar USDC",
-    "bridgeToHyperliquid": "Puente a Rayo",
+    "bridgeToHyperliquid": "Puente a Delos",
     "txSent": "¡Transacción enviada! Tus fondos llegarán pronto.",
     "bridgeInitiated": "Puente Iniciado",
     "checkProgress": "Ver Progreso",
@@ -705,13 +706,13 @@
     "confirmNetworkSwitch": "Confirma el cambio de red",
     "confirmTransaction": "Confirma la transacción",
     "crossChainBridge": "Puente Multi-Cadena",
-    "crossChainDesc": "Pasa USDC de otras redes a Rayo (Hyperliquid).",
+    "crossChainDesc": "Pasa USDC de otras redes a Delos (Hyperliquid).",
     "fromChain": "Desde la Red",
     "toChain": "Hacia la Red",
-    "arbitrumForHl": "Arbitrum (Puente USDC para Rayo)",
+    "arbitrumForHl": "Arbitrum (Puente USDC para Delos)",
     "amountUsdc": "Monto (USDC)",
     "bridgeToArbitrum": "Puente a Arbitrum",
-    "afterBridging": "Después del puente, deposita de Arbitrum a Rayo usando la pestaña 'Puente Arbitrum'.",
+    "afterBridging": "Después del puente, deposita de Arbitrum a Delos usando la pestaña 'Puente Arbitrum'.",
     "available": "Disponible"
   },
   "withdraw": {
@@ -721,7 +722,7 @@
     "amount": "Monto",
     "processing": "Procesando...",
     "withdraw": "Retirar",
-    "desc": "Retirá USDC de tu cuenta de Rayo hacia Arbitrum.",
+    "desc": "Retirá USDC de tu cuenta de Delos hacia Arbitrum.",
     "fee": "Tarifa de red Hyperliquid",
     "receive": "Recibes",
     "minAmount": "El retiro mínimo es de ${{amount}} USDC",
@@ -793,7 +794,7 @@
     "currency": "$"
   },
   "home": {
-    "welcome": "Bienvenido a Rayo",
+    "welcome": "Bienvenido a Delos",
     "welcomeDescription": "Compra cripto en segundos. Sin descargar nada, sin claves raras.",
     "signInToContinue": "Continuar",
     "signInWithEmail": "Continuar con email",
@@ -820,7 +821,7 @@
     "gainers": "Ganadores",
     "losers": "Perdedores",
     "compareFees": "Compara Comisiones 2025",
-    "saveOnFees": "Descubre cuánto ahorras operando en Rayo",
+    "saveOnFees": "Descubre cuánto ahorras operando en Delos",
     "buyAndSell": "Compra y vende BTC, ETH, HYPE, SOL"
   },
   "homeRedesign": {
@@ -906,6 +907,204 @@
     }
   },
   "screens": {
+    "academy": {
+      "kicker": "Delos Academy",
+      "title": "Aprendé perps sin quemarte.",
+      "subtitle": "Lecciones cortas para entender margen, apalancamiento, longs, shorts y liquidación antes de poner plata real en riesgo.",
+      "lessonLabel": "Lección",
+      "markComplete": "Marcar lista",
+      "completed": "Lista",
+      "closeLesson": "Cerrar",
+      "levels": {
+        "basic": "Básico",
+        "risk": "Riesgo"
+      },
+      "filters": {
+        "label": "Filtrar lecciones",
+        "all": "Ruta completa",
+        "basics": "Fundamentos",
+        "risk": "Riesgo"
+      },
+      "progress": {
+        "label": "Progreso",
+        "copy": "Tu progreso vive en este dispositivo. La idea no es memorizar: es operar entendiendo qué puede salir mal."
+      },
+      "simulator": {
+        "title": "Mini simulador de apalancamiento",
+        "copy": "Probá cómo cambia tu PnL cuando sube el apalancamiento. Es una aproximación educativa: no incluye comisiones, funding ni precio exacto de liquidación.",
+        "margin": "Margen",
+        "leverage": "Apalancamiento",
+        "move": "Movimiento",
+        "position": "Tamaño posición",
+        "pnl": "PnL estimado",
+        "equity": "Equity luego",
+        "liquidation": "Movimiento contra ti",
+        "note": "Regla simple: más apalancamiento hace que movimientos pequeños sean suficientes para ganar o perder mucho."
+      },
+      "demo": {
+        "title": "Paper trading",
+        "copy": "Abrí una posición falsa usando precios reales de mercado. No usa billetera, no manda órdenes y no toca tu plata.",
+        "fakeBadge": "Demo",
+        "market": "Mercado",
+        "balance": "Saldo demo",
+        "unrealized": "PnL abierto",
+        "side": "Dirección",
+        "long": "Long",
+        "short": "Short",
+        "margin": "Margen",
+        "leverage": "Leverage",
+        "entry": "Entrada",
+        "current": "Precio actual",
+        "liveMove": "Movimiento real desde entrada",
+        "marketMove": "Mover mercado",
+        "position": "Posición",
+        "liquidation": "Liquidación aprox.",
+        "equity": "Equity demo",
+        "status": "Estado",
+        "readyStatus": "Listo",
+        "openStatus": "Abierta",
+        "liquidated": "Liquidable",
+        "open": "Abrir trade demo",
+        "close": "Cerrar trade demo",
+        "reset": "Reset",
+        "note": "El precio es real, la posición es falsa. Es para practicar cómo se mueve el PnL antes de operar con dinero real."
+      },
+      "lessons": [
+        {
+          "id": "what-is-perp",
+          "title": "¿Qué es un perp?",
+          "summary": "Un contrato perpetuo sigue el precio de un activo sin que tengas que comprar el token o la acción.",
+          "duration": "3 min",
+          "level": "Básico",
+          "takeaways": [
+            "No recibís BTC, ETH o una acción: abrís una posición que sube o baja con ese mercado.",
+            "Los perps no vencen como un futuro tradicional; se mantienen vivos mientras tengas margen.",
+            "Podés cerrar la posición cuando quieras si hay mercado disponible."
+          ],
+          "example": {
+            "label": "Ejemplo",
+            "value": "BTC perp ≠ BTC spot",
+            "note": "Comprar BTC spot significa tener BTC. Abrir BTC perp significa tener exposición al precio de BTC."
+          }
+        },
+        {
+          "id": "margin",
+          "title": "Margen: la plata que ponés",
+          "summary": "El margen es el colateral que reservás para sostener una posición apalancada.",
+          "duration": "4 min",
+          "level": "Básico",
+          "takeaways": [
+            "Si ponés 100 USDC como margen, esa es la base que absorbe ganancias y pérdidas.",
+            "El margen no es una comisión: sigue siendo tuyo mientras la posición esté sana.",
+            "Si la pérdida se acerca demasiado a tu margen, aparece riesgo de liquidación."
+          ],
+          "example": {
+            "label": "Ejemplo",
+            "value": "$100 de margen",
+            "note": "Con 100 USDC podés abrir una posición de 100 USDC a 1x o una posición más grande si usás apalancamiento."
+          }
+        },
+        {
+          "id": "leverage",
+          "title": "Apalancamiento: multiplicar exposición",
+          "summary": "El apalancamiento aumenta el tamaño de tu posición usando el mismo margen.",
+          "duration": "5 min",
+          "level": "Riesgo",
+          "takeaways": [
+            "5x con 100 USDC crea una exposición aproximada de 500 USDC.",
+            "Si el mercado se mueve 2%, tu posición 5x se mueve como si fuera cerca de 10% sobre tu margen.",
+            "El apalancamiento no aumenta tu probabilidad de acertar; solo amplifica el resultado."
+          ],
+          "example": {
+            "label": "Fórmula rápida",
+            "value": "$100 × 5x = $500",
+            "note": "Un movimiento a favor suma más rápido. Un movimiento en contra también resta más rápido."
+          }
+        },
+        {
+          "id": "long-short",
+          "title": "Long y short",
+          "summary": "Long es apostar a que sube. Short es apostar a que baja.",
+          "duration": "3 min",
+          "level": "Básico",
+          "takeaways": [
+            "Abrís long cuando querés ganar si el precio sube.",
+            "Abrís short cuando querés ganar si el precio baja.",
+            "En ambos casos podés perder si el mercado se mueve en contra."
+          ],
+          "example": {
+            "label": "Dirección",
+            "value": "Long +3% gana · Short +3% pierde",
+            "note": "La misma vela puede ser buena o mala según la dirección de tu posición."
+          }
+        },
+        {
+          "id": "liquidation",
+          "title": "Liquidación",
+          "summary": "La liquidación ocurre cuando tu margen ya no alcanza para cubrir una pérdida grande.",
+          "duration": "5 min",
+          "level": "Riesgo",
+          "takeaways": [
+            "A más apalancamiento, más cerca queda el precio de liquidación.",
+            "Un stop loss puede cerrar antes de llegar a liquidación, pero no garantiza precio perfecto.",
+            "Nunca uses todo tu saldo como margen en una sola idea."
+          ],
+          "example": {
+            "label": "Regla mental",
+            "value": "10x ≈ 10% contra ti",
+            "note": "Es una aproximación. El precio real depende del mercado, mantenimiento, comisiones y funding."
+          }
+        },
+        {
+          "id": "orders",
+          "title": "Órdenes básicas",
+          "summary": "Market entra rápido. Limit espera un precio. Stop ayuda a cortar pérdidas.",
+          "duration": "4 min",
+          "level": "Básico",
+          "takeaways": [
+            "Market prioriza ejecución y puede tener slippage.",
+            "Limit prioriza precio, pero puede no llenarse.",
+            "Stop loss y take profit ayudan a definir salida antes de emocionarte."
+          ],
+          "example": {
+            "label": "Orden",
+            "value": "Market = ahora · Limit = a mi precio",
+            "note": "Para empezar, entendé qué orden estás mandando antes de tocar el botón final."
+          }
+        },
+        {
+          "id": "plan",
+          "title": "Tu plan antes del trade",
+          "summary": "Un trade sin plan suele convertirse en esperanza. Definí entrada, salida y pérdida máxima.",
+          "duration": "4 min",
+          "level": "Riesgo",
+          "takeaways": [
+            "Decidí cuánto podés perder antes de abrir la posición.",
+            "Usá tamaños pequeños mientras aprendés cómo se siente una posición real.",
+            "Si no podés explicar el trade en una frase, probablemente todavía no está listo."
+          ],
+          "example": {
+            "label": "Plan mínimo",
+            "value": "Entro, invalido, salgo",
+            "note": "Entrada: dónde abrís. Invalidación: dónde aceptás que estabas equivocado. Salida: dónde tomás ganancia o cortás pérdida."
+          }
+        }
+      ],
+      "checklist": {
+        "title": "Checklist antes de tradear",
+        "items": [
+          "Sé si estoy long o short.",
+          "Sé cuánto margen estoy arriesgando.",
+          "Entiendo qué hace mi apalancamiento.",
+          "Tengo un punto de salida si sale mal.",
+          "No estoy usando plata que necesito para vivir."
+        ]
+      },
+      "languageHint": {
+        "es": "Próximo paso: podemos convertir estas lecciones en videos, quizzes o un modo demo sin dinero real.",
+        "en": "Next step: these lessons can become videos, quizzes, or a demo mode with no real money."
+      }
+    },
     "chooseUsername": {
       "title": "Elegí tu usuario",
       "subtitle": "Así te van a encontrar otros traders. Lo podés cambiar más tarde.",
@@ -1024,7 +1223,7 @@
       "limitPrice": "Precio límite (USD)",
       "orderType": "Tipo de orden",
       "limitLabel": "Orden límite",
-      "finePrint": "Operación procesada por Rayo. La conversión usa el precio de mercado en el momento de la confirmación.",
+      "finePrint": "Operación procesada por Delos. La conversión usa el precio de mercado en el momento de la confirmación.",
       "success": {
         "title": "Listo.",
         "placedTitle": "Orden colocada.",
@@ -1169,8 +1368,9 @@
       },
       "help": {
         "tutorial": "Tutorial",
-        "center": "Centro de ayuda",
-        "twitter": "Twitter",
+      "center": "Centro de ayuda",
+      "academy": "Academia",
+      "twitter": "Twitter",
         "feedback": "Sugerir mejora"
       },
       "logout": "Cerrar sesión",
@@ -1207,12 +1407,12 @@
       "approve": "Activar Un Clic",
       "waiting": "Esperando firma...",
       "active": "Un Clic Activado",
-      "preSignNote": "Estás aprobando que Rayo ejecute operaciones en tu nombre sin pedirte confirmación cada vez."
+      "preSignNote": "Estás aprobando que Delos ejecute operaciones en tu nombre sin pedirte confirmación cada vez."
     },
     "fee": {
       "title": "Permisos del Protocolo",
       "description": "Otorga los permisos necesarios para interactuar con el protocolo Hyperliquid.",
-      "longDescription": "Una pequeña comisión de {{fee}} bps en las operaciones ayuda a mantener Rayo.",
+      "longDescription": "Una pequeña comisión de {{fee}} bps en las operaciones ayuda a mantener Delos.",
       "approve": "Aprobar Comisión",
       "skip": "Saltar por ahora",
       "waiting": "Esperando firma...",
@@ -1241,7 +1441,7 @@
   "trollbox": {
     "title": "Trollbox",
     "usersOnline": "{{count}} usuarios",
-    "onlyTraders": "Solo los traders de Rayo pueden enviar mensajes",
+    "onlyTraders": "Solo los traders de Delos pueden enviar mensajes",
     "newMessages": "Nuevos mensajes",
     "initializingProfile": "⏳ Inicializando perfil...",
     "connectWalletChat": "🔒 Inicia sesión para unirte al chat"

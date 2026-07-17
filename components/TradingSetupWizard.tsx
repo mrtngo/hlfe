@@ -51,8 +51,8 @@ export default function TradingSetupWizard({ isOpen, onClose }: TradingSetupWiza
         },
         fee: {
             title: 'Builder Fee',
-            description: 'Support Rayo with {{fee}} bps fee',
-            longDescription: 'A tiny {{fee}} bps fee on trades helps support Rayo development.',
+            description: 'Support Delos with {{fee}} bps fee',
+            longDescription: 'A tiny {{fee}} bps fee on trades helps support Delos development.',
             approve: 'Approve Fee',
             skip: 'Skip for now',
             waiting: 'Waiting for signature...',

@@ -37,10 +37,10 @@ interface BolsillosScreenProps {
 // and the Spot card "soft purple." Used by every pocket-aware widget below.
 const POCKET_COLORS = {
     perp: {
-        color: '#FACC15',
-        soft: 'rgba(250,204,21,0.12)',
-        softer: 'rgba(250,204,21,0.04)',
-        border: 'rgba(250,204,21,0.25)',
+        color: '#E3B34C',
+        soft: 'rgba(227,179,76,0.12)',
+        softer: 'rgba(227,179,76,0.04)',
+        border: 'rgba(227,179,76,0.25)',
     },
     spot: {
         color: '#A78BFA',
@@ -206,14 +206,14 @@ export default function BolsillosScreen({
                             width: 64,
                             height: 64,
                             borderRadius: 20,
-                            background: 'rgba(250,204,21,0.1)',
-                            border: '1px solid rgba(250,204,21,0.25)',
+                            background: 'rgba(227,179,76,0.1)',
+                            border: '1px solid rgba(227,179,76,0.25)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                         }}
                     >
-                        <Wallet style={{ width: 28, height: 28, color: '#FACC15' }} />
+                        <Wallet style={{ width: 28, height: 28, color: '#E3B34C' }} />
                     </div>
                     <div
                         style={{
@@ -242,13 +242,13 @@ export default function BolsillosScreen({
                             borderRadius: 14,
                             border: 'none',
                             background:
-                                'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
-                            color: '#1A1304',
+                                'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
+                            color: '#1C1608',
                             fontWeight: 800,
                             fontSize: 13,
                             cursor: 'pointer',
                             boxShadow:
-                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 32px -8px rgba(250,204,21,0.45)',
+                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 14px 32px -8px rgba(227,179,76,0.45)',
                         }}
                     >
                         {t.bolsillos.emptyCta}
@@ -371,13 +371,13 @@ export default function BolsillosScreen({
                                 height: 44,
                                 borderRadius: '50%',
                                 background:
-                                    'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                                    'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                                 border: '3px solid #0A0907',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 boxShadow:
-                                    '0 8px 24px -6px rgba(250,204,21,0.55), 0 0 0 1px rgba(0,0,0,0.4)',
+                                    '0 8px 24px -6px rgba(227,179,76,0.55), 0 0 0 1px rgba(0,0,0,0.4)',
                                 cursor: 'pointer',
                             }}
                         >
@@ -385,7 +385,7 @@ export default function BolsillosScreen({
                                 style={{
                                     width: 18,
                                     height: 18,
-                                    color: '#1A1304',
+                                    color: '#1C1608',
                                     strokeWidth: 2.6,
                                 }}
                             />
@@ -415,10 +415,10 @@ export default function BolsillosScreen({
                             width: '100%',
                             padding: 18,
                             background:
-                                'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                                'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                             border: 'none',
                             borderRadius: 18,
-                            color: '#1A1304',
+                            color: '#1C1608',
                             fontWeight: 800,
                             fontSize: 14,
                             cursor: 'pointer',
@@ -428,7 +428,7 @@ export default function BolsillosScreen({
                             justifyContent: 'center',
                             gap: 8,
                             boxShadow:
-                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px -10px rgba(250,204,21,0.45)',
+                                '0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px -10px rgba(227,179,76,0.45)',
                             letterSpacing: '0.01em',
                         }}
                     >
@@ -436,7 +436,7 @@ export default function BolsillosScreen({
                             style={{
                                 width: 16,
                                 height: 16,
-                                color: '#1A1304',
+                                color: '#1C1608',
                                 strokeWidth: 2.6,
                             }}
                         />
@@ -492,14 +492,14 @@ export default function BolsillosScreen({
                                     height: 32,
                                     borderRadius: 10,
                                     flexShrink: 0,
-                                    background: 'rgba(250,204,21,0.12)',
+                                    background: 'rgba(227,179,76,0.12)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                 }}
                             >
                                 <Info
-                                    style={{ width: 14, height: 14, color: '#FACC15' }}
+                                    style={{ width: 14, height: 14, color: '#E3B34C' }}
                                 />
                             </div>
                             <div>
@@ -748,7 +748,7 @@ function PocketCard({
                             style={{
                                 fontSize: 11,
                                 fontWeight: 700,
-                                color: '#FACC15',
+                                color: '#E3B34C',
                             }}
                         >
                             {allocPct.toFixed(1)}%
@@ -771,7 +771,7 @@ function PocketCard({
                                 bottom: 0,
                                 width: `${Math.min(100, allocPct)}%`,
                                 background:
-                                    'linear-gradient(90deg, rgba(250,204,21,0.4), #FACC15)',
+                                    'linear-gradient(90deg, rgba(227,179,76,0.4), #E3B34C)',
                                 borderRadius: 99,
                             }}
                         />

@@ -1,27 +1,26 @@
 /* ==========================================================================
-   RAYO DESIGN SYSTEM - Design Tokens
-   
-   Black + Yellow trading app aesthetic
-   Inspired by: Ostium, Dreamdrop
+   DELOS DESIGN SYSTEM - Design Tokens
+
+   Cool marble-dark + Apollonian gold trading app aesthetic
    ========================================================================== */
 
 :root {
   /* -------------------------------------------------------------------------
      COLORS - Core Palette
      ------------------------------------------------------------------------- */
-  
+
   /* Background hierarchy */
-  --color-bg-primary: #000000;
-  --color-bg-secondary: #0A0A0A;
-  --color-bg-tertiary: #111111;
-  --color-bg-elevated: #1A1A1A;
-  --color-bg-hover: #222222;
-  
-  /* Brand - Yellow */
-  --color-brand-primary: #FACC15;        /* Main yellow */
-  --color-brand-primary-hover: #FDE047;  /* Lighter on hover */
-  --color-brand-primary-muted: #FACC1533; /* 20% opacity for backgrounds */
-  --color-brand-primary-border: #FACC1566; /* 40% opacity for borders */
+  --color-bg-primary: #0A0C0E;           /* Cool marble-dark */
+  --color-bg-secondary: #0F1215;
+  --color-bg-tertiary: #14181C;
+  --color-bg-elevated: #1A1F24;
+  --color-bg-hover: #222831;
+
+  /* Brand - Apollonian gold */
+  --color-brand-primary: #E3B34C;        /* Main gold */
+  --color-brand-primary-hover: #F2D389;  /* Lighter on hover */
+  --color-brand-primary-muted: #E3B34C33; /* 20% opacity for backgrounds */
+  --color-brand-primary-border: #E3B34C66; /* 40% opacity for borders */
   
   /* Semantic - Status Colors */
   --color-positive: #22C55E;             /* Green - gains, success */
@@ -36,7 +35,7 @@
   --color-text-secondary: #A1A1AA;       /* zinc-400 */
   --color-text-tertiary: #71717A;        /* zinc-500 */
   --color-text-muted: #52525B;           /* zinc-600 */
-  --color-text-on-brand: #000000;        /* Black text on yellow */
+  --color-text-on-brand: #1C1608;        /* Warm near-black text on gold */
   
   /* Borders & Dividers */
   --color-border-default: #27272A;       /* zinc-800 */

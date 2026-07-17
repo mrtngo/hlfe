@@ -345,7 +345,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
 
                         {/* Two-leg note for bridged chains */}
                         {isBridged && !wd.inProgress && (
-                            <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 13px', borderRadius: 12, background: V2.accentSoft, border: '1px solid rgba(250,204,21,0.2)' }}>
+                            <div style={{ marginTop: 12, display: 'flex', alignItems: 'flex-start', gap: 8, padding: '10px 13px', borderRadius: 12, background: V2.accentSoft, border: '1px solid rgba(227,179,76,0.2)' }}>
                                 <Icon name="info" size={15} color={V2.accent} />
                                 <span style={{ fontSize: 12, color: V2.t2, lineHeight: 1.45 }}>
                                     {(t.withdraw.bridgeNote || 'Primero retiramos a tu wallet de Arbitrum (~5 min) y luego puenteamos a {{chain}} vía Circle CCTP. No cierres la app durante el proceso.').replace('{{chain}}', destLabel)}
@@ -486,7 +486,7 @@ function WithdrawProgress({ status, isBridged, destLabel, t }: { status: Withdra
     const currentIdx = order.indexOf(status);
 
     return (
-        <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: V2.accentSoft, border: '1px solid rgba(250,204,21,0.18)' }}>
+        <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: V2.accentSoft, border: '1px solid rgba(227,179,76,0.18)' }}>
             {steps.map((s) => {
                 const sIdx = order.indexOf(s.key);
                 const active = s.key === status;

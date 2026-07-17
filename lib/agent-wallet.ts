@@ -193,7 +193,7 @@ async function decryptPrivateKey(
 export function generateAgentWallet(): AgentWallet {
     const wallet = ethers.Wallet.createRandom();
     // Agent name must be between 1 and 16 characters (Hyperliquid requirement)
-    const name = 'Rayo Agent'; // 10 characters
+    const name = 'Delos Agent'; // 10 characters
     return {
         address: wallet.address,
         privateKey: wallet.privateKey,
@@ -461,12 +461,12 @@ export async function approveAgentWallet(
         (client.exchange as any).walletAddress = userAddress.toLowerCase();
         
         // Validate and truncate agent name to 16 characters (Hyperliquid requirement)
-        let validAgentName = (agentName || 'Rayo Agent').trim();
+        let validAgentName = (agentName || 'Delos Agent').trim();
         if (validAgentName.length > 16) {
             validAgentName = validAgentName.substring(0, 16);
         }
         if (validAgentName.length === 0) {
-            validAgentName = 'Rayo Agent';
+            validAgentName = 'Delos Agent';
         }
         
         logger.debug('🔐 Approving agent via SDK', { agentNameLength: validAgentName.length });

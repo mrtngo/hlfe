@@ -6,7 +6,7 @@
  *
  * 1. **Status bar** — Default iOS 15+ behavior renders status bar text in
  *    dark mode when the system is in light mode, which is invisible against
- *    Rayo's black background. Force `.dark` style so the text is always
+ *    Delos's black background. Force `.dark` style so the text is always
  *    white, and tint the background black to match.
  *
  * 2. **Splash screen** — LaunchScreen.storyboard stays visible until we

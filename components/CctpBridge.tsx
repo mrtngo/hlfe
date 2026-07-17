@@ -209,7 +209,7 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
                                         padding: '8px 14px',
                                         borderRadius: 999,
                                         border: `1px solid ${selected ? 'var(--color-brand-primary)' : 'rgba(255,255,255,0.1)'}`,
-                                        background: selected ? 'rgba(250,204,21,0.12)' : 'rgba(255,255,255,0.025)',
+                                        background: selected ? 'rgba(227,179,76,0.12)' : 'rgba(255,255,255,0.025)',
                                         color: selected ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
                                         fontSize: 13,
                                         fontWeight: 700,
@@ -275,7 +275,7 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
 
                 {/* Progress */}
                 {flow.inProgress && (
-                    <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: 'rgba(250,204,21,0.06)', border: '1px solid rgba(250,204,21,0.18)' }}>
+                    <div style={{ marginTop: 16, padding: 14, borderRadius: 14, background: 'rgba(227,179,76,0.06)', border: '1px solid rgba(227,179,76,0.18)' }}>
                         {order.slice(0, -1).map((s, i) => {
                             const active = flow.status === s;
                             const done = currentStepIdx > i;
@@ -316,10 +316,10 @@ export default function CctpBridge({ onClose, defaultFrom = 'base', onArrivedOnA
                             padding: 16,
                             borderRadius: 14,
                             background: canSubmit
-                                ? 'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)'
+                                ? 'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)'
                                 : 'rgba(255,255,255,0.04)',
                             border: 'none',
-                            color: canSubmit ? '#1A1304' : 'rgba(255,255,255,0.3)',
+                            color: canSubmit ? '#1C1608' : 'rgba(255,255,255,0.3)',
                             fontWeight: 800,
                             fontSize: 14,
                             cursor: canSubmit ? 'pointer' : 'not-allowed',
@@ -405,9 +405,9 @@ const primaryBtn: React.CSSProperties = {
     flex: 1,
     padding: 14,
     borderRadius: 14,
-    background: 'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+    background: 'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
     border: 'none',
-    color: '#1A1304',
+    color: '#1C1608',
     fontWeight: 800,
     fontSize: 13,
     cursor: 'pointer',

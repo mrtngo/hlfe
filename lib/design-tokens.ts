@@ -14,7 +14,7 @@ export { colors, spacing, typography, borderRadius, shadows, transitions, zIndex
  * Useful when you need to pass colors to libraries like Chart.js, Recharts, etc.
  *
  * @example
- * const brandColor = getCSSVar('--color-brand-primary'); // Returns '#FACC15'
+ * const brandColor = getCSSVar('--color-brand-primary'); // Returns '#E3B34C'
  */
 export function getCSSVar(varName: string): string {
   if (typeof window === 'undefined') return '';

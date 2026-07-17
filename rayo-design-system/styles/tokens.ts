@@ -7,19 +7,19 @@
 export const colors = {
   // Background hierarchy
   bg: {
-    primary: '#000000',
-    secondary: '#0A0A0A',
-    tertiary: '#111111',
-    elevated: '#1A1A1A',
-    hover: '#222222',
+    primary: '#0A0C0E',
+    secondary: '#0F1215',
+    tertiary: '#14181C',
+    elevated: '#1A1F24',
+    hover: '#222831',
   },
 
-  // Brand - Yellow
+  // Brand - Apollonian gold
   brand: {
-    primary: '#FACC15',
-    primaryHover: '#FDE047',
-    primaryMuted: 'rgba(250, 204, 21, 0.2)',
-    primaryBorder: 'rgba(250, 204, 21, 0.4)',
+    primary: '#E3B34C',
+    primaryHover: '#F2D389',
+    primaryMuted: 'rgba(227, 179, 76, 0.2)',
+    primaryBorder: 'rgba(227, 179, 76, 0.4)',
   },
 
   // Semantic - Status
@@ -36,7 +36,7 @@ export const colors = {
     secondary: '#A1A1AA',
     tertiary: '#71717A',
     muted: '#52525B',
-    onBrand: '#000000',
+    onBrand: '#1C1608',
   },
 
   // Borders
@@ -115,7 +115,7 @@ export const shadows = {
   sm: '0 1px 2px 0 rgb(0 0 0 / 0.5)',
   md: '0 4px 6px -1px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.5)',
   lg: '0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5)',
-  glowBrand: '0 0 20px rgba(250, 204, 21, 0.2)',
+  glowBrand: '0 0 20px rgba(227, 179, 76, 0.2)',
   glowPositive: '0 0 20px rgba(34, 197, 94, 0.2)',
   glowNegative: '0 0 20px rgba(239, 68, 68, 0.2)',
 } as const;

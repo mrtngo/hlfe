@@ -36,10 +36,10 @@ type Step = 'amount' | 'review' | 'submitting' | 'success' | 'error';
 
 const POCKET_PALETTE = {
     perp: {
-        color: '#FACC15',
-        soft: 'rgba(250,204,21,0.12)',
-        softer: 'rgba(250,204,21,0.04)',
-        border: 'rgba(250,204,21,0.25)',
+        color: '#E3B34C',
+        soft: 'rgba(227,179,76,0.12)',
+        softer: 'rgba(227,179,76,0.04)',
+        border: 'rgba(227,179,76,0.25)',
     },
     spot: {
         color: '#A78BFA',
@@ -319,8 +319,8 @@ function AmountStep({
                             width: 40,
                             height: 40,
                             borderRadius: 12,
-                            background: 'rgba(250,204,21,0.12)',
-                            border: '1px solid rgba(250,204,21,0.3)',
+                            background: 'rgba(227,179,76,0.12)',
+                            border: '1px solid rgba(227,179,76,0.3)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -331,7 +331,7 @@ function AmountStep({
                             style={{
                                 width: 16,
                                 height: 16,
-                                color: '#FACC15',
+                                color: '#E3B34C',
                                 strokeWidth: 2.4,
                             }}
                         />
@@ -436,13 +436,13 @@ function AmountStep({
                                     padding: '10px 0',
                                     borderRadius: 10,
                                     border: isOn
-                                        ? '1px solid #FACC15'
+                                        ? '1px solid #E3B34C'
                                         : '1px solid rgba(255,255,255,0.08)',
                                     background: isOn
-                                        ? 'rgba(250,204,21,0.1)'
+                                        ? 'rgba(227,179,76,0.1)'
                                         : 'rgba(255,255,255,0.025)',
                                     color: isOn
-                                        ? '#FACC15'
+                                        ? '#E3B34C'
                                         : 'rgba(255,255,255,0.75)',
                                     fontSize: 11,
                                     fontWeight: 700,
@@ -513,11 +513,11 @@ function AmountStep({
                         width: '100%',
                         padding: 18,
                         background: valid
-                            ? 'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)'
+                            ? 'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)'
                             : 'rgba(255,255,255,0.05)',
                         border: 'none',
                         borderRadius: 18,
-                        color: valid ? '#1A1304' : 'rgba(255,255,255,0.3)',
+                        color: valid ? '#1C1608' : 'rgba(255,255,255,0.3)',
                         fontWeight: 800,
                         fontSize: 15,
                         cursor: valid ? 'pointer' : 'not-allowed',
@@ -527,7 +527,7 @@ function AmountStep({
                         justifyContent: 'center',
                         gap: 6,
                         boxShadow: valid
-                            ? '0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px -10px rgba(250,204,21,0.45)'
+                            ? '0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px -10px rgba(227,179,76,0.45)'
                             : 'none',
                     }}
                 >
@@ -633,7 +633,7 @@ function ReviewStep({
                             style={{
                                 width: 20,
                                 height: 20,
-                                color: '#FACC15',
+                                color: '#E3B34C',
                                 strokeWidth: 2.6,
                                 flexShrink: 0,
                             }}
@@ -692,16 +692,16 @@ function ReviewStep({
                         width: '100%',
                         padding: 18,
                         background:
-                            'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                            'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                         border: 'none',
                         borderRadius: 18,
-                        color: '#1A1304',
+                        color: '#1C1608',
                         fontWeight: 800,
                         fontSize: 15,
                         cursor: 'pointer',
                         fontFamily: 'inherit',
                         boxShadow:
-                            '0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px -10px rgba(250,204,21,0.45)',
+                            '0 1px 0 rgba(255,255,255,0.4) inset, 0 18px 40px -10px rgba(227,179,76,0.45)',
                     }}
                 >
                     {t.mover.confirmCta.replace('{amount}', amount.toFixed(2))}
@@ -735,7 +735,7 @@ function SubmittingStep({
         >
             <Loader2
                 className="animate-spin"
-                style={{ width: 48, height: 48, color: '#FACC15' }}
+                style={{ width: 48, height: 48, color: '#E3B34C' }}
             />
             <div style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>
                 Moviendo ${amount.toFixed(2)} de {from.name} a {to.name}…
@@ -810,7 +810,7 @@ function SuccessStep({
                     }}
                 >
                     {t.mover.successTitleBefore}{' '}
-                    <span style={{ color: '#FACC15', fontStyle: 'italic' }}>
+                    <span style={{ color: '#E3B34C', fontStyle: 'italic' }}>
                         ${amount.toFixed(2)}
                     </span>
                     .
@@ -872,9 +872,9 @@ function SuccessStep({
                         padding: 14,
                         borderRadius: 14,
                         background:
-                            'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                            'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                         border: 'none',
-                        color: '#1A1304',
+                        color: '#1C1608',
                         fontWeight: 800,
                         fontSize: 13,
                         cursor: 'pointer',
@@ -977,9 +977,9 @@ function ErrorStep({
                             padding: 14,
                             borderRadius: 14,
                             background:
-                                'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                                'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                             border: 'none',
-                            color: '#1A1304',
+                            color: '#1C1608',
                             fontWeight: 800,
                             fontSize: 13,
                             cursor: 'pointer',
@@ -1136,7 +1136,7 @@ function StepDots({ active, total }: { active: number; total: number }) {
                         height: 3,
                         borderRadius: 99,
                         background:
-                            i < active ? '#FACC15' : 'rgba(255,255,255,0.1)',
+                            i < active ? '#E3B34C' : 'rgba(255,255,255,0.1)',
                     }}
                 />
             ))}

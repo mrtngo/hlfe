@@ -28,7 +28,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
         // Normalize everything to USD for calculation if dealing with crypto/stocks often, 
         // OR normalize everything to COP if that's the base.
         // For this specific calculator, it compares Colombian brokers (Trii/Tyba) which charge in COP.
-        // Rayo charges in USD/USDC but we want to show comparison in the selected currency.
+        // Delos charges in USD/USDC but we want to show comparison in the selected currency.
 
         // Let's assume the input `amount` is in the CURRENT selected currency.
 
@@ -56,7 +56,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
         const tybaCostCOP = amountInCOP * 0.015;
 
         // 4. RAYO - 0.075% Taker Fee (Charges in USD usually, but represented here)
-        // Rayo fee is 0.075% of volume.
+        // Delos fee is 0.075% of volume.
         const rayoCostUSD = amountInUSD * 0.00075;
         const rayoCostCOP = rayoCostUSD * exchangeRate;
 
@@ -220,7 +220,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
 
                     {/* Comparison Visualizer */}
                     <div className="space-y-3">
-                        {/* Rayo Card */}
+                        {/* Delos Card */}
                         <div
                             className="bg-brand rounded-xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group text-black"
                         >
@@ -273,7 +273,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                                     </div>
                                     <div className="text-right">
                                         <div className="text-sm font-bold text-white font-mono">{formatCurrency(comp.cost)}</div>
-                                        <div className="text-coffee-medium text-[9px]">+{(comp.cost / (calculation.rayo || 1)).toFixed(1)}x vs Rayo</div>
+                                        <div className="text-coffee-medium text-[9px]">+{(comp.cost / (calculation.rayo || 1)).toFixed(1)}x vs Delos</div>
                                     </div>
                                 </div>
                             ))}
@@ -284,7 +284,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     <div className="bg-bg-secondary p-3 rounded-xl flex gap-2 text-[10px] text-coffee-medium leading-relaxed">
                         <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-white/40" />
                         <p>
-                            Tarifas públicas 2025. Rayo Taker: 0.075%. Maker fees pueden ser menores.
+                            Tarifas públicas 2025. Delos Taker: 0.075%. Maker fees pueden ser menores.
                         </p>
                     </div>
 

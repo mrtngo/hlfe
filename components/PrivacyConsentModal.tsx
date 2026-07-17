@@ -8,7 +8,7 @@
  * the user grants authorization, capturing a versioned, timestamped record
  * (incl. express international-transfer consent) in `data_consents`.
  *
- * Beginner-first tone to match the rest of Rayo, but the legal substance
+ * Beginner-first tone to match the rest of Delos, but the legal substance
  * (qué datos, con quién se comparten, transferencia internacional, derechos)
  * is explicit as the law requires.
  */
@@ -56,8 +56,8 @@ export default function PrivacyConsentModal({ open, onAccept }: PrivacyConsentMo
 
                 <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed mb-4">
                     {es
-                        ? 'Para usar Rayo necesitamos tratar algunos datos tuyos: tu correo, tu cuenta y tu actividad de trading. Los usamos solo para que la app funcione — nunca para publicidad de terceros.'
-                        : 'To use Rayo we process some of your data: your email, your account and your trading activity. We use it only to run the app — never for third-party advertising.'}
+                        ? 'Para usar Delos necesitamos tratar algunos datos tuyos: tu correo, tu cuenta y tu actividad de trading. Los usamos solo para que la app funcione — nunca para publicidad de terceros.'
+                        : 'To use Delos we process some of your data: your email, your account and your trading activity. We use it only to run the app — never for third-party advertising.'}
                 </p>
 
                 <ul className="text-xs text-[var(--color-text-tertiary)] leading-relaxed mb-4 space-y-1.5">

@@ -100,7 +100,7 @@ export default function DcaScheduleSheet({
                                 inset: 0,
                                 pointerEvents: 'none',
                                 background:
-                                    'radial-gradient(60% 40% at 50% 0%, rgba(250,204,21,0.06) 0%, transparent 60%)',
+                                    'radial-gradient(60% 40% at 50% 0%, rgba(227,179,76,0.06) 0%, transparent 60%)',
                                 borderRadius: 'inherit',
                             }}
                         />
@@ -241,7 +241,7 @@ export default function DcaScheduleSheet({
                                                         style={{
                                                             backgroundColor: 'var(--color-brand-primary)',
                                                             zIndex: -1,
-                                                            boxShadow: '0 4px 14px -4px rgba(250, 204, 21, 0.5)',
+                                                            boxShadow: '0 4px 14px -4px rgba(227, 179, 76, 0.5)',
                                                         }}
                                                         transition={{ type: 'spring', damping: 26, stiffness: 340 }}
                                                     />
@@ -280,10 +280,10 @@ export default function DcaScheduleSheet({
                                                         onClick={() => setDayOfWeek(i)}
                                                         className="aspect-square rounded-xl text-[13px] font-bold border-none outline-none transition-colors"
                                                         style={{
-                                                            backgroundColor: active ? 'rgba(250, 204, 21, 0.1)' : 'rgba(255,255,255,0.03)',
+                                                            backgroundColor: active ? 'rgba(227, 179, 76, 0.1)' : 'rgba(255,255,255,0.03)',
                                                             color: active ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
-                                                            border: active ? '1px solid rgba(250, 204, 21, 0.5)' : '1px solid rgba(255,255,255,0.05)',
-                                                            boxShadow: active ? '0 0 0 3px rgba(250, 204, 21, 0.08)' : 'none',
+                                                            border: active ? '1px solid rgba(227, 179, 76, 0.5)' : '1px solid rgba(255,255,255,0.05)',
+                                                            boxShadow: active ? '0 0 0 3px rgba(227, 179, 76, 0.08)' : 'none',
                                                         }}
                                                     >
                                                         {d}
@@ -319,9 +319,9 @@ export default function DcaScheduleSheet({
                                                         onClick={() => setDayOfMonth(d)}
                                                         className="aspect-square rounded-lg text-[12px] tabular-mono font-bold border-none outline-none transition-colors"
                                                         style={{
-                                                            backgroundColor: active ? 'rgba(250, 204, 21, 0.1)' : 'rgba(255,255,255,0.025)',
+                                                            backgroundColor: active ? 'rgba(227, 179, 76, 0.1)' : 'rgba(255,255,255,0.025)',
                                                             color: active ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
-                                                            border: active ? '1px solid rgba(250, 204, 21, 0.5)' : '1px solid rgba(255,255,255,0.04)',
+                                                            border: active ? '1px solid rgba(227, 179, 76, 0.5)' : '1px solid rgba(255,255,255,0.04)',
                                                         }}
                                                     >
                                                         {d}
@@ -351,9 +351,9 @@ export default function DcaScheduleSheet({
                                                 onClick={() => setHourUtc(h)}
                                                 className="py-2.5 rounded-xl tabular-mono text-[13px] font-semibold border-none outline-none transition-colors"
                                                 style={{
-                                                    backgroundColor: active ? 'rgba(250, 204, 21, 0.1)' : 'rgba(255,255,255,0.03)',
+                                                    backgroundColor: active ? 'rgba(227, 179, 76, 0.1)' : 'rgba(255,255,255,0.03)',
                                                     color: active ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
-                                                    border: active ? '1px solid rgba(250, 204, 21, 0.5)' : '1px solid rgba(255,255,255,0.05)',
+                                                    border: active ? '1px solid rgba(227, 179, 76, 0.5)' : '1px solid rgba(255,255,255,0.05)',
                                                 }}
                                             >
                                                 {String(h).padStart(2, '0')}:00
@@ -367,9 +367,9 @@ export default function DcaScheduleSheet({
                             <div
                                 className="flex items-center justify-between px-4 py-3.5 rounded-2xl mb-4 grain"
                                 style={{
-                                    backgroundColor: 'rgba(250, 204, 21, 0.05)',
-                                    border: '1px solid rgba(250, 204, 21, 0.2)',
-                                    boxShadow: '0 0 24px -8px rgba(250, 204, 21, 0.15)',
+                                    backgroundColor: 'rgba(227, 179, 76, 0.05)',
+                                    border: '1px solid rgba(227, 179, 76, 0.2)',
+                                    boxShadow: '0 0 24px -8px rgba(227, 179, 76, 0.15)',
                                 }}
                             >
                                 <div>

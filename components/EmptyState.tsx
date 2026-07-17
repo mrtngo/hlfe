@@ -32,8 +32,8 @@ export default function EmptyState({
                     width: 64,
                     height: 64,
                     borderRadius: 24,
-                    background: 'rgba(250,204,21,0.1)',
-                    border: '1px solid rgba(250,204,21,0.2)',
+                    background: 'rgba(227,179,76,0.1)',
+                    border: '1px solid rgba(227,179,76,0.2)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -75,8 +75,8 @@ export default function EmptyState({
                         padding: '12px 18px',
                         borderRadius: 99,
                         background:
-                            'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
-                        color: '#1A1304',
+                            'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
+                        color: '#1C1608',
                         fontWeight: 700,
                         fontSize: 13,
                         border: 'none',
@@ -85,7 +85,7 @@ export default function EmptyState({
                         alignItems: 'center',
                         gap: 6,
                         boxShadow:
-                            '0 1px 0 rgba(255,255,255,0.4) inset, 0 10px 28px -8px rgba(250,204,21,0.45)',
+                            '0 1px 0 rgba(255,255,255,0.4) inset, 0 10px 28px -8px rgba(227,179,76,0.45)',
                     }}
                 >
                     {cta}

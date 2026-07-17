@@ -858,7 +858,7 @@ export default function OrderPanel() {
                         </div>
                     )}
 
-                {/* Place Order Button - Rayo Style - Taller & Squared */}
+                {/* Place Order Button - Delos Style - Taller & Squared */}
                 <button
                     onClick={handlePlaceOrder}
                     disabled={loading || (connected && (tokenSize <= 0 || notionalValue < MIN_NOTIONAL_VALUE))}

@@ -10,7 +10,7 @@ interface PortfolioSparklineProps {
 }
 
 export default function PortfolioSparkline({
-    color = '#FACC15',
+    color = '#E3B34C',
     height = 150,
     days = 30,
 }: PortfolioSparklineProps) {

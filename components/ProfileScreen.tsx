@@ -230,7 +230,7 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
             <SectionHead title="Logros" right={<span style={{ fontSize: 13, color: V2.t3, fontWeight: 600, fontFamily: V2.mono }}>{achievements.filter((a) => a.on).length}/{achievements.length}</span>} />
             <div style={{ padding: '0 20px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
                 {achievements.map((a) => (
-                    <div key={a.l} style={{ padding: '14px 10px', borderRadius: 14, textAlign: 'center', background: a.on ? V2.accentSoft : 'rgba(255,255,255,0.02)', border: a.on ? '1px solid rgba(250,204,21,0.2)' : `1px solid ${V2.hair}`, opacity: a.on ? 1 : 0.5 }}>
+                    <div key={a.l} style={{ padding: '14px 10px', borderRadius: 14, textAlign: 'center', background: a.on ? V2.accentSoft : 'rgba(255,255,255,0.02)', border: a.on ? '1px solid rgba(227,179,76,0.2)' : `1px solid ${V2.hair}`, opacity: a.on ? 1 : 0.5 }}>
                         <div style={{ fontSize: 26, marginBottom: 6, filter: a.on ? 'none' : 'grayscale(1)' }}>{a.e}</div>
                         <div style={{ fontSize: 11, fontWeight: 700 }}>{a.l}</div>
                     </div>
@@ -239,7 +239,7 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
 
             {/* Referral */}
             <div style={{ padding: '20px 20px 0' }}>
-                <div style={{ padding: 18, borderRadius: 18, background: V2.accentSoft, border: '1px solid rgba(250,204,21,0.22)' }}>
+                <div style={{ padding: 18, borderRadius: 18, background: V2.accentSoft, border: '1px solid rgba(227,179,76,0.22)' }}>
                     <div style={{ fontSize: 12, color: V2.accent, fontWeight: 800, letterSpacing: '0.06em' }}>{t.screens.perfil.referral.headline.toUpperCase()}</div>
                     <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6, letterSpacing: '-0.02em' }}>{t.screens.perfil.referral.sub}</div>
                     {referralCode && (

@@ -1,6 +1,6 @@
 'use client';
 
-// Rayo v2 — Animated full-screen tutorial / onboarding.
+// Delos v2 — Animated full-screen tutorial / onboarding.
 // 4 auto-playing scenes: Perps · Leverage · Deposit · Ready. Tap or wait to advance.
 // Recreated from design_handoff_onboarding/v2/tutorial.jsx with real tokens,
 // V2Kit Icon, i18n. The scene container is keyed by index so re-entering a
@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
-import { Icon, V2, type IconName } from '@/components/V2Kit';
+import { Icon, V2, DelosSun, type IconName } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
 interface OnboardingTutorialProps {
@@ -215,9 +215,7 @@ function SceneLeverage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: 0, animation: 'tpop 400ms ease 600ms forwards' }}>
                         <span style={{ fontSize: 18, fontWeight: 800, color: V2.accent }}>×</span>
-                        <svg width="14" height="17" viewBox="0 0 24 24">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={V2.accent} />
-                        </svg>
+                        <DelosSun size={15} color={V2.accent} />
                     </div>
                     <div style={{ textAlign: 'center', opacity: 0, animation: 'tfade 500ms ease 700ms forwards' }}>
                         <div style={{ fontSize: 12, color: V2.accent, fontWeight: 700 }}>{tt.control}</div>
@@ -329,8 +327,8 @@ function SceneDeposit() {
                         width: 124,
                         height: 124,
                         borderRadius: 28,
-                        background: 'radial-gradient(circle at 50% 40%, rgba(250,204,21,0.18), rgba(250,204,21,0.04))',
-                        border: '1px solid rgba(250,204,21,0.3)',
+                        background: 'radial-gradient(circle at 50% 40%, rgba(227,179,76,0.18), rgba(227,179,76,0.04))',
+                        border: '1px solid rgba(227,179,76,0.3)',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -339,9 +337,7 @@ function SceneDeposit() {
                         animation: 'tpop 600ms ease 500ms forwards',
                     }}
                 >
-                    <svg width="22" height="27" viewBox="0 0 24 24" style={{ marginBottom: 6 }}>
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={V2.accent} />
-                    </svg>
+                    <DelosSun size={24} color={V2.accent} style={{ marginBottom: 6 }} />
                     <div style={{ fontSize: 11, color: V2.t3, fontWeight: 600 }}>{tt.balance}</div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: V2.t1, fontFamily: V2.ui, letterSpacing: '-0.02em' }}>
                         ${bal.toLocaleString()}
@@ -375,27 +371,24 @@ function SceneReady() {
                         left: '50%',
                         width: 380,
                         height: 380,
-                        background: 'radial-gradient(circle, rgba(250,204,21,0.2) 0%, rgba(250,204,21,0.05) 40%, transparent 68%)',
+                        background: 'radial-gradient(circle, rgba(227,179,76,0.2) 0%, rgba(227,179,76,0.05) 40%, transparent 68%)',
                         animation: 'tburst 700ms ease-out both',
                     }}
                 />
                 {bolts.map((b, i) => (
-                    <svg
+                    <DelosSun
                         key={i}
-                        width={b.s}
-                        height={b.s * 1.3}
-                        viewBox="0 0 24 24"
+                        size={b.s}
+                        color={V2.accent}
                         style={{
                             position: 'absolute',
                             left: `${b.l}%`,
                             top: `${b.t}%`,
                             ['--r' as string]: `${b.r}deg`,
                             animation: `tbolt 1600ms ease-out ${b.d}s infinite`,
-                            filter: 'drop-shadow(0 0 8px rgba(250,204,21,0.7))',
+                            filter: 'drop-shadow(0 0 8px rgba(227,179,76,0.7))',
                         }}
-                    >
-                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={V2.accent} />
-                    </svg>
+                    />
                 ))}
                 <div style={{ position: 'relative', textAlign: 'center', opacity: 0, animation: 'tpop 600ms ease 200ms forwards' }}>
                     <div
@@ -408,12 +401,10 @@ function SceneReady() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: '0 16px 40px -8px rgba(250,204,21,0.6)',
+                            boxShadow: '0 16px 40px -8px rgba(227,179,76,0.6)',
                         }}
                     >
-                        <svg width="42" height="50" viewBox="0 0 24 24">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#1A1304" />
-                        </svg>
+                        <DelosSun size={44} color="#1C1608" />
                     </div>
                     <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-0.035em' }}>{tt.headline}</div>
                 </div>
@@ -531,10 +522,10 @@ export default function OnboardingTutorial({ onClose, onDeposit }: OnboardingTut
                             cursor: 'pointer',
                             fontFamily: V2.ui,
                             background: V2.accent,
-                            color: '#1A1304',
+                            color: '#1C1608',
                             fontWeight: 800,
                             fontSize: 16,
-                            boxShadow: '0 14px 32px -8px rgba(250,204,21,0.5)',
+                            boxShadow: '0 14px 32px -8px rgba(227,179,76,0.5)',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -542,7 +533,7 @@ export default function OnboardingTutorial({ onClose, onDeposit }: OnboardingTut
                         }}
                     >
                         {t.onboarding.tutorial.depositStart}
-                        <Icon name="arrowUpRight" size={17} color="#1A1304" strokeWidth={2.8} />
+                        <Icon name="arrowUpRight" size={17} color="#1C1608" strokeWidth={2.8} />
                     </button>
                 ) : (
                     <button

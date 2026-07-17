@@ -35,8 +35,8 @@ export default function DataBlock({
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    background: accent ? 'rgba(250,204,21,0.06)' : 'transparent',
-                    borderBottom: accent ? '1px solid rgba(250,204,21,0.2)' : 'none',
+                    background: accent ? 'rgba(227,179,76,0.06)' : 'transparent',
+                    borderBottom: accent ? '1px solid rgba(227,179,76,0.2)' : 'none',
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

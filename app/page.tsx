@@ -34,10 +34,11 @@ import DesktopPredictions from '@/components/DesktopPredictions';
 import DesktopTerminal from '@/components/DesktopTerminal';
 import NewsScreen from '@/components/NewsScreen';
 import RewardsScreen from '@/components/RewardsScreen';
+import AcademyScreen from '@/components/AcademyScreen';
 import PublicProfileScreen from '@/components/PublicProfileScreen';
 import TraderSearchScreen from '@/components/TraderSearchScreen';
 import Trollbox from '@/components/Trollbox';
-import { Icon, V2, type IconName } from '@/components/V2Kit';
+import { Icon, V2, DelosSun, type IconName } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
 export default function Home() {
@@ -55,7 +56,7 @@ export default function Home() {
     } = useHyperliquid();
     const { ready, authenticated, login, getAccessToken } = usePrivy();
     const { user, loading: userLoading, needsConsent, recordConsent } = useUser();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'academy' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Preselected side for the trade screen ("Bajar" → sell). Resets to buy on generic entry. */
     const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
@@ -177,7 +178,7 @@ export default function Home() {
     // V2 "serious redesign" screens render full-bleed (they own their padding
     // and background via ScreenV2). Everything else keeps the legacy padded
     // container + live-sync chip.
-    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'traderSearch', 'publicProfile', 'predictions'];
+    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'academy', 'traderSearch', 'publicProfile', 'predictions'];
     const isV2View = V2_VIEWS.includes(view);
     const DESKTOP_TERMINAL_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'advanced'];
     const showDesktopTerminal = ready && authenticated && isDesktopTerminal && DESKTOP_TERMINAL_VIEWS.includes(view);
@@ -294,6 +295,8 @@ export default function Home() {
                                 />
                             ) : view === 'rewards' ? (
                                 <RewardsScreen />
+                            ) : view === 'academy' ? (
+                                <AcademyScreen />
                             ) : view === 'predictions' ? (
                                 <PredictionsHub />
                             ) : view === 'traderSearch' ? (
@@ -348,6 +351,7 @@ export default function Home() {
                                 <AjustesScreen
                                     onBack={() => setView('profile')}
                                     onReplayTutorial={() => setShowTutorial(true)}
+                                    onOpenAcademy={() => setView('academy')}
                                 />
                             )}
                         </div>
@@ -448,6 +452,7 @@ export default function Home() {
                 const tabs: { id: string; label: string; icon: IconName; on: boolean; onClick: () => void; domId?: string }[] = [
                     { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home', onClick: () => setView('home') },
                     { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },
+                    { id: 'academy', label: t.nav.academy || 'Academia', icon: 'info', on: view === 'academy', onClick: () => setView('academy'), domId: 'nav-academy-tab' },
                     { id: 'predictions', label: t.nav.predictions || 'Predice', icon: 'target', on: view === 'predictions', onClick: () => setView('predictions'), domId: 'nav-predictions-tab' },
                     { id: 'news', label: t.nav.news || 'Noticias', icon: 'news', on: view === 'news', onClick: () => setView('news'), domId: 'nav-news-tab' },
                     { id: 'history', label: t.nav.history, icon: 'history', on: view === 'history', onClick: () => setView('history') },
@@ -490,9 +495,7 @@ export default function Home() {
                                     >
                                         <div style={{ position: 'relative', width: 38, height: 30, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {tab.on && (
-                                                <svg width="10" height="13" viewBox="0 0 24 24" aria-hidden style={{ position: 'absolute', top: -9, filter: 'drop-shadow(0 0 5px rgba(250,204,21,0.9))' }}>
-                                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={V2.accent} />
-                                                </svg>
+                                                <DelosSun size={12} color={V2.accent} style={{ position: 'absolute', top: -10, filter: 'drop-shadow(0 0 5px rgba(227,179,76,0.9))' }} />
                                             )}
                                             {accountLoading ? (
                                                 <div className="spinner w-5 h-5 border-2" style={{ borderTopColor: V2.accent }} />

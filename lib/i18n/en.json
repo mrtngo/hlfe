@@ -45,6 +45,7 @@
     "signIn": "Sign In",
     "news": "News",
     "rewards": "Rewards",
+    "academy": "Academy",
     "predictions": "Predict"
   },
   "advanced": {
@@ -212,7 +213,7 @@
     "native": "NATIVE",
     "seeMore": "Show other networks",
     "max": "MAX {balance}",
-    "previewTitle": "You'll receive in Rayo",
+    "previewTitle": "You'll receive in Delos",
     "live": "LIVE",
     "previewFee": "Bridge fee",
     "free": "free",
@@ -224,7 +225,7 @@
     "reviewSub": "step 2 of 2",
     "reviewFrom": "from",
     "reviewTo": "to",
-    "reviewDestination": "Rayo · Perps",
+    "reviewDestination": "Delos · Perps",
     "youReceive": "You'll receive",
     "tokenOn": "{token} on {chain}",
     "rowSend": "You send",
@@ -243,7 +244,7 @@
     "stepApprovedSub": "Confirming on {chain}",
     "stepBridging": "Bridging",
     "stepBridgingSub": "Waiting for Arbitrum confirmation",
-    "stepDelivered": "Arrives at Rayo",
+    "stepDelivered": "Arrives at Delos",
     "stepDeliveredPending": "Pending",
     "stepDeliveredDone": "Credited to Perps",
     "progressCta": "Close and notify me when it lands",
@@ -637,11 +638,11 @@
     "agentInstruction": "Approve once to enable automatic signing. You'll sign ONE transaction to approve the agent, then all future trades will be signed automatically.",
     "disableAgent": "Disable 1-Tap trading",
     "builderFee": "Builder Fee",
-    "builderFeeDesc": "Support Rayo with a {{fee}} bps fee on trades",
+    "builderFeeDesc": "Support Delos with a {{fee}} bps fee on trades",
     "approved": "Approved",
     "approving": "Approving...",
-    "builderFeeSuccess": "Builder fee approved! Thank you for supporting Rayo.",
-    "builderFeeInstruction": "Approve once to enable trading fees. A small {{fee}} basis points ({{percent}}%) fee will be collected on each trade to support Rayo development.",
+    "builderFeeSuccess": "Builder fee approved! Thank you for supporting Delos.",
+    "builderFeeInstruction": "Approve once to enable trading fees. A small {{fee}} basis points ({{percent}}%) fee will be collected on each trade to support Delos development.",
     "security": "Security",
     "support": "Help & Support",
     "poweredBy": "Powered by Hyperliquid",
@@ -655,11 +656,11 @@
     "tabMultiChain": "Multi-Chain",
     "tabTransfer": "Transfer",
     "title": "Deposit USDC",
-    "instruction": "Send USDC from the Rayo Network to this address.",
+    "instruction": "Send USDC from the Delos Network to this address.",
     "walletAddressLabel": "Your deposit address",
     "connectWallet": "Sign in to see your address",
     "warningTitle": "Important: Only USDC",
-    "warningText": "Only send USDC on the Rayo network. Sending any other asset or via another network will result in permanent loss.",
+    "warningText": "Only send USDC on the Delos network. Sending any other asset or via another network will result in permanent loss.",
     "copyAddress": "Copy Deposit Address",
     "addressCopied": "Copied!",
     "networkNote": "Only send USDC on Arbitrum network",
@@ -679,7 +680,7 @@
     "confirmBridge": "Confirm Bridge",
     "bridgeSuccess": "Bridge complete!",
     "fromArbitrum": "Deposit from Arbitrum",
-    "sendUsdcFromArbitrum": "Send USDC from Arbitrum directly to Rayo.",
+    "sendUsdcFromArbitrum": "Send USDC from Arbitrum directly to Delos.",
     "minDeposit": "Min deposit: 10 USDC",
     "connectToBridge": "Sign in to use the bridge",
     "switchToArbitrum": "Switch to Arbitrum",
@@ -689,7 +690,7 @@
     "minRequired": "Minimum 10 USDC required",
     "processing": "Processing...",
     "approveUsdc": "Approve USDC",
-    "bridgeToHyperliquid": "Bridge to Rayo",
+    "bridgeToHyperliquid": "Bridge to Delos",
     "txSent": "Transaction sent! Your funds will arrive shortly.",
     "bridgeInitiated": "Bridge Initiated",
     "checkProgress": "Check Progress",
@@ -706,13 +707,13 @@
     "confirmNetworkSwitch": "Confirm the network switch",
     "confirmTransaction": "Confirm the transaction",
     "crossChainBridge": "Multi-Chain Bridge",
-    "crossChainDesc": "Bridge USDC from other networks to Rayo (Hyperliquid).",
+    "crossChainDesc": "Bridge USDC from other networks to Delos (Hyperliquid).",
     "fromChain": "From Chain",
     "toChain": "To Chain",
-    "arbitrumForHl": "Arbitrum (USDC Bridge for Rayo)",
+    "arbitrumForHl": "Arbitrum (USDC Bridge for Delos)",
     "amountUsdc": "Amount (USDC)",
     "bridgeToArbitrum": "Bridge to Arbitrum",
-    "afterBridging": "After bridging, deposit from Arbitrum to Rayo using the 'Arbitrum Bridge' tab.",
+    "afterBridging": "After bridging, deposit from Arbitrum to Delos using the 'Arbitrum Bridge' tab.",
     "available": "Available"
   },
   "withdraw": {
@@ -794,7 +795,7 @@
     "currency": "$"
   },
   "home": {
-    "welcome": "Welcome to Rayo",
+    "welcome": "Welcome to Delos",
     "trustSignal": "No downloads · 60 seconds to get started",
     "signInWithEmail": "Continue with email",
     "signInWithGoogle": "Continue with Google",
@@ -821,7 +822,7 @@
     "gainers": "Gainers",
     "losers": "Losers",
     "compareFees": "Compare Fees 2025",
-    "saveOnFees": "Discover how much you save trading on Rayo",
+    "saveOnFees": "Discover how much you save trading on Delos",
     "buyAndSell": "Buy & sell BTC, ETH, HYPE, SOL"
   },
   "homeRedesign": {
@@ -907,6 +908,204 @@
     }
   },
   "screens": {
+    "academy": {
+      "kicker": "Delos Academy",
+      "title": "Learn perps before you get burned.",
+      "subtitle": "Short lessons to understand margin, leverage, longs, shorts, and liquidation before putting real money at risk.",
+      "lessonLabel": "Lesson",
+      "markComplete": "Mark done",
+      "completed": "Done",
+      "closeLesson": "Close",
+      "levels": {
+        "basic": "Basics",
+        "risk": "Risk"
+      },
+      "filters": {
+        "label": "Filter lessons",
+        "all": "Full path",
+        "basics": "Foundations",
+        "risk": "Risk"
+      },
+      "progress": {
+        "label": "Progress",
+        "copy": "Your progress lives on this device. The goal is not memorizing terms: it is trading while understanding what can go wrong."
+      },
+      "simulator": {
+        "title": "Mini leverage simulator",
+        "copy": "Try how PnL changes as leverage rises. This is an educational approximation: it does not include fees, funding, or exact liquidation price.",
+        "margin": "Margin",
+        "leverage": "Leverage",
+        "move": "Move",
+        "position": "Position size",
+        "pnl": "Estimated PnL",
+        "equity": "Equity after",
+        "liquidation": "Move against you",
+        "note": "Simple rule: more leverage means smaller market moves are enough to win or lose a lot."
+      },
+      "demo": {
+        "title": "Paper trading",
+        "copy": "Open a fake position using real market prices. No wallet, no orders, and no real money touched.",
+        "fakeBadge": "Demo",
+        "market": "Market",
+        "balance": "Demo balance",
+        "unrealized": "Open PnL",
+        "side": "Direction",
+        "long": "Long",
+        "short": "Short",
+        "margin": "Margin",
+        "leverage": "Leverage",
+        "entry": "Entry",
+        "current": "Current price",
+        "liveMove": "Real move since entry",
+        "marketMove": "Move market",
+        "position": "Position",
+        "liquidation": "Approx. liquidation",
+        "equity": "Demo equity",
+        "status": "Status",
+        "readyStatus": "Ready",
+        "openStatus": "Open",
+        "liquidated": "Liquidatable",
+        "open": "Open demo trade",
+        "close": "Close demo trade",
+        "reset": "Reset",
+        "note": "The price is real, the position is fake. Use it to practice how PnL moves before trading real money."
+      },
+      "lessons": [
+        {
+          "id": "what-is-perp",
+          "title": "What is a perp?",
+          "summary": "A perpetual contract follows an asset price without requiring you to buy the token or stock.",
+          "duration": "3 min",
+          "level": "Basics",
+          "takeaways": [
+            "You do not receive BTC, ETH, or a stock: you open a position that moves with that market.",
+            "Perps do not expire like traditional futures; they stay open while you have enough margin.",
+            "You can close the position whenever you want if the market is available."
+          ],
+          "example": {
+            "label": "Example",
+            "value": "BTC perp is not BTC spot",
+            "note": "Buying BTC spot means owning BTC. Opening a BTC perp means getting exposure to BTC price."
+          }
+        },
+        {
+          "id": "margin",
+          "title": "Margin: the money you put up",
+          "summary": "Margin is the collateral you reserve to support a leveraged position.",
+          "duration": "4 min",
+          "level": "Basics",
+          "takeaways": [
+            "If you put up 100 USDC as margin, that is the base absorbing profits and losses.",
+            "Margin is not a fee: it remains yours while the position is healthy.",
+            "If the loss gets too close to your margin, liquidation risk appears."
+          ],
+          "example": {
+            "label": "Example",
+            "value": "$100 margin",
+            "note": "With 100 USDC you can open a 100 USDC position at 1x or a larger position if you use leverage."
+          }
+        },
+        {
+          "id": "leverage",
+          "title": "Leverage: multiplying exposure",
+          "summary": "Leverage increases your position size using the same margin.",
+          "duration": "5 min",
+          "level": "Risk",
+          "takeaways": [
+            "5x with 100 USDC creates roughly 500 USDC of exposure.",
+            "If the market moves 2%, your 5x position moves like roughly 10% on your margin.",
+            "Leverage does not increase your chance of being right; it only amplifies the result."
+          ],
+          "example": {
+            "label": "Quick formula",
+            "value": "$100 × 5x = $500",
+            "note": "A favorable move adds up faster. An unfavorable move also subtracts faster."
+          }
+        },
+        {
+          "id": "long-short",
+          "title": "Long and short",
+          "summary": "Long means betting it goes up. Short means betting it goes down.",
+          "duration": "3 min",
+          "level": "Basics",
+          "takeaways": [
+            "You open long when you want to profit if price rises.",
+            "You open short when you want to profit if price falls.",
+            "In both cases you can lose if the market moves against you."
+          ],
+          "example": {
+            "label": "Direction",
+            "value": "Long +3% wins · Short +3% loses",
+            "note": "The same candle can be good or bad depending on your position direction."
+          }
+        },
+        {
+          "id": "liquidation",
+          "title": "Liquidation",
+          "summary": "Liquidation happens when your margin is no longer enough to cover a large loss.",
+          "duration": "5 min",
+          "level": "Risk",
+          "takeaways": [
+            "The higher the leverage, the closer the liquidation price gets.",
+            "A stop loss can close before liquidation, but it does not guarantee a perfect price.",
+            "Never use your entire balance as margin for one idea."
+          ],
+          "example": {
+            "label": "Mental rule",
+            "value": "10x ≈ 10% against you",
+            "note": "This is an approximation. The real price depends on market conditions, maintenance, fees, and funding."
+          }
+        },
+        {
+          "id": "orders",
+          "title": "Basic orders",
+          "summary": "Market enters fast. Limit waits for a price. Stop helps cut losses.",
+          "duration": "4 min",
+          "level": "Basics",
+          "takeaways": [
+            "Market prioritizes execution and can have slippage.",
+            "Limit prioritizes price, but may not fill.",
+            "Stop loss and take profit help define your exit before emotions take over."
+          ],
+          "example": {
+            "label": "Order",
+            "value": "Market = now · Limit = my price",
+            "note": "When starting out, understand which order you are sending before tapping the final button."
+          }
+        },
+        {
+          "id": "plan",
+          "title": "Your plan before the trade",
+          "summary": "A trade without a plan usually turns into hope. Define entry, exit, and max loss.",
+          "duration": "4 min",
+          "level": "Risk",
+          "takeaways": [
+            "Decide how much you can lose before opening the position.",
+            "Use small sizes while learning how a real position feels.",
+            "If you cannot explain the trade in one sentence, it is probably not ready."
+          ],
+          "example": {
+            "label": "Minimum plan",
+            "value": "Enter, invalidate, exit",
+            "note": "Entry: where you open. Invalidation: where you accept you were wrong. Exit: where you take profit or cut the loss."
+          }
+        }
+      ],
+      "checklist": {
+        "title": "Checklist before trading",
+        "items": [
+          "I know whether I am long or short.",
+          "I know how much margin I am risking.",
+          "I understand what my leverage does.",
+          "I have an exit point if it goes wrong.",
+          "I am not using money I need to live."
+        ]
+      },
+      "languageHint": {
+        "es": "Siguiente paso: podemos convertir estas lecciones en videos, quizzes o un modo demo sin dinero real.",
+        "en": "Next step: these lessons can become videos, quizzes, or a demo mode with no real money."
+      }
+    },
     "chooseUsername": {
       "title": "Choose your username",
       "subtitle": "This is how other traders will find you. You can change it later.",
@@ -1025,7 +1224,7 @@
       "limitPrice": "Limit price (USD)",
       "orderType": "Order type",
       "limitLabel": "Limit order",
-      "finePrint": "Trade processed by Rayo. Conversion uses the market price at confirmation time.",
+      "finePrint": "Trade processed by Delos. Conversion uses the market price at confirmation time.",
       "success": {
         "title": "Done.",
         "placedTitle": "Order placed.",
@@ -1170,8 +1369,9 @@
       },
       "help": {
         "tutorial": "Tutorial",
-        "center": "Help center",
-        "twitter": "Twitter",
+      "center": "Help center",
+      "academy": "Academy",
+      "twitter": "Twitter",
         "feedback": "Suggest a feature"
       },
       "logout": "Sign out",
@@ -1208,12 +1408,12 @@
       "approve": "Enable One-Click",
       "waiting": "Waiting for signature...",
       "active": "One-Click Enabled",
-      "preSignNote": "You're approving Rayo to execute trades on your behalf without confirming each one."
+      "preSignNote": "You're approving Delos to execute trades on your behalf without confirming each one."
     },
     "fee": {
       "title": "Protocol Permissions",
       "description": "Grant necessary permissions to interact with the Hyperliquid protocol.",
-      "longDescription": "A tiny {{fee}} bps fee on trades helps support Rayo development.",
+      "longDescription": "A tiny {{fee}} bps fee on trades helps support Delos development.",
       "approve": "Approve Fee",
       "skip": "Skip for now",
       "waiting": "Waiting for signature...",
@@ -1242,7 +1442,7 @@
   "trollbox": {
     "title": "Trollbox",
     "usersOnline": "{{count}} users",
-    "onlyTraders": "Only Rayo traders can send messages",
+    "onlyTraders": "Only Delos traders can send messages",
     "newMessages": "New messages",
     "initializingProfile": "⏳ Initializing profile...",
     "connectWalletChat": "🔒 Sign in to join the chat"

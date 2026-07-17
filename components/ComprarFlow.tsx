@@ -102,7 +102,7 @@ export default function ComprarFlow({ onOpenAdvanced, onDeposit, onClose }: Comp
     const methods: PaymentMethod[] = [
         {
             id: 'usdc',
-            name: 'USDC en Rayo',
+            name: 'USDC en Delos',
             sub: `Disponible · ${formatCurrency(availableUsd, 2)}`,
             fee: '$0',
             feeFree: true,
@@ -545,7 +545,7 @@ function StepAmount({
                                 borderRadius: 11,
                                 border: 'none',
                                 background: on ? 'var(--color-brand-primary)' : 'transparent',
-                                color: on ? '#1A1304' : 'var(--color-text-secondary)',
+                                color: on ? '#1C1608' : 'var(--color-text-secondary)',
                                 cursor: 'pointer',
                                 fontFamily: 'inherit',
                                 display: 'flex',
@@ -645,7 +645,7 @@ function StepAmount({
                         padding: '12px 14px',
                         borderRadius: 14,
                         background: 'rgba(255,255,255,0.025)',
-                        border: '1px solid rgba(250,204,21,0.18)',
+                        border: '1px solid rgba(227,179,76,0.18)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -730,7 +730,7 @@ function StepAmount({
                         padding: '6px 14px',
                         borderRadius: 99,
                         border: '1px solid var(--color-brand-primary)',
-                        background: 'rgba(250,204,21,0.12)',
+                        background: 'rgba(227,179,76,0.12)',
                         color: 'var(--color-brand-primary)',
                         fontSize: 12,
                         fontWeight: 700,
@@ -788,10 +788,10 @@ function StepAmount({
                         padding: '16px',
                         borderRadius: 14,
                         background: valid
-                            ? 'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)'
+                            ? 'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)'
                             : 'rgba(255,255,255,0.04)',
                         border: 'none',
-                        color: valid ? '#1A1304' : 'rgba(255,255,255,0.3)',
+                        color: valid ? '#1C1608' : 'rgba(255,255,255,0.3)',
                         fontWeight: 800,
                         fontSize: 14,
                         cursor: valid ? 'pointer' : 'not-allowed',
@@ -874,8 +874,8 @@ function StepMethod({
                     width: '100%',
                     padding: 14,
                     borderRadius: 14,
-                    background: 'rgba(250,204,21,0.06)',
-                    border: '1px solid rgba(250,204,21,0.18)',
+                    background: 'rgba(227,179,76,0.06)',
+                    border: '1px solid rgba(227,179,76,0.18)',
                     color: '#fff',
                     cursor: 'pointer',
                     display: 'flex',
@@ -938,7 +938,7 @@ function StepMethod({
                                 padding: 14,
                                 borderRadius: 14,
                                 background: active
-                                    ? 'rgba(250,204,21,0.08)'
+                                    ? 'rgba(227,179,76,0.08)'
                                     : 'rgba(255,255,255,0.025)',
                                 border: active
                                     ? '1px solid var(--color-brand-primary)'
@@ -956,8 +956,8 @@ function StepMethod({
                                     width: 38,
                                     height: 38,
                                     borderRadius: 12,
-                                    background: 'rgba(250,204,21,0.12)',
-                                    border: '1px solid rgba(250,204,21,0.22)',
+                                    background: 'rgba(227,179,76,0.12)',
+                                    border: '1px solid rgba(227,179,76,0.22)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
@@ -1022,9 +1022,9 @@ function StepMethod({
                         padding: 16,
                         borderRadius: 14,
                         background:
-                            'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                            'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                         border: 'none',
-                        color: '#1A1304',
+                        color: '#1C1608',
                         fontWeight: 800,
                         fontSize: 14,
                         cursor: 'pointer',
@@ -1210,9 +1210,9 @@ function StepReview({
                         borderRadius: 14,
                         background: submitting
                             ? 'rgba(255,255,255,0.05)'
-                            : 'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                            : 'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                         border: 'none',
-                        color: submitting ? 'rgba(255,255,255,0.5)' : '#1A1304',
+                        color: submitting ? 'rgba(255,255,255,0.5)' : '#1C1608',
                         fontWeight: 800,
                         fontSize: 14,
                         cursor: submitting ? 'wait' : 'pointer',
@@ -1483,9 +1483,9 @@ function SuccessView({
                         padding: '14px',
                         borderRadius: 14,
                         background:
-                            'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                            'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                         border: 'none',
-                        color: '#1A1304',
+                        color: '#1C1608',
                         fontWeight: 800,
                         fontSize: 13,
                         cursor: 'pointer',
@@ -1614,9 +1614,9 @@ function ErrorView({
                         padding: '14px',
                         borderRadius: 14,
                         background:
-                            'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)',
+                            'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)',
                         border: 'none',
-                        color: '#1A1304',
+                        color: '#1C1608',
                         fontWeight: 800,
                         fontSize: 13,
                         cursor: 'pointer',

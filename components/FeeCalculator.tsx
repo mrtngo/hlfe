@@ -77,10 +77,10 @@ export default function FeeCalculator() {
         // Fee: ~0.025% (Taker) + Builder Fee (e.g. 0.01%)?
         // Let's be conservative and say 0.1% total to cover everything.
         // Actually Hyperliquid is insanely cheap. 2.5bps = 0.025%.
-        // Let's use 0.05% (0.0005) as a "Realistic" fee for Rayo comparison.
+        // Let's use 0.05% (0.0005) as a "Realistic" fee for Delos comparison.
         const rayoCost = amount * 0.0005; // 0.05%
         results.push({
-            name: 'Rayo',
+            name: 'Delos',
             cost: rayoCost,
             notes: ['Tarifa Protocolo ~0.05%', 'Sin cobro por dividendos'],
             color: '#FFFF00', // Neon Yellow
@@ -92,11 +92,11 @@ export default function FeeCalculator() {
     }, [amount, strategy]);
 
     const recommendation = useMemo(() => {
-        if (strategy === 'usa') return 'Tyba ofrece acceso directo, pero Rayo es 30x más barato.';
-        if (strategy === 'dividends') return 'Bancolombia evita cobros en dividendos, pero Rayo tiene comisiones de operación cercanas a cero.';
-        if (amount < 6600000) return 'Para montos bajos, Trii suele ser la opción local. Rayo sigue siendo más barato.';
-        if (amount > 8000000) return 'Para montos altos, Bancolombia mejora, pero Rayo sigue siendo imbatible.';
-        return 'Rayo es la opción más eficiente matemáticamente.';
+        if (strategy === 'usa') return 'Tyba ofrece acceso directo, pero Delos es 30x más barato.';
+        if (strategy === 'dividends') return 'Bancolombia evita cobros en dividendos, pero Delos tiene comisiones de operación cercanas a cero.';
+        if (amount < 6600000) return 'Para montos bajos, Trii suele ser la opción local. Delos sigue siendo más barato.';
+        if (amount > 8000000) return 'Para montos altos, Bancolombia mejora, pero Delos sigue siendo imbatible.';
+        return 'Delos es la opción más eficiente matemáticamente.';
     }, [amount, strategy]);
 
     return (
@@ -107,7 +107,7 @@ export default function FeeCalculator() {
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-white">Calculadora de Tarifas</h2>
-                    <p className="text-sm text-coffee-medium">Compara Rayo vs Mercado Colombiano</p>
+                    <p className="text-sm text-coffee-medium">Compara Delos vs Mercado Colombiano</p>
                 </div>
             </div>
 
@@ -223,7 +223,7 @@ export default function FeeCalculator() {
             </div>
 
             <p className="text-[10px] text-coffee-medium text-center">
-                *Tarifas oficiales 2025 (Incluye IVA). Rayo opera con tarifas DeFi variables, estimado 0.05%.
+                *Tarifas oficiales 2025 (Incluye IVA). Delos opera con tarifas DeFi variables, estimado 0.05%.
             </p>
         </div>
     );

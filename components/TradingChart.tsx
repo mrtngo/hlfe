@@ -10,7 +10,7 @@ import { BarChart3, Maximize2 } from 'lucide-react';
 import { colors } from '@/rayo-design-system/styles/tokens';
 
 // Design System Colors
-const CHART_BRAND = colors.brand.primary;      // #FACC15 - Brand yellow
+const CHART_BRAND = colors.brand.primary;      // #E3B34C - Brand yellow
 const CHART_POSITIVE = colors.positive;        // #22C55E - Green for entries
 const CHART_NEGATIVE = colors.negative;        // #EF4444 - Red for liquidations
 const CHART_LIMIT_ORDER = '#A855F7';           // Purple for limit orders
@@ -231,7 +231,7 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                             margin={{ top: 10, right: 0, left: 0, bottom: 10 }}
                         >
                             <defs>
-                                {/* Rayo Yellow gradient for area fill */}
+                                {/* Delos Yellow gradient for area fill */}
                                 <linearGradient id="fillRayo" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor={CHART_BRAND} stopOpacity={0.3} />
                                     <stop offset="95%" stopColor={CHART_BRAND} stopOpacity={0} />
@@ -244,14 +244,14 @@ export default function TradingChart({ symbol }: TradingChartProps = {}) {
                                 content={<TradingChartTooltip formatCurrency={formatCurrency} />}
                                 cursor={{ stroke: CHART_BRAND, strokeWidth: 1, strokeDasharray: '5 5' }}
                             />
-                            {/* Area fill with Rayo Yellow gradient */}
+                            {/* Area fill with Delos Yellow gradient */}
                             <Area
                                 type="monotone"
                                 dataKey="price"
                                 fill="url(#fillRayo)"
                                 stroke="none"
                             />
-                            {/* Main price line - Rayo Yellow */}
+                            {/* Main price line - Delos Yellow */}
                             <Line
                                 type="monotone"
                                 dataKey="price"

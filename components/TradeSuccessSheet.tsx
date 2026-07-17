@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { MarketLogo, Icon, V2 } from '@/components/V2Kit';
+import { MarketLogo, Icon, V2, DelosSun } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
 interface TradeSuccessSheetProps {
@@ -48,11 +48,7 @@ const BOLTS = [
 ];
 
 function Bolt({ size }: { size: number }) {
-    return (
-        <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={V2.accent} stroke={V2.accent} />
-        </svg>
-    );
+    return <DelosSun size={size} color={V2.accent} />;
 }
 
 export default function TradeSuccessSheet({
@@ -96,7 +92,7 @@ export default function TradeSuccessSheet({
                 style={{
                     position: 'absolute', top: 300, left: '50%', width: 460, height: 460,
                     transform: 'translate(-50%,-50%)',
-                    background: 'radial-gradient(circle, rgba(250,204,21,0.22) 0%, rgba(250,204,21,0.06) 38%, transparent 66%)',
+                    background: 'radial-gradient(circle, rgba(227,179,76,0.22) 0%, rgba(227,179,76,0.06) 38%, transparent 66%)',
                     animation: 'v2-burst 700ms ease-out both', pointerEvents: 'none',
                 }}
             />
@@ -110,7 +106,7 @@ export default function TradeSuccessSheet({
                         position: 'absolute', left: `${b.l}%`, top: `${b.t}%`,
                         ['--r' as string]: `${b.r}deg`,
                         animation: `v2-boltflash 1700ms ease-out ${b.d}s infinite`,
-                        pointerEvents: 'none', filter: 'drop-shadow(0 0 10px rgba(250,204,21,0.6))',
+                        pointerEvents: 'none', filter: 'drop-shadow(0 0 10px rgba(227,179,76,0.6))',
                     } as React.CSSProperties}
                 >
                     <Bolt size={b.s} />
@@ -167,7 +163,7 @@ export default function TradeSuccessSheet({
                         width: '100%', padding: 18, borderRadius: 18, border: 'none', cursor: 'pointer', fontFamily: V2.ui,
                         background: V2.accent, color: V2.accentInk, fontWeight: 800, fontSize: 16, letterSpacing: '-0.01em',
                         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                        boxShadow: '0 14px 32px -8px rgba(250,204,21,0.5)',
+                        boxShadow: '0 14px 32px -8px rgba(227,179,76,0.5)',
                     }}
                 >
                     {ctaLabel || 'Listo'}

@@ -148,10 +148,10 @@ export default function TokenCandleChart({
                                 padding: '7px 0',
                                 borderRadius: 8,
                                 border: active
-                                    ? '1px solid rgba(250,204,21,0.4)'
+                                    ? '1px solid rgba(227,179,76,0.4)'
                                     : '1px solid transparent',
                                 background: active
-                                    ? 'rgba(250,204,21,0.1)'
+                                    ? 'rgba(227,179,76,0.1)'
                                     : 'rgba(255,255,255,0.02)',
                                 color: active
                                     ? 'var(--color-brand-primary)'

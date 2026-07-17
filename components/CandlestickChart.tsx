@@ -15,7 +15,7 @@ import { useCandleData, type Timeframe } from '@/hooks/useCandleData';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { logger } from '@/lib/logger';
 
-// Rayo theme colors
+// Delos theme colors
 const RAYO_YELLOW = '#FFD60A';
 const BULLISH = '#00C853';
 const BEARISH = '#FF3D00';

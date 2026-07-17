@@ -388,7 +388,7 @@ function NormalMode({
                         onClick={() => { haptic.light(); setShowTransfer(true); }}
                         style={{
                             width: '100%', marginTop: 16, padding: '13px 14px', borderRadius: 12,
-                            background: V2.accentSoft, border: '1px solid rgba(250,204,21,0.22)',
+                            background: V2.accentSoft, border: '1px solid rgba(227,179,76,0.22)',
                             color: V2.t1, fontFamily: V2.ui, cursor: 'pointer', textAlign: 'left',
                             display: 'flex', alignItems: 'center', gap: 10,
                         }}
@@ -491,7 +491,7 @@ function ProMode({
             className="atmosphere-grid"
             style={{ minHeight: '100%', color: '#fff', fontFamily: 'var(--font-jetbrains), ui-monospace, monospace', marginLeft: -16, marginRight: -16 }}
         >
-            <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid #1A1A1A', background: 'linear-gradient(180deg, rgba(250,204,21,0.04), transparent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+            <div style={{ padding: '12px 16px 10px', borderBottom: '1px solid #1A1A1A', background: 'linear-gradient(180deg, rgba(227,179,76,0.04), transparent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                 <button type="button" onClick={onBack} aria-label="Back" style={{ width: 28, height: 28, borderRadius: 6, border: '1px solid #27272A', background: 'transparent', color: 'rgba(255,255,255,0.7)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>‹</button>
                 <button type="button" onClick={onPickerOpen} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 6, border: '1px solid #27272A', background: 'rgba(255,255,255,0.015)', color: '#fff', cursor: 'pointer', fontFamily: 'inherit', flex: 1, minWidth: 0 }}>
                     <TokenLogo symbol={market.symbol} size={20} />
@@ -503,7 +503,7 @@ function ProMode({
             </div>
 
             <div style={{ padding: '8px 16px', display: 'flex', gap: 16, alignItems: 'baseline', borderBottom: '1px solid #1A1A1A', background: '#000', flexWrap: 'wrap' }}>
-                <div className="tabular-mono" style={{ fontSize: 20, fontWeight: 700, color: '#fff', textShadow: '0 0 24px rgba(250,204,21,0.18)' }}>${formatUsdPrice(market.price || 0, market)}</div>
+                <div className="tabular-mono" style={{ fontSize: 20, fontWeight: 700, color: '#fff', textShadow: '0 0 24px rgba(227,179,76,0.18)' }}>${formatUsdPrice(market.price || 0, market)}</div>
                 <div className="tabular-mono" style={{ fontSize: 12, color: cl, fontWeight: 700 }}>{up ? '+' : ''}{(market.change24h || 0).toFixed(2)}%</div>
                 <div className="tabular-mono" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>
                     VOL ${((market.volume24h || 0) / 1_000_000).toFixed(1)}M · OI ${((market.openInterest || 0) / 1_000_000).toFixed(1)}M · FUND {((market.fundingRate || 0) * 100).toFixed(3)}%

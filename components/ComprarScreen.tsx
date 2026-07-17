@@ -140,7 +140,7 @@ export default function ComprarScreen({ onOpenAdvanced, onDeposit }: ComprarScre
                 className="pointer-events-none fixed inset-0 -z-10"
                 style={{
                     background:
-                        'radial-gradient(70% 50% at 50% 0%, rgba(250,204,21,0.08) 0%, transparent 55%), radial-gradient(60% 40% at 100% 30%, rgba(124, 58, 237, 0.05) 0%, transparent 50%), radial-gradient(50% 40% at 0% 70%, rgba(34, 197, 94, 0.04) 0%, transparent 50%), #000',
+                        'radial-gradient(70% 50% at 50% 0%, rgba(227,179,76,0.08) 0%, transparent 55%), radial-gradient(60% 40% at 100% 30%, rgba(124, 58, 237, 0.05) 0%, transparent 50%), radial-gradient(50% 40% at 0% 70%, rgba(34, 197, 94, 0.04) 0%, transparent 50%), #000',
                 }}
             />
 
@@ -217,7 +217,7 @@ export default function ComprarScreen({ onOpenAdvanced, onDeposit }: ComprarScre
                                     <span
                                         className="absolute inset-0 rounded-full"
                                         style={{
-                                            boxShadow: '0 0 24px -4px rgba(250, 204, 21, 0.3)',
+                                            boxShadow: '0 0 24px -4px rgba(227, 179, 76, 0.3)',
                                             pointerEvents: 'none',
                                         }}
                                     />
@@ -363,9 +363,9 @@ export default function ComprarScreen({ onOpenAdvanced, onDeposit }: ComprarScre
                                         onClick={() => { setAmountUsd(String(v)); setError(''); }}
                                         className="py-2.5 rounded-xl text-[13px] tabular-mono font-bold border-none outline-none transition-colors"
                                         style={{
-                                            backgroundColor: active ? 'rgba(250, 204, 21, 0.14)' : 'rgba(255,255,255,0.04)',
+                                            backgroundColor: active ? 'rgba(227, 179, 76, 0.14)' : 'rgba(255,255,255,0.04)',
                                             color: active ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
-                                            border: active ? '1px solid rgba(250, 204, 21, 0.4)' : '1px solid rgba(255,255,255,0.05)',
+                                            border: active ? '1px solid rgba(227, 179, 76, 0.4)' : '1px solid rgba(255,255,255,0.05)',
                                         }}
                                     >
                                         ${v}
@@ -424,8 +424,8 @@ export default function ComprarScreen({ onOpenAdvanced, onDeposit }: ComprarScre
                         <div>
                             <div className="flex items-start gap-2 p-3 rounded-xl mb-3 text-sm"
                                 style={{
-                                    backgroundColor: 'rgba(250, 204, 21, 0.06)',
-                                    border: '1px solid rgba(250, 204, 21, 0.2)',
+                                    backgroundColor: 'rgba(227, 179, 76, 0.06)',
+                                    border: '1px solid rgba(227, 179, 76, 0.2)',
                                     color: 'var(--color-text-secondary)',
                                 }}>
                                 <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--color-brand-primary)' }} />
@@ -482,7 +482,7 @@ export default function ComprarScreen({ onOpenAdvanced, onDeposit }: ComprarScre
                                 className="w-full mt-3 py-3 px-4 flex items-center justify-center gap-2.5 rounded-2xl border-none outline-none"
                                 style={{
                                     backgroundColor: 'rgba(255,255,255,0.03)',
-                                    border: '1px dashed rgba(250, 204, 21, 0.35)',
+                                    border: '1px dashed rgba(227, 179, 76, 0.35)',
                                     color: 'var(--color-text-primary)',
                                 }}>
                                 <Repeat className="w-4 h-4" style={{ color: 'var(--color-brand-primary)' }} />

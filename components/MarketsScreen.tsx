@@ -87,8 +87,8 @@ function MarketsScreen({ onTokenClick, onBack }: MarketsScreenProps) {
                 <div
                     style={{
                         padding: '12px 16px 10px',
-                        borderBottom: '1px solid rgba(250,204,21,0.25)',
-                        background: 'linear-gradient(180deg, rgba(250,204,21,0.04), transparent)',
+                        borderBottom: '1px solid rgba(227,179,76,0.25)',
+                        background: 'linear-gradient(180deg, rgba(227,179,76,0.04), transparent)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-end',

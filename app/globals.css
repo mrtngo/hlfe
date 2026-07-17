@@ -54,8 +54,8 @@
   :root {
     /* Tailwind HSL color format (required for Tailwind's color utilities) */
     /* These reference the design system tokens above */
-    --background: 0 0% 0%;
-    /* var(--color-bg-primary) */
+    --background: 210 17% 5%;
+    /* var(--color-bg-primary) — cool marble-dark #0A0C0E */
     --foreground: 0 0% 100%;
     /* var(--color-text-primary) */
 
@@ -67,11 +67,11 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 100%;
 
-    /* Brand Yellow Primary - #FACC15 */
-    --primary: 43 96% 53%;
+    /* Brand Apollonian Gold - #E3B34C */
+    --primary: 41 73% 59%;
     /* var(--color-brand-primary) */
-    --primary-foreground: 0 0% 0%;
-    /* var(--color-text-on-brand) */
+    --primary-foreground: 42 56% 7%;
+    /* var(--color-text-on-brand) #1C1608 */
 
     /* Secondary - Dark surfaces */
     --secondary: 0 0% 10%;
@@ -89,7 +89,7 @@
 
     --border: 0 0% 15%;
     --input: 0 0% 10%;
-    --ring: 43 96% 53%;
+    --ring: 41 73% 59%;
     /* var(--color-brand-primary) */
 
     --radius: 1rem;
@@ -195,7 +195,7 @@ body {
   overflow-y: auto;
   /* Ensure vertical scrolling is enabled */
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #000000;
+  background: #0A0C0E;
   color: #FFFFFF;
 }
 
@@ -206,7 +206,7 @@ html {
 
 body {
   min-height: 100vh;
-  background: #000000;
+  background: #0A0C0E;
   color: #FFFFFF;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -668,8 +668,8 @@ h6 {
   overflow: hidden;
   transition: all 0.3s ease;
   box-shadow:
-    0 4px 15px rgba(250, 204, 21, 0.3),
-    0 0 0 1px rgba(250, 204, 21, 0.1);
+    0 4px 15px rgba(227, 179, 76, 0.3),
+    0 0 0 1px rgba(227, 179, 76, 0.1);
 }
 
 .btn-premium::after {
@@ -688,8 +688,8 @@ h6 {
 .btn-premium:hover {
   transform: scale(1.02);
   box-shadow:
-    0 8px 25px rgba(250, 204, 21, 0.5),
-    0 0 0 2px rgba(250, 204, 21, 0.2);
+    0 8px 25px rgba(227, 179, 76, 0.5),
+    0 0 0 2px rgba(227, 179, 76, 0.2);
 }
 
 .btn-premium:hover::after {
@@ -703,9 +703,9 @@ h6 {
 .mesh-gradient-header {
   background-color: #000;
   background-image:
-    radial-gradient(at 0% 0%, rgba(250, 204, 21, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, rgba(227, 179, 76, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(200, 204, 21, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(250, 204, 21, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(227, 179, 76, 0.1) 0px, transparent 50%),
     radial-gradient(at 0% 100%, rgba(100, 100, 255, 0.05) 0px, transparent 50%);
 }
 /* ============================================================
@@ -723,7 +723,7 @@ h6 {
   --shadow-fintech-sm: 0 1px 2px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
   --shadow-fintech-md: 0 8px 24px -8px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
   --shadow-fintech-lg: 0 24px 60px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.05);
-  --shadow-brand-glow: 0 0 40px -8px rgba(250, 204, 21, 0.45), 0 8px 24px -8px rgba(250, 204, 21, 0.25);
+  --shadow-brand-glow: 0 0 40px -8px rgba(227, 179, 76, 0.45), 0 8px 24px -8px rgba(227, 179, 76, 0.25);
   --shadow-inset-hairline: inset 0 1px 0 0 rgba(255,255,255,0.06);
 }
 
@@ -753,9 +753,9 @@ h6 {
 .atmosphere-black {
   background-color: #000;
   background-image:
-    radial-gradient(80% 60% at 50% 0%, rgba(250, 204, 21, 0.04) 0%, transparent 60%),
+    radial-gradient(80% 60% at 50% 0%, rgba(227, 179, 76, 0.04) 0%, transparent 60%),
     radial-gradient(60% 50% at 100% 100%, rgba(70, 70, 90, 0.06) 0%, transparent 60%),
-    radial-gradient(50% 40% at 0% 70%, rgba(250, 204, 21, 0.03) 0%, transparent 60%);
+    radial-gradient(50% 40% at 0% 70%, rgba(227, 179, 76, 0.03) 0%, transparent 60%);
 }
 
 /* Grain texture overlay — SVG noise, multiply-blends with surfaces */
@@ -795,13 +795,13 @@ h6 {
 /* Brand CTA — gradient yellow w/ subtle highlight & glow */
 .cta-brand {
   background:
-    linear-gradient(180deg, #FEE082 0%, #FACC15 45%, #E8B713 100%);
-  color: #1A1304;
+    linear-gradient(180deg, #F2D389 0%, #E3B34C 45%, #C8952E 100%);
+  color: #1C1608;
   box-shadow:
     0 1px 0 0 rgba(255,255,255,0.4) inset,
     0 -1px 0 0 rgba(0,0,0,0.15) inset,
-    0 10px 32px -8px rgba(250, 204, 21, 0.45),
-    0 4px 12px -4px rgba(250, 204, 21, 0.2);
+    0 10px 32px -8px rgba(227, 179, 76, 0.45),
+    0 4px 12px -4px rgba(227, 179, 76, 0.2);
   border: none;
   transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease;
 }
@@ -810,8 +810,8 @@ h6 {
   box-shadow:
     0 1px 0 0 rgba(255,255,255,0.45) inset,
     0 -1px 0 0 rgba(0,0,0,0.15) inset,
-    0 14px 40px -8px rgba(250, 204, 21, 0.55),
-    0 6px 16px -4px rgba(250, 204, 21, 0.28);
+    0 14px 40px -8px rgba(227, 179, 76, 0.55),
+    0 6px 16px -4px rgba(227, 179, 76, 0.28);
 }
 .cta-brand:active {
   transform: translateY(0) scale(0.985);
@@ -819,7 +819,7 @@ h6 {
 
 /* Yellow halo ring for active/selected states */
 .ring-brand-soft {
-  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.4), 0 0 0 4px rgba(250, 204, 21, 0.12);
+  box-shadow: 0 0 0 1px rgba(227, 179, 76, 0.4), 0 0 0 4px rgba(227, 179, 76, 0.12);
 }
 
 /* Hairline divider that picks up the surface highlight */
@@ -929,20 +929,20 @@ h6 {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #FACC15;
+  background: #E3B34C;
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+  box-shadow: 0 0 12px rgba(227, 179, 76, 0.5);
   margin-top: -6px;
 }
 .leverage-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #FACC15;
+  background: #E3B34C;
   cursor: pointer;
   border: none;
-  box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+  box-shadow: 0 0 12px rgba(227, 179, 76, 0.5);
 }
 .leverage-slider::-webkit-slider-runnable-track {
   height: 4px;
@@ -973,26 +973,29 @@ h6 {
 }
 
 /* ==========================================================================
-   RAYO V2 — "Serious redesign"
-   Cooler near-black, Hanken Grotesk, brand-yellow accent. Tokens mirror
-   components/V2Kit.tsx (V2 const) so CSS and inline styles stay in sync.
+   DELOS V2 — "Serious redesign"
+   Cool marble-dark, Hanken Grotesk, Apollonian gold accent, Cormorant serif
+   wordmark. Tokens mirror components/V2Kit.tsx (V2 const) so CSS and inline
+   styles stay in sync.
    ========================================================================== */
 :root {
   --v2-bg: #0A0C0E;
-  --v2-bg-glow: radial-gradient(120% 60% at 50% -10%, rgba(250, 204, 21, 0.06) 0%, transparent 55%);
+  --v2-bg-glow: radial-gradient(120% 60% at 50% -10%, rgba(227, 179, 76, 0.06) 0%, transparent 55%);
   --v2-card: rgba(255, 255, 255, 0.025);
   --v2-card-solid: #111417;
   --v2-hair: rgba(255, 255, 255, 0.07);
   --v2-hair2: rgba(255, 255, 255, 0.12);
   --v2-pos: #22C55E;
   --v2-neg: #EF4444;
-  --v2-accent: #FACC15;
-  --v2-accent-soft: rgba(250, 204, 21, 0.13);
+  --v2-accent: #E3B34C;
+  --v2-accent-soft: rgba(227, 179, 76, 0.13);
+  --v2-accent-ink: #1C1608;
   --v2-t1: #FFFFFF;
   --v2-t2: rgba(255, 255, 255, 0.62);
   --v2-t3: rgba(255, 255, 255, 0.40);
   --v2-font-ui: "Hanken Grotesk Variable", -apple-system, system-ui, sans-serif;
   --v2-font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --v2-font-serif: "Cormorant Garamond Variable", "Cormorant Garamond", Georgia, serif;
 }
 
 /* Root surface for the redesigned app shell */
@@ -1066,8 +1069,10 @@ h6 {
 }
 
 .dt-brand-title {
-  font-size: var(--text-lg);
-  font-weight: 900;
+  font-family: var(--v2-font-serif);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: 0.04em;
   line-height: 1;
 }
 

@@ -53,7 +53,7 @@ export default function AdvancedMenu({
                 className="pointer-events-none fixed inset-0 -z-10"
                 style={{
                     background:
-                        'radial-gradient(70% 50% at 0% 0%, rgba(250,204,21,0.06) 0%, transparent 55%), radial-gradient(60% 40% at 100% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 50%), radial-gradient(50% 40% at 0% 70%, rgba(239, 68, 68, 0.04) 0%, transparent 50%), #000',
+                        'radial-gradient(70% 50% at 0% 0%, rgba(227,179,76,0.06) 0%, transparent 55%), radial-gradient(60% 40% at 100% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 50%), radial-gradient(50% 40% at 0% 70%, rgba(239, 68, 68, 0.04) 0%, transparent 50%), #000',
                 }}
             />
 
@@ -129,7 +129,7 @@ export default function AdvancedMenu({
                             position: 'absolute',
                             inset: 0,
                             pointerEvents: 'none',
-                            background: 'radial-gradient(70% 50% at 100% 0%, rgba(250,204,21,0.08) 0%, transparent 55%)',
+                            background: 'radial-gradient(70% 50% at 100% 0%, rgba(227,179,76,0.08) 0%, transparent 55%)',
                         }}
                     />
 
@@ -139,8 +139,8 @@ export default function AdvancedMenu({
                                 <div
                                     className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                                     style={{
-                                        backgroundColor: 'rgba(250, 204, 21, 0.1)',
-                                        border: '1px solid rgba(250, 204, 21, 0.25)',
+                                        backgroundColor: 'rgba(227, 179, 76, 0.1)',
+                                        border: '1px solid rgba(227, 179, 76, 0.25)',
                                         color: 'var(--color-brand-primary)',
                                     }}
                                 >
@@ -242,7 +242,7 @@ export default function AdvancedMenu({
                                 inset: 0,
                                 pointerEvents: 'none',
                                 background:
-                                    'radial-gradient(70% 50% at 100% 0%, rgba(250,204,21,0.08) 0%, transparent 55%)',
+                                    'radial-gradient(70% 50% at 100% 0%, rgba(227,179,76,0.08) 0%, transparent 55%)',
                             }}
                         />
                         <div className="relative p-5">
@@ -251,8 +251,8 @@ export default function AdvancedMenu({
                                     <div
                                         className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                                         style={{
-                                            backgroundColor: 'rgba(250,204,21,0.1)',
-                                            border: '1px solid rgba(250,204,21,0.25)',
+                                            backgroundColor: 'rgba(227,179,76,0.1)',
+                                            border: '1px solid rgba(227,179,76,0.25)',
                                             color: 'var(--color-brand-primary)',
                                         }}
                                     >
@@ -576,7 +576,7 @@ export default function AdvancedMenu({
                                             height: p.height,
                                             background:
                                                 i === 1
-                                                    ? 'linear-gradient(180deg, var(--color-brand-primary) 0%, rgba(250, 204, 21, 0.4) 100%)'
+                                                    ? 'linear-gradient(180deg, var(--color-brand-primary) 0%, rgba(227, 179, 76, 0.4) 100%)'
                                                     : 'linear-gradient(180deg, rgba(34, 197, 94, 0.6) 0%, rgba(34, 197, 94, 0.15) 100%)',
                                         }}
                                     />
@@ -611,8 +611,8 @@ export default function AdvancedMenu({
                             <div
                                 className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                                 style={{
-                                    backgroundColor: 'rgba(250,204,21,0.1)',
-                                    border: '1px solid rgba(250,204,21,0.22)',
+                                    backgroundColor: 'rgba(227,179,76,0.1)',
+                                    border: '1px solid rgba(227,179,76,0.22)',
                                     color: 'var(--color-brand-primary)',
                                 }}
                             >

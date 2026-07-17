@@ -349,7 +349,7 @@ export default function Settings() {
                     </div>
                 )}
 
-                {/* Builder Fee - Rayo Trading Fees */}
+                {/* Builder Fee - Delos Trading Fees */}
                 {address && BUILDER_CONFIG.enabled && (
                     <div className="bg-bg-secondary border border-white/10 rounded-xl p-4">
                         <div className="space-y-3">

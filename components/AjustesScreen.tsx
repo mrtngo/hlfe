@@ -47,9 +47,11 @@ interface AjustesScreenProps {
     onBack?: () => void;
     /** Replay the animated onboarding tutorial. */
     onReplayTutorial?: () => void;
+    /** Open the in-app education hub. */
+    onOpenAcademy?: () => void;
 }
 
-export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScreenProps) {
+export default function AjustesScreen({ onBack, onReplayTutorial, onOpenAcademy }: AjustesScreenProps) {
     const { t, language, setLanguage } = useLanguage();
     const { currency, toggleCurrency } = useCurrency();
     const { logout, user: privyUser, exportWallet, getAccessToken } = usePrivy();
@@ -288,6 +290,7 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
 
                 {/* ayuda */}
                 <SettingGroup label={t.screens.ajustes.section.help}>
+                    <Row icon={BookOpen} label={t.screens.ajustes.help.academy} right={<ChevronIcon />} onClick={onOpenAcademy} />
                     <Row icon={LifeBuoy} label={t.screens.ajustes.help.tutorial} right={<ChevronIcon />} onClick={onReplayTutorial} />
                     <Row icon={HelpCircle} label={t.screens.ajustes.help.center} right={<ChevronIcon />} />
                     <Row icon={Twitter} label={t.screens.ajustes.help.twitter} right={<ChevronIcon />} />
@@ -311,7 +314,7 @@ export default function AjustesScreen({ onBack, onReplayTutorial }: AjustesScree
                     <Row
                         icon={FileText}
                         label={exportingTax ? (es ? 'Armando ZIP…' : 'Building ZIP…') : (es ? 'Exportar historial para impuestos' : 'Export tax history')}
-                        sub={es ? 'CSV + JSON de Rayo, Hyperliquid y movimientos' : 'CSV + JSON for Rayo, Hyperliquid and movements'}
+                        sub={es ? 'CSV + JSON de Delos, Hyperliquid y movimientos' : 'CSV + JSON for Delos, Hyperliquid and movements'}
                         onClick={exportingTax ? undefined : handleExportTaxHistory}
                         right={<ChevronIcon />}
                     />

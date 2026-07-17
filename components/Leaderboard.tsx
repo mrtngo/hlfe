@@ -104,7 +104,7 @@ export default function Leaderboard({ onSelectTrader, onOpenSearch }: Leaderboar
                                 ? '1px solid var(--color-brand-primary)'
                                 : '1px solid rgba(255,255,255,0.08)',
                             background: period === p
-                                ? 'rgba(250,204,21,0.12)'
+                                ? 'rgba(227,179,76,0.12)'
                                 : 'rgba(255,255,255,0.02)',
                             color: period === p ? 'var(--color-brand-primary)' : 'var(--color-text-secondary)',
                             fontSize: 11,
@@ -152,7 +152,7 @@ export default function Leaderboard({ onSelectTrader, onOpenSearch }: Leaderboar
                                 const podiumHeight = heights[Math.min(idx, 2)];
                                 const medal = idx === 0 ? '👑' : idx === 1 ? '🥈' : '🥉';
                                 const color = idx === 0
-                                    ? '#FACC15'
+                                    ? '#E3B34C'
                                     : idx === 1
                                     ? '#D1D5DB'
                                     : '#D97706';
@@ -184,8 +184,8 @@ export default function Leaderboard({ onSelectTrader, onOpenSearch }: Leaderboar
                                     padding: 16,
                                     borderRadius: 18,
                                     background:
-                                        'linear-gradient(160deg, rgba(250,204,21,0.08), rgba(250,204,21,0.02))',
-                                    border: '1px solid rgba(250,204,21,0.22)',
+                                        'linear-gradient(160deg, rgba(227,179,76,0.08), rgba(227,179,76,0.02))',
+                                    border: '1px solid rgba(227,179,76,0.22)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: 14,
@@ -263,7 +263,7 @@ export default function Leaderboard({ onSelectTrader, onOpenSearch }: Leaderboar
                                                 borderBottom:
                                                     '1px solid rgba(255,255,255,0.06)',
                                                 background: isMe
-                                                    ? 'linear-gradient(90deg, rgba(250,204,21,0.05), transparent 70%)'
+                                                    ? 'linear-gradient(90deg, rgba(227,179,76,0.05), transparent 70%)'
                                                     : 'transparent',
                                                 paddingLeft: isMe ? 8 : 0,
                                                 paddingRight: isMe ? 8 : 0,
@@ -318,7 +318,7 @@ export default function Leaderboard({ onSelectTrader, onOpenSearch }: Leaderboar
                                                                 fontWeight: 800,
                                                                 letterSpacing: '0.08em',
                                                                 background:
-                                                                    'rgba(250,204,21,0.18)',
+                                                                    'rgba(227,179,76,0.18)',
                                                                 color: 'var(--color-brand-primary)',
                                                             }}
                                                         >
@@ -461,8 +461,8 @@ function Avatar({ name, size }: { name: string; size: number }) {
                 width: size,
                 height: size,
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #FEE082, #E8B713)',
-                color: '#1A1304',
+                background: 'linear-gradient(135deg, #F2D389, #C8952E)',
+                color: '#1C1608',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

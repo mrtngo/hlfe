@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Soporte · Rayo',
-    description: '¿Necesitas ayuda con Rayo? Contáctanos y revisa las preguntas frecuentes.',
+    title: 'Soporte · Delos',
+    description: '¿Necesitas ayuda con Delos? Contáctanos y revisa las preguntas frecuentes.',
 };
 
 const page: React.CSSProperties = {
@@ -38,10 +38,10 @@ export default function SoportePage() {
     return (
         <main style={page}>
             <div style={wrap}>
-                <Link href="/" style={brand}>Rayo</Link>
+                <Link href="/" style={brand}>Delos</Link>
 
                 <h1 style={h1}>Soporte</h1>
-                <p style={lead}>¿Necesitas ayuda con Rayo? Estamos para ayudarte.</p>
+                <p style={lead}>¿Necesitas ayuda con Delos? Estamos para ayudarte.</p>
 
                 <div style={card}>
                     <h2 style={{ ...h2, marginTop: 0 }}>Contáctanos</h2>
@@ -54,15 +54,15 @@ export default function SoportePage() {
 
                 <h2 style={h2}>Preguntas frecuentes</h2>
 
-                <p style={q}>¿Qué es Rayo?</p>
+                <p style={q}>¿Qué es Delos?</p>
                 <p style={p}>
-                    Rayo es una app para comprar criptomonedas y operar mercados (cripto, acciones, índices y más)
+                    Delos es una app para comprar criptomonedas y operar mercados (cripto, acciones, índices y más)
                     de forma simple, en español y desde tu teléfono.
                 </p>
 
-                <p style={q}>¿Rayo guarda mi dinero?</p>
+                <p style={q}>¿Delos guarda mi dinero?</p>
                 <p style={p}>
-                    No. Rayo es no-custodial: tú mantienes el control de tu wallet y tus fondos en todo momento.
+                    No. Delos es no-custodial: tú mantienes el control de tu wallet y tus fondos en todo momento.
                 </p>
 
                 <p style={q}>¿Cómo empiezo?</p>
@@ -73,7 +73,7 @@ export default function SoportePage() {
                 <p style={q}>¿Cuáles son los riesgos?</p>
                 <p style={p}>
                     Operar con criptomonedas y productos apalancados implica riesgo y puedes perder tu dinero.
-                    Opera con responsabilidad. Rayo no ofrece asesoría financiera.
+                    Opera con responsabilidad. Delos no ofrece asesoría financiera.
                 </p>
 
                 <p style={q}>¿Cómo elimino mi cuenta o mis datos?</p>

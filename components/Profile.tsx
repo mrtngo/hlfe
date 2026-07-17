@@ -544,7 +544,7 @@ export default function Profile() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full py-4 rounded-xl bg-brand text-black font-extrabold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
-                    style={{ boxShadow: '0 0 20px rgba(250,204,21,0.1)' }}
+                    style={{ boxShadow: '0 0 20px rgba(227,179,76,0.1)' }}
                 >
                     <Book className="w-4 h-4" />
                     <span className="uppercase tracking-widest text-sm">{t.common.documentation}</span>

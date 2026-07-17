@@ -42,7 +42,7 @@ export default function MobileOnlyNotice() {
 
                 {/* Description */}
                 <p className="text-[#A0A0A0] text-lg leading-relaxed">
-                    Rayo is designed for mobile devices. For the best experience, please open this app on your phone or resize your browser window to a mobile width.
+                    Delos is designed for mobile devices. For the best experience, please open this app on your phone or resize your browser window to a mobile width.
                 </p>
 
                 {/* Device illustration */}

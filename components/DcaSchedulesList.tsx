@@ -43,15 +43,15 @@ export default function DcaSchedulesList({ compact = false }: DcaSchedulesListPr
                         inset: 0,
                         pointerEvents: 'none',
                         background:
-                            'radial-gradient(60% 50% at 50% 0%, rgba(250,204,21,0.04) 0%, transparent 60%)',
+                            'radial-gradient(60% 50% at 50% 0%, rgba(227,179,76,0.04) 0%, transparent 60%)',
                     }}
                 />
                 <div
                     className="relative w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
                     style={{
-                        backgroundColor: 'rgba(250, 204, 21, 0.06)',
-                        border: '1px solid rgba(250, 204, 21, 0.18)',
-                        boxShadow: '0 0 32px -8px rgba(250, 204, 21, 0.25)',
+                        backgroundColor: 'rgba(227, 179, 76, 0.06)',
+                        border: '1px solid rgba(227, 179, 76, 0.18)',
+                        boxShadow: '0 0 32px -8px rgba(227, 179, 76, 0.25)',
                     }}
                 >
                     <Calendar className="w-6 h-6" style={{ color: 'var(--color-brand-primary)' }} strokeWidth={1.5} />
@@ -111,7 +111,7 @@ export default function DcaSchedulesList({ compact = false }: DcaSchedulesListPr
                                     inset: 0,
                                     pointerEvents: 'none',
                                     background: isActive
-                                        ? 'radial-gradient(60% 100% at 0% 50%, rgba(250,204,21,0.05) 0%, transparent 55%)'
+                                        ? 'radial-gradient(60% 100% at 0% 50%, rgba(227,179,76,0.05) 0%, transparent 55%)'
                                         : 'none',
                                 }}
                             />
@@ -126,7 +126,7 @@ export default function DcaSchedulesList({ compact = false }: DcaSchedulesListPr
                                         bottom: 0,
                                         width: 3,
                                         background: 'linear-gradient(180deg, transparent 0%, var(--color-brand-primary) 30%, var(--color-brand-primary) 70%, transparent 100%)',
-                                        boxShadow: '2px 0 8px -2px rgba(250, 204, 21, 0.3)',
+                                        boxShadow: '2px 0 8px -2px rgba(227, 179, 76, 0.3)',
                                     }}
                                 />
                             )}
@@ -144,15 +144,15 @@ export default function DcaSchedulesList({ compact = false }: DcaSchedulesListPr
                                                     width: 16,
                                                     height: 16,
                                                     borderRadius: 9999,
-                                                    background: 'linear-gradient(135deg, #FEE082 0%, #FACC15 100%)',
+                                                    background: 'linear-gradient(135deg, #F2D389 0%, #E3B34C 100%)',
                                                     border: '2px solid var(--color-bg-primary)',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    boxShadow: '0 2px 8px -2px rgba(250, 204, 21, 0.5)',
+                                                    boxShadow: '0 2px 8px -2px rgba(227, 179, 76, 0.5)',
                                                 }}
                                             >
-                                                <Repeat className="w-2 h-2" style={{ color: '#1A1304' }} strokeWidth={3.5} />
+                                                <Repeat className="w-2 h-2" style={{ color: '#1C1608' }} strokeWidth={3.5} />
                                             </div>
                                         )}
                                     </div>

@@ -21,7 +21,7 @@ export default function ProToggle({ pro, onClick }: ProToggleProps) {
                     ? '1px solid var(--color-brand-primary)'
                     : '1px solid rgba(255,255,255,0.1)',
                 background: pro
-                    ? 'rgba(250,204,21,0.12)'
+                    ? 'rgba(227,179,76,0.12)'
                     : 'rgba(255,255,255,0.02)',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -54,7 +54,7 @@ export default function ProToggle({ pro, onClick }: ProToggleProps) {
                         width: 8,
                         height: 8,
                         borderRadius: '50%',
-                        background: pro ? '#1A1304' : '#71717A',
+                        background: pro ? '#1C1608' : '#71717A',
                         transition: 'left 180ms cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                 />

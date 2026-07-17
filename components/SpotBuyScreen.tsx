@@ -286,7 +286,7 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                                         padding: '9px 13px',
                                         borderRadius: 14,
                                         background: on
-                                            ? 'rgba(250,204,21,0.12)'
+                                            ? 'rgba(227,179,76,0.12)'
                                             : 'rgba(255,255,255,0.025)',
                                         border: on
                                             ? '1px solid var(--color-brand-primary)'
@@ -437,7 +437,7 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                             padding: '6px 14px',
                             borderRadius: 99,
                             border: '1px solid var(--color-brand-primary)',
-                            background: 'rgba(250,204,21,0.12)',
+                            background: 'rgba(227,179,76,0.12)',
                             color: 'var(--color-brand-primary)',
                             fontSize: 12,
                             fontWeight: 700,
@@ -508,10 +508,10 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                             padding: 16,
                             borderRadius: 14,
                             background: canSubmit
-                                ? 'linear-gradient(180deg, #FEE082 0%, #FACC15 50%, #E8B713 100%)'
+                                ? 'linear-gradient(180deg, #F2D389 0%, #E3B34C 50%, #C8952E 100%)'
                                 : 'rgba(255,255,255,0.04)',
                             border: 'none',
-                            color: canSubmit ? '#1A1304' : 'rgba(255,255,255,0.3)',
+                            color: canSubmit ? '#1C1608' : 'rgba(255,255,255,0.3)',
                             fontWeight: 800,
                             fontSize: 14,
                             cursor: canSubmit ? 'pointer' : 'not-allowed',

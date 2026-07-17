@@ -21,6 +21,7 @@ import {
     MarketLogo,
     Icon,
     V2,
+    DelosSun,
 } from '@/components/V2Kit';
 import { useOutcomePositions } from '@/hooks/useOutcomePositions';
 import OutcomePositionCard from '@/components/OutcomePositionCard';
@@ -157,7 +158,7 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                     </div>
                     <div>
                         <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, textTransform: 'capitalize' }}>{greet}</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>{firstName || 'Rayo'}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>{firstName || 'Delos'}</div>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -169,9 +170,7 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
 
             {/* Portfolio (no chart) */}
             <div style={{ padding: '24px 20px 0', position: 'relative' }}>
-                <svg width="116" height="150" viewBox="0 0 24 24" aria-hidden style={{ position: 'absolute', top: 4, right: 6, opacity: 0.05, pointerEvents: 'none' }}>
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={V2.accent} />
-                </svg>
+                <DelosSun size={130} color={V2.accent} style={{ position: 'absolute', top: 4, right: 6, opacity: 0.05, pointerEvents: 'none' }} />
                 <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, letterSpacing: '0.01em' }}>{t.homeRedesign.totalValue}</div>
                 <div style={{ marginTop: 8 }}><BigMoney value={portfolioValue} size={52} /></div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>

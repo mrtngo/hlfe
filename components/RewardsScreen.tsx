@@ -41,8 +41,8 @@ export default function RewardsScreen() {
         if (!link) return;
         haptic.light();
         const shareData = {
-            title: 'Rayo',
-            text: 'Invertí en cripto y acciones conmigo en Rayo. Usá mi link y empezá en segundos:',
+            title: 'Delos',
+            text: 'Invertí en cripto y acciones conmigo en Delos. Usá mi link y empezá en segundos:',
             url: link,
         };
         // Native share sheet when available (iOS/Android), else copy.
@@ -100,8 +100,8 @@ export default function RewardsScreen() {
                 <div
                     style={{
                         borderRadius: 22, padding: '24px 22px',
-                        background: 'linear-gradient(160deg, rgba(250,204,21,0.14), rgba(250,204,21,0.03))',
-                        border: '1px solid rgba(250,204,21,0.25)',
+                        background: 'linear-gradient(160deg, rgba(227,179,76,0.14), rgba(227,179,76,0.03))',
+                        border: '1px solid rgba(227,179,76,0.25)',
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>

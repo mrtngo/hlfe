@@ -175,12 +175,12 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                     border-radius: 10px;
                 }
                 .trollbox-messages::-webkit-scrollbar-thumb {
-                    background: linear-gradient(180deg, rgba(250, 204, 21, 0.6), rgba(250, 204, 21, 0.4));
+                    background: linear-gradient(180deg, rgba(227, 179, 76, 0.6), rgba(227, 179, 76, 0.4));
                     border-radius: 10px;
                     border: 2px solid rgba(0, 0, 0, 0.2);
                 }
                 .trollbox-messages::-webkit-scrollbar-thumb:hover {
-                    background: linear-gradient(180deg, rgba(250, 204, 21, 0.8), rgba(250, 204, 21, 0.6));
+                    background: linear-gradient(180deg, rgba(227, 179, 76, 0.8), rgba(227, 179, 76, 0.6));
                 }
             `}</style>
 
@@ -250,7 +250,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                     style={{
                         background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 50px)',
                         scrollbarWidth: 'thin',
-                        scrollbarColor: 'rgba(250, 204, 21, 0.5) rgba(0, 0, 0, 0.2)',
+                        scrollbarColor: 'rgba(227, 179, 76, 0.5) rgba(0, 0, 0, 0.2)',
                     }}
                 >
                     {isLoading ? (

@@ -120,7 +120,7 @@ export default function DesktopTerminal({
                 <div className="dt-brand">
                     <div className="dt-brand-mark">R</div>
                     <div>
-                        <div className="dt-brand-title">Rayo</div>
+                        <div className="dt-brand-title">Delos</div>
                         <div className="dt-brand-subtitle">Terminal</div>
                     </div>
                 </div>
