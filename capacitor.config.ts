@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'xyz.rayotrade.app',
-  appName: 'Rayo',
+  appName: 'Delos',
   webDir: 'out',
   // NOTE: `server.url` makes Capacitor load the app from a remote URL instead
   // of the bundled `out/` directory. Enable this ONLY for local development —

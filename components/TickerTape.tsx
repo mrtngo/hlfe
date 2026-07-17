@@ -26,7 +26,7 @@ export default function TickerTape({ onSymbolClick, count = 10 }: TickerTapeProp
             <div
                 style={{
                     height: 30,
-                    background: '#000',
+                    background: '#0A0C0E',
                     borderBottom: '1px solid #1A1A1A',
                 }}
             />
@@ -39,7 +39,7 @@ export default function TickerTape({ onSymbolClick, count = 10 }: TickerTapeProp
                 position: 'relative',
                 overflow: 'hidden',
                 borderBottom: '1px solid #1A1A1A',
-                background: '#000',
+                background: '#0A0C0E',
                 height: 30,
             }}
         >

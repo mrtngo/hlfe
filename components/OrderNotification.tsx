@@ -122,7 +122,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
             >
                 <div
                     style={{
-                        backgroundColor: '#000000',
+                        backgroundColor: '#0A0C0E',
                         border: '2px solid rgba(255, 255, 0, 0.3)',
                         borderRadius: '24px',
                         padding: '32px',

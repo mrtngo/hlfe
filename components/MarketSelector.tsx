@@ -30,7 +30,7 @@ export default function MarketSelector() {
                 onClick={() => setIsOpen(true)}
                 className="w-full p-4 mb-3 rounded-xl transition-all flex items-center justify-between gap-4"
                 style={{
-                    backgroundColor: '#000000',
+                    backgroundColor: '#0A0C0E',
                     border: 'none',
                     boxShadow: isOpen
                         ? '0 8px 24px rgba(0, 0, 0, 0.65), 0 0 12px rgba(255, 255, 0, 0.18)'

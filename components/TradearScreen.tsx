@@ -502,7 +502,7 @@ function ProMode({
                 <ProToggle pro={true} onClick={onToggleMode} />
             </div>
 
-            <div style={{ padding: '8px 16px', display: 'flex', gap: 16, alignItems: 'baseline', borderBottom: '1px solid #1A1A1A', background: '#000', flexWrap: 'wrap' }}>
+            <div style={{ padding: '8px 16px', display: 'flex', gap: 16, alignItems: 'baseline', borderBottom: '1px solid #1A1A1A', background: '#0A0C0E', flexWrap: 'wrap' }}>
                 <div className="tabular-mono" style={{ fontSize: 20, fontWeight: 700, color: '#fff', textShadow: '0 0 24px rgba(227,179,76,0.18)' }}>${formatUsdPrice(market.price || 0, market)}</div>
                 <div className="tabular-mono" style={{ fontSize: 12, color: cl, fontWeight: 700 }}>{up ? '+' : ''}{(market.change24h || 0).toFixed(2)}%</div>
                 <div className="tabular-mono" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>

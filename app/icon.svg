@@ -1,20 +1,11 @@
-<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#F2D389"/>
+      <stop offset="55%" stop-color="#E3B34C"/>
+      <stop offset="100%" stop-color="#C8952E"/>
+    </radialGradient>
   </defs>
-  <path 
-    d="M55 10L25 52H45L38 90L75 42H52L55 10Z" 
-    stroke="#FFFF00" 
-    stroke-width="4" 
-    stroke-linecap="round" 
-    stroke-linejoin="round"
-    fill="none"
-    filter="url(#glow)"
-  />
+  <rect x="0" y="0" width="512" height="512" rx="112.6" fill="url(#bg)"/>
+  <g><circle cx="256" cy="256" r="65.19" fill="#1C1608"/><line x1="346.70" y1="256.00" x2="414.72" y2="256.00" stroke="#1C1608" stroke-width="26.93" stroke-linecap="round"/><line x1="334.55" y1="301.35" x2="368.91" y2="321.19" stroke="#1C1608" stroke-width="19.84" stroke-linecap="round"/><line x1="301.35" y1="334.55" x2="335.36" y2="393.46" stroke="#1C1608" stroke-width="26.93" stroke-linecap="round"/><line x1="256.00" y1="346.70" x2="256.00" y2="386.38" stroke="#1C1608" stroke-width="19.84" stroke-linecap="round"/><line x1="210.65" y1="334.55" x2="176.64" y2="393.46" stroke="#1C1608" stroke-width="26.93" stroke-linecap="round"/><line x1="177.45" y1="301.35" x2="143.09" y2="321.19" stroke="#1C1608" stroke-width="19.84" stroke-linecap="round"/><line x1="165.30" y1="256.00" x2="97.28" y2="256.00" stroke="#1C1608" stroke-width="26.93" stroke-linecap="round"/><line x1="177.45" y1="210.65" x2="143.09" y2="190.81" stroke="#1C1608" stroke-width="19.84" stroke-linecap="round"/><line x1="210.65" y1="177.45" x2="176.64" y2="118.54" stroke="#1C1608" stroke-width="26.93" stroke-linecap="round"/><line x1="256.00" y1="165.30" x2="256.00" y2="125.62" stroke="#1C1608" stroke-width="19.84" stroke-linecap="round"/><line x1="301.35" y1="177.45" x2="335.36" y2="118.54" stroke="#1C1608" stroke-width="26.93" stroke-linecap="round"/><line x1="334.55" y1="210.65" x2="368.91" y2="190.81" stroke="#1C1608" stroke-width="19.84" stroke-linecap="round"/></g>
 </svg>

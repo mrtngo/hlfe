@@ -207,7 +207,7 @@ function HomePro({ onTokenClick, onBuyClick, onDeposit, onToggleProMode }: HomeP
                     position: 'relative',
                     overflow: 'hidden',
                     borderBottom: '1px solid #1A1A1A',
-                    background: '#000',
+                    background: '#0A0C0E',
                     height: 30,
                 }}
             >

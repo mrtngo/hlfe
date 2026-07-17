@@ -38,7 +38,7 @@ export default function CapacitorInit() {
 
                 // White icons + text against black bg
                 await StatusBar.setStyle({ style: Style.Dark });
-                await StatusBar.setBackgroundColor({ color: '#000000' }).catch(() => {
+                await StatusBar.setBackgroundColor({ color: '#0A0C0E' }).catch(() => {
                     // setBackgroundColor is iOS-15+ only and silently throws
                     // on older runtimes — ignore.
                 });

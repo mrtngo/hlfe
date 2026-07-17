@@ -53,7 +53,7 @@ export default function AdvancedMenu({
                 className="pointer-events-none fixed inset-0 -z-10"
                 style={{
                     background:
-                        'radial-gradient(70% 50% at 0% 0%, rgba(227,179,76,0.06) 0%, transparent 55%), radial-gradient(60% 40% at 100% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 50%), radial-gradient(50% 40% at 0% 70%, rgba(239, 68, 68, 0.04) 0%, transparent 50%), #000',
+                        'radial-gradient(70% 50% at 0% 0%, rgba(227,179,76,0.06) 0%, transparent 55%), radial-gradient(60% 40% at 100% 20%, rgba(124, 58, 237, 0.06) 0%, transparent 50%), radial-gradient(50% 40% at 0% 70%, rgba(239, 68, 68, 0.04) 0%, transparent 50%), #0A0C0E',
                 }}
             />
 
