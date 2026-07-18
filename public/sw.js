@@ -1,5 +1,5 @@
 // Rayo Service Worker - Push Notifications & Caching
-const CACHE_NAME = 'rayo-v2';
+const CACHE_NAME = 'delos-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache for offline support
