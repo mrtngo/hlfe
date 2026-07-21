@@ -10,7 +10,7 @@
 // It does NOT replace the pro DesktopTerminal (dense trading workstation) — it's
 // the friendly consumer desktop shell that all other views live in.
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { DelosWordmark, Icon, V2, type IconName } from '@/components/V2Kit';
 
 export type ShellView =
@@ -84,29 +84,14 @@ export default function DesktopShell({
                 </div>
 
                 <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-                    {NAV.map((item) => {
-                        const active = item.id === view || item.group?.includes(view);
-                        return (
-                            <button
-                                key={item.id}
-                                onClick={() => onNavigate(item.id)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: 13, width: '100%',
-                                    padding: '11px 12px', borderRadius: 12, cursor: 'pointer',
-                                    border: 'none', textAlign: 'left', fontFamily: V2.ui,
-                                    fontSize: 14.5, fontWeight: active ? 800 : 600,
-                                    color: active ? V2.accent : V2.t2,
-                                    background: active ? V2.accentSoft : 'transparent',
-                                    transition: 'background 120ms ease, color 120ms ease',
-                                }}
-                                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
-                                onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent'; }}
-                            >
-                                <Icon name={item.icon} size={19} color={active ? V2.accent : V2.t3} strokeWidth={active ? 2.4 : 1.9} />
-                                {item.label}
-                            </button>
-                        );
-                    })}
+                    {NAV.map((item) => (
+                        <NavButton
+                            key={item.id}
+                            item={item}
+                            active={item.id === view || (item.group?.includes(view) ?? false)}
+                            onClick={() => onNavigate(item.id)}
+                        />
+                    ))}
                 </nav>
 
                 {/* Account footer */}
@@ -189,5 +174,28 @@ export default function DesktopShell({
                 </main>
             </div>
         </div>
+    );
+}
+
+function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+    const [hover, setHover] = useState(false);
+    return (
+        <button
+            onClick={onClick}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            style={{
+                display: 'flex', alignItems: 'center', gap: 13, width: '100%',
+                padding: '11px 12px', borderRadius: 12, cursor: 'pointer',
+                border: 'none', textAlign: 'left', fontFamily: V2.ui,
+                fontSize: 14.5, fontWeight: active ? 800 : 600,
+                color: active ? V2.accent : V2.t2,
+                background: active ? V2.accentSoft : hover ? 'rgba(255,255,255,0.04)' : 'transparent',
+                transition: 'background 120ms ease, color 120ms ease',
+            }}
+        >
+            <Icon name={item.icon} size={19} color={active ? V2.accent : V2.t3} strokeWidth={active ? 2.4 : 1.9} />
+            {item.label}
+        </button>
     );
 }

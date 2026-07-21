@@ -34,6 +34,8 @@ import DesktopPredictions from '@/components/DesktopPredictions';
 import DesktopTerminal from '@/components/DesktopTerminal';
 import DesktopShell, { type ShellView } from '@/components/DesktopShell';
 import DesktopHome from '@/components/DesktopHome';
+import DesktopMarkets from '@/components/DesktopMarkets';
+import DesktopRewards from '@/components/DesktopRewards';
 import NewsScreen from '@/components/NewsScreen';
 import RewardsScreen from '@/components/RewardsScreen';
 import AcademyScreen from '@/components/AcademyScreen';
@@ -360,8 +362,18 @@ export default function Home() {
                             onDeposit={() => setView('deposit')}
                             onOpenPredictions={() => setView('predictions')}
                         />
+                    ) : view === 'markets' ? (
+                        <DesktopMarkets
+                            onTokenClick={(symbol) => {
+                                setSelectedMarket(symbol);
+                                setDetailSymbol(symbol);
+                                setView('tokenDetail');
+                            }}
+                        />
+                    ) : view === 'rewards' ? (
+                        <DesktopRewards />
                     ) : (
-                        <div style={{ maxWidth: 640, margin: '0 auto', width: '100%' }}>
+                        <div style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}>
                             {renderV2View()}
                         </div>
                     )}
