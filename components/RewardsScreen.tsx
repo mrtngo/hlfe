@@ -4,7 +4,8 @@
 // your referral link, and the list of people you've brought in.
 
 import { useState } from 'react';
-import { useRewards, WEEKLY_RESET_HINT } from '@/hooks/useRewards';
+import { useRewards } from '@/hooks/useRewards';
+import { usePoints } from '@/hooks/usePoints';
 import { useUser } from '@/hooks/useUser';
 import { useCurrency } from '@/context/CurrencyContext';
 import { copyToClipboard } from '@/lib/clipboard';
@@ -26,14 +27,19 @@ export default function RewardsScreen() {
         referredUsers,
         referredCount,
         totalEarned,
-        weeklyPoints,
-        weeklyReferrals,
-        pointsFromReferrals,
-        pointsFromVolume,
         loading,
     } = useRewards();
+    const {
+        total: totalPoints,
+        bySource,
+        streak,
+        quests,
+        loading: pointsLoading,
+    } = usePoints();
 
     const [copied, setCopied] = useState(false);
+
+    const pointsFromReferrals = bySource.referral_signup + bySource.referral_volume;
 
     const link = referralCode ? `${APP_ORIGIN}/?ref=${referralCode}` : '';
 
@@ -91,11 +97,11 @@ export default function RewardsScreen() {
             <div style={{ padding: '60px 20px 0' }}>
                 <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>Recompensas</div>
                 <div style={{ marginTop: 6, fontSize: 14, color: V2.t3 }}>
-                    Invitá amigos, operá y ganá. 10% de sus comisiones es tuyo.
+                    Sumá puntos por operar, invitar y volver cada día.
                 </div>
             </div>
 
-            {/* Weekly points hero */}
+            {/* Points hero — persisted, all-time balance */}
             <div style={{ padding: '20px 20px 0' }}>
                 <div
                     style={{
@@ -105,19 +111,48 @@ export default function RewardsScreen() {
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <Icon name="bolt" size={15} color={V2.accent} />
-                        <span style={{ fontSize: 13, fontWeight: 700, color: V2.accent, letterSpacing: '0.02em' }}>Puntos de la semana</span>
+                        <Icon name="sparkle" size={15} color={V2.accent} />
+                        <span style={{ fontSize: 13, fontWeight: 700, color: V2.accent, letterSpacing: '0.02em' }}>Tus puntos</span>
                     </div>
                     <div style={{ fontSize: 46, fontWeight: 800, fontFamily: V2.mono, letterSpacing: '-0.03em', marginTop: 6 }}>
-                        {loading ? '—' : weeklyPoints.toLocaleString('en-US')}
+                        {pointsLoading ? '—' : totalPoints.toLocaleString('en-US')}
                     </div>
-                    <div style={{ fontSize: 12, color: V2.t3, marginTop: 2 }}>{WEEKLY_RESET_HINT}</div>
+                    <div style={{ fontSize: 12, color: V2.t3, marginTop: 2 }}>
+                        Se acumulan para siempre y podrían contar para futuras recompensas.
+                    </div>
 
-                    {/* Breakdown */}
+                    {/* Breakdown by source */}
                     <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
-                        <Pill label={`${weeklyReferrals} referido${weeklyReferrals === 1 ? '' : 's'}`} value={`+${pointsFromReferrals.toLocaleString('en-US')}`} />
-                        <Pill label="por volumen" value={`+${pointsFromVolume.toLocaleString('en-US')}`} />
+                        <Pill label="volumen" value={`${bySource.trade_volume.toLocaleString('en-US')}`} />
+                        <Pill label="referidos" value={`${pointsFromReferrals.toLocaleString('en-US')}`} />
+                        <Pill label="racha" value={`${bySource.streak.toLocaleString('en-US')}`} />
+                        <Pill label="logros" value={`${bySource.quest.toLocaleString('en-US')}`} />
                     </div>
+                </div>
+            </div>
+
+            {/* Daily streak */}
+            <div style={{ padding: '14px 20px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px', borderRadius: 16, background: V2.card, border: `1px solid ${V2.hair}` }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', flexShrink: 0, background: streak.checkedInToday ? V2.accentSoft : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Icon name="flame" size={22} color={streak.checkedInToday ? V2.accent : V2.t3} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 800 }}>
+                            {pointsLoading ? '—' : `${streak.current} día${streak.current === 1 ? '' : 's'} de racha`}
+                        </div>
+                        <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 2 }}>
+                            {streak.checkedInToday
+                                ? '¡Sumaste tus puntos de hoy! Volvé mañana.'
+                                : 'Abrí la app cada día para no perder tu racha.'}
+                        </div>
+                    </div>
+                    {streak.longest > 0 && (
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <div style={{ fontSize: 18, fontWeight: 800, fontFamily: V2.mono, color: V2.accent }}>{streak.longest}</div>
+                            <div style={{ fontSize: 10.5, color: V2.t3 }}>mejor</div>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -147,6 +182,27 @@ export default function RewardsScreen() {
                         Tu código: <span style={{ color: V2.accent, fontWeight: 700, fontFamily: V2.mono }}>{referralCode}</span>
                     </div>
                 )}
+            </div>
+
+            {/* Quests / logros */}
+            <div style={{ padding: '26px 20px 0' }}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Logros</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {quests.map((q) => (
+                        <div key={q.id} style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '14px 16px', borderRadius: 14, background: V2.card, border: `1px solid ${q.done ? 'rgba(227,179,76,0.28)' : V2.hair}`, opacity: q.done ? 1 : 0.72 }}>
+                            <div style={{ width: 30, height: 30, borderRadius: '50%', flexShrink: 0, background: q.done ? V2.accentSoft : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Icon name={q.done ? 'check' : 'target'} size={16} color={q.done ? V2.accent : V2.t3} strokeWidth={q.done ? 2.6 : 2} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 14, fontWeight: 700 }}>{q.label}</div>
+                                <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 1, lineHeight: 1.4 }}>{q.description}</div>
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 800, fontFamily: V2.mono, color: q.done ? V2.accent : V2.t3, flexShrink: 0 }}>
+                                +{q.points}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* How it works */}
