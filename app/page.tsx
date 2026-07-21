@@ -373,7 +373,7 @@ export default function Home() {
                     ) : view === 'rewards' ? (
                         <DesktopRewards />
                     ) : (
-                        <div style={{ maxWidth: 720, margin: '0 auto', width: '100%' }}>
+                        <div style={{ maxWidth: view === 'news' ? 1040 : 720, margin: '0 auto', width: '100%' }}>
                             {renderV2View()}
                         </div>
                     )}

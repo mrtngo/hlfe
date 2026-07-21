@@ -1005,6 +1005,22 @@ h6 {
   color: var(--v2-t1);
 }
 
+/* Feed/list that stacks on mobile but becomes a multi-column grid on the
+   desktop shell, so card lists (news, etc.) use the available width. */
+.v2-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+@media (min-width: 1024px) and (pointer: fine) {
+  .v2-feed {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    align-content: start;
+  }
+}
+
 /* Translucent card with hairline border (the signature V2 surface) */
 .v2-card {
   background: var(--v2-card);

@@ -120,7 +120,7 @@ export default function NewsScreen({ onTickerClick }: NewsScreenProps) {
                         No hay noticias para este filtro todavía.
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div className="v2-feed">
                         {filtered.map((it) => (
                             <NewsCard
                                 key={it.id}
