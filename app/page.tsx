@@ -184,6 +184,10 @@ export default function Home() {
     const showDesktopTerminal = ready && authenticated && isDesktopTerminal && DESKTOP_TERMINAL_VIEWS.includes(view);
     const showDesktopPredictions = ready && authenticated && isDesktopTerminal && view === 'predictions';
     const hideMobileFooter = ready && authenticated && isDesktopTerminal;
+    // On wide screens the single-column mobile shell (everything except the
+    // dedicated desktop terminal / predictions) gets scaled up and framed so it
+    // reads as an intentional desktop layout instead of a narrow strip in a void.
+    const desktopScaledShell = isV2View && !showDesktopTerminal && !showDesktopPredictions;
 
     const tutorialOverlay = showTutorial ? (
         <OnboardingTutorial onClose={closeTutorial} onDeposit={handleTutorialDeposit} />
@@ -212,7 +216,7 @@ export default function Home() {
     }
 
     return (
-        <div className="v2-app min-h-screen flex flex-col" style={{ background: 'var(--v2-bg)' }}>
+        <div className={`v2-app min-h-screen flex flex-col${desktopScaledShell ? ' v2-mobile-shell' : ''}`} style={{ background: 'var(--v2-bg)' }}>
             {/* Ley 1581 authorization gate — blocks until the user accepts the
                 current privacy-policy version. Lazily provisioned signing is
                 untouched; this is purely the data-protection consent. */}
@@ -249,7 +253,7 @@ export default function Home() {
                         />
                     ) : isV2View ? (
                         <div
-                            className="mx-auto w-full max-w-[480px]"
+                            className="v2-appcol mx-auto w-full max-w-[480px]"
                             style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom))' }}
                         >
                             {view === 'home' ? (
@@ -461,6 +465,7 @@ export default function Home() {
                 ];
                 return (
                     <nav
+                        className="v2-footer"
                         style={{
                             position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
                             padding: '20px 12px calc(14px + env(safe-area-inset-bottom))',
