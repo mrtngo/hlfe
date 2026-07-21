@@ -36,6 +36,7 @@ import DesktopShell, { type ShellView } from '@/components/DesktopShell';
 import DesktopHome from '@/components/DesktopHome';
 import DesktopMarkets from '@/components/DesktopMarkets';
 import DesktopRewards from '@/components/DesktopRewards';
+import DesktopTokenDetail from '@/components/DesktopTokenDetail';
 import NewsScreen from '@/components/NewsScreen';
 import RewardsScreen from '@/components/RewardsScreen';
 import AcademyScreen from '@/components/AcademyScreen';
@@ -376,6 +377,13 @@ export default function Home() {
                         />
                     ) : view === 'rewards' ? (
                         <DesktopRewards />
+                    ) : view === 'tokenDetail' ? (
+                        <DesktopTokenDetail
+                            symbol={detailSymbol || selectedMarket || 'BTC'}
+                            onBack={() => setView('markets')}
+                            onBuy={() => goTrade('buy')}
+                            onTrade={(side) => goTrade(side ?? 'buy')}
+                        />
                     ) : (
                         <div style={{ maxWidth: WIDE_SHELL_VIEWS.includes(view) ? 1040 : 720, margin: '0 auto', width: '100%' }}>
                             {renderV2View()}
