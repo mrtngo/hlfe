@@ -301,7 +301,7 @@ export default function OrderHistory() {
                     grouped.map((g, gi) => (
                         <div key={`${g.label}-${gi}`} style={{ marginBottom: 18 }}>
                             <div style={{ fontSize: 13, fontWeight: 700, color: V2.t3, marginBottom: 10 }}>{g.label}</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <div className="v2-feed">
                                 {g.items.map((e, i) => (
                                     <HistoryRowV2 key={`${e.id}-${i}`} entry={e} formatCurrency={formatCurrency} t={t} />
                                 ))}

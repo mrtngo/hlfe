@@ -45,6 +45,10 @@ import Trollbox from '@/components/Trollbox';
 import { Icon, V2, DelosSun, type IconName } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
+// Non-bespoke views that still benefit from extra width in the desktop shell
+// (their card lists grid via the .v2-feed class).
+const WIDE_SHELL_VIEWS = ['portfolio', 'history', 'academy'];
+
 export default function Home() {
     const { t, language } = useLanguage();
     const {
@@ -373,7 +377,7 @@ export default function Home() {
                     ) : view === 'rewards' ? (
                         <DesktopRewards />
                     ) : (
-                        <div style={{ maxWidth: view === 'news' ? 1040 : 720, margin: '0 auto', width: '100%' }}>
+                        <div style={{ maxWidth: WIDE_SHELL_VIEWS.includes(view) ? 1040 : 720, margin: '0 auto', width: '100%' }}>
                             {renderV2View()}
                         </div>
                     )}

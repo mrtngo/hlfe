@@ -106,7 +106,7 @@ export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick, onOp
                     {positions.length > 0 && (
                     <>
                     <SectionHead title={t.screens.portafolio.open} right={<span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{positions.length}</span>} />
-                    <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div className="v2-feed" style={{ padding: '0 20px' }}>
                         {positions.map((p) => {
                             const up = p.unrealizedPnl >= 0;
                             const isLong = p.side === 'long';
@@ -162,7 +162,7 @@ export default function PortfolioScreen({ onBack, onBuyClick, onTokenClick, onOp
                                 title={t.outcomeMarkets.positionsTitle}
                                 right={<span style={{ fontSize: 13, color: V2.t3, fontWeight: 600 }}>{outcomePositions.length}</span>}
                             />
-                            <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            <div className="v2-feed" style={{ padding: '0 20px' }}>
                                 {outcomePositions.map((p) => (
                                     <OutcomePositionCard
                                         key={p.coinRef}
