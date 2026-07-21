@@ -32,6 +32,8 @@ import BolsillosScreen from '@/components/BolsillosScreen';
 import DepositScreen from '@/components/DepositScreen';
 import DesktopPredictions from '@/components/DesktopPredictions';
 import DesktopTerminal from '@/components/DesktopTerminal';
+import DesktopShell, { type ShellView } from '@/components/DesktopShell';
+import DesktopHome from '@/components/DesktopHome';
 import NewsScreen from '@/components/NewsScreen';
 import RewardsScreen from '@/components/RewardsScreen';
 import AcademyScreen from '@/components/AcademyScreen';
@@ -184,14 +186,122 @@ export default function Home() {
     const showDesktopTerminal = ready && authenticated && isDesktopTerminal && DESKTOP_TERMINAL_VIEWS.includes(view);
     const showDesktopPredictions = ready && authenticated && isDesktopTerminal && view === 'predictions';
     const hideMobileFooter = ready && authenticated && isDesktopTerminal;
-    // On wide screens the single-column mobile shell (everything except the
-    // dedicated desktop terminal / predictions) gets scaled up and framed so it
-    // reads as an intentional desktop layout instead of a narrow strip in a void.
-    const desktopScaledShell = isV2View && !showDesktopTerminal && !showDesktopPredictions;
+    // Wide-screen consumer desktop layout: every V2 view that isn't the dedicated
+    // pro terminal / predictions renders in the sidebar+topbar DesktopShell
+    // instead of the mobile single-column + floating pill. Applies to guests and
+    // to authenticated users on non-terminal views. Mobile/touch is untouched.
+    const desktopConsumerShell =
+        isDesktopTerminal && isV2View && !showDesktopTerminal && !showDesktopPredictions;
 
     const tutorialOverlay = showTutorial ? (
         <OnboardingTutorial onClose={closeTutorial} onDeposit={handleTutorialDeposit} />
     ) : null;
+
+    // The active V2 view's screen. Shared between the mobile single-column
+    // layout and the desktop shell so there's one source of truth.
+    const renderV2View = () =>
+        view === 'home' ? (
+            <HomeScreen
+                onTokenClick={(symbol) => {
+                    setSelectedMarket(symbol);
+                    setDetailSymbol(symbol);
+                    setView('tokenDetail');
+                }}
+                onSpotHoldingClick={(coin) => {
+                    setSelectedSpotBase(coin);
+                    setView('spotManage');
+                }}
+                onTradeClick={() => goTrade()}
+                onBuyClick={() => goTrade()}
+                onDeposit={() => setView('deposit')}
+                onOpenPredictions={() => setView('predictions')}
+            />
+        ) : view === 'markets' ? (
+            <MarketsScreen
+                onBack={() => setView('home')}
+                onTokenClick={(symbol) => {
+                    setSelectedMarket(symbol);
+                    setDetailSymbol(symbol);
+                    setView('tokenDetail');
+                }}
+            />
+        ) : view === 'tokenDetail' ? (
+            <TokenDetail
+                symbol={detailSymbol || selectedMarket || 'BTC'}
+                onBack={() => setView('markets')}
+                onBuy={() => goTrade('buy')}
+                onTrade={(side) => goTrade(side ?? 'buy')}
+            />
+        ) : view === 'trading' ? (
+            <TradearScreen onBack={() => setView('advanced')} initialSide={tradeSide} />
+        ) : view === 'news' ? (
+            <NewsScreen
+                onTickerClick={(symbol) => {
+                    setSelectedMarket(symbol);
+                    goTrade();
+                }}
+            />
+        ) : view === 'rewards' ? (
+            <RewardsScreen />
+        ) : view === 'academy' ? (
+            <AcademyScreen />
+        ) : view === 'predictions' ? (
+            <PredictionsHub />
+        ) : view === 'traderSearch' ? (
+            <TraderSearchScreen
+                onBack={() => setView('leaderboard')}
+                onSelect={(addr) => {
+                    setProfileAddress(addr);
+                    setProfileReturn('traderSearch');
+                    setView('publicProfile');
+                }}
+            />
+        ) : view === 'publicProfile' ? (
+            <PublicProfileScreen
+                address={profileAddress || ''}
+                onBack={() => setView(profileReturn)}
+                onTokenClick={(symbol) => {
+                    setSelectedMarket(symbol);
+                    setDetailSymbol(symbol);
+                    setView('tokenDetail');
+                }}
+            />
+        ) : view === 'deposit' ? (
+            <DepositScreen
+                onBack={() => setView('home')}
+                onDone={() => {
+                    setView('home');
+                    refreshAccountData();
+                }}
+            />
+        ) : view === 'portfolio' ? (
+            <PortfolioScreen
+                onBack={() => setView('profile')}
+                onBuyClick={() => goTrade()}
+                onOpenPredictions={() => setView('predictions')}
+                onTokenClick={(symbol) => {
+                    setSelectedMarket(symbol);
+                    setDetailSymbol(symbol);
+                    setView('tokenDetail');
+                }}
+            />
+        ) : view === 'history' ? (
+            <OrderHistory />
+        ) : view === 'profile' ? (
+            <ProfileScreen
+                onOpenSettings={() => setView('settings')}
+                onOpenPortfolio={() => setView('portfolio')}
+                onOpenHistory={() => setView('history')}
+                onOpenLeaderboard={() => setView('leaderboard')}
+                onOpenAdvanced={() => setView('advanced')}
+            />
+        ) : (
+            <AjustesScreen
+                onBack={() => setView('profile')}
+                onReplayTutorial={() => setShowTutorial(true)}
+                onOpenAcademy={() => setView('academy')}
+            />
+        );
 
     // Pre-login welcome gate. Logged-out users see the full-bleed Welcome screen
     // (no bottom nav) unless they chose to browse as a guest.
@@ -215,8 +325,69 @@ export default function Home() {
         return <ChooseUsernameScreen />;
     }
 
+    // Desktop consumer shell — sidebar + top bar wrapping the same views. Home
+    // gets the dedicated multi-column dashboard; other views render centered.
+    // Comes after the welcome/username gates so those still take precedence.
+    const firstName = user?.username || user?.display_name?.split(' ')[0] || '';
+    if (desktopConsumerShell) {
+        return (
+            <div className="v2-app min-h-screen" style={{ background: 'var(--v2-bg)' }}>
+                <PrivacyConsentModal
+                    open={authenticated && needsConsent}
+                    onAccept={async () => { await recordConsent({ locale: language }); }}
+                />
+                <DesktopShell
+                    view={view}
+                    onNavigate={(v: ShellView) => (v === 'profile' ? handleProfileClick() : setView(v))}
+                    authenticated={authenticated}
+                    firstName={firstName}
+                    onLogin={login}
+                    onDeposit={() => setView('deposit')}
+                    onOpenProfile={handleProfileClick}
+                    onOpenSearch={() => setView('markets')}
+                >
+                    {view === 'home' ? (
+                        <DesktopHome
+                            onTokenClick={(symbol) => {
+                                setSelectedMarket(symbol);
+                                setDetailSymbol(symbol);
+                                setView('tokenDetail');
+                            }}
+                            onSpotHoldingClick={(coin) => {
+                                setSelectedSpotBase(coin);
+                                setView('spotManage');
+                            }}
+                            onDeposit={() => setView('deposit')}
+                            onOpenPredictions={() => setView('predictions')}
+                        />
+                    ) : (
+                        <div style={{ maxWidth: 640, margin: '0 auto', width: '100%' }}>
+                            {renderV2View()}
+                        </div>
+                    )}
+                </DesktopShell>
+                <Trollbox isOpen={isTrollboxOpen} onClose={() => setIsTrollboxOpen(false)} />
+                <TradingSetupWizard isOpen={showSetupWizard} onClose={handleWizardClose} />
+                <ApproveAgentModal
+                    open={showAgentModal}
+                    onClose={() => {
+                        setShowAgentModal(false);
+                        sessionStorage.setItem('setup_wizard_dismissed', 'true');
+                    }}
+                    onSuccess={() => {
+                        setShowAgentModal(false);
+                        if (BUILDER_CONFIG.enabled && !builderFeeApproved) {
+                            setShowSetupWizard(true);
+                        }
+                    }}
+                />
+                {tutorialOverlay}
+            </div>
+        );
+    }
+
     return (
-        <div className={`v2-app min-h-screen flex flex-col${desktopScaledShell ? ' v2-mobile-shell' : ''}`} style={{ background: 'var(--v2-bg)' }}>
+        <div className="v2-app min-h-screen flex flex-col" style={{ background: 'var(--v2-bg)' }}>
             {/* Ley 1581 authorization gate — blocks until the user accepts the
                 current privacy-policy version. Lazily provisioned signing is
                 untouched; this is purely the data-protection consent. */}
@@ -253,111 +424,10 @@ export default function Home() {
                         />
                     ) : isV2View ? (
                         <div
-                            className="v2-appcol mx-auto w-full max-w-[480px]"
+                            className="mx-auto w-full max-w-[480px]"
                             style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom))' }}
                         >
-                            {view === 'home' ? (
-                                <HomeScreen
-                                    onTokenClick={(symbol) => {
-                                        setSelectedMarket(symbol);
-                                        setDetailSymbol(symbol);
-                                        setView('tokenDetail');
-                                    }}
-                                    onSpotHoldingClick={(coin) => {
-                                        setSelectedSpotBase(coin);
-                                        setView('spotManage');
-                                    }}
-                                    onTradeClick={() => goTrade()}
-                                    onBuyClick={() => goTrade()}
-                                    onDeposit={() => setView('deposit')}
-                                    onOpenPredictions={() => setView('predictions')}
-                                />
-                            ) : view === 'markets' ? (
-                                <MarketsScreen
-                                    onBack={() => setView('home')}
-                                    onTokenClick={(symbol) => {
-                                        setSelectedMarket(symbol);
-                                        setDetailSymbol(symbol);
-                                        setView('tokenDetail');
-                                    }}
-                                />
-                            ) : view === 'tokenDetail' ? (
-                                <TokenDetail
-                                    symbol={detailSymbol || selectedMarket || 'BTC'}
-                                    onBack={() => setView('markets')}
-                                    onBuy={() => goTrade('buy')}
-                                    onTrade={(side) => goTrade(side ?? 'buy')}
-                                />
-                            ) : view === 'trading' ? (
-                                <TradearScreen onBack={() => setView('advanced')} initialSide={tradeSide} />
-                            ) : view === 'news' ? (
-                                <NewsScreen
-                                    onTickerClick={(symbol) => {
-                                        setSelectedMarket(symbol);
-                                        goTrade();
-                                    }}
-                                />
-                            ) : view === 'rewards' ? (
-                                <RewardsScreen />
-                            ) : view === 'academy' ? (
-                                <AcademyScreen />
-                            ) : view === 'predictions' ? (
-                                <PredictionsHub />
-                            ) : view === 'traderSearch' ? (
-                                <TraderSearchScreen
-                                    onBack={() => setView('leaderboard')}
-                                    onSelect={(addr) => {
-                                        setProfileAddress(addr);
-                                        setProfileReturn('traderSearch');
-                                        setView('publicProfile');
-                                    }}
-                                />
-                            ) : view === 'publicProfile' ? (
-                                <PublicProfileScreen
-                                    address={profileAddress || ''}
-                                    onBack={() => setView(profileReturn)}
-                                    onTokenClick={(symbol) => {
-                                        setSelectedMarket(symbol);
-                                        setDetailSymbol(symbol);
-                                        setView('tokenDetail');
-                                    }}
-                                />
-                            ) : view === 'deposit' ? (
-                                <DepositScreen
-                                    onBack={() => setView('home')}
-                                    onDone={() => {
-                                        setView('home');
-                                        refreshAccountData();
-                                    }}
-                                />
-                            ) : view === 'portfolio' ? (
-                                <PortfolioScreen
-                                    onBack={() => setView('profile')}
-                                    onBuyClick={() => goTrade()}
-                                    onOpenPredictions={() => setView('predictions')}
-                                    onTokenClick={(symbol) => {
-                                        setSelectedMarket(symbol);
-                                        setDetailSymbol(symbol);
-                                        setView('tokenDetail');
-                                    }}
-                                />
-                            ) : view === 'history' ? (
-                                <OrderHistory />
-                            ) : view === 'profile' ? (
-                                <ProfileScreen
-                                    onOpenSettings={() => setView('settings')}
-                                    onOpenPortfolio={() => setView('portfolio')}
-                                    onOpenHistory={() => setView('history')}
-                                    onOpenLeaderboard={() => setView('leaderboard')}
-                                    onOpenAdvanced={() => setView('advanced')}
-                                />
-                            ) : (
-                                <AjustesScreen
-                                    onBack={() => setView('profile')}
-                                    onReplayTutorial={() => setShowTutorial(true)}
-                                    onOpenAcademy={() => setView('academy')}
-                                />
-                            )}
+                            {renderV2View()}
                         </div>
                     ) : (
                     <div className="container px-4 pt-[48px] max-w-[1920px] w-[90%] mx-auto" style={{ paddingBottom: '120px' }}>
@@ -465,7 +535,6 @@ export default function Home() {
                 ];
                 return (
                     <nav
-                        className="v2-footer"
                         style={{
                             position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
                             padding: '20px 12px calc(14px + env(safe-area-inset-bottom))',
