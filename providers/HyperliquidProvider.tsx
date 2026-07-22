@@ -451,7 +451,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             } else {
                 // Ensure existing agent has a valid name (1-16 characters)
                 if (!agent.name || agent.name.length > 16 || agent.name.length === 0) {
-                    agent.name = 'Rayo Agent';
+                    agent.name = 'Delos Agent';
                     await saveAgentWallet(agent, address);
                 }
             }
@@ -679,7 +679,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             setBuilderFeeApproved(true);
             return {
                 success: true,
-                message: `Builder fee approved! Rayo will collect ${feePercent}% on your trades.`
+                message: `Builder fee approved! Delos will collect ${feePercent}% on your trades.`
             };
         } catch (error: any) {
             console.error('Error approving builder fee:', error);
@@ -746,7 +746,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         if (BUILDER_CONFIG.enabled) {
             const fee = await approveBuilderFee();
             if (!fee.success) {
-                throw new Error(fee.message || 'No se pudo aprobar la comisión de Rayo');
+                throw new Error(fee.message || 'No se pudo aprobar la comisión de Delos');
             }
         }
     }, [address, t, setupAgentWallet, approveBuilderFee]);

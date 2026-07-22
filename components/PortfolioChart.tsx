@@ -262,7 +262,7 @@ function PortfolioChart() {
                             onClick={() => handleTimeframeChange(option)}
                             className="flex flex-col items-center px-4 py-2 transition-all border-none outline-none"
                             style={{
-                                color: '#FFFF00',
+                                color: '#E3B34C',
                                 background: 'transparent',
                                 opacity: isSelected ? 1 : 0.5
                             }}

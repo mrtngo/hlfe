@@ -141,7 +141,7 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
             } else {
                 // Ensure existing agent has a valid name (1-16 characters)
                 if (!agent.name || agent.name.length > 16 || agent.name.length === 0) {
-                    agent.name = 'Rayo Agent';
+                    agent.name = 'Delos Agent';
                     await saveAgentWallet(agent, address);
                 }
             }
@@ -300,7 +300,7 @@ export function useAgentWallet(address: string | null): AgentWalletResult {
             setBuilderFeeApproved(true);
             return {
                 success: true,
-                message: `Builder fee approved! Rayo will collect ${feePercent}% on your trades.`
+                message: `Builder fee approved! Delos will collect ${feePercent}% on your trades.`
             };
         } catch (error: any) {
             console.error('Error approving builder fee:', error);

@@ -1,5 +1,7 @@
 /**
- * PWA Icon Generator for Rayo
+ * PWA Icon Generator for Delos
+ * Draws the Delos sun mark (matches DelosSun in components/V2Kit.tsx) in
+ * Apollonian gold on the Delos dark surface.
  * Run with: node scripts/generate-icons.js
  */
 
@@ -14,17 +16,36 @@ if (!fs.existsSync(ICONS_DIR)) {
   fs.mkdirSync(ICONS_DIR, { recursive: true });
 }
 
-// SVG template for the Rayo lightning bolt icon
+const GOLD = '#E3B34C';
+const SURFACE = '#0A0C0E';
+
+// Delos sun mark — mirrors DelosSun() in components/V2Kit.tsx (24x24 space:
+// a filled core at r=4.6 plus 12 alternating-length rays).
+function delosSunPaths() {
+  let rays = '';
+  for (let k = 0; k < 12; k++) {
+    const a = (k * Math.PI) / 6;
+    const long = k % 2 === 0;
+    const r1 = 6.4;
+    const r2 = long ? 11.2 : 9.2;
+    rays += `<line x1="${(12 + Math.cos(a) * r1).toFixed(2)}" y1="${(12 + Math.sin(a) * r1).toFixed(2)}" x2="${(12 + Math.cos(a) * r2).toFixed(2)}" y2="${(12 + Math.sin(a) * r2).toFixed(2)}" stroke="${GOLD}" stroke-width="${long ? 1.9 : 1.4}" stroke-linecap="round"/>`;
+  }
+  return `<circle cx="12" cy="12" r="4.6" fill="${GOLD}"/>${rays}`;
+}
+
+// SVG template for the Delos sun icon
 function createIconSVG(size, isMaskable = false) {
-  const padding = isMaskable ? size * 0.1 : size * 0.15;
-  const innerSize = size - (padding * 2);
-  const scale = innerSize / 100;
+  // The sun's rays reach the edge of the 24-unit box, so leave a little more
+  // breathing room than a solid glyph would need.
+  const padding = isMaskable ? size * 0.18 : size * 0.2;
+  const innerSize = size - padding * 2;
+  const scale = innerSize / 24;
 
   return `
     <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="${size * 0.02}" result="coloredBlur"/>
+          <feGaussianBlur stdDeviation="${size * 0.015}" result="coloredBlur"/>
           <feMerge>
             <feMergeNode in="coloredBlur"/>
             <feMergeNode in="SourceGraphic"/>
@@ -33,19 +54,11 @@ function createIconSVG(size, isMaskable = false) {
       </defs>
 
       <!-- Background -->
-      <rect width="${size}" height="${size}" fill="#000000" rx="${isMaskable ? 0 : size * 0.2}"/>
+      <rect width="${size}" height="${size}" fill="${SURFACE}" rx="${isMaskable ? 0 : size * 0.2}"/>
 
-      <!-- Lightning bolt -->
-      <g transform="translate(${padding}, ${padding}) scale(${scale})">
-        <path
-          d="M55 10L25 52H45L38 90L75 42H52L55 10Z"
-          stroke="#FACC15"
-          stroke-width="4"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          fill="none"
-          filter="url(#glow)"
-        />
+      <!-- Delos sun -->
+      <g transform="translate(${padding}, ${padding}) scale(${scale})" filter="url(#glow)">
+        ${delosSunPaths()}
       </g>
     </svg>
   `;

@@ -258,9 +258,9 @@ export default function TransferModal({
                         display: 'flex',
                         gap: '12px'
                     }}>
-                        <ArrowLeftRight style={{ width: '20px', height: '20px', color: '#FFFF00', flexShrink: 0 }} />
+                        <ArrowLeftRight style={{ width: '20px', height: '20px', color: '#E3B34C', flexShrink: 0 }} />
                         <div style={{ fontSize: '13px' }}>
-                            <div style={{ fontWeight: 600, color: '#FFFF00', marginBottom: '4px' }}>{t.transfer.betweenAccounts}</div>
+                            <div style={{ fontWeight: 600, color: '#E3B34C', marginBottom: '4px' }}>{t.transfer.betweenAccounts}</div>
                             <div style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
                                 {infoText}
                             </div>
@@ -285,7 +285,7 @@ export default function TransferModal({
                                 fontWeight: 'bold',
                                 fontSize: '13px',
                                 cursor: 'pointer',
-                                backgroundColor: toPerp ? '#FFFF00' : 'transparent',
+                                backgroundColor: toPerp ? '#E3B34C' : 'transparent',
                                 color: toPerp ? 'black' : 'rgba(255, 255, 255, 0.5)',
                                 transition: 'all 0.2s',
                             }}
@@ -302,7 +302,7 @@ export default function TransferModal({
                                 fontWeight: 'bold',
                                 fontSize: '13px',
                                 cursor: 'pointer',
-                                backgroundColor: !toPerp ? '#FFFF00' : 'transparent',
+                                backgroundColor: !toPerp ? '#E3B34C' : 'transparent',
                                 color: !toPerp ? 'black' : 'rgba(255, 255, 255, 0.5)',
                                 transition: 'all 0.2s',
                             }}
@@ -322,7 +322,7 @@ export default function TransferModal({
                             <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
                                 {spotBalanceLabel}
                             </div>
-                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
+                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#E3B34C', fontFamily: 'monospace' }}>
                                 {formatCurrency(spotBalance)}
                             </div>
                         </div>
@@ -335,7 +335,7 @@ export default function TransferModal({
                             <div style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.5)', marginBottom: '6px' }}>
                                 {perpBalanceLabel}
                             </div>
-                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#FFFF00', fontFamily: 'monospace' }}>
+                            <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#E3B34C', fontFamily: 'monospace' }}>
                                 {formatCurrency(availableBalance)}
                             </div>
                         </div>
@@ -398,7 +398,7 @@ export default function TransferModal({
                         style={{
                             width: '100%',
                             padding: '16px',
-                            backgroundColor: '#FFFF00',
+                            backgroundColor: '#E3B34C',
                             color: 'black',
                             fontWeight: 'bold',
                             border: 'none',

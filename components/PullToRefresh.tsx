@@ -95,7 +95,7 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
                         opacity: isRefreshing ? 1 : pullDistance / PULL_THRESHOLD,
                     }}
                 >
-                    <div className={`p-2 rounded-full bg-black/80 backdrop-blur-md border border-[#FFFF00]/30 shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
+                    <div className={`p-2 rounded-full bg-black/80 backdrop-blur-md border border-[#E3B34C]/30 shadow-lg ${isRefreshing ? 'animate-spin' : ''}`}>
                         <RefreshCw
                             size={18}
                             className="text-brand"

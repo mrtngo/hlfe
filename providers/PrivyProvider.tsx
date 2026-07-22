@@ -41,8 +41,8 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
         loginMethods: ['email'],
         appearance: {
             theme: 'dark',
-            accentColor: '#FACC15', // Rayo brand yellow
-            logo: '/logo.svg',
+            accentColor: '#E3B34C', // Delos Apollonian gold
+            logo: '/logo.svg', // Delos sun mark
             walletList: [], // hide all wallet connectors
             showWalletLoginFirst: false,
         },

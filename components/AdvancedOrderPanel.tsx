@@ -210,7 +210,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                     <button
                         onClick={() => setOrderType('limit')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-xl border transition-colors ${orderType === 'limit'
-                            ? 'bg-brand border-[#FFFF00] text-black'
+                            ? 'bg-brand border-[#E3B34C] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
@@ -219,7 +219,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                     <button
                         onClick={() => setOrderType('market')}
                         className={`px-4 py-1.5 text-xs font-medium rounded-xl border transition-colors ${orderType === 'market'
-                            ? 'bg-brand border-[#FFFF00] text-black'
+                            ? 'bg-brand border-[#E3B34C] text-black'
                             : 'bg-transparent border-white/20 text-white/60 hover:text-white'
                             }`}
                     >
@@ -231,14 +231,14 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                 <div className="relative">
                     <button
                         onClick={() => setShowLeverageDropdown(!showLeverageDropdown)}
-                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-brand border border-[#FFFF00] rounded text-black"
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-brand border border-[#E3B34C] rounded text-black"
                     >
                         {Math.min(leverage, maxLeverage)}x
                         <ChevronDown className="w-3 h-3" />
                     </button>
                     {showLeverageDropdown && (
                         <div
-                            className="absolute right-0 top-full mt-1 bg-[#111111] border border-[#FFFF00]/30 rounded-lg shadow-2xl z-50 p-3"
+                            className="absolute right-0 top-full mt-1 bg-[#111111] border border-[#E3B34C]/30 rounded-lg shadow-2xl z-50 p-3"
                             style={{ minWidth: '150px' }}
                         >
                             <div className="text-center text-brand font-bold text-lg mb-2">
@@ -250,8 +250,8 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                                 max={maxLeverage}
                                 value={Math.min(leverage, maxLeverage)}
                                 onChange={(e) => setLeverage(parseInt(e.target.value))}
-                                className="w-full h-2 accent-[#FFFF00] bg-bg-elevated rounded-full"
-                                style={{ accentColor: '#FFFF00' }}
+                                className="w-full h-2 accent-[#E3B34C] bg-bg-elevated rounded-full"
+                                style={{ accentColor: '#E3B34C' }}
                             />
                             <div className="flex justify-between text-[10px] text-brand/60 mt-1">
                                 <span>1x</span>
@@ -299,7 +299,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
             {/* Price Input (for limit orders) */}
             {orderType === 'limit' && (
                 <div className="mb-3">
-                    <div className="flex items-center justify-between bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2.5">
+                    <div className="flex items-center justify-between bg-black border border-[#E3B34C]/30 rounded-lg px-3 py-2.5">
                         <span className="text-xs text-brand/60">{t.order.price} (USDC)</span>
                         <div className="flex items-center gap-2">
                             <input
@@ -310,11 +310,11 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                                 step="any"
                                 min="0"
                                 className="w-24 text-right bg-transparent text-sm font-mono outline-none"
-                                style={{ color: '#FFFF00' }}
+                                style={{ color: '#E3B34C' }}
                             />
                             <button
                                 onClick={() => market?.price && setPrice(formatPrice(market.price))}
-                                className="text-[10px] text-black bg-brand font-medium border border-[#FFFF00] px-1.5 py-0.5 rounded"
+                                className="text-[10px] text-black bg-brand font-medium border border-[#E3B34C] px-1.5 py-0.5 rounded"
                             >
                                 {t.order.mid}
                             </button>
@@ -325,7 +325,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
 
             {/* Size Input */}
             <div className="mb-3">
-                <div className="flex items-center justify-between bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2.5">
+                <div className="flex items-center justify-between bg-black border border-[#E3B34C]/30 rounded-lg px-3 py-2.5">
                     <span className="text-xs text-brand/60">{t.order.amount}</span>
                     <div className="flex items-center gap-2">
                         <input
@@ -339,7 +339,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                             step="any"
                             min="0"
                             className="w-24 text-right bg-transparent text-sm font-mono outline-none"
-                            style={{ color: '#FFFF00' }}
+                            style={{ color: '#E3B34C' }}
                         />
                         <span className="text-xs text-brand/50">{coin}</span>
                     </div>
@@ -356,7 +356,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                         step="25"
                         value={sizePercent}
                         onChange={(e) => setQuickSize(parseInt(e.target.value))}
-                        className="w-full h-1 bg-brand/20 rounded-lg appearance-none cursor-pointer accent-[#FFFF00]"
+                        className="w-full h-1 bg-brand/20 rounded-lg appearance-none cursor-pointer accent-[#E3B34C]"
                     />
                     {/* Tick marks */}
                     <div className="flex justify-between mt-1">
@@ -384,7 +384,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                 <label className="flex items-center gap-2 cursor-pointer">
                     <div
                         onClick={() => setReduceOnly(!reduceOnly)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${reduceOnly ? 'bg-brand border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${reduceOnly ? 'bg-brand border-[#E3B34C]' : 'border-[#E3B34C]/40 bg-transparent'
                             }`}
                     >
                         {reduceOnly && <Check className="w-3 h-3 text-black" />}
@@ -395,7 +395,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                 <label className="flex items-center gap-2 cursor-pointer">
                     <div
                         onClick={() => setEnableTpSl(!enableTpSl)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${enableTpSl ? 'bg-brand border-[#FFFF00]' : 'border-[#FFFF00]/40 bg-transparent'
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${enableTpSl ? 'bg-brand border-[#E3B34C]' : 'border-[#E3B34C]/40 bg-transparent'
                             }`}
                     >
                         {enableTpSl && <Check className="w-3 h-3 text-black" />}
@@ -407,7 +407,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
             {/* TP/SL Inputs */}
             {enableTpSl && (
                 <div className="grid grid-cols-2 gap-2 mb-4">
-                    <div className="bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2">
+                    <div className="bg-black border border-[#E3B34C]/30 rounded-lg px-3 py-2">
                         <span className="text-[10px] text-brand/50 block mb-1">{t.order.tpPrice}</span>
                         <input
                             type="number"
@@ -417,10 +417,10 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                             step="any"
                             min="0"
                             className="w-full bg-transparent text-sm font-mono outline-none"
-                            style={{ color: '#FFFF00' }}
+                            style={{ color: '#E3B34C' }}
                         />
                     </div>
-                    <div className="bg-black border border-[#FFFF00]/30 rounded-lg px-3 py-2">
+                    <div className="bg-black border border-[#E3B34C]/30 rounded-lg px-3 py-2">
                         <span className="text-[10px] text-brand/50 block mb-1">{t.order.slPrice}</span>
                         <input
                             type="number"
@@ -430,14 +430,14 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
                             step="any"
                             min="0"
                             className="w-full bg-transparent text-sm font-mono outline-none"
-                            style={{ color: '#FFFF00' }}
+                            style={{ color: '#E3B34C' }}
                         />
                     </div>
                 </div>
             )}
 
             {/* Order Summary */}
-            <div className="border-t border-[#FFFF00]/20 pt-3 mb-4 space-y-1">
+            <div className="border-t border-[#E3B34C]/20 pt-3 mb-4 space-y-1">
                 <div className="flex justify-between text-xs">
                     <span className="text-brand/50">{t.order.value}</span>
                     <span className="text-brand font-mono">${orderValue.toFixed(2)}</span>
@@ -520,7 +520,7 @@ export default function AdvancedOrderPanel({ symbol, initialPrice, initialSide =
             {/* Stock Approval Modal */}
             {showStockApprovalModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#111111] border border-[#FFFF00]/30 rounded-2xl p-6 max-w-sm w-full">
+                    <div className="bg-[#111111] border border-[#E3B34C]/30 rounded-2xl p-6 max-w-sm w-full">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <Zap className="w-5 h-5 text-blue-400" />

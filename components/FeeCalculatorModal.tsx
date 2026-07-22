@@ -145,7 +145,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
 
                         <div className="relative group">
                             <div className="absolute inset-0 bg-brand/10 blur-xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
-                            <div className="relative flex items-center justify-center gap-2 border-b border-white/10 group-focus-within:border-[#FFFF00]/50 transition-colors pb-2">
+                            <div className="relative flex items-center justify-center gap-2 border-b border-white/10 group-focus-within:border-[#E3B34C]/50 transition-colors pb-2">
                                 <span className="text-2xl font-black text-coffee-medium select-none">
                                     {currency === 'USD' ? '$' : 'COP'}
                                 </span>
@@ -183,7 +183,7 @@ export default function FeeCalculatorModal({ isOpen, onClose }: FeeCalculatorMod
                     </div>
 
                     {/* Savings Highlight */}
-                    <div className="bg-gradient-to-br from-[#FFFF00]/10 to-[#FFFF00]/5 border border-[#FFFF00]/20 rounded-2xl p-4 text-center">
+                    <div className="bg-gradient-to-br from-[#E3B34C]/10 to-[#E3B34C]/5 border border-[#E3B34C]/20 rounded-2xl p-4 text-center">
                         <div className="flex items-center justify-center gap-2 mb-1">
                             <Trophy className="w-4 h-4 text-brand" />
                             <span className="text-brand font-bold text-xs tracking-wide">AHORRO ESTIMADO</span>

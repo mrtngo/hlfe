@@ -255,7 +255,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                 >
                     {isLoading ? (
                         <div className="flex flex-col items-center justify-center h-full gap-4 text-gray-500">
-                            <div className="w-10 h-10 border-3 border-[#FFFF00]/20 border-t-[#FFFF00] rounded-full animate-spin" />
+                            <div className="w-10 h-10 border-3 border-[#E3B34C]/20 border-t-[#E3B34C] rounded-full animate-spin" />
                             <span className="text-sm font-semibold">{t.common.loadingMessages}</span>
                         </div>
                     ) : messages.length === 0 ? (
@@ -271,7 +271,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                         </div>
                     ) : (
                         messages.map((msg) => {
-                            const userColor = msg.is_system ? '#FFFF00' : getUserColor(msg.user_id);
+                            const userColor = msg.is_system ? '#E3B34C' : getUserColor(msg.user_id);
                             const isCurrentUser = currentUser && msg.user_id === currentUser.id;
 
                             return (
@@ -338,7 +338,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                         onClick={() => scrollToBottom()}
                         className="absolute bottom-24 right-8 p-3 rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all z-10 animate-bounce"
                         style={{
-                            background: 'linear-gradient(135deg, #FFFF00, #FFD700)',
+                            background: 'linear-gradient(135deg, #E3B34C, #FFD700)',
                             boxShadow: '0 4px 20px rgba(255, 255, 0, 0.5)',
                         }}
                     >
@@ -411,7 +411,7 @@ export default function Trollbox({ isOpen, onClose }: TrollboxProps) {
                                 style={{
                                     background: !newMessage.trim() || isSending
                                         ? 'rgba(100, 100, 100, 0.5)'
-                                        : 'linear-gradient(135deg, #FFFF00, #FFD700)',
+                                        : 'linear-gradient(135deg, #E3B34C, #FFD700)',
                                     boxShadow: !newMessage.trim() || isSending
                                         ? 'none'
                                         : '0 4px 16px rgba(255, 255, 0, 0.4)',

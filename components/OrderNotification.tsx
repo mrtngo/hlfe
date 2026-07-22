@@ -156,7 +156,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                             >
                                 <path
                                     d="M55 10L25 52H45L38 90L75 42H52L55 10Z"
-                                    stroke="#FFFF00"
+                                    stroke="#E3B34C"
                                     strokeWidth="3"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -183,15 +183,15 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                             >
                                 <defs>
                                     <linearGradient id="boltGradientNotif" x1="0%" y1="100%" x2="0%" y2="0%">
-                                        <stop offset="0%" stopColor="#FFFF00" />
-                                        <stop offset="50%" stopColor="#FFFF00" />
+                                        <stop offset="0%" stopColor="#E3B34C" />
+                                        <stop offset="50%" stopColor="#E3B34C" />
                                         <stop offset="100%" stopColor="#FFD700" />
                                     </linearGradient>
                                 </defs>
                                 <path
                                     d="M55 10L25 52H45L38 90L75 42H52L55 10Z"
                                     fill="url(#boltGradientNotif)"
-                                    stroke="#FFFF00"
+                                    stroke="#E3B34C"
                                     strokeWidth="3"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -219,7 +219,7 @@ export default function OrderNotification({ order, onClose }: OrderNotificationP
                             {actionText}
                         </h2>
                         <p style={{
-                            color: '#FFFF00',
+                            color: '#E3B34C',
                             textAlign: 'center',
                             fontSize: '14px',
                             marginBottom: '24px',

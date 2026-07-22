@@ -843,7 +843,7 @@ export default function OrderPanel() {
                     </div>
                 )}
                 {success && (
-                    <div className="flex items-center gap-2 p-3 bg-brand/10 border border-[#FFFF00]/20 rounded-lg text-sm text-brand">
+                    <div className="flex items-center gap-2 p-3 bg-brand/10 border border-[#E3B34C]/20 rounded-lg text-sm text-brand">
                         <Info className="w-4 h-4 shrink-0" />
                         <span>{success}</span>
                     </div>

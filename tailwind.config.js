@@ -23,18 +23,19 @@ module.exports = {
         "3xl": "2rem",
       },
       colors: {
-        // Rayo Brand Colors - Using Design System
+        // Delos Brand Colors - Apollonian gold (kept under the legacy `rayo`
+        // key so existing utility classes keep working post-rebrand).
         rayo: {
-          yellow: "#FACC15",  // Design System Brand Yellow
+          yellow: "#E3B34C",  // Delos gold (was Rayo yellow)
           black: "#000000",   // Pure Black
           grey: "#1A1A1A",    // Dark Grey
         },
         // Design System Colors (can be used as bg-brand, text-brand, etc.)
         brand: {
-          DEFAULT: "#FACC15",
-          hover: "#FDE047",
-          muted: "rgba(250, 204, 21, 0.2)",
-          border: "rgba(250, 204, 21, 0.4)",
+          DEFAULT: "#E3B34C",
+          hover: "#F2D389",
+          muted: "rgba(227, 179, 76, 0.2)",
+          border: "rgba(227, 179, 76, 0.4)",
         },
         positive: {
           DEFAULT: "#22C55E",

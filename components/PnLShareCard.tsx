@@ -65,11 +65,11 @@ const PnLShareCard = forwardRef<HTMLDivElement, PnLShareCardProps>(
                         alignItems: 'center',
                         gap: '8px',
                     }}>
-                        <Zap style={{ width: '24px', height: '24px', color: '#FFFF00', fill: '#FFFF00' }} />
+                        <Zap style={{ width: '24px', height: '24px', color: '#E3B34C', fill: '#E3B34C' }} />
                         <span style={{
                             fontSize: '20px',
                             fontWeight: 'bold',
-                            color: '#FFFF00',
+                            color: '#E3B34C',
                             letterSpacing: '2px',
                         }}>
                             RAYO
@@ -134,7 +134,7 @@ const PnLShareCard = forwardRef<HTMLDivElement, PnLShareCardProps>(
                         <span style={{
                             fontSize: '14px',
                             fontWeight: 'bold',
-                            color: '#FFFF00',
+                            color: '#E3B34C',
                         }}>
                             {position.leverage}x
                         </span>

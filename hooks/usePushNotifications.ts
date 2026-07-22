@@ -331,7 +331,7 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
     // Use the service worker to show the notification
     navigator.serviceWorker.ready.then((registration) => {
-      registration.showNotification('Rayo Test', {
+      registration.showNotification('Delos Test', {
         body: 'Push notifications are working!',
         icon: '/icons/icon-192x192.png',
         badge: '/icons/icon-96x96.png',

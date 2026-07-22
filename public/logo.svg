@@ -1,20 +1,15 @@
-<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-      <feMerge>
-        <feMergeNode in="coloredBlur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
-  </defs>
-  <path 
-    d="M55 10L25 52H45L38 90L75 42H52L55 10Z" 
-    stroke="#FFFF00" 
-    stroke-width="4" 
-    stroke-linecap="round" 
-    stroke-linejoin="round"
-    fill="none"
-    filter="url(#glow)"
-  />
+<svg width="96" height="96" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="12" cy="12" r="4.6" fill="#E3B34C"/>
+  <line x1="18.40" y1="12.00" x2="23.20" y2="12.00" stroke="#E3B34C" stroke-width="1.9" stroke-linecap="round"/>
+  <line x1="17.54" y1="15.20" x2="19.97" y2="16.60" stroke="#E3B34C" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="15.20" y1="17.54" x2="17.60" y2="21.70" stroke="#E3B34C" stroke-width="1.9" stroke-linecap="round"/>
+  <line x1="12.00" y1="18.40" x2="12.00" y2="21.20" stroke="#E3B34C" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="8.80" y1="17.54" x2="6.40" y2="21.70" stroke="#E3B34C" stroke-width="1.9" stroke-linecap="round"/>
+  <line x1="6.46" y1="15.20" x2="4.03" y2="16.60" stroke="#E3B34C" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="5.60" y1="12.00" x2="0.80" y2="12.00" stroke="#E3B34C" stroke-width="1.9" stroke-linecap="round"/>
+  <line x1="6.46" y1="8.80" x2="4.03" y2="7.40" stroke="#E3B34C" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="8.80" y1="6.46" x2="6.40" y2="2.30" stroke="#E3B34C" stroke-width="1.9" stroke-linecap="round"/>
+  <line x1="12.00" y1="5.60" x2="12.00" y2="2.80" stroke="#E3B34C" stroke-width="1.4" stroke-linecap="round"/>
+  <line x1="15.20" y1="6.46" x2="17.60" y2="2.30" stroke="#E3B34C" stroke-width="1.9" stroke-linecap="round"/>
+  <line x1="17.54" y1="8.80" x2="19.97" y2="7.40" stroke="#E3B34C" stroke-width="1.4" stroke-linecap="round"/>
 </svg>

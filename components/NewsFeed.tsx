@@ -70,7 +70,7 @@ export function NewsFeed({ height = 600, showHeader = true }: NewsFeedProps) {
             )}
 
             {/* Info Banner */}
-            <div className="px-4 py-3 bg-brand/5 border-b border-[#FFFF00]/20">
+            <div className="px-4 py-3 bg-brand/5 border-b border-[#E3B34C]/20">
                 <p className="text-xs text-coffee-medium text-center">
                     📱 Tap any account to view their latest tweets on X
                 </p>
@@ -87,7 +87,7 @@ export function NewsFeed({ height = 600, showHeader = true }: NewsFeedProps) {
                         href={`https://twitter.com/${account.handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-4 bg-bg-secondary rounded-xl border border-white/10 hover:border-[#FFFF00]/50 hover:bg-bg-elevated transition-all"
+                        className="group p-4 bg-bg-secondary rounded-xl border border-white/10 hover:border-[#E3B34C]/50 hover:bg-bg-elevated transition-all"
                     >
                         <div className="flex items-start justify-between mb-2">
                             <div className="w-10 h-10 bg-brand/20 rounded-full flex items-center justify-center">

@@ -194,13 +194,13 @@ export default function OrderBook({
     return (
         <div className="flex flex-col h-full bg-black overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 bg-black border-b border-[#FFFF00]/20">
+            <div className="flex items-center justify-between px-3 py-2 bg-black border-b border-[#E3B34C]/20">
                 <span className="text-xs font-semibold text-brand">{t.orderBook.title}</span>
                 <span className="text-xs text-brand/60">{levels}x{levels}</span>
             </div>
 
             {/* Column headers */}
-            <div className="grid grid-cols-3 px-3 py-1 text-[10px] text-brand/50 font-medium border-b border-[#FFFF00]/10">
+            <div className="grid grid-cols-3 px-3 py-1 text-[10px] text-brand/50 font-medium border-b border-[#E3B34C]/10">
                 <span>{t.orderBook.price}</span>
                 <span className="text-right">{t.orderBook.size}</span>
                 <span className="text-right">{t.orderBook.total}</span>

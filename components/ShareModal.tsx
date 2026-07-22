@@ -160,7 +160,7 @@ export default function ShareModal({ isOpen, onClose, position }: ShareModalProp
                     borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Share2 style={{ width: '20px', height: '20px', color: '#FFFF00' }} />
+                        <Share2 style={{ width: '20px', height: '20px', color: '#E3B34C' }} />
                         <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: 'white', margin: 0 }}>
                             Share Position
                         </h2>
@@ -206,7 +206,7 @@ export default function ShareModal({ isOpen, onClose, position }: ShareModalProp
                             justifyContent: 'center',
                             gap: '8px',
                             padding: '14px',
-                            backgroundColor: '#FFFF00',
+                            backgroundColor: '#E3B34C',
                             color: 'black',
                             fontWeight: 'bold',
                             border: 'none',

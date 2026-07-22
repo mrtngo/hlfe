@@ -1671,8 +1671,8 @@ h6 {
   color: var(--color-text-secondary);
 }
 
-.dt-orderbook-panel .border-\[\#FFFF00\]\/20,
-.dt-orderbook-panel .border-\[\#FFFF00\]\/10 {
+.dt-orderbook-panel .border-\[\#E3B34C\]\/20,
+.dt-orderbook-panel .border-\[\#E3B34C\]\/10 {
   border-color: var(--color-border-subtle);
 }
 
@@ -2223,8 +2223,8 @@ h6 {
   color: var(--color-text-secondary);
 }
 
-.dp-orderbook .border-\[\#FFFF00\]\/20,
-.dp-orderbook .border-\[\#FFFF00\]\/10 {
+.dp-orderbook .border-\[\#E3B34C\]\/20,
+.dp-orderbook .border-\[\#E3B34C\]\/10 {
   border-color: var(--color-border-subtle);
 }
 
