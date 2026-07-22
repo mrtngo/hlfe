@@ -26,6 +26,7 @@ import CandlestickChart from '@/components/CandlestickChart';
 import MarketSelectModal from '@/components/MarketSelectModal';
 import OrderBook from '@/components/OrderBook';
 import TokenLogo from '@/components/TokenLogo';
+import ProToggle from '@/components/ProToggle';
 
 type DesktopTerminalProps = {
     onOpenDeposit: () => void;
@@ -34,6 +35,8 @@ type DesktopTerminalProps = {
     onOpenPredictions: () => void;
     onOpenProfile: () => void;
     onOpenSettings: () => void;
+    /** Leaves the pro terminal and returns to the consumer desktop shell. */
+    onExitPro?: () => void;
 };
 
 type MarketFilter = 'all' | TokenCategory;
@@ -56,6 +59,7 @@ export default function DesktopTerminal({
     onOpenPredictions,
     onOpenProfile,
     onOpenSettings,
+    onExitPro,
 }: DesktopTerminalProps) {
     const { formatCurrency } = useCurrency();
     const {
@@ -147,6 +151,7 @@ export default function DesktopTerminal({
                 <div className="dt-account-strip">
                     <Metric label="Equity" value={formatCurrency(account.equity || 0)} />
                     <Metric label="Disponible" value={`${(account.availableMargin || 0).toFixed(2)} USDC`} />
+                    {onExitPro && <ProToggle pro onClick={onExitPro} />}
                     <button className="dt-icon-button" type="button" aria-label="Alertas">
                         <Bell size={16} />
                     </button>

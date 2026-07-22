@@ -12,6 +12,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { DelosWordmark, Icon, V2, type IconName } from '@/components/V2Kit';
+import ProToggle from '@/components/ProToggle';
 
 export type ShellView =
     | 'home' | 'markets' | 'academy' | 'predictions'
@@ -48,6 +49,8 @@ interface DesktopShellProps {
     onDeposit: () => void;
     onOpenProfile: () => void;
     onOpenSearch?: () => void;
+    /** Switches into the dense pro terminal (opt-in, persisted). */
+    onTogglePro?: () => void;
     /** Title shown in the top bar (defaults to the active nav label). */
     title?: string;
     children: ReactNode;
@@ -62,6 +65,7 @@ export default function DesktopShell({
     onDeposit,
     onOpenProfile,
     onOpenSearch,
+    onTogglePro,
     title,
     children,
 }: DesktopShellProps) {
@@ -151,6 +155,7 @@ export default function DesktopShell({
                             <Icon name="search" size={16} color={V2.t3} />
                             Buscar mercado…
                         </button>
+                        {authenticated && onTogglePro && <ProToggle pro={false} onClick={onTogglePro} />}
                         {authenticated ? (
                             <button
                                 onClick={onDeposit}

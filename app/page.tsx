@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useUser } from '@/hooks/useUser';
+import { usePreferences } from '@/hooks/usePreferences';
 import { usePrivy } from '@privy-io/react-auth';
 import WelcomeScreen from '@/components/WelcomeScreen';
 import ChooseUsernameScreen from '@/components/ChooseUsernameScreen';
@@ -66,6 +67,7 @@ export default function Home() {
     } = useHyperliquid();
     const { ready, authenticated, login, getAccessToken } = usePrivy();
     const { user, loading: userLoading, needsConsent, recordConsent } = useUser();
+    const { proMode, toggleProMode } = usePreferences();
     const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'academy' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Preselected side for the trade screen ("Bajar" → sell). Resets to buy on generic entry. */
@@ -191,8 +193,11 @@ export default function Home() {
     const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'academy', 'traderSearch', 'publicProfile', 'predictions'];
     const isV2View = V2_VIEWS.includes(view);
     const DESKTOP_TERMINAL_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'advanced'];
-    const showDesktopTerminal = ready && authenticated && isDesktopTerminal && DESKTOP_TERMINAL_VIEWS.includes(view);
-    const showDesktopPredictions = ready && authenticated && isDesktopTerminal && view === 'predictions';
+    // The dense pro terminal is opt-in: desktop users get the consumer shell by
+    // default and only land in the terminal after flipping the PRO toggle
+    // (persisted in localStorage via usePreferences).
+    const showDesktopTerminal = ready && authenticated && isDesktopTerminal && proMode && DESKTOP_TERMINAL_VIEWS.includes(view);
+    const showDesktopPredictions = ready && authenticated && isDesktopTerminal && proMode && view === 'predictions';
     const hideMobileFooter = ready && authenticated && isDesktopTerminal;
     // Wide-screen consumer desktop layout: every V2 view that isn't the dedicated
     // pro terminal / predictions renders in the sidebar+topbar DesktopShell
@@ -353,6 +358,7 @@ export default function Home() {
                     onDeposit={() => setView('deposit')}
                     onOpenProfile={handleProfileClick}
                     onOpenSearch={() => setView('markets')}
+                    onTogglePro={toggleProMode}
                 >
                     {view === 'home' ? (
                         <DesktopHome
@@ -445,6 +451,7 @@ export default function Home() {
                             onOpenPredictions={() => setView('predictions')}
                             onOpenProfile={() => setView('profile')}
                             onOpenSettings={() => setView('settings')}
+                            onExitPro={toggleProMode}
                         />
                     ) : showDesktopPredictions ? (
                         <DesktopPredictions
