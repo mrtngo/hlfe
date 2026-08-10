@@ -8,6 +8,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { createHyperliquidClient, API_URL } from '@/lib/hyperliquid/client';
+import { indexSpotCtxsByCoin } from '@/lib/hyperliquid/spot-meta';
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { cachedFetch } from '@/lib/api-cache';
 import type { Position, Order, AccountState, Market } from '@/types';
@@ -383,15 +384,21 @@ export function useHyperliquidAccount(
             if (Array.isArray(spotMetaResponse) && spotMetaResponse.length === 2) {
                 const [spotMeta, spotCtxs] = spotMetaResponse;
                 const prices: Record<string, number> = {};
-                spotMeta?.universe?.forEach((pair: any, idx: number) => {
+                // Contexts are keyed by pair id, not by position in
+                // `universe` (HL returns ~715 contexts for ~324 live pairs),
+                // so join on `ctx.coin === pair.name` — indexing positionally
+                // values holdings at some other market's price.
+                const ctxByCoin = indexSpotCtxsByCoin(spotCtxs);
+                spotMeta?.universe?.forEach((pair: any) => {
                     const baseTok = spotMeta.tokens.find((t: any) => t.index === pair.tokens[0]);
-                    const markPx = spotCtxs[idx]?.markPx;
+                    const ctx = ctxByCoin.get(pair.name);
+                    const markPx = ctx?.markPx;
                     if (baseTok?.name && markPx) {
                         const px = parseFloat(markPx);
                         // Keep the highest-volume quote if a base has multiple
                         // pairs — same dedup intent as useSpotMarkets.
                         const existingVol = prices[`__vol_${baseTok.name}`] || 0;
-                        const curVol = parseFloat(spotCtxs[idx]?.dayNtlVlm || '0');
+                        const curVol = parseFloat(ctx?.dayNtlVlm || '0');
                         if (curVol >= existingVol) {
                             prices[baseTok.name] = px;
                             prices[`__vol_${baseTok.name}`] = curVol;
@@ -555,11 +562,14 @@ export function useHyperliquidAccount(
                 const [spotMeta, spotCtxs] = spotMetaResponse;
                 const prices: Record<string, number> = {};
                 const vols: Record<string, number> = {};
-                spotMeta?.universe?.forEach((pair: any, idx: number) => {
+                // Join by pair name — see the note in fetchAccountData.
+                const ctxByCoin = indexSpotCtxsByCoin(spotCtxs);
+                spotMeta?.universe?.forEach((pair: any) => {
                     const baseTok = spotMeta.tokens.find((t: any) => t.index === pair.tokens[0]);
-                    const markPx = spotCtxs[idx]?.markPx;
+                    const ctx = ctxByCoin.get(pair.name);
+                    const markPx = ctx?.markPx;
                     if (!baseTok?.name || !markPx) return;
-                    const curVol = parseFloat(spotCtxs[idx]?.dayNtlVlm || '0');
+                    const curVol = parseFloat(ctx?.dayNtlVlm || '0');
                     if (curVol >= (vols[baseTok.name] || 0)) {
                         prices[baseTok.name] = parseFloat(markPx);
                         vols[baseTok.name] = curVol;

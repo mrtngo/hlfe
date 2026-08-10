@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { API_URL } from '@/lib/hyperliquid/client';
 import { cachedFetch } from '@/lib/api-cache';
-import { SPOT_PICKER_TOP_N } from '@/lib/constants/spot-tokens';
+import {
+    SPOT_CATALOG,
+    SPOT_CATALOG_BY_TOKEN_ID,
+    SPOT_PICKER_TOP_N,
+    type SpotAssetKind,
+    type SpotWrapper,
+} from '@/lib/constants/spot-tokens';
+import { getTokenFullName } from '@/lib/constants/tokens';
 
 /**
  * Hyperliquid token metadata from `spotMeta.tokens`.
@@ -31,7 +38,7 @@ interface HLSpotPairMeta {
 }
 
 /**
- * Asset context per pair, in the same order as `spotMeta.universe`.
+ * Asset context per pair. `coin` matches the pair's `name`.
  */
 interface HLSpotAssetCtx {
     dayNtlVlm: string;
@@ -45,9 +52,9 @@ interface HLSpotAssetCtx {
  * Flattened market shape consumed by Rayo's Spot UI.
  */
 export interface SpotMarket {
-    /** Base token name, e.g. "HYPE". */
+    /** Base token name as HL knows it, e.g. "UBTC". Key for balances. */
     baseName: string;
-    /** Symbol passed to placeOrder() — e.g. "HYPE/USDC". */
+    /** Symbol passed to placeOrder() — e.g. "UBTC/USDC". */
     symbol: string;
     /** Index into `spotMeta.universe`. Provider re-resolves this server-side. */
     pairIndex: number;
@@ -55,10 +62,24 @@ export interface SpotMarket {
     szDecimals: number;
     /** Current mark price in USDC. */
     price: number;
-    /** Percent change over the previous 24h. */
-    change24h: number;
+    /** Percent change over the previous 24h. Null when HL has no prior
+     *  close for the pair — freshly listed markets report prevDayPx 0, and
+     *  rendering that as "0.00%" would claim the price is flat. */
+    change24h: number | null;
     /** 24h notional volume in USDC. */
     volume24h: number;
+    /** Ticker to show the user ("BTC" for UBTC, "NVDAx" for NVDAX). */
+    display: string;
+    /** Human name for the subtitle ("Bitcoin", "NVIDIA"). */
+    fullName: string;
+    /** Symbol to hand <TokenLogo />. */
+    logo: string;
+    /** Section the picker groups this under. */
+    kind: SpotAssetKind;
+    /** Bridge/wrapper behind the token, when there is one. */
+    wrapper?: SpotWrapper;
+    /** False for holdings surfaced outside the curated catalog. */
+    curated: boolean;
 }
 
 interface UseSpotMarketsResult {
@@ -71,19 +92,25 @@ interface UseSpotMarketsResult {
 interface UseSpotMarketsOptions {
     /**
      * Base tickers to always surface (typically the user's owned tokens),
-     * even if they're outside the top-N-by-volume ranking. Ensures users
-     * can always sell what they already hold.
+     * even when they're outside the curated catalog. Ensures users can
+     * always sell what they already hold.
      */
     includeOwned?: string[];
     /**
-     * Override the default top-N count. Defaults to SPOT_PICKER_TOP_N (10).
+     * Override the fallback top-N count (auto-discovery mode only).
+     * Defaults to SPOT_PICKER_TOP_N (10).
      */
     topN?: number;
 }
 
 /**
- * Fetches the curated Hyperliquid spot universe (whitelist filtered) with
- * price + 24h stats. Polls every 15s so the order panel reflects mark moves.
+ * Fetches the curated Hyperliquid spot universe with price + 24h stats.
+ * Polls every 15s so the order panel reflects mark moves.
+ *
+ * Assets come from SPOT_CATALOG and are matched by `tokenId`, never by
+ * ticker — HL spot names are not unique and impostor "SPY"/"QQQ"/"MU"
+ * tokens exist on mainnet today. Anything the user already holds is
+ * appended so they can always sell it.
  *
  * We do NOT subscribe to allMids WS here — the perp `useMarketData` already
  * runs a WS, and spinning up a second one for ~10 tokens isn't worth it.
@@ -131,12 +158,25 @@ export function useSpotMarkets(
             const tokensByIndex = new Map<number, HLSpotTokenMeta>();
             for (const tok of meta.tokens) tokensByIndex.set(tok.index, tok);
 
+            // Contexts are NOT positionally aligned with `universe`: HL
+            // returns a context per pair id (currently ~715 of them) while
+            // `universe` only lists the live pairs (~324). Reading
+            // `contexts[i]` for universe position `i` silently pairs a
+            // token with another market's price — that's how HYPE ends up
+            // quoted at $0.11. Join on the pair name, which `ctx.coin`
+            // mirrors exactly.
+            const ctxByCoin = new Map<string, HLSpotAssetCtx>();
+            for (const ctx of contexts) {
+                if (ctx?.coin) ctxByCoin.set(ctx.coin, ctx);
+            }
+
             // 1. Build one SpotMarket per base token, restricted to USDC-
             //    quoted pairs. If a base has multiple USDC pairs (HL sometimes
             //    runs HYPE/USDC alongside HYPE/USDC0), keep the higher-volume
             //    one so quoting + order routing both go through the deeper book.
             const all: SpotMarket[] = [];
             const seenByBase = new Map<string, number>(); // baseName -> index in `all`
+            const byTokenId = new Map<string, SpotMarket>();
             meta.universe.forEach((pair, idx) => {
                 const baseTok = tokensByIndex.get(pair.tokens[0]);
                 const quoteTok = tokensByIndex.get(pair.tokens[1]);
@@ -146,12 +186,14 @@ export function useSpotMarkets(
                 // USDC0 variants) would require extra hops we don't support.
                 if (quoteTok?.name !== 'USDC') return;
 
-                const ctx = contexts[idx];
+                const ctx = ctxByCoin.get(pair.name);
                 const markPx = ctx?.markPx ? parseFloat(ctx.markPx) : 0;
                 const prevPx = ctx?.prevDayPx ? parseFloat(ctx.prevDayPx) : 0;
-                const change24h = prevPx > 0 ? ((markPx - prevPx) / prevPx) * 100 : 0;
+                const change24h =
+                    prevPx > 0 ? ((markPx - prevPx) / prevPx) * 100 : null;
                 const volume24h = ctx?.dayNtlVlm ? parseFloat(ctx.dayNtlVlm) : 0;
 
+                const entry = SPOT_CATALOG_BY_TOKEN_ID[(baseTok.tokenId || '').toLowerCase()];
                 const candidate: SpotMarket = {
                     baseName: baseTok.name,
                     // Always emit a slash-formatted symbol from the canonical
@@ -169,6 +211,15 @@ export function useSpotMarkets(
                     price: markPx,
                     change24h,
                     volume24h,
+                    display: entry?.display ?? baseTok.name,
+                    fullName:
+                        entry?.fullName ??
+                        baseTok.fullName ??
+                        getTokenFullName(baseTok.name),
+                    logo: entry?.logo ?? baseTok.name,
+                    kind: entry?.kind ?? 'crypto',
+                    wrapper: entry?.wrapper,
+                    curated: !!entry,
                 };
 
                 const existingIdx = seenByBase.get(baseTok.name);
@@ -178,26 +229,41 @@ export function useSpotMarkets(
                 } else if (volume24h > all[existingIdx].volume24h) {
                     all[existingIdx] = candidate;
                 }
+
+                if (entry) {
+                    const prev = byTokenId.get(entry.tokenId);
+                    if (!prev || volume24h > prev.volume24h) {
+                        byTokenId.set(entry.tokenId, candidate);
+                    }
+                }
             });
 
-            // 2. Sort by 24h volume descending.
-            all.sort((a, b) => b.volume24h - a.volume24h);
+            // 2. Curated list, in catalog order. Matching is by tokenId, so a
+            //    squatter that renames itself "NVDAX" can never take this slot.
+            const curated = SPOT_CATALOG.map((e) => byTokenId.get(e.tokenId)).filter(
+                (m): m is SpotMarket => !!m,
+            );
 
-            // 3. Take top N, then union with the user's owned tokens so
-            //    holdings outside the top N still render in the picker
-            //    (otherwise users can't sell less-liquid stuff they already
-            //    hold). The union sorts by volume too.
+            // 3. Testnet (and any venue whose token ids don't match mainnet's)
+            //    resolves zero curated entries — fall back to the old
+            //    auto-discovery by 24h volume so the screens stay usable.
+            const base =
+                curated.length > 0
+                    ? curated
+                    : [...all]
+                          .sort((a, b) => b.volume24h - a.volume24h)
+                          .slice(0, topN);
+
+            // 4. Append anything the user holds that isn't already listed, so
+            //    holdings outside the catalog stay sellable (airdrops, tokens
+            //    bought before a catalog change, testnet artifacts).
             const ownedSet = new Set(ownedKey.split(',').filter(Boolean));
-            const top = all.slice(0, topN);
-            const topSet = new Set(top.map((m) => m.baseName));
-            const ownedExtras = all.filter(
-                (m) => ownedSet.has(m.baseName) && !topSet.has(m.baseName),
-            );
-            const final = [...top, ...ownedExtras].sort(
-                (a, b) => b.volume24h - a.volume24h,
-            );
+            const listed = new Set(base.map((m) => m.baseName));
+            const ownedExtras = all
+                .filter((m) => ownedSet.has(m.baseName) && !listed.has(m.baseName))
+                .sort((a, b) => b.volume24h - a.volume24h);
 
-            setMarkets(final);
+            setMarkets([...base, ...ownedExtras]);
             setError(null);
         } catch (err: unknown) {
             console.error('useSpotMarkets fetch error:', err);

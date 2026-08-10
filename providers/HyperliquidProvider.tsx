@@ -18,6 +18,8 @@ import {
 } from '@/lib/agent-wallet';
 import { wsManager } from '@/lib/hyperliquid/websocket-manager';
 import { outcomeWireAsset } from '@/lib/hyperliquid/outcome';
+import { indexSpotCtxsByCoin } from '@/lib/hyperliquid/spot-meta';
+import { SPOT_CATALOG_BY_HL_NAME } from '@/lib/constants/spot-tokens';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useWalletClient } from 'wagmi';
 import { apiCache } from '@/lib/api-cache';
@@ -938,7 +940,28 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 const ownedBalance = spotBalances.find((b: any) => b.coin === baseCoin);
                 let pairIndex: number;
 
-                if (ownedBalance) {
+                // Listed assets resolve by tokenId, which is unique — spot
+                // NAMES are not. Mainnet already carries a "SPY", "QQQ" and
+                // "MU" from an unrelated deployer, so a name (or even a held
+                // balance) with the same ticker must never decide where a
+                // catalog order is routed. Same identity check the picker uses.
+                const catalogEntry = SPOT_CATALOG_BY_HL_NAME[baseCoin];
+                const catalogTokenIndex = catalogEntry
+                    ? spotMeta.tokens.find(
+                          (t: any) =>
+                              (t.tokenId || '').toLowerCase() === catalogEntry.tokenId,
+                      )?.index
+                    : undefined;
+
+                if (catalogTokenIndex !== undefined) {
+                    pairIndex = spotMeta.universe.findIndex((p: any) => {
+                        if (p.tokens[0] !== catalogTokenIndex) return false;
+                        const quoteTok = spotMeta.tokens.find(
+                            (t: any) => t.index === p.tokens[1],
+                        );
+                        return quoteTok?.name === 'USDC';
+                    });
+                } else if (ownedBalance) {
                     // Owned coin: route to a pair containing THIS specific
                     // token index. USDC-quoted preferred.
                     pairIndex = spotMeta.universe.findIndex((p: any) => {
@@ -987,9 +1010,19 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // even when the user clearly holds the underlying token.
                 const resolvedPair = spotMeta.universe[pairIndex];
                 assetIndex = resolvedPair.index;
-                const spotCtx = spotContexts[pairIndex];
+                // Contexts are keyed by pair name, not by position in
+                // `universe` — see indexSpotCtxsByCoin. A positional read
+                // returns another market's mark, and that mark becomes the
+                // IOC limit price below, so the order either can't fill or
+                // is rejected for being far from the reference price.
+                const spotCtx = indexSpotCtxsByCoin(spotContexts).get(resolvedPair.name);
                 referencePrice = spotCtx?.markPx ? parseFloat(spotCtx.markPx) : null;
-                actualSzDecimals = spotMeta.tokens.find((t: any) => t.name === baseCoin)?.szDecimals;
+                // Size precision must come from the token we actually routed
+                // to, not from a name lookup that could hit a same-named
+                // token with different szDecimals.
+                actualSzDecimals = spotMeta.tokens.find(
+                    (t: any) => t.index === resolvedPair.tokens[0],
+                )?.szDecimals;
 
                 logger.debug(
                     `🔎 Spot pair resolution: baseCoin=${baseCoin}, ownedTokenIndex=${ownedBalance?.token ?? '(none)'}, arrayIdx=${pairIndex}, canonicalIndex=${assetIndex}, pairName=${resolvedPair.name}`,
@@ -2495,10 +2528,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 if (!usdhTok) {
                     return { filled: false, filledSize: 0, filledPrice: 0, error: 'USDH not on this network' };
                 }
-                const pairIdx = spotMeta.universe.findIndex(
+                const usdhPair = spotMeta.universe.find(
                     (p: any) => p.tokens[0] === usdhTok.index,
                 );
-                const mid = parseFloat(spotCtxs[pairIdx]?.markPx || '1') || 1;
+                // Join contexts by pair name — they are not positionally
+                // aligned with `universe` (see indexSpotCtxsByCoin).
+                const usdhCtx = usdhPair
+                    ? indexSpotCtxsByCoin(spotCtxs).get(usdhPair.name)
+                    : undefined;
+                const mid = parseFloat(usdhCtx?.markPx || '1') || 1;
                 const usdhSize = Math.floor((usdcAmount / mid) * 100) / 100;
                 if (usdhSize <= 0) {
                     return { filled: false, filledSize: 0, filledPrice: 0, error: 'Computed USDH size is 0' };

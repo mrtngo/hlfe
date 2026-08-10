@@ -6,7 +6,14 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePrivy } from '@privy-io/react-auth';
 import { useUser } from '@/hooks/useUser';
-import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
+import {
+    getTokenFullName,
+    getSpotDisplaySymbol,
+    getSpotFullName,
+    getSpotLogoSymbol,
+    STORAGE_KEYS,
+    DEFAULT_WATCHLIST,
+} from '@/lib/constants';
 import { formatUsdPrice } from '@/lib/format/price';
 import MiniChart from '@/components/MiniChart';
 import MarketSelectModal from '@/components/MarketSelectModal';
@@ -297,14 +304,14 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                                     onKeyDown={(e) => e.key === 'Enter' && onSpotHoldingClick?.(h.coin)}
                                     style={{ display: 'flex', alignItems: 'center', gap: 13, padding: '14px 16px', cursor: 'pointer', borderBottom: i < spotHoldings.length - 1 ? `1px solid ${V2.hair}` : 'none' }}
                                 >
-                                    <MarketLogo sym={h.coin} size={40} />
+                                    <MarketLogo sym={getSpotLogoSymbol(h.coin)} size={40} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                                            <span style={{ fontSize: 16, fontWeight: 700 }}>{getTokenFullName(h.coin)}</span>
+                                            <span style={{ fontSize: 16, fontWeight: 700 }}>{getSpotFullName(h.coin)}</span>
                                             <span style={{ fontSize: 10.5, fontWeight: 800, padding: '2px 6px', borderRadius: 5, letterSpacing: '0.04em', background: 'rgba(56,189,248,0.16)', color: '#38BDF8' }}>SPOT</span>
                                         </div>
                                         <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 2, fontFamily: V2.mono }}>
-                                            {h.amount.toLocaleString('en-US', { maximumFractionDigits: 6 })} {h.coin}
+                                            {h.amount.toLocaleString('en-US', { maximumFractionDigits: 6 })} {getSpotDisplaySymbol(h.coin)}
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>

@@ -93,7 +93,13 @@
     "transferTitle": "Move USDC",
     "movePerpToSpot": "Move USDC from Perp to Spot",
     "balanceChip": "Spot {spot} · Perp {perp}",
-    "untradableDust": "{amount} {coin} not tradable (Hyperliquid precision)"
+    "untradableDust": "{amount} {coin} not tradable (Hyperliquid precision)",
+    "sectionCrypto": "Crypto",
+    "sectionStocks": "Tokenized stocks",
+    "sectionOther": "Your other tokens",
+    "wrapperUnit": "Bridged by Unit",
+    "wrapperXstocks": "Tokenized stock · xStocks",
+    "stocksDisclaimer": "Tokenized stocks track the price of the underlying share and trade 24/7 on Hyperliquid. They carry no shareholder rights or dividends."
   },
   "bolsillos": {
     "title": "Pockets.",
@@ -1369,9 +1375,9 @@
       },
       "help": {
         "tutorial": "Tutorial",
-      "center": "Help center",
-      "academy": "Academy",
-      "twitter": "Twitter",
+        "center": "Help center",
+        "academy": "Academy",
+        "twitter": "Twitter",
         "feedback": "Suggest a feature"
       },
       "logout": "Sign out",

@@ -19,7 +19,6 @@ import { useSpotMarkets, type SpotMarket } from '@/hooks/useSpotMarkets';
 import {
     MIN_NOTIONAL_VALUE,
     SPOT_LOW_LIQUIDITY_THRESHOLD_USD,
-    getTokenFullName,
 } from '@/lib/constants';
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
@@ -48,6 +47,15 @@ type ResultState =
 function roundSize(size: number, szDecimals: number): number {
     const factor = Math.pow(10, szDecimals);
     return Math.floor(size * factor) / factor;
+}
+
+/** Picker sections. "other" holds anything the user owns that isn't in the
+ *  curated catalog — kept visible so it stays sellable. */
+type Section = 'crypto' | 'stock' | 'other';
+
+function sectionOf(m: SpotMarket): Section {
+    if (!m.curated) return 'other';
+    return m.kind === 'stock' ? 'stock' : 'crypto';
 }
 
 export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScreenProps) {
@@ -141,6 +149,30 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
         () => spotMarkets.find((m) => m.baseName === selectedBase),
         [spotMarkets, selectedBase],
     );
+    /** Ticker shown to the user ("BTC" for UBTC). Orders and balance lookups
+     *  keep using `selectedBase`, which is HL's own token name. */
+    const ticker = market?.display ?? selectedBase;
+
+    // ─── Section tabs ─────────────────────────────────────────
+    const sections = useMemo(() => {
+        const present = new Set(spotMarkets.map(sectionOf));
+        return (['crypto', 'stock', 'other'] as const).filter((s) => present.has(s));
+    }, [spotMarkets]);
+    const [section, setSection] = useState<Section>('crypto');
+    const activeSection = sections.includes(section) ? section : sections[0] ?? 'crypto';
+
+    // Follow the selection across tabs. Keyed on the section STRING so the
+    // 15s market refresh (new objects, same values) doesn't yank the tab
+    // back while the user is browsing a different one.
+    const selectedSection = market ? sectionOf(market) : null;
+    useEffect(() => {
+        if (selectedSection) setSection(selectedSection);
+    }, [selectedSection]);
+
+    const visibleMarkets = useMemo(
+        () => spotMarkets.filter((m) => sectionOf(m) === activeSection),
+        [spotMarkets, activeSection],
+    );
 
     // HL's SpotBalance has `total` (full holdings) and `hold` (locked in
     // open orders, pending settlement). Sellable = total - hold.
@@ -214,7 +246,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
             if (notionalUsd > spotUsdcBalance) return t.spot.insufficientUsdc;
         } else {
             if (amountNum > baseBalance)
-                return t.spot.insufficientToken.replace('{symbol}', selectedBase);
+                return t.spot.insufficientToken.replace('{symbol}', ticker);
             if (notionalUsd < MIN_NOTIONAL_VALUE) return t.spot.minAmount;
         }
         return null;
@@ -225,7 +257,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
         spotUsdcBalance,
         baseBalance,
         mode,
-        selectedBase,
+        ticker,
         t,
     ]);
 
@@ -323,7 +355,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                 setFilledSnapshot({
                     mode,
                     symbol: market.symbol,
-                    ticker: selectedBase,
+                    ticker,
                     tokenAmount: filledSize,
                     usdAmount: filledSize * price,
                     avgPrice: price,
@@ -331,7 +363,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                 setResult({
                     kind: 'success',
                     mode,
-                    symbol: selectedBase,
+                    symbol: ticker,
                     filledSize,
                 });
                 setAmount('');
@@ -400,7 +432,51 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                 }
             />
 
-            {/* Token picker — horizontal scroll of curated whitelist */}
+            {/* Section tabs — Cripto / Acciones tokenizadas / Otros */}
+            {sections.length > 1 && (
+                <div
+                    style={{
+                        display: 'flex',
+                        gap: 4,
+                        padding: 4,
+                        background: 'var(--color-bg-secondary)',
+                        borderRadius: 'var(--radius-lg)',
+                    }}
+                >
+                    {sections.map((s) => {
+                        const active = s === activeSection;
+                        return (
+                            <button
+                                key={s}
+                                onClick={() => setSection(s)}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px 0',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: 'var(--text-xs)',
+                                    fontWeight: 700,
+                                    background: active
+                                        ? 'var(--color-brand-primary-muted)'
+                                        : 'transparent',
+                                    color: active
+                                        ? 'var(--color-brand-primary)'
+                                        : 'var(--color-text-secondary)',
+                                }}
+                            >
+                                {s === 'crypto'
+                                    ? t.spot.sectionCrypto
+                                    : s === 'stock'
+                                      ? t.spot.sectionStocks
+                                      : t.spot.sectionOther}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Token picker — horizontal scroll of the active section */}
             <div
                 style={{
                     display: 'flex',
@@ -425,9 +501,9 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                         Cargando mercados spot...
                     </div>
                 ) : (
-                    spotMarkets.map((m) => {
+                    visibleMarkets.map((m) => {
                         const isSelected = m.baseName === selectedBase;
-                        const isPositive = m.change24h >= 0;
+                        const isPositive = (m.change24h ?? 0) >= 0;
                         return (
                             <button
                                 key={m.baseName}
@@ -454,7 +530,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                                     minWidth: 140,
                                 }}
                             >
-                                <TokenLogo symbol={m.baseName} size={28} />
+                                <TokenLogo symbol={m.logo} size={28} />
                                 <div style={{ textAlign: 'left' }}>
                                     <div
                                         style={{
@@ -463,7 +539,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                                             color: 'var(--color-text-primary)',
                                         }}
                                     >
-                                        {m.baseName}
+                                        {m.display}
                                     </div>
                                     <div
                                         className="font-mono"
@@ -475,7 +551,9 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                                         }}
                                     >
                                         {isPositive ? '+' : ''}
-                                        {m.change24h.toFixed(2)}%
+                                        {m.change24h === null
+                                            ? '—'
+                                            : `${m.change24h.toFixed(2)}%`}
                                     </div>
                                 </div>
                             </button>
@@ -528,8 +606,22 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                                     color: 'var(--color-text-tertiary)',
                                 }}
                             >
-                                {getTokenFullName(selectedBase)}
+                                {market?.fullName ?? selectedBase}
                             </div>
+                            {market?.wrapper && (
+                                <div
+                                    style={{
+                                        fontSize: 10,
+                                        color: 'var(--color-text-tertiary)',
+                                        opacity: 0.8,
+                                        marginTop: 2,
+                                    }}
+                                >
+                                    {market.wrapper === 'xstocks'
+                                        ? t.spot.wrapperXstocks
+                                        : t.spot.wrapperUnit}
+                                </div>
+                            )}
                         </div>
                         <div style={{ textAlign: 'right' }}>
                             <div
@@ -549,7 +641,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                                     color: 'var(--color-text-primary)',
                                 }}
                             >
-                                {baseBalance.toFixed(displayDecimals)} {selectedBase}
+                                {baseBalance.toFixed(displayDecimals)} {ticker}
                             </div>
                             <div
                                 className="font-mono"
@@ -570,14 +662,14 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                                         fontStyle: 'italic',
                                         opacity: 0.75,
                                     }}
-                                    title={`Hyperliquid requires order sizes in multiples of 10^-${market?.szDecimals ?? 0} ${selectedBase}.`}
+                                    title={`Hyperliquid requires order sizes in multiples of 10^-${market?.szDecimals ?? 0} ${ticker}.`}
                                 >
                                     {t.spot.untradableDust
                                         .replace(
                                             '{amount}',
                                             untradableDust.toFixed(displayDecimals),
                                         )
-                                        .replace('{coin}', selectedBase)}
+                                        .replace('{coin}', ticker)}
                                 </div>
                             )}
                         </div>
@@ -614,6 +706,19 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                             >
                                 {t.spot.thinLiquidity}
                             </div>
+                        </div>
+                    )}
+
+                    {market?.wrapper === 'xstocks' && (
+                        <div
+                            style={{
+                                marginTop: 10,
+                                fontSize: 10.5,
+                                lineHeight: 1.45,
+                                color: 'var(--color-text-tertiary)',
+                            }}
+                        >
+                            {t.spot.stocksDisclaimer}
                         </div>
                     )}
                 </div>
@@ -742,7 +847,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                             fontWeight: 600,
                         }}
                     >
-                        {mode === 'buy' ? 'USDC' : selectedBase}
+                        {mode === 'buy' ? 'USDC' : ticker}
                     </span>
                 </div>
 
@@ -775,7 +880,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                             }}
                         >
                             {mode === 'buy'
-                                ? `${sizeBase.toFixed(market?.szDecimals ?? 4)} ${selectedBase}`
+                                ? `${sizeBase.toFixed(market?.szDecimals ?? 4)} ${ticker}`
                                 : formatCurrency(notionalUsd)}
                         </span>
                     </div>
@@ -1099,7 +1204,7 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                         <ArrowDownUp style={{ width: 18, height: 18 }} />
                         {(mode === 'buy' ? t.spot.buyAction : t.spot.sellAction).replace(
                             '{symbol}',
-                            selectedBase,
+                            ticker,
                         )}
                     </>
                 )}
@@ -1129,8 +1234,8 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                 onConfirm={handleSubmitOrder}
                 submitting={submitting}
                 side={mode}
-                symbol={market?.symbol || selectedBase}
-                ticker={selectedBase}
+                symbol={market?.logo || ticker}
+                ticker={ticker}
                 price={price}
                 usdAmount={notionalUsd}
                 tokenAmount={sizeBase}
@@ -1142,8 +1247,8 @@ export default function SpotScreen({ onClose, onDeposit, initialBase }: SpotScre
                 open={showSuccess}
                 onClose={() => setShowSuccess(false)}
                 side={filledSnapshot?.mode || 'buy'}
-                symbol={filledSnapshot?.symbol || selectedBase}
-                ticker={filledSnapshot?.ticker || selectedBase}
+                symbol={market?.logo || ticker}
+                ticker={filledSnapshot?.ticker || ticker}
                 tokenAmount={filledSnapshot?.tokenAmount || 0}
                 usdAmount={filledSnapshot?.usdAmount || 0}
                 avgPrice={filledSnapshot?.avgPrice}

@@ -23,6 +23,11 @@ import {
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
+import {
+    getSpotDisplaySymbol,
+    getSpotFullName,
+    getSpotLogoSymbol,
+} from '@/lib/constants';
 import ScreenHeader from '@/components/ScreenHeader';
 import TokenLogo from '@/components/TokenLogo';
 import MoverFlow from '@/components/MoverFlow';
@@ -131,8 +136,11 @@ export default function BolsillosScreen({
                 const price = spotPx || perpPx;
                 if (price <= 0) return null;
                 return {
-                    symbol: b.coin,
-                    name: b.coin,
+                    // Show the familiar ticker (UBTC → BTC) and the asset's real
+                    // name; `logo` keeps the right mark for wrapped tokens.
+                    symbol: getSpotDisplaySymbol(b.coin),
+                    name: getSpotFullName(b.coin),
+                    logo: getSpotLogoSymbol(b.coin),
                     amount,
                     value: amount * price,
                 };
@@ -823,7 +831,7 @@ function SpotHoldingsPreview({
     holdings,
     label,
 }: {
-    holdings: { symbol: string; name: string; amount: number; value: number }[];
+    holdings: { symbol: string; name: string; logo: string; amount: number; value: number }[];
     label: string;
 }) {
     const { formatCurrency } = useCurrency();
@@ -851,7 +859,7 @@ function SpotHoldingsPreview({
                             gap: 10,
                         }}
                     >
-                        <TokenLogo symbol={h.symbol} size={26} />
+                        <TokenLogo symbol={h.logo} size={26} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div
                                 style={{

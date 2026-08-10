@@ -11,7 +11,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useHyperliquid, type Market } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
-import { getTokenFullName, STORAGE_KEYS, DEFAULT_WATCHLIST } from '@/lib/constants';
+import {
+    getTokenFullName,
+    getSpotDisplaySymbol,
+    getSpotFullName,
+    getSpotLogoSymbol,
+    STORAGE_KEYS,
+    DEFAULT_WATCHLIST,
+} from '@/lib/constants';
 import { formatUsdPrice } from '@/lib/format/price';
 import MiniChart from '@/components/MiniChart';
 import MarketSelectModal from '@/components/MarketSelectModal';
@@ -164,9 +171,9 @@ export default function DesktopHome({ onTokenClick, onSpotHoldingClick, onDeposi
                     {spotHoldings.length > 0 && (
                         <Panel title={t.spot.homeSectionTitle} count={spotHoldings.length}>
                             {spotHoldings.map((h, i) => (
-                                <Row key={h.coin} last={i === spotHoldings.length - 1} onClick={() => onSpotHoldingClick?.(h.coin)} sym={h.coin}
-                                    title={getTokenFullName(h.coin)}
-                                    sub={`${h.amount.toLocaleString('en-US', { maximumFractionDigits: 6 })} ${h.coin}`}
+                                <Row key={h.coin} last={i === spotHoldings.length - 1} onClick={() => onSpotHoldingClick?.(h.coin)} sym={getSpotLogoSymbol(h.coin)}
+                                    title={getSpotFullName(h.coin)}
+                                    sub={`${h.amount.toLocaleString('en-US', { maximumFractionDigits: 6 })} ${getSpotDisplaySymbol(h.coin)}`}
                                     value={formatCurrency(h.valueUsd, 0)}
                                 />
                             ))}

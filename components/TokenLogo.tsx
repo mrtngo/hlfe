@@ -57,6 +57,10 @@ const STOCK_TO_TWITTER: Record<string, string> = {
     'QCOM': 'qualcomm',
     'TXN': 'txinstruments',
     'AVGO': 'broadcom',
+    // Semis traded as xStocks on spot (MUx, SKHYx) — MU resolves from the
+    // local /logos/mu.svg first; the handles are the remote fallback.
+    'MU': 'MicronTech',
+    'SKHX': 'skhynix',
     'NOW': 'servicenow',
     'INTU': 'intuit',
     // Finance
@@ -137,13 +141,23 @@ const STOCK_TO_TWITTER: Record<string, string> = {
     'EA': 'ea',
     'TTWO': 'rockstargames',
     'ATVI': 'activision',
-    // SPY/Indexes
-    'SPY': 'spglobal',
+    // SPY/Indexes — SPY is a State Street SPDR fund, not S&P Global; the
+    // old 'spglobal' handle 403s on unavatar and fell through to the
+    // letter placeholder.
+    'SPY': 'SPDRETFs',
     'QQQ': 'invesco',
     'IWM': 'ishares',
     'DIA': 'spglobal',
     // PayPal
     'PYPL': 'paypal',
+};
+
+// Tickers whose brand lives on a website rather than a usable X avatar.
+// ETFs are the main case: @SPDRETFs and @invesco resolve to a smiley and a
+// default egg respectively, so we pull the issuer/index mark by domain.
+const STOCK_TO_DOMAIN: Record<string, string> = {
+    'SPY': 'ssga.com', // State Street, the SPDR S&P 500 issuer
+    'QQQ': 'nasdaq.com', // the index the fund tracks — clearer than Invesco's mark
 };
 
 // Get logo URLs for stocks - try local first, then trade.xyz, then unavatar.io
@@ -157,7 +171,13 @@ function getStockLogoUrls(symbol: string): string[] {
     // 2. app.trade.xyz - fallback
     urls.push(`https://app.trade.xyz/markets/${lowerSymbol}.svg`);
 
-    // 3. unavatar.io via Twitter handle as fallback
+    // 3. unavatar.io by brand domain, where the X avatar is unusable
+    const domain = STOCK_TO_DOMAIN[symbol];
+    if (domain) {
+        urls.push(`https://unavatar.io/${domain}`);
+    }
+
+    // 4. unavatar.io via Twitter handle as fallback
     const twitterHandle = STOCK_TO_TWITTER[symbol];
     if (twitterHandle) {
         urls.push(`https://unavatar.io/x/${twitterHandle}`);

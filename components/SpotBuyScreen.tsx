@@ -6,7 +6,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
-import { useSpotMarkets } from '@/hooks/useSpotMarkets';
+import { useSpotMarkets, type SpotMarket } from '@/hooks/useSpotMarkets';
 import { MIN_NOTIONAL_VALUE } from '@/lib/constants';
 import TokenLogo from '@/components/TokenLogo';
 import ScreenHeader from '@/components/ScreenHeader';
@@ -43,7 +43,17 @@ interface SpotBuyScreenProps {
     initialBase?: string;
 }
 
+/** Picker sections. "other" only appears when the user holds something
+ *  outside the curated catalog (airdrop, legacy buy) and can still sell it. */
+type Section = 'crypto' | 'stock' | 'other';
+
+function sectionOf(m: SpotMarket): Section {
+    if (!m.curated) return 'other';
+    return m.kind === 'stock' ? 'stock' : 'crypto';
+}
+
 export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBase }: SpotBuyScreenProps) {
+    const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { ready, authenticated, login } = usePrivy();
     const {
@@ -101,7 +111,33 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
     );
     const price = market?.price ?? 0;
     const amountNum = parseFloat(amount || '0') || 0;
-    const ticker = selectedBase;
+    /** What the user sees — "BTC" for UBTC, "NVDAx" for NVDAX. Orders still
+     *  go out under `market.symbol`, which uses HL's own token name. */
+    const ticker = market?.display ?? selectedBase;
+
+    // ─── Section tabs ─────────────────────────────────────────
+    const sections = useMemo(() => {
+        const present = new Set(spotMarkets.map(sectionOf));
+        return (['crypto', 'stock', 'other'] as const).filter((s) => present.has(s));
+    }, [spotMarkets]);
+    const [section, setSection] = useState<Section>('crypto');
+    /** Guards the 15s refresh: on testnet no section is 'crypto'. */
+    const activeSection = sections.includes(section) ? section : sections[0] ?? 'crypto';
+
+    // Keep the visible tab in sync with the selection: preselecting a stock
+    // (or an owned oddity) from elsewhere in the app should land on its tab,
+    // not on an empty-looking Crypto list. Depends on the section STRING, not
+    // on `market` — that object is rebuilt on every 15s poll, and depending on
+    // it would yank the tab back while the user is browsing another one.
+    const selectedSection = market ? sectionOf(market) : null;
+    useEffect(() => {
+        if (selectedSection) setSection(selectedSection);
+    }, [selectedSection]);
+
+    const visibleMarkets = useMemo(
+        () => spotMarkets.filter((m) => sectionOf(m) === activeSection),
+        [spotMarkets, activeSection],
+    );
 
     const spotUsdcBalance = useMemo(() => {
         const b = spotBalances.find((b) => b.coin === 'USDC');
@@ -245,6 +281,54 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
             />
 
             <div style={{ padding: '4px 6px 0' }}>
+                {/* Section tabs — Cripto / Acciones tokenizadas */}
+                {sections.length > 1 && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            gap: 4,
+                            padding: 3,
+                            marginBottom: 10,
+                            borderRadius: 12,
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                        }}
+                    >
+                        {sections.map((s) => {
+                            const on = s === activeSection;
+                            return (
+                                <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setSection(s)}
+                                    style={{
+                                        flex: 1,
+                                        padding: '8px 0',
+                                        borderRadius: 9,
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        fontFamily: 'inherit',
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        background: on
+                                            ? 'rgba(227,179,76,0.14)'
+                                            : 'transparent',
+                                        color: on
+                                            ? 'var(--color-brand-primary)'
+                                            : 'var(--color-text-tertiary)',
+                                    }}
+                                >
+                                    {s === 'crypto'
+                                        ? t.spot.sectionCrypto
+                                        : s === 'stock'
+                                          ? t.spot.sectionStocks
+                                          : t.spot.sectionOther}
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
                 {/* Token chips */}
                 <div
                     style={{
@@ -266,9 +350,9 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                             Cargando tokens…
                         </div>
                     ) : (
-                        spotMarkets.map((m) => {
+                        visibleMarkets.map((m) => {
                             const on = m.baseName === selectedBase;
-                            const up = m.change24h >= 0;
+                            const up = (m.change24h ?? 0) >= 0;
                             return (
                                 <button
                                     key={m.baseName}
@@ -295,7 +379,7 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                                         fontFamily: 'inherit',
                                     }}
                                 >
-                                    <TokenLogo symbol={m.baseName} size={26} />
+                                    <TokenLogo symbol={m.logo} size={26} />
                                     <div style={{ textAlign: 'left' }}>
                                         <div
                                             style={{
@@ -304,7 +388,7 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                                                 color: '#fff',
                                             }}
                                         >
-                                            {m.baseName}
+                                            {m.display}
                                         </div>
                                         <div
                                             className="tabular-mono"
@@ -317,7 +401,9 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                                             }}
                                         >
                                             {up ? '+' : ''}
-                                            {m.change24h.toFixed(2)}%
+                                            {m.change24h === null
+                                                ? '—'
+                                                : `${m.change24h.toFixed(2)}%`}
                                         </div>
                                     </div>
                                 </button>
@@ -326,21 +412,32 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                     )}
                 </div>
 
-                {/* Price line */}
+                {/* Price line + what the token actually is */}
                 {market && (
-                    <div
-                        className="tabular-mono"
-                        style={{
-                            marginTop: 12,
-                            fontSize: 11,
-                            color: 'var(--color-text-tertiary)',
-                            textAlign: 'center',
-                        }}
-                    >
-                        1 {ticker} ={' '}
-                        <span style={{ color: 'var(--color-text-secondary)', fontWeight: 700 }}>
-                            ${price.toLocaleString('en-US', { maximumFractionDigits: 4 })}
-                        </span>
+                    <div style={{ marginTop: 12, textAlign: 'center' }}>
+                        <div
+                            className="tabular-mono"
+                            style={{ fontSize: 11, color: 'var(--color-text-tertiary)' }}
+                        >
+                            1 {ticker} ={' '}
+                            <span style={{ color: 'var(--color-text-secondary)', fontWeight: 700 }}>
+                                ${price.toLocaleString('en-US', { maximumFractionDigits: 4 })}
+                            </span>
+                        </div>
+                        <div
+                            style={{
+                                marginTop: 3,
+                                fontSize: 10.5,
+                                color: 'rgba(255,255,255,0.32)',
+                            }}
+                        >
+                            {market.fullName}
+                            {market.wrapper === 'xstocks'
+                                ? ` · ${t.spot.wrapperXstocks}`
+                                : market.wrapper === 'unit'
+                                  ? ` · ${t.spot.wrapperUnit}`
+                                  : ''}
+                        </div>
                     </div>
                 )}
 
@@ -526,6 +623,20 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                         {canSubmit && <ArrowUpRight size={16} strokeWidth={2.6} />}
                     </button>
 
+                    {market?.wrapper === 'xstocks' && (
+                        <div
+                            style={{
+                                marginTop: 12,
+                                fontSize: 10.5,
+                                lineHeight: 1.45,
+                                color: 'rgba(255,255,255,0.32)',
+                                textAlign: 'center',
+                            }}
+                        >
+                            {t.spot.stocksDisclaimer}
+                        </div>
+                    )}
+
                     {belowMin && (
                         <div
                             style={{
@@ -582,7 +693,9 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                 onConfirm={handleSubmitOrder}
                 submitting={submitting}
                 side="buy"
-                symbol={market?.symbol || `${ticker}/USDC`}
+                // `symbol` only drives the logo in this sheet; `ticker` is the
+                // text. Pass the underlying asset so UBTC shows Bitcoin's mark.
+                symbol={market?.logo || ticker}
                 ticker={ticker}
                 price={price}
                 usdAmount={amountNum}
@@ -597,7 +710,7 @@ export default function SpotBuyScreen({ onClose, onDeposit, onManage, initialBas
                 open={showSuccess}
                 onClose={() => setShowSuccess(false)}
                 side="buy"
-                symbol={market?.symbol || `${ticker}/USDC`}
+                symbol={market?.logo || ticker}
                 ticker={ticker}
                 tokenAmount={filled?.tokenAmount || 0}
                 usdAmount={filled?.usdAmount || 0}
