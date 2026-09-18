@@ -17,8 +17,11 @@
  */
 import { API_URL } from '@/lib/hyperliquid/client';
 import {
+    formatTarget,
     isTradFiAsset,
+    ladderSpec,
     parseDescFields,
+    renderLadderEventName,
     renderOutcomeDetail,
     renderOutcomeTitle,
     renderQuestionTitle,
@@ -103,8 +106,23 @@ export interface OutcomeMarketView {
     sides: OutcomeSideView[];
     /** Parent question id, when this outcome belongs to a grouped event. */
     questionId: number | null;
+    /**
+     * Stable identity of the event this market groups under. Screens MUST
+     * group on this rather than on `eventName`: two distinct books can render
+     * the same label (a Skew BTC ladder expiring 04:30 and another at 06:00),
+     * and grouping by the display string would silently merge them.
+     */
+    groupKey: string;
     /** Event name to group under — the question title, or the market's own. */
     eventName: string;
+    /**
+     * Label for this market when it's rendered beneath an event header, where
+     * the shared context is already in the header. For a ladder rung that's
+     * just its threshold ("$76.525"); otherwise it equals `name`.
+     */
+    groupLabel: string;
+    /** A ladder rung's threshold, for ordering rungs within their event. */
+    ladderValue: number | null;
     /** Coarse category derived from the market's structured fields. */
     category: OutcomeCategory;
     /** Deployer code that launched this market (`out`, `txyz`, `skew`). */
@@ -320,8 +338,25 @@ export function buildMarketViews(
             // a `sportsContestDraw2` has no description of its own.
             const parentFields = parseDescFields(q?.description);
             const name = renderOutcomeTitle(o.name, o.description, language, parentFields);
-            const eventName = (q && questionTitle.get(q.question)) || name;
             const venue = o.venue || '';
+
+            // Three ways a market joins an event, in precedence order: an
+            // explicit parent question, a price ladder it shares with its
+            // sibling rungs, or nothing (it stands alone under no header).
+            const ladder = q ? null : ladderSpec(o.name, o.description);
+            let groupKey = `o:${o.outcome}`;
+            let eventName = name;
+            let groupLabel = name;
+            if (q) {
+                groupKey = `q:${q.question}`;
+                eventName = questionTitle.get(q.question) || name;
+            } else if (ladder) {
+                // Venue is part of the identity: each deployer runs its own
+                // book, so two venues' ladders stay separate events.
+                groupKey = `p:${venue}:${ladder.kind}:${ladder.asset}:${ladder.time}`;
+                eventName = renderLadderEventName(ladder, language);
+                groupLabel = formatTarget(String(ladder.value), language);
+            }
 
             return {
                 outcomeId: o.outcome,
@@ -329,7 +364,10 @@ export function buildMarketViews(
                 description: renderOutcomeDetail(o.description, language, q?.description),
                 quoteToken: o.quoteToken,
                 questionId: q?.question ?? null,
+                groupKey,
                 eventName,
+                groupLabel,
+                ladderValue: ladder?.value ?? null,
                 category: deriveCategory(eventName || name, { ...parentFields, ...fields }, o.name),
                 venue,
                 venueName: venueLabel(venue),

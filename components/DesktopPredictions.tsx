@@ -121,17 +121,28 @@ export default function DesktopPredictions({
             .sort((a, b) => (b.sides[0]?.mid || 0) - (a.sides[0]?.mid || 0));
     }, [filter, markets, query]);
 
+    /**
+     * Group on `groupKey`, not the display name: same-label events (one
+     * asset and deployer at two expiry times) are separate books. Price
+     * ladders are ordered by threshold so the rungs read in sequence.
+     */
     const groupedMarkets = useMemo(() => {
         const order: string[] = [];
         const byEvent = new Map<string, OutcomeMarketView[]>();
         for (const market of filteredMarkets) {
-            if (!byEvent.has(market.eventName)) {
-                byEvent.set(market.eventName, []);
-                order.push(market.eventName);
+            if (!byEvent.has(market.groupKey)) {
+                byEvent.set(market.groupKey, []);
+                order.push(market.groupKey);
             }
-            byEvent.get(market.eventName)!.push(market);
+            byEvent.get(market.groupKey)!.push(market);
         }
-        return order.map((name) => ({ name, markets: byEvent.get(name)! }));
+        return order.map((key) => {
+            const group = byEvent.get(key)!;
+            if (group.length > 1 && group.every((m) => m.ladderValue !== null)) {
+                group.sort((a, b) => a.ladderValue! - b.ladderValue!);
+            }
+            return { key, name: group[0].eventName, markets: group };
+        });
     }, [filteredMarkets]);
 
     const quoteBalance = useMemo(() => {
@@ -329,7 +340,7 @@ export default function DesktopPredictions({
                                 <span>{t.outcomeMarkets.loading}</span>
                             </div>
                         ) : groupedMarkets.map((group) => (
-                            <section className="dp-event-group" key={group.name}>
+                            <section className="dp-event-group" key={group.key}>
                                 <div className="dp-event-title">
                                     <span>{group.name}</span>
                                     <strong>{group.markets.length}</strong>
@@ -338,6 +349,7 @@ export default function DesktopPredictions({
                                     <PredictionMarketRow
                                         key={market.outcomeId}
                                         market={market}
+                                        grouped={group.markets.length > 1}
                                         language={language}
                                         active={market.outcomeId === selected?.outcomeId}
                                         onSelect={() => {
@@ -559,6 +571,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function PredictionMarketRow({
     active,
+    grouped,
     language,
     market,
     onSelect,
@@ -566,6 +579,7 @@ function PredictionMarketRow({
     active: boolean;
     language: string;
     market: OutcomeMarketView;
+    grouped: boolean;
     onSelect: () => void;
 }) {
     const yes = market.sides[0];
@@ -574,7 +588,7 @@ function PredictionMarketRow({
     return (
         <button className={active ? 'dp-market-row dp-market-row-active' : 'dp-market-row'} type="button" onClick={onSelect}>
             <span className="dp-market-main">
-                <strong>{market.name}</strong>
+                <strong>{grouped ? market.groupLabel : market.name}</strong>
                 <small>{market.venueName || market.quoteToken} · #{market.outcomeId}</small>
             </span>
             <span className="dp-market-prices">

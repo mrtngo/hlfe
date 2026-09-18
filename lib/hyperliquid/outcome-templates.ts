@@ -74,7 +74,7 @@ export function formatDeadline(stamp: string | undefined, language: string): str
 }
 
 /** Price target with thousands separators, e.g. "$100,000" / "$100.000". */
-function formatTarget(raw: string | undefined, language: string): string {
+export function formatTarget(raw: string | undefined, language: string): string {
     if (!raw) return '';
     const n = parseFloat(raw);
     if (!Number.isFinite(n)) return raw;
@@ -85,6 +85,22 @@ function formatTarget(raw: string | undefined, language: string): string {
         useGrouping: 'always',
     }).format(n);
     return `$${formatted}`;
+}
+
+/**
+ * Deadline including time-of-day when the expiry isn't midnight, e.g.
+ * "18 sept 2026, 06:00 UTC". Short-dated ladders expire several times a day,
+ * so the date alone doesn't identify which book you're looking at. UTC is
+ * stated explicitly rather than converted, to match the dates above.
+ */
+export function formatDeadlineWithTime(stamp: string | undefined, language: string): string {
+    const d = parseHlTime(stamp);
+    if (!d) return '';
+    const date = formatDeadline(stamp, language);
+    if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) return date;
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mm = String(d.getUTCMinutes()).padStart(2, '0');
+    return `${date}, ${hh}:${mm} UTC`;
 }
 
 /* ------------------------------------------------------------------ *
@@ -372,10 +388,69 @@ export function renderOutcomeDetail(
     if (f.season) parts.push(f.season);
     if (f.priceDescription) parts.push(f.priceDescription);
     if (f.policyMeasure) parts.push(f.policyMeasure);
-    const deadline = formatDeadline(f.resolutionDeadline || f.time || f.dateTime, language);
+    // Time-of-day included: short-dated price markets resolve several times
+    // a day, so the date alone doesn't say when this one closes.
+    const deadline = formatDeadlineWithTime(f.resolutionDeadline || f.time || f.dateTime, language);
     if (deadline) parts.push(language === 'es' ? `Cierra ${deadline}` : `Resolves ${deadline}`);
     if (f.officialSource) {
         parts.push(language === 'es' ? `Fuente: ${f.officialSource}` : `Source: ${f.officialSource}`);
     }
     return parts.join(' · ');
+}
+
+/* ------------------------------------------------------------------ *
+ * Price ladders
+ * ------------------------------------------------------------------ */
+
+/**
+ * A price market's position in a "ladder" — the several markets a deployer
+ * lists on one asset and expiry, differing only by threshold (BTC above
+ * 74,950 / 76,650 / 77,250 … all expiring 18 Sep 06:00).
+ *
+ * Listing each rung as its own event buries the rest of the board, so rungs
+ * are merged into one event. `kind` separates the two questions a rung can
+ * ask — a close-above ladder and a touch-before ladder on the same asset and
+ * expiry are different books and must not merge.
+ */
+export interface LadderSpec {
+    kind: 'above' | 'touch';
+    /** Raw perp ref, e.g. `BTC` or `xyz:SP500` — identity, not display. */
+    asset: string;
+    /** Raw `YYYYMMDD-HHMM` expiry — identity, not display. */
+    time: string;
+    /** This rung's threshold, for ordering the ladder. */
+    value: number;
+}
+
+/** Ladder spec for a price outcome, or null if the template isn't a rung. */
+export function ladderSpec(templateId: string, desc?: string): LadderSpec | null {
+    const tpl = stripTemplatePrefix(templateId);
+    const kind: LadderSpec['kind'] | null =
+        tpl === 'binaryPrice' ? 'above' : tpl === 'priceTouch' ? 'touch' : null;
+    if (!kind) return null;
+
+    const f = parseDescFields(desc);
+    const asset = f.perp || f.underlying || '';
+    const time = f.time || '';
+    const value = parseFloat(kind === 'above' ? f.threshold || f.targetPrice : f.target);
+    if (!asset || !time || !Number.isFinite(value)) return null;
+    return { kind, asset, time, value };
+}
+
+/**
+ * Event name for a ladder, e.g. "BTC toca… · 1 oct 2026" — the trailing
+ * ellipsis reads as an open question the rungs below answer.
+ */
+export function renderLadderEventName(spec: LadderSpec, language: string): string {
+    const asset = assetLabel(spec.asset, language);
+    const when = formatDeadlineWithTime(spec.time, language);
+    const phrase =
+        language === 'es'
+            ? spec.kind === 'above'
+                ? `${asset} arriba de…`
+                : `${asset} toca…`
+            : spec.kind === 'above'
+              ? `${asset} above…`
+              : `${asset} touches…`;
+    return [phrase, when].filter(Boolean).join(' · ');
 }

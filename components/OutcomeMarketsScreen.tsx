@@ -13,7 +13,8 @@
  *
  * Titles, side labels and detail lines are rendered from each market's
  * deployer template in buildMarketViews — HL ships template ids, not prose.
- * Markets are grouped by their parent event (question) and filterable by
+ * Markets are grouped by event — a parent question, or a price "ladder" of
+ * rungs a deployer listed on one asset and expiry — and filterable by
  * category and by deployer venue (Outcome / Trade.xyz / Skew). Internal
  * fallback, settled and scaffold outcomes are dropped in buildMarketViews.
  * Styled with the v2 design kit (Hanken, #0A0C0E, bolt accent).
@@ -261,8 +262,12 @@ export default function OutcomeMarketsScreen() {
     }, [markets]);
 
     /**
-     * Markets after category filter, sorted (actively-traded first), then
-     * grouped by event. Groups appear in the order their best market scored.
+     * Markets after the filters, sorted (actively-traded first), then grouped
+     * by event. Groups appear in the order their best market scored.
+     *
+     * Grouping keys on `groupKey`, not the display name — two events can
+     * render the same label (same asset and deployer, different expiry time)
+     * and must stay separate.
      */
     const groups = useMemo(() => {
         // Rank by YES probability descending so favourites/most-likely lead
@@ -274,13 +279,21 @@ export default function OutcomeMarketsScreen() {
         const order: string[] = [];
         const byEvent = new Map<string, OutcomeMarketView[]>();
         for (const m of filtered) {
-            if (!byEvent.has(m.eventName)) {
-                byEvent.set(m.eventName, []);
-                order.push(m.eventName);
+            if (!byEvent.has(m.groupKey)) {
+                byEvent.set(m.groupKey, []);
+                order.push(m.groupKey);
             }
-            byEvent.get(m.eventName)!.push(m);
+            byEvent.get(m.groupKey)!.push(m);
         }
-        return order.map((name) => ({ name, markets: byEvent.get(name)! }));
+        return order.map((key) => {
+            const group = byEvent.get(key)!;
+            // A price ladder reads as a ladder: order the rungs by threshold
+            // rather than by probability.
+            if (group.length > 1 && group.every((m) => m.ladderValue !== null)) {
+                group.sort((a, b) => a.ladderValue! - b.ladderValue!);
+            }
+            return { name: group[0].eventName, markets: group };
+        });
     }, [markets, cat, venue]);
 
     if (loading && markets.length === 0) {
@@ -382,7 +395,7 @@ export default function OutcomeMarketsScreen() {
             {/* Grouped market list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {groups.map((g) => (
-                    <div key={g.name} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div key={g.markets[0].groupKey} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {g.markets.length > 1 && (
                             <EventHeader
                                 name={g.name}
@@ -399,8 +412,9 @@ export default function OutcomeMarketsScreen() {
                         {g.markets.map((m) => {
                             const pos0 = userPositions[outcomeCoinRef(m.outcomeId, 0)];
                             const pos1 = userPositions[outcomeCoinRef(m.outcomeId, 1)];
-                            // For grouped multi-outcome events, the card title is the
-                            // outcome (e.g. team) name; for standalones, its own name.
+                            // Under an event header the card shows only what
+                            // distinguishes it (the team, or a ladder rung's
+                            // threshold); a standalone card carries its full name.
                             const grouped = g.markets.length > 1;
                             return (
                                 <MarketCard
@@ -1082,7 +1096,7 @@ function MarketCard({
                         textOverflow: 'ellipsis',
                     }}
                 >
-                    {market.name}
+                    {grouped ? market.groupLabel : market.name}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 11 }}>
                     <SidePill label={localizeSideName(sideYes?.name || 'Yes', language)} pct={sideYes?.mid ?? 0.5} sideIdx={0} />
