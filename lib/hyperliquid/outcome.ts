@@ -2,12 +2,30 @@
  * HIP-4 outcome markets — types + helpers.
  *
  * HIP-4 launched May 2026 as Hyperliquid's native prediction-markets layer.
- * Markets are binary (Yes/No or labeled like Change/No-Change), fully
- * collateralized in USDH (or USDC for some markets), zero open fees.
+ * Markets are binary (Yes/No, or labeled per side like Lions/Bills) and fully
+ * collateralized — mainnet settles every market in USDC today.
  *
- * Spec verified against testnet /info `outcomeMeta` on 2026-05-26.
+ * Markets are launched by independent deployers ("venues"): Outcome (`out`),
+ * Trade.xyz (`txyz`) and Skew (`skew`). Each outcome carries its venue, and
+ * `outcomeMeta.deployers` maps a venue to the address that registers and
+ * settles its markets.
+ *
+ * Definitions are template-based: `name` is a template id and `description`
+ * holds its arguments, so rendering them requires outcome-templates.ts.
+ *
+ * Spec verified against mainnet /info `outcomeMeta` on 2026-09-17.
  */
 import { API_URL } from '@/lib/hyperliquid/client';
+import {
+    isTradFiAsset,
+    parseDescFields,
+    renderOutcomeDetail,
+    renderOutcomeTitle,
+    renderQuestionTitle,
+    resolveSideName,
+    stripTemplatePrefix,
+    venueLabel,
+} from '@/lib/hyperliquid/outcome-templates';
 
 /** A side of a binary outcome (Yes/No, Change/No-Change, etc.). */
 export interface OutcomeSideSpec {
@@ -16,13 +34,25 @@ export interface OutcomeSideSpec {
 
 /** Raw entry from /info `outcomeMeta`. */
 export interface OutcomeMetaEntry {
-    /** Canonical outcome id (e.g. 7004 for "Canned Tuna"). */
+    /** Canonical outcome id (e.g. 1209). */
     outcome: number;
+    /** Template id, e.g. `template:binaryPrice` — NOT a human name. */
     name: string;
+    /** Template arguments as `key:value|key:value`. */
     description: string;
     sideSpecs: OutcomeSideSpec[];
-    /** Settles in this token — `USDH` for some, `USDC` for most mainnet markets. */
+    /** Settles in this token. Mainnet is USDC-only today. */
     quoteToken: 'USDH' | 'USDC' | string;
+    /** Deployer code that launched this market: `out`, `txyz`, `skew`. */
+    venue?: string;
+    deployerFeeScale?: string;
+}
+
+/** Raw `deployers[]` entry — which address runs each venue. */
+export interface OutcomeDeployerEntry {
+    deployer: string;
+    venue: string;
+    subDeployers?: [string, string[]][];
 }
 
 /**
@@ -33,16 +63,21 @@ export interface OutcomeMetaEntry {
  */
 export interface OutcomeQuestionEntry {
     question: number;
+    /** Template id, e.g. `template:sportsContestResult`. */
     name: string;
     description?: string;
     fallbackOutcome: number;
     namedOutcomes: number[];
+    /** Already-resolved outcomes — no longer tradeable, so never listed. */
+    settledNamedOutcomes?: number[];
 }
 
 /** Full /info `outcomeMeta` payload. */
 export interface OutcomeMeta {
     outcomes: OutcomeMetaEntry[];
     questions: OutcomeQuestionEntry[];
+    deployers: OutcomeDeployerEntry[];
+    feeScale?: string;
 }
 
 /** Coarse category, derived from the event name for filtering/labelling. */
@@ -68,10 +103,16 @@ export interface OutcomeMarketView {
     sides: OutcomeSideView[];
     /** Parent question id, when this outcome belongs to a grouped event. */
     questionId: number | null;
-    /** Event name to group under — the question name, or the market's own. */
+    /** Event name to group under — the question title, or the market's own. */
     eventName: string;
-    /** Coarse category derived from the event name. */
+    /** Coarse category derived from the market's structured fields. */
     category: OutcomeCategory;
+    /** Deployer code that launched this market (`out`, `txyz`, `skew`). */
+    venue: string;
+    /** Deployer brand for display ("Outcome", "Trade.xyz", "Skew"). */
+    venueName: string;
+    /** Template id this market was deployed from, for debugging/grouping. */
+    template: string;
 }
 
 /**
@@ -123,6 +164,7 @@ export interface CachedOutcome {
     name: string;
     questionId: number | null;
     sides: string[];
+    venueName?: string;
 }
 
 const OUTCOME_NAME_CACHE_KEY = 'rayo_outcome_names';
@@ -147,6 +189,7 @@ export function cacheOutcomeNames(markets: OutcomeMarketView[]): void {
                 name: m.name,
                 questionId: m.questionId,
                 sides: m.sides.map((s) => s.name),
+                venueName: m.venueName,
             };
         }
         localStorage.setItem(OUTCOME_NAME_CACHE_KEY, JSON.stringify(cache));
@@ -164,7 +207,12 @@ export async function fetchOutcomeMeta(): Promise<OutcomeMeta> {
     });
     if (!res.ok) throw new Error(`outcomeMeta fetch failed: ${res.status}`);
     const data = await res.json();
-    return { outcomes: data?.outcomes || [], questions: data?.questions || [] };
+    return {
+        outcomes: data?.outcomes || [],
+        questions: data?.questions || [],
+        deployers: data?.deployers || [],
+        feeScale: data?.feeScale,
+    };
 }
 
 /**
@@ -184,67 +232,115 @@ export function localizeSideName(name: string, language: string): string {
     return name;
 }
 
-/** Keyword → coarse category. Used for the filter chips and labelling. */
-export function deriveCategory(name: string): OutcomeCategory {
-    const n = name.toLowerCase();
+/**
+ * Coarse category for the filter chips.
+ *
+ * Prefers the market's structured fields (a `sport:` field is proof it's a
+ * sports market) and only falls back to keyword-sniffing the rendered title,
+ * which is all that was possible before HL exposed template arguments.
+ */
+export function deriveCategory(
+    title: string,
+    fields: Record<string, string> = {},
+    templateId = '',
+): OutcomeCategory {
+    const tpl = templateId.toLowerCase();
+    if (fields.sport || fields.competition || tpl.includes('sports')) return 'sports';
+    if (fields.institution || fields.policyMeasure || tpl.includes('policyrate')) return 'economy';
+    if (fields.perp || fields.underlying) {
+        // Price markets ride HIP-3 perps, which include indices and commodities.
+        return isTradFiAsset(fields.perp || fields.underlying) ? 'economy' : 'crypto';
+    }
+    if (tpl.includes('price')) return 'crypto';
+    if (fields.company || tpl.includes('ipo')) return 'economy';
+
+    const n = title.toLowerCase();
     if (/(world cup|nba|finals|champion|\bvs\b|game \d|\bcup\b|league|match)/.test(n)) return 'sports';
-    if (/(cpi|fed|rate|fomc|inflation|gdp|jobs|unemployment|interest|recession)/.test(n)) return 'economy';
+    if (/(cpi|fed|rate|fomc|inflation|gdp|jobs|unemployment|interest|recession|tasas)/.test(n)) return 'economy';
     if (/(btc|bitcoin|eth|ethereum|crypto|solana|\bsol\b|\bhype\b|token)/.test(n)) return 'crypto';
-    if (/(election|president|senate|congress|vote|poll|trump|government)/.test(n)) return 'politics';
+    if (/(election|president|senate|congress|vote|poll|trump|government|elecc)/.test(n)) return 'politics';
     return 'other';
+}
+
+/**
+ * Internal/placeholder markets that must never surface as tradeable.
+ *
+ * Every question carries a `fallbackOutcome` ("none of the above" plumbing),
+ * and HL also registers standalone fallbacks named `template fallback`. The
+ * `Recurring` family is an un-deployed price-bucket scaffold: those entries
+ * have no `venue`, no real labels, and no bettable event.
+ */
+function isJunkOutcome(
+    o: OutcomeMetaEntry,
+    fallbackIds: Set<number>,
+    settledIds: Set<number>,
+    question: OutcomeQuestionEntry | null,
+): boolean {
+    if (fallbackIds.has(o.outcome)) return true;
+    if (settledIds.has(o.outcome)) return true;
+    // `Fallback`, `template fallback`, `Recurring Fallback`, `Recurring …`
+    if (/(^|\s)fallback$/i.test(o.name) || /^recurring/i.test(o.name)) return true;
+    if (question && /^recurring/i.test(question.name)) return true;
+    return false;
 }
 
 /**
  * Join outcomeMeta + allMids into the consumable market list.
  *
- * Drops internal `fallbackOutcome` placeholders (and anything literally named
- * "Fallback"/"Recurring") so they never surface as tradeable markets, and
- * attaches each market's parent event name + category for grouping.
+ * Fills each market's template into a human title in `language`, resolves
+ * side labels (including `{shortNameA}`-style placeholders), attaches the
+ * deployer venue, and drops internal fallback/settled/scaffold entries.
  */
 export function buildMarketViews(
     meta: OutcomeMeta,
     allMids: Record<string, string>,
+    language = 'es',
 ): OutcomeMarketView[] {
     const { outcomes, questions } = meta;
-    // Outcome ids that are internal fallbacks — never show these.
     const fallbackIds = new Set(questions.map((q) => q.fallbackOutcome));
+    const settledIds = new Set(questions.flatMap((q) => q.settledNamedOutcomes || []));
+
     // outcomeId → parent question, for grouping + event naming.
     const questionByOutcome = new Map<number, OutcomeQuestionEntry>();
     for (const q of questions) {
         for (const oid of q.namedOutcomes) questionByOutcome.set(oid, q);
     }
-
-    // Internal/placeholder markets that aren't presentable: explicit
-    // fallbacks, anything literally "Fallback", and the "Recurring"
-    // price-bucket template (outcomes named "Recurring …" with no real
-    // labels, and its parent question).
-    const isJunk = (o: OutcomeMetaEntry): boolean => {
-        if (fallbackIds.has(o.outcome)) return true;
-        if (o.name === 'Fallback' || /^recurring/i.test(o.name)) return true;
-        if (questionByOutcome.get(o.outcome)?.name === 'Recurring') return true;
-        return false;
-    };
+    // Question titles are rendered once — several outcomes share each one.
+    const questionTitle = new Map<number, string>();
+    for (const q of questions) {
+        questionTitle.set(q.question, renderQuestionTitle(q.name, q.description, language));
+    }
 
     return outcomes
-        .filter((o) => !isJunk(o))
+        .filter((o) => !isJunkOutcome(o, fallbackIds, settledIds, questionByOutcome.get(o.outcome) || null))
         .map((o) => {
             const q = questionByOutcome.get(o.outcome) || null;
-            const eventName = q?.name || o.name;
+            const fields = parseDescFields(o.description);
+            // A question's description carries context its children omit —
+            // a `sportsContestDraw2` has no description of its own.
+            const parentFields = parseDescFields(q?.description);
+            const name = renderOutcomeTitle(o.name, o.description, language, parentFields);
+            const eventName = (q && questionTitle.get(q.question)) || name;
+            const venue = o.venue || '';
+
             return {
                 outcomeId: o.outcome,
-                name: o.name,
-                description: o.description,
+                name,
+                description: renderOutcomeDetail(o.description, language, q?.description),
                 quoteToken: o.quoteToken,
                 questionId: q?.question ?? null,
                 eventName,
-                category: deriveCategory(eventName),
+                category: deriveCategory(eventName || name, { ...parentFields, ...fields }, o.name),
+                venue,
+                venueName: venueLabel(venue),
+                template: stripTemplatePrefix(o.name),
                 sides: o.sideSpecs.map((s, idx) => {
                     const ref = outcomeCoinRef(o.outcome, idx);
                     const midStr = allMids[ref];
                     return {
                         outcomeId: o.outcome,
                         sideIdx: idx,
-                        name: s.name,
+                        name: resolveSideName(s.name, fields, parentFields),
                         coinRef: ref,
                         mid: midStr ? parseFloat(midStr) : 0,
                     };

@@ -3,15 +3,19 @@
 /**
  * OutcomeMarketsScreen — HIP-4 prediction markets browser + trade flow (v2).
  *
- * HIP-4 markets are binary outcomes (Yes/No, Change/No-Change, …):
+ * HIP-4 markets are binary outcomes (Yes/No, or per-side labels like
+ * Lions/Bills):
  *  - prices live in (0,1) and represent implied probability
  *  - sizes are whole contracts (szDecimals=0)
- *  - settlement is in USDC or USDH per market.quoteToken
+ *  - settlement is in market.quoteToken (USDC across mainnet today)
  *  - "you hold" derived from spotBalances entries whose coin starts "#"
  *    (HL exposes outcome positions in the spot ledger)
  *
+ * Titles, side labels and detail lines are rendered from each market's
+ * deployer template in buildMarketViews — HL ships template ids, not prose.
  * Markets are grouped by their parent event (question) and filterable by
- * category. Internal "Fallback" outcomes are dropped in buildMarketViews.
+ * category and by deployer venue (Outcome / Trade.xyz / Skew). Internal
+ * fallback, settled and scaffold outcomes are dropped in buildMarketViews.
  * Styled with the v2 design kit (Hanken, #0A0C0E, bolt accent).
  */
 
@@ -81,6 +85,8 @@ export default function OutcomeMarketsScreen() {
     const [activeTab, setActiveTab] = useState<'trade' | 'chart' | 'book'>('trade');
     /** Category filter — null = all. */
     const [cat, setCat] = useState<OutcomeCategory | null>(null);
+    /** Deployer-venue filter (`out` / `txyz` / `skew`) — null = all. */
+    const [venue, setVenue] = useState<string | null>(null);
 
     const selected = useMemo<OutcomeMarketView | null>(
         () => markets.find((m) => m.outcomeId === selectedId) || null,
@@ -239,6 +245,22 @@ export default function OutcomeMarketsScreen() {
     }, [markets]);
 
     /**
+     * Deployers with live markets, most-listed first. HIP-4 markets come from
+     * independent venues (Outcome, Trade.xyz, Skew) and a bettor generally
+     * wants to know — and often to pick — whose book they're taking.
+     */
+    const availableVenues = useMemo(() => {
+        const count = new Map<string, { venue: string; name: string; n: number }>();
+        for (const m of markets) {
+            if (!m.venue) continue;
+            const e = count.get(m.venue) || { venue: m.venue, name: m.venueName, n: 0 };
+            e.n += 1;
+            count.set(m.venue, e);
+        }
+        return [...count.values()].sort((a, b) => b.n - a.n);
+    }, [markets]);
+
+    /**
      * Markets after category filter, sorted (actively-traded first), then
      * grouped by event. Groups appear in the order their best market scored.
      */
@@ -247,7 +269,7 @@ export default function OutcomeMarketsScreen() {
         // (e.g. World Cup contenders before 0% longshots).
         const score = (m: OutcomeMarketView) => m.sides[0]?.mid ?? 0;
         const filtered = markets
-            .filter((m) => !cat || m.category === cat)
+            .filter((m) => (!cat || m.category === cat) && (!venue || m.venue === venue))
             .sort((a, b) => score(b) - score(a));
         const order: string[] = [];
         const byEvent = new Map<string, OutcomeMarketView[]>();
@@ -259,7 +281,7 @@ export default function OutcomeMarketsScreen() {
             byEvent.get(m.eventName)!.push(m);
         }
         return order.map((name) => ({ name, markets: byEvent.get(name)! }));
-    }, [markets, cat]);
+    }, [markets, cat, venue]);
 
     if (loading && markets.length === 0) {
         return (
@@ -325,6 +347,24 @@ export default function OutcomeMarketsScreen() {
                 </div>
             )}
 
+            {/* Deployer filter — which venue launched the market */}
+            {availableVenues.length > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflowX: 'auto', paddingBottom: 2 }} className="v2-noscroll">
+                    <span style={{ fontSize: 10, fontWeight: 700, color: V2.t3, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>
+                        {t.outcomeMarkets.venueLabel}
+                    </span>
+                    <CatChip label={t.outcomeMarkets.cat.all} active={venue === null} onClick={() => setVenue(null)} />
+                    {availableVenues.map((v) => (
+                        <CatChip
+                            key={v.venue}
+                            label={v.name}
+                            active={venue === v.venue}
+                            onClick={() => setVenue(v.venue)}
+                        />
+                    ))}
+                </div>
+            )}
+
             {/* User's open positions — manage cards (see / add more / close), at top */}
             {outcomePositions.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -343,7 +383,19 @@ export default function OutcomeMarketsScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {groups.map((g) => (
                     <div key={g.name} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {g.markets.length > 1 && <EventHeader name={g.name} count={g.markets.length} />}
+                        {g.markets.length > 1 && (
+                            <EventHeader
+                                name={g.name}
+                                count={g.markets.length}
+                                venueName={
+                                    // Only attribute the group when every market in it
+                                    // came from the same deployer.
+                                    g.markets.every((m) => m.venue === g.markets[0].venue)
+                                        ? g.markets[0].venueName
+                                        : undefined
+                                }
+                            />
+                        )}
                         {g.markets.map((m) => {
                             const pos0 = userPositions[outcomeCoinRef(m.outcomeId, 0)];
                             const pos1 = userPositions[outcomeCoinRef(m.outcomeId, 1)];
@@ -387,7 +439,7 @@ export default function OutcomeMarketsScreen() {
                     <>
                         <ModalHeader
                             title={selected.eventName}
-                            sub={selected.quoteToken}
+                            sub={[selected.venueName, selected.quoteToken].filter(Boolean).join(' · ')}
                             onClose={() => {
                                 setSelectedId(null);
                                 setResult({ kind: 'idle' });
@@ -948,15 +1000,38 @@ function SpreadCell({
     );
 }
 
-function EventHeader({ name, count }: { name: string; count: number }) {
+function EventHeader({ name, count, venueName }: { name: string; count: number; venueName?: string }) {
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginTop: 2 }}>
             <span style={{ width: 3, height: 15, borderRadius: 99, background: V2.accent, flexShrink: 0 }} />
             <div style={{ fontSize: 15, fontWeight: 800, letterSpacing: '-0.01em', color: V2.t1, flex: 1, minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {name}
             </div>
+            {venueName && <VenueBadge name={venueName} />}
             <span style={{ fontSize: 11, fontWeight: 700, color: V2.t3, flexShrink: 0 }}>{count}</span>
         </div>
+    );
+}
+
+/** Small "who launched this" chip — HIP-4 markets come from several deployers. */
+function VenueBadge({ name }: { name: string }) {
+    return (
+        <span
+            style={{
+                flexShrink: 0,
+                padding: '2px 7px',
+                borderRadius: 99,
+                border: `1px solid ${V2.hair}`,
+                background: V2.card,
+                color: V2.t3,
+                fontSize: 9.5,
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                whiteSpace: 'nowrap',
+            }}
+        >
+            {name}
+        </span>
     );
 }
 
@@ -1012,19 +1087,7 @@ function MarketCard({
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, fontSize: 11 }}>
                     <SidePill label={localizeSideName(sideYes?.name || 'Yes', language)} pct={sideYes?.mid ?? 0.5} sideIdx={0} />
                     <SidePill label={localizeSideName(sideNo?.name || 'No', language)} pct={sideNo?.mid ?? 0.5} sideIdx={1} />
-                    {!grouped && (
-                        <span
-                            style={{
-                                fontSize: 9,
-                                color: V2.t3,
-                                letterSpacing: '0.1em',
-                                textTransform: 'uppercase',
-                                fontWeight: 700,
-                            }}
-                        >
-                            {market.quoteToken}
-                        </span>
-                    )}
+                    {!grouped && market.venueName && <VenueBadge name={market.venueName} />}
                 </div>
                 {position && (
                     <div

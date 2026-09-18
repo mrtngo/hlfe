@@ -4,11 +4,13 @@
  * useOutcomeMarkets — HIP-4 prediction-market data.
  *
  * Polls /info `outcomeMeta` (definitions) and `allMids` (live implied
- * probabilities for each side) and merges them into a list of markets.
+ * probabilities for each side) and merges them into a list of markets whose
+ * titles and side labels are rendered from HL's deployer templates.
  * Cached at 30s via api-cache so multiple consumers share one fetch.
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { useLanguage } from '@/hooks/useLanguage';
 import { API_URL } from '@/lib/hyperliquid/client';
 import { cachedFetch } from '@/lib/api-cache';
 import {
@@ -27,6 +29,7 @@ interface Result {
 }
 
 export function useOutcomeMarkets(): Result {
+    const { language } = useLanguage();
     const [markets, setMarkets] = useState<OutcomeMarketView[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -54,7 +57,8 @@ export function useOutcomeMarkets(): Result {
                 },
                 3_000,
             );
-            const views = buildMarketViews(meta, allMids);
+            // Titles are rendered from HL's templates, so they depend on language.
+            const views = buildMarketViews(meta, allMids, language);
             setMarkets(views);
             cacheOutcomeNames(views);
             setError(null);
@@ -63,7 +67,7 @@ export function useOutcomeMarkets(): Result {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [language]);
 
     useEffect(() => {
         fetchAll();

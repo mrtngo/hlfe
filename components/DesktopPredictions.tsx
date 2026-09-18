@@ -114,6 +114,7 @@ export default function DesktopPredictions({
                 return (
                     market.name.toLowerCase().includes(normalized) ||
                     market.eventName.toLowerCase().includes(normalized) ||
+                    market.venueName.toLowerCase().includes(normalized) ||
                     market.quoteToken.toLowerCase().includes(normalized)
                 );
             })
@@ -357,7 +358,9 @@ export default function DesktopPredictions({
                     <div className="dt-panel dp-hero-panel">
                         <div className="dp-selected-header">
                             <div>
-                                <div className="dt-panel-kicker">{selected?.quoteToken || 'USDC'} · Prediction market</div>
+                                <div className="dt-panel-kicker">
+                                    {[selected?.venueName, selected?.quoteToken || 'USDC'].filter(Boolean).join(' · ')}
+                                </div>
                                 <h1>{selected?.eventName || t.outcomeMarkets.title}</h1>
                                 <p>{selected?.name || t.outcomeMarkets.subtitle}</p>
                             </div>
@@ -572,7 +575,7 @@ function PredictionMarketRow({
         <button className={active ? 'dp-market-row dp-market-row-active' : 'dp-market-row'} type="button" onClick={onSelect}>
             <span className="dp-market-main">
                 <strong>{market.name}</strong>
-                <small>{market.quoteToken} · #{market.outcomeId}</small>
+                <small>{market.venueName || market.quoteToken} · #{market.outcomeId}</small>
             </span>
             <span className="dp-market-prices">
                 <span className="dp-pill-positive">

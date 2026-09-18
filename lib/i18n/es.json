@@ -344,7 +344,8 @@
     "sellTab": "Vender",
     "sellMax": "Tenés {n}",
     "noToSell": "No tenés nada para vender",
-    "invested": "Invertido"
+    "invested": "Invertido",
+    "venueLabel": "Casa"
   },
   "buy": {
     "title": "Comprar Cripto",
@@ -1368,9 +1369,9 @@
       },
       "help": {
         "tutorial": "Tutorial",
-      "center": "Centro de ayuda",
-      "academy": "Academia",
-      "twitter": "Twitter",
+        "center": "Centro de ayuda",
+        "academy": "Academia",
+        "twitter": "Twitter",
         "feedback": "Sugerir mejora"
       },
       "logout": "Cerrar sesión",

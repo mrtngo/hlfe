@@ -344,7 +344,8 @@
     "sellTab": "Sell",
     "sellMax": "You hold {n}",
     "noToSell": "Nothing to sell",
-    "invested": "Invested"
+    "invested": "Invested",
+    "venueLabel": "Venue"
   },
   "buy": {
     "title": "Buy Crypto",
@@ -1369,9 +1370,9 @@
       },
       "help": {
         "tutorial": "Tutorial",
-      "center": "Help center",
-      "academy": "Academy",
-      "twitter": "Twitter",
+        "center": "Help center",
+        "academy": "Academy",
+        "twitter": "Twitter",
         "feedback": "Suggest a feature"
       },
       "logout": "Sign out",
