@@ -1,0 +1,26 @@
+{
+  "name": "delos-brand-videos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion brand videos for the Delos app flows (vertical 9:16, Spanish).",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render",
+    "still": "remotion still",
+    "render:all": "tsx scripts/render-all.ts",
+    "stills:all": "tsx scripts/stills-all.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.409",
+    "@remotion/google-fonts": "4.0.409",
+    "@remotion/shapes": "4.0.409",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.409"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "typescript": "5.9.3",
+    "tsx": "4.20.6"
+  }
+}
