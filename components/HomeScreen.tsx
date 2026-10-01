@@ -16,9 +16,10 @@ interface HomeScreenProps {
     onOpenPredictions?: () => void;
     onOpenAcademy?: () => void;
     onOpenNews?: () => void;
+    onOpenPockets?: () => void;
 }
 
-export default function HomeScreen({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onOpenPredictions, onOpenAcademy, onOpenNews }: HomeScreenProps = {}) {
+export default function HomeScreen({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onOpenPredictions, onOpenAcademy, onOpenNews, onOpenPockets }: HomeScreenProps = {}) {
     const { t } = useLanguage();
     const { proMode, toggleProMode } = usePreferences();
     const [mounted, setMounted] = useState(false);
@@ -57,6 +58,7 @@ export default function HomeScreen({ onTokenClick, onSpotHoldingClick, onBuyClic
                     onOpenPredictions={onOpenPredictions}
                     onOpenAcademy={onOpenAcademy}
                     onOpenNews={onOpenNews}
+                    onOpenPockets={onOpenPockets}
                 />
             )}
         </div>

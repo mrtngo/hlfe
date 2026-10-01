@@ -40,9 +40,11 @@ interface HomeNormalProps {
     /** Academia / Noticias left the bottom nav — Home links to them instead. */
     onOpenAcademy?: () => void;
     onOpenNews?: () => void;
+    /** Tap the balance → Bolsillos (where your money is + move it). */
+    onOpenPockets?: () => void;
 }
 
-function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode, onOpenPredictions, onOpenAcademy, onOpenNews }: HomeNormalProps) {
+function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode, onOpenPredictions, onOpenAcademy, onOpenNews, onOpenPockets }: HomeNormalProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, markets, thirtyDayPnl, setSelectedMarket, spotBalances, spotPrices } = useHyperliquid();
@@ -177,8 +179,19 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
             {/* Portfolio (no chart) */}
             <div style={{ padding: '24px 20px 0', position: 'relative' }}>
                 <DelosSun size={130} color={V2.accent} style={{ position: 'absolute', top: 4, right: 6, opacity: 0.05, pointerEvents: 'none' }} />
-                <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, letterSpacing: '0.01em' }}>{t.homeRedesign.totalValue}</div>
-                <div style={{ marginTop: 8 }}><BigMoney value={portfolioValue} size={52} /></div>
+                <div
+                    role={onOpenPockets ? 'button' : undefined}
+                    tabIndex={onOpenPockets ? 0 : undefined}
+                    onClick={onOpenPockets}
+                    onKeyDown={(ev) => ev.key === 'Enter' && onOpenPockets?.()}
+                    style={{ cursor: onOpenPockets ? 'pointer' : 'default', display: 'inline-block' }}
+                >
+                    <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, letterSpacing: '0.01em', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {t.homeRedesign.totalValue}
+                        {onOpenPockets && <Icon name="chevronRight" size={13} color={V2.t3} />}
+                    </div>
+                    <div style={{ marginTop: 8 }}><BigMoney value={portfolioValue} size={52} /></div>
+                </div>
                 {isEmptyAccount ? (
                     <div style={{ marginTop: 12, fontSize: 14, color: V2.t2, lineHeight: 1.5 }}>{t.homeRedesign.emptyHint}</div>
                 ) : (<>

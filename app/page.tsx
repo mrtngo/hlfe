@@ -30,6 +30,7 @@ import MarketsScreen from '@/components/MarketsScreen';
 import TokenDetail from '@/components/TokenDetail';
 import PortfolioScreen from '@/components/PortfolioScreen';
 import BolsillosScreen from '@/components/BolsillosScreen';
+import EarnScreen from '@/components/EarnScreen';
 import DepositScreen from '@/components/DepositScreen';
 import DesktopPredictions from '@/components/DesktopPredictions';
 import DesktopTerminal from '@/components/DesktopTerminal';
@@ -68,7 +69,7 @@ export default function Home() {
     const { ready, authenticated, login, getAccessToken } = usePrivy();
     const { user, loading: userLoading, needsConsent, recordConsent } = useUser();
     const { proMode, toggleProMode } = usePreferences();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'academy' | 'bolsillos' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'academy' | 'bolsillos' | 'earn' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Preselected side for the trade screen ("Bajar" → sell). Resets to buy on generic entry. */
     const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
@@ -209,7 +210,7 @@ export default function Home() {
     // V2 "serious redesign" screens render full-bleed (they own their padding
     // and background via ScreenV2). Everything else keeps the legacy padded
     // container + live-sync chip.
-    const V2_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'academy', 'traderSearch', 'publicProfile', 'predictions'];
+    const V2_VIEWS = ['earn', 'home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'academy', 'traderSearch', 'publicProfile', 'predictions'];
     const isV2View = V2_VIEWS.includes(view);
     const DESKTOP_TERMINAL_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'advanced'];
     // The dense pro terminal is opt-in: desktop users get the consumer shell by
@@ -249,6 +250,7 @@ export default function Home() {
                 onOpenPredictions={() => setView('predictions')}
                 onOpenAcademy={() => openSecondary('academy')}
                 onOpenNews={() => openSecondary('news')}
+                onOpenPockets={authenticated ? () => setView('bolsillos') : undefined}
             />
         ) : view === 'markets' ? (
             <MarketsScreen
@@ -284,6 +286,8 @@ export default function Home() {
             />
         ) : view === 'rewards' ? (
             <RewardsScreen />
+        ) : view === 'earn' ? (
+            <EarnScreen onBack={() => setView('bolsillos')} />
         ) : view === 'academy' ? (
             <AcademyScreen onBack={desktopConsumerShell ? undefined : () => setView(secondaryReturnView)} />
         ) : view === 'predictions' ? (
@@ -567,6 +571,7 @@ export default function Home() {
                                 <BolsillosScreen
                                     onBack={() => setView('home')}
                                     onDeposit={goDeposit}
+                                    onOpenEarn={() => setView('earn')}
                                 />
                             </div>
                         ) : (
@@ -596,7 +601,7 @@ export default function Home() {
                     { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },
                     { id: 'predictions', label: t.nav.predictions || 'Predice', icon: 'target', on: view === 'predictions', onClick: () => setView('predictions'), domId: 'nav-predictions-tab' },
                     { id: 'rewards', label: t.nav.rewards || 'Premios', icon: 'gift', on: view === 'rewards', onClick: () => setView('rewards'), domId: 'nav-rewards-tab' },
-                    { id: 'account', label: t.nav.profile, icon: 'user', on: view === 'profile' || view === 'history' || view === 'settings' || view === 'portfolio' || view === 'advanced' || view === 'leaderboard' || view === 'cctp' || view === 'bolsillos' || view === 'traderSearch' || view === 'publicProfile', onClick: handleProfileClick, domId: 'nav-profile-tab' },
+                    { id: 'account', label: t.nav.profile, icon: 'user', on: view === 'profile' || view === 'history' || view === 'settings' || view === 'portfolio' || view === 'advanced' || view === 'leaderboard' || view === 'cctp' || view === 'bolsillos' || view === 'earn' || view === 'traderSearch' || view === 'publicProfile', onClick: handleProfileClick, domId: 'nav-profile-tab' },
                 ];
                 return (
                     <nav

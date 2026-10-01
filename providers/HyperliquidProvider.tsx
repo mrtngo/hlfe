@@ -191,6 +191,13 @@ interface HyperliquidContextType {
      * outcomeId * 10 + sideIdx. Sizes are whole contracts (szDecimals=0).
      * Min notional = 10 USDH. Same signing path as spot orders.
      */
+    /**
+     * HyperCore borrow/lend on USDC (token 0): supply to earn the reserve's
+     * supply rate, or withdraw it back. L1 action signed by the agent key.
+     * `amount` null = everything (withdraw all / supply all available).
+     * Documented as a Portfolio Margin feature — callers gate on mode.
+     */
+    borrowLend: (operation: 'supply' | 'withdraw', amount: string | null) => Promise<{ ok: boolean; error?: string }>;
     placeOutcomeOrder: (params: {
         outcomeId: number;
         sideIdx: number;
@@ -2781,6 +2788,50 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         [isConnected, address, agentWalletEnabled, wallets, refreshAccountData, ensureAgentReady],
     );
 
+    const borrowLend = useCallback(
+        async (operation: 'supply' | 'withdraw', amount: string | null): Promise<{ ok: boolean; error?: string }> => {
+            if (!isConnected || !address) return { ok: false, error: t.errors.walletNotConnected };
+            try {
+                // Same reason as outcome orders: L1 actions must be signed by
+                // the approved agent key, never through Privy.
+                await ensureAgentReady();
+                const agent = await getAgentWallet(address);
+                const agentSigner = agent ? getAgentSigner(agent) : null;
+                if (!agent || !agentSigner || !isAgentApproved(address)) {
+                    return { ok: false, error: 'Agent wallet not approved.' };
+                }
+                const signingWallet = {
+                    address: agent.address,
+                    getAddress: async () => agent.address.toLowerCase(),
+                    signTypedData: async (domain: any, types: any, value: any) => {
+                        const { EIP712Domain, ...restTypes } = types;
+                        return await agentSigner.signTypedData(domain, restTypes, value);
+                    },
+                };
+                // Key order is part of the signed msgpack hash — keep HL's order.
+                const action = { type: 'borrowLend', operation, token: 0, amount };
+                const nonce = Date.now();
+                const { signL1Action } = await import('@/lib/vendor/hyperliquid/index.mjs');
+                const signature = await signL1Action(signingWallet as any, action as any, null, nonce, !IS_TESTNET);
+                const response = await fetch(`${API_URL}/exchange`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, nonce, signature, vaultAddress: null }),
+                });
+                const result = await response.json().catch(() => null);
+                if (result?.status === 'ok') {
+                    setTimeout(() => refreshAccountData(), 500);
+                    return { ok: true };
+                }
+                const err = typeof result?.response === 'string' ? result.response : JSON.stringify(result?.response ?? result);
+                return { ok: false, error: err || 'borrowLend rejected' };
+            } catch (err: unknown) {
+                return { ok: false, error: err instanceof Error ? err.message : String(err) };
+            }
+        },
+        [isConnected, address, t, ensureAgentReady, refreshAccountData],
+    );
+
     // Withdrawal logic
     const withdraw = useCallback(async (amount: string, destination: string) => {
         if (!isConnected || !address) throw new Error('Not connected');
@@ -2911,6 +2962,7 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
         withdraw,
         transferBetweenPockets,
         buyUsdh,
+        borrowLend,
         placeOutcomeOrder,
         account,
         positions,

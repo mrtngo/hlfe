@@ -26,10 +26,14 @@ import { useCurrency } from '@/context/CurrencyContext';
 import ScreenHeader from '@/components/ScreenHeader';
 import TokenLogo from '@/components/TokenLogo';
 import MoverFlow from '@/components/MoverFlow';
+import { useLending } from '@/hooks/useLending';
+import { Icon, V2 } from '@/components/V2Kit';
 
 interface BolsillosScreenProps {
     onBack?: () => void;
     onDeposit?: () => void;
+    /** Opens "Ganar intereses" (HyperCore USDC lending). */
+    onOpenEarn?: () => void;
 }
 
 // ─── Pocket palette ────────────────────────────────────────────
@@ -70,7 +74,9 @@ const SEEN_INTRO_KEY = 'rayo:bolsillosIntroSeen';
 export default function BolsillosScreen({
     onBack,
     onDeposit,
+    onOpenEarn,
 }: BolsillosScreenProps) {
+    const lending = useLending();
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const {
@@ -443,6 +449,28 @@ export default function BolsillosScreen({
                         {t.bolsillos.cta}
                     </button>
                 </div>
+
+                {/* Earn — idle USDC → HyperCore lending */}
+                {onOpenEarn && (
+                    <div style={{ padding: '0 22px 24px' }}>
+                        <button
+                            onClick={onOpenEarn}
+                            className="v2-card"
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 16, cursor: 'pointer', fontFamily: V2.ui, color: V2.t1, textAlign: 'left' }}
+                        >
+                            <span style={{ width: 38, height: 38, borderRadius: 11, background: V2.posSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Icon name="coins" size={18} color={V2.pos} />
+                            </span>
+                            <span style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>{t.earn.title}</span>
+                                <span style={{ display: 'block', fontSize: 12.5, color: V2.t3, marginTop: 2 }}>
+                                    {lending.supplyApy != null ? `${(lending.supplyApy * 100).toFixed(1).replace('.', ',')}% ${t.earn.perYear} · USDC` : 'USDC'}
+                                </span>
+                            </span>
+                            <Icon name="chevronRight" size={16} color={V2.t3} />
+                        </button>
+                    </div>
+                )}
 
                 {/* Recent transfers — empty for now until pocket_transfers
                     table ships. Renders an honest "no transfers yet" hint
