@@ -5,11 +5,11 @@ import type { Metadata } from 'next';
 // providers needed; the only action is a link to the app.
 
 export const metadata: Metadata = {
-    title: 'Delos — Invertí en cripto y acciones, simple y en segundos',
+    title: 'Delos — Invierte en cripto y acciones, simple y en segundos',
     description:
-        'Delos es la forma más simple de invertir en cripto y acciones desde LATAM. Comprá al alza o a la baja, depositá USDC desde cualquier red y operá en segundos. Tu plata, on-chain.',
+        'Delos es la forma más simple de invertir en cripto y acciones desde LATAM. Compra al alza o a la baja, deposita USDC desde cualquier red y opera en segundos. Tu plata, on-chain.',
     openGraph: {
-        title: 'Delos — Invertí en cripto y acciones',
+        title: 'Delos — Invierte en cripto y acciones',
         description:
             'La forma más simple de invertir en cripto y acciones desde LATAM. Sin claves raras, en segundos.',
         type: 'website',
@@ -28,15 +28,15 @@ const SERIF = 'var(--font-serif, "Cormorant Garamond", Georgia, serif)';
 const FEATURES = [
     {
         title: 'Compra simple',
-        body: 'Comprá BTC, ETH o acciones con un multiplicador. Deslizá para confirmar y listo — sin formularios eternos.',
+        body: 'Compra BTC, ETH o acciones con un multiplicador. Desliza para confirmar y listo — sin formularios eternos.',
     },
     {
-        title: 'Depositá desde cualquier red',
-        body: 'USDC desde Arbitrum, Base, Solana, Ethereum y más. Copiás tu dirección, enviás y se acredita solo.',
+        title: 'Deposita desde cualquier red',
+        body: 'USDC desde Arbitrum, Base, Solana, Ethereum y más. Copias tu dirección, envías y se acredita solo.',
     },
     {
         title: 'Apalancamiento con control',
-        body: 'Operá hasta el máximo de cada activo con el precio de liquidación siempre visible en el gráfico.',
+        body: 'Opera hasta el máximo de cada activo con el precio de liquidación siempre visible en el gráfico.',
     },
     {
         title: 'Acciones tokenizadas',
@@ -48,14 +48,14 @@ const FEATURES = [
     },
     {
         title: 'Tu plata es tuya',
-        body: 'Tu propia billetera on-chain. Sin custodios, sin bloqueos, retirás cuando quieras.',
+        body: 'Tu propia billetera on-chain. Sin custodios, sin bloqueos, retiras cuando quieras.',
     },
 ];
 
 const STEPS = [
-    { n: '01', title: 'Creá tu cuenta', body: 'Con tu email. Sin claves raras ni papeleo.' },
-    { n: '02', title: 'Depositá USDC', body: 'Desde cualquier red. Se acredita en menos de un minuto.' },
-    { n: '03', title: 'Empezá a operar', body: 'Al alza o a la baja, en segundos.' },
+    { n: '01', title: 'Crea tu cuenta', body: 'Con tu email. Sin claves raras ni papeleo.' },
+    { n: '02', title: 'Deposita USDC', body: 'Desde cualquier red. Se acredita en menos de un minuto.' },
+    { n: '03', title: 'Empieza a operar', body: 'Al alza o a la baja, en segundos.' },
 ];
 
 export default function LandingPage() {
@@ -86,11 +86,11 @@ export default function LandingPage() {
                         Hecho para LATAM
                     </div>
                     <h1 style={{ fontSize: 'clamp(40px, 7vw, 68px)', fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.04, margin: '24px 0 0' }}>
-                        Invertí en cripto y acciones,{' '}
+                        Invierte en cripto y acciones,{' '}
                         <span style={{ color: ACCENT }}>simple y en segundos.</span>
                     </h1>
                     <p style={{ fontSize: 'clamp(16px, 2.4vw, 20px)', color: 'rgba(255,255,255,0.62)', lineHeight: 1.5, margin: '22px auto 0', maxWidth: 560 }}>
-                        Comprá al alza o a la baja, depositá USDC desde cualquier red y operá al instante.
+                        Compra al alza o a la baja, deposita USDC desde cualquier red y opera al instante.
                         Sin descargas, sin claves raras, sin custodios.
                     </p>
                     <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap', marginTop: 34 }}>
@@ -100,7 +100,7 @@ export default function LandingPage() {
                         <a href="#como-funciona" style={secondaryCta}>Cómo funciona</a>
                     </div>
                     <div style={{ marginTop: 18, fontSize: 13, color: 'rgba(255,255,255,0.4)', fontFamily: MONO }}>
-                        Sin descargas · Empezás en 60 segundos
+                        Sin descargas · Empiezas en 60 segundos
                     </div>
                 </section>
 
@@ -125,7 +125,7 @@ export default function LandingPage() {
                         Empezar toma 3 pasos
                     </h2>
                     <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: 16, margin: '0 0 44px' }}>
-                        De cero a tu primera operación en menos de lo que tardás en pedir un café.
+                        De cero a tu primera operación en menos de lo que tardas en pedir un café.
                     </p>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
                         {STEPS.map((s) => (
@@ -151,7 +151,7 @@ export default function LandingPage() {
                             Tu primera operación te espera.
                         </h2>
                         <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.62)', margin: '14px auto 28px', maxWidth: 440 }}>
-                            Abrí Delos en el navegador y empezá ahora mismo. Gratis.
+                            Abre Delos en el navegador y empieza ahora mismo. Gratis.
                         </p>
                         <a href={APP_URL} style={primaryCta}>
                             Abrir app <span style={{ fontSize: 18 }}>↗</span>

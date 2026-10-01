@@ -234,7 +234,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                             </button>
                         </div>
                         <div style={{ marginTop: 6, fontSize: 13.5, color: V2.t3, lineHeight: 1.45 }}>
-                            {t.withdraw.descMulti || 'Elegí la red y la dirección a donde querés retirar tu USDC.'}
+                            {t.withdraw.descMulti || 'Elige la red y la dirección a donde quieres retirar tu USDC.'}
                         </div>
 
                         {/* Destination network */}
@@ -375,7 +375,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                         {isError && wd.withdrawDone && (
                             <>
                                 <div style={{ marginTop: 10, fontSize: 12, color: V2.t2, textAlign: 'center', lineHeight: 1.45 }}>
-                                    {t.withdraw.fundsSafe || 'Tus fondos están seguros en tu wallet de Arbitrum. Podés reintentar el envío.'}
+                                    {t.withdraw.fundsSafe || 'Tus fondos están seguros en tu wallet de Arbitrum. Puedes reintentar el envío.'}
                                 </div>
                                 <button onClick={() => wd.retryBridge()} style={{ ...ctaBtn, marginTop: 12, background: V2.accent, color: V2.accentInk }}>
                                     {t.withdraw.retryBridge || 'Reintentar envío'}
@@ -386,7 +386,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                         {canResumePendingBridge && (
                             <>
                                 <div style={{ marginTop: 10, fontSize: 12, color: V2.t2, textAlign: 'center', lineHeight: 1.45 }}>
-                                    {t.withdraw.pendingBridge || 'Hay un envío pendiente de Circle. Podés completarlo sin iniciar otro retiro.'}
+                                    {t.withdraw.pendingBridge || 'Hay un envío pendiente de Circle. Puedes completarlo sin iniciar otro retiro.'}
                                 </div>
                                 <button onClick={() => wd.retryBridge()} style={{ ...ctaBtn, marginTop: 12, background: V2.accent, color: V2.accentInk }}>
                                     {t.withdraw.completePendingBridge || 'Completar envío pendiente'}
@@ -397,7 +397,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                         {canManualRecover && !canResumePendingBridge && (
                             <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: V2.card, border: `1px solid ${V2.hair}` }}>
                                 <div style={{ fontSize: 12, color: V2.t2, lineHeight: 1.45, marginBottom: 10 }}>
-                                    {t.withdraw.bridgeExistingHint || 'Si el USDC ya llegó a tu wallet de Arbitrum, podés enviarlo a la red elegida sin retirar de nuevo.'}
+                                    {t.withdraw.bridgeExistingHint || 'Si el USDC ya llegó a tu wallet de Arbitrum, puedes enviarlo a la red elegida sin retirar de nuevo.'}
                                 </div>
                                 <button
                                     onClick={handleBridgeExistingArbitrum}
@@ -410,7 +410,7 @@ export default function WithdrawModal({ isOpen, onClose }: WithdrawModalProps) {
                                 <div style={{ height: 1, background: V2.hair, margin: '2px 0 12px' }} />
 
                                 <div style={{ fontSize: 12, color: V2.t2, lineHeight: 1.45, marginBottom: 10 }}>
-                                    {t.withdraw.manualRecoveryHint || 'Si el envío quedó pendiente, pegá el hash de burn en Arbitrum para completar el minteo.'}
+                                    {t.withdraw.manualRecoveryHint || 'Si el envío quedó pendiente, pega el hash de burn en Arbitrum para completar el minteo.'}
                                 </div>
                                 <div style={{ fontSize: 11, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 700, color: V2.t3, marginBottom: 8 }}>
                                     {t.withdraw.bridgeHashLabel || 'Hash del bridge'}

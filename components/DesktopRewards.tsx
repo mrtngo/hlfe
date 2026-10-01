@@ -43,9 +43,9 @@ export default function DesktopRewards() {
                 <div style={{ width: 70, height: 70, borderRadius: '50%', margin: '0 auto 18px', background: V2.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon name="gift" size={30} color={V2.accent} />
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 800 }}>Iniciá sesión</div>
+                <div style={{ fontSize: 20, fontWeight: 800 }}>Inicia sesión</div>
                 <div style={{ marginTop: 8, fontSize: 14, color: V2.t3, lineHeight: 1.5 }}>
-                    Creá tu cuenta para obtener tu link de invitación y empezar a ganar.
+                    Crea tu cuenta para obtener tu link de invitación y empezar a ganar.
                 </div>
             </div>
         );
@@ -82,7 +82,7 @@ export default function DesktopRewards() {
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 15, fontWeight: 800 }}>{pointsLoading ? '—' : `${streak.current} día${streak.current === 1 ? '' : 's'} de racha`}</div>
                         <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 2 }}>
-                            {streak.checkedInToday ? '¡Sumaste tus puntos de hoy! Volvé mañana.' : 'Entrá cada día para no perder tu racha.'}
+                            {streak.checkedInToday ? '¡Sumaste tus puntos de hoy! Vuelve mañana.' : 'Entra cada día para no perder tu racha.'}
                         </div>
                     </div>
                     {streak.longest > 0 && (
@@ -134,7 +134,7 @@ export default function DesktopRewards() {
                     </button>
                     {referralCode && (
                         <div style={{ marginTop: 12, textAlign: 'center', fontSize: 12.5, color: V2.t3 }}>
-                            Tu código: <span style={{ color: V2.accent, fontWeight: 700, fontFamily: V2.mono }}>{referralCode}</span>. Te llevás el 10% de sus comisiones.
+                            Tu código: <span style={{ color: V2.accent, fontWeight: 700, fontFamily: V2.mono }}>{referralCode}</span>. Te llevas el 10% de sus comisiones.
                         </div>
                     )}
                 </div>
@@ -152,7 +152,7 @@ export default function DesktopRewards() {
                         </div>
                     ) : referredCount === 0 ? (
                         <div style={{ padding: '32px 18px', textAlign: 'center', color: V2.t3, fontSize: 13.5, lineHeight: 1.5 }}>
-                            Todavía no invitaste a nadie.<br />Compartí tu link y empezá a ganar.
+                            Todavía no invitaste a nadie.<br />Comparte tu link y empieza a ganar.
                         </div>
                     ) : (
                         referredUsers.map((u, i) => (

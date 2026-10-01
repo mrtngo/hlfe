@@ -348,7 +348,7 @@ export function useCctpTransfer() {
                         args: [address],
                     })) as bigint;
                 } catch {
-                    setError('No pudimos leer tu balance inicial en Arbitrum. Reintentá antes de quemar USDC.');
+                    setError('No pudimos leer tu balance inicial en Arbitrum. Reintenta antes de quemar USDC.');
                     setStatus('error');
                     return;
                 }

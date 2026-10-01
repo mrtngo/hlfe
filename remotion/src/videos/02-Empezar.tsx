@@ -22,7 +22,7 @@ export const empezarSpec: FilmSpec = {
         {
             dur: 76,
             screen: <IntroWithTap />,
-            eyebrow: 'Entrá',
+            eyebrow: 'Entra',
             caption: 'Con tu email. Sin formularios eternos.',
         },
         {
@@ -33,7 +33,7 @@ export const empezarSpec: FilmSpec = {
         },
         {
             dur: 60,
-            screen: <SuccessScreen headline="¡Listo!" sub="Tu cuenta ya está activa" rows={[['Billetera', '0x889c…0f06'], ['Red', 'Arbitrum'], ['Custodia', 'Solo vos']]} />,
+            screen: <SuccessScreen headline="¡Listo!" sub="Tu cuenta ya está activa" rows={[['Billetera', '0x889c…0f06'], ['Red', 'Arbitrum'], ['Custodia', 'Solo tú']]} />,
             eyebrow: 'Hecho',
             caption: 'Sin frase semilla que puedas perder.',
         },
@@ -41,7 +41,7 @@ export const empezarSpec: FilmSpec = {
             dur: 62,
             screen: <HomeScreen balance={0} />,
             eyebrow: 'Adentro',
-            caption: 'Ya podés depositar y empezar.',
+            caption: 'Ya puedes depositar y empezar.',
         },
     ],
     end: {},

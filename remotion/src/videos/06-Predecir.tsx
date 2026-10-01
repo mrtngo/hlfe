@@ -52,7 +52,7 @@ const SlideBeat: React.FC = () => {
 export const predecirSpec: FilmSpec = {
     title: {
         kicker: 'Mercados de predicción',
-        title: 'Predecí',
+        title: 'Predice',
         sub: 'Fútbol, tasas, precios. Sin comisión de apertura.',
     },
     scenes: [
@@ -71,20 +71,20 @@ export const predecirSpec: FilmSpec = {
         {
             dur: 72,
             screen: <PickBeat />,
-            eyebrow: 'Elegí',
+            eyebrow: 'Elige',
             caption: 'Desde un partido hasta la decisión de la Fed.',
         },
         {
             dur: 78,
             screen: <SlideBeat />,
-            eyebrow: 'Apostá',
-            caption: 'Ves exactamente cuánto cobrás si acertás.',
+            eyebrow: 'Apuesta',
+            caption: 'Ves exactamente cuánto cobras si aciertas.',
         },
         {
             dur: 60,
-            screen: <SuccessScreen headline="¡Apuesta hecha!" sub="$50,00 a Barcelona" rows={[['Cobrás si acertás', '$61,50'], ['Casa', 'Trade.xyz'], ['Comisión de apertura', '$0,00']]} />,
+            screen: <SuccessScreen headline="¡Apuesta hecha!" sub="$50,00 a Barcelona" rows={[['Cobras si aciertas', '$61,50'], ['Casa', 'Trade.xyz'], ['Comisión de apertura', '$0,00']]} />,
             eyebrow: 'Listo',
-            caption: 'Y podés vender tu posición antes del cierre.',
+            caption: 'Y puedes vender tu posición antes del cierre.',
         },
     ],
     end: {},

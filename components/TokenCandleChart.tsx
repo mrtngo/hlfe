@@ -243,7 +243,7 @@ function AreaLine({
         : '';
     // Candle `time` is in seconds (see useCandleData) — convert to ms.
     const actDate = act
-        ? new Date(act.time * 1000).toLocaleString('es-AR', {
+        ? new Date(act.time * 1000).toLocaleString('es-CO', {
               day: '2-digit',
               month: 'short',
               hour: '2-digit',

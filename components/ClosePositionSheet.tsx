@@ -193,7 +193,7 @@ export default function ClosePositionSheet({
 
                         {partialTooSmall && (
                             <div style={{ marginBottom: 12, fontSize: 12.5, color: V2.neg, fontWeight: 600, textAlign: 'center' }}>
-                                Un cierre parcial necesita un mínimo de {formatCurrency(MIN_NOTIONAL_VALUE, 0)} — subí el porcentaje o cerrá todo.
+                                Un cierre parcial necesita un mínimo de {formatCurrency(MIN_NOTIONAL_VALUE, 0)} — sube el porcentaje o cierra todo.
                             </div>
                         )}
 
@@ -215,8 +215,8 @@ export default function ClosePositionSheet({
                                     : partialTooSmall
                                       ? `Mín. ${formatCurrency(MIN_NOTIONAL_VALUE, 0)} para cierre parcial`
                                       : pct >= 100
-                                        ? 'Deslizá para cerrar todo'
-                                        : `Deslizá para cerrar ${pct}%`
+                                        ? 'Desliza para cerrar todo'
+                                        : `Desliza para cerrar ${pct}%`
                             }
                             onConfirm={handleConfirm}
                         />

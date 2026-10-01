@@ -188,7 +188,7 @@ export default function BolsillosScreen({
             <div style={{ paddingBottom: 110 }}>
                 <ScreenHeader
                     title={t.bolsillos.title}
-                    sub="empezá acá"
+                    sub="empieza acá"
                     onBack={onBack}
                 />
                 <div

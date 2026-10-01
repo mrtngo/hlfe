@@ -67,7 +67,7 @@ export const DepositPickChain: React.FC<{ selected?: string }> = ({ selected }) 
                     ¿Desde qué red?
                 </div>
                 <div style={{ fontSize: 13, color: V2.t2, marginBottom: 20, lineHeight: 1.45 }}>
-                    Mandá USDC desde cualquiera. Nosotros lo puenteamos solos.
+                    Manda USDC desde cualquiera. Nosotros lo puenteamos solos.
                 </div>
                 <Card style={{ padding: 5, ...riseIn(frame, 3, 14) }}>
                     {CHAINS.map((c) => (
@@ -192,7 +192,7 @@ export const WithdrawScreen: React.FC<{ amount?: string; showMfa?: boolean }> = 
             <div style={{ padding: '56px 20px 0' }}>
                 <Label style={{ fontSize: 11, color: V2.t3, fontWeight: 600 }}>Retirar</Label>
                 <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 18 }}>
-                    ¿Cuánto sacás?
+                    ¿Cuánto sacas?
                 </div>
 
                 <Card style={{ padding: 18, ...riseIn(frame, 2, 14) }}>
@@ -248,7 +248,7 @@ export const WithdrawScreen: React.FC<{ amount?: string; showMfa?: boolean }> = 
                             <span style={{ fontSize: 16 }}>🛡️</span>
                             <div>
                                 <div style={{ fontSize: 13, fontWeight: 800, color: V2.accent }}>
-                                    Confirmá con tu código
+                                    Confirma con tu código
                                 </div>
                                 <div style={{ fontSize: 11.5, color: V2.t2, marginTop: 2 }}>
                                     2FA protege cada retiro
@@ -284,7 +284,7 @@ export const WithdrawScreen: React.FC<{ amount?: string; showMfa?: boolean }> = 
             </div>
             {!showMfa && (
                 <FootNote icon="🔓">
-                    Nadie tiene que aprobar tu retiro. Es tu plata y sale cuando querés.
+                    Nadie tiene que aprobar tu retiro. Es tu plata y sale cuando quieres.
                 </FootNote>
             )}
         </Screen>

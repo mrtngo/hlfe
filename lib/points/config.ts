@@ -45,19 +45,19 @@ export const QUESTS: QuestDef[] = [
     {
         id: 'first_trade',
         label: 'Primera operación',
-        description: 'Hacé tu primera operación en Delos.',
+        description: 'Haz tu primera operación en Delos.',
         points: 100,
     },
     {
         id: 'first_referral',
         label: 'Primer invitado',
-        description: 'Invitá a tu primer amigo con tu link.',
+        description: 'Invita a tu primer amigo con tu link.',
         points: 200,
     },
     {
         id: 'volume_1k',
         label: '$1.000 operados',
-        description: 'Alcanzá $1.000 de volumen operado en total.',
+        description: 'Alcanza $1.000 de volumen operado en total.',
         points: 150,
     },
 ];

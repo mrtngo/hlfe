@@ -488,7 +488,7 @@ export default function DesktopPredictions({
                                 <PreviewRow label={tradeSide === 'sell' ? 'Contratos' : t.outcomeMarkets.totalCost} value={tradeSide === 'sell' ? contracts.toString() : `${formatCurrency(totalCost, 2)} ${selected?.quoteToken || ''}`} />
                                 <PreviewRow label={t.outcomeMarkets.potentialPayout} value={`${formatCurrency(payout, 2)} ${selected?.quoteToken || ''}`} />
                                 <PreviewRow label={t.outcomeMarkets.potentialProfit} value={`${profit >= 0 ? '+' : ''}${formatCurrency(profit, 2)}`} tone={profit >= 0 ? 'positive' : 'negative'} />
-                                <PreviewRow label={tradeSide === 'sell' ? 'Tenés' : selected?.quoteToken || 'Balance'} value={tradeSide === 'sell' ? heldContracts.toString() : formatCurrency(quoteBalance, 2)} />
+                                <PreviewRow label={tradeSide === 'sell' ? 'Tienes' : selected?.quoteToken || 'Balance'} value={tradeSide === 'sell' ? heldContracts.toString() : formatCurrency(quoteBalance, 2)} />
                             </div>
 
                             {selected?.quoteToken === 'USDH' && tradeSide === 'buy' && quoteBalance < 10 && (

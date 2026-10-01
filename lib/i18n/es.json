@@ -116,9 +116,9 @@
     "thisMonth": "{count} este mes",
     "noTransfersYet": "Aún no hiciste movimientos",
     "eduTitle": "¿Por qué dos bolsillos?",
-    "eduBody": "Perps es para operar con apalancamiento — podés ganar (o perder) más. Spot es cripto que comprás y guardás. Separar los dos te ayuda a no mezclar tu plata segura con la que arriesgás.",
-    "emptyTitle": "Cargá tu primer bolsillo",
-    "emptyBody": "Depositá plata para empezar a tradear o a guardar cripto. Vas a poder separar las dos cosas.",
+    "eduBody": "Perps es para operar con apalancamiento — puedes ganar (o perder) más. Spot es cripto que compras y guardas. Separar los dos te ayuda a no mezclar tu plata segura con la que arriesgas.",
+    "emptyTitle": "Carga tu primer bolsillo",
+    "emptyBody": "Deposita plata para empezar a tradear o a guardar cripto. Vas a poder separar las dos cosas.",
     "emptyCta": "Cargar plata"
   },
   "mover": {
@@ -126,11 +126,11 @@
     "sub": "entre bolsillos",
     "from": "Desde",
     "to": "Hacia",
-    "howMuch": "Cuánto querés mover",
+    "howMuch": "Cuánto quieres mover",
     "availableIn": "Disponible en {pocket}",
     "chipHalf": "Mitad",
     "chipAll": "Todo",
-    "reviewTitle": "Revisá.",
+    "reviewTitle": "Revisa.",
     "reviewSub": "el movimiento",
     "youWillMove": "Vas a mover",
     "fee": "Comisión",
@@ -146,40 +146,40 @@
     "successSub": "De {from} a {to}",
     "successTxId": "ID transacción",
     "successBackCta": "Volver a bolsillos",
-    "errInsufficient": "No tenés suficiente en {pocket}",
-    "errSame": "Tenés que elegir dos bolsillos distintos",
-    "errFailed": "Algo salió mal. Volvé a intentar."
+    "errInsufficient": "No tienes suficiente en {pocket}",
+    "errSame": "Tienes que elegir dos bolsillos distintos",
+    "errFailed": "Algo salió mal. Vuelve a intentar."
   },
   "agent": {
-    "introTitle": "Tradeá libre.",
+    "introTitle": "Opera libre.",
     "introSub": "paso 1 de 2",
-    "you": "Vos",
+    "you": "Tú",
     "youSub": "billetera",
     "agentLabel": "Agente",
     "agentSub": "delegado",
-    "headlinePre": "Operá sin firmar",
+    "headlinePre": "Opera sin firmar",
     "headlineEm": "cada vez",
     "headlinePost": ".",
-    "introBody": "Creás una billetera-agente que firma tus órdenes por vos. Es como darle permiso temporal para mover solo tu plata de trading.",
-    "trustTitle": "podés tranqui",
+    "introBody": "Creas una billetera-agente que firma tus órdenes por ti. Es como darle permiso temporal para mover solo tu plata de trading.",
+    "trustTitle": "puedes estar tranquilo",
     "trust1": "El agente solo abre y cierra tus posiciones",
     "trust2": "No puede retirar tu plata",
-    "trust3": "Podés desactivarlo en cualquier momento",
+    "trust3": "Puedes desactivarlo en cualquier momento",
     "trust4": "La clave queda guardada solo en este dispositivo",
     "detailsNetwork": "Red",
     "detailsNetworkValue": "Hyperliquid · Arbitrum",
     "detailsCost": "Costo",
     "detailsCostValue": "Gratis",
     "detailsValidity": "Validez",
-    "detailsValidityValue": "Mientras vos quieras",
+    "detailsValidityValue": "Mientras tú quieras",
     "ctaActivate": "Activar agente",
     "ctaSkip": "Ahora no — voy a firmar cada orden",
-    "signingTitle": "Firmá.",
+    "signingTitle": "Firma.",
     "signingSub": "paso 2 de 2",
     "signingHeadlinePre": "Esperando tu",
     "signingHeadlineEm": "firma",
     "signingHeadlinePost": "...",
-    "signingBody": "Abrí tu billetera y aprobá la transacción para activar el agente.",
+    "signingBody": "Abre tu billetera y aprueba la transacción para activar el agente.",
     "payloadTitle": "qué estás firmando",
     "payloadAction": "Acción",
     "payloadActionValue": "Approve Agent",
@@ -192,15 +192,15 @@
     "signingCancel": "Cancelar",
     "successTitle": "Listo.",
     "successSub": "Tu agente está activo",
-    "successBody": "Ya podés tradear sin firmar. Cada orden se ejecuta al toque.",
+    "successBody": "Ya puedes tradear sin firmar. Cada orden se ejecuta al instante.",
     "successAgentLabel": "Agente",
     "successCta": "Empezar a tradear",
     "errorRejectedTitle": "Rechazaste la firma",
-    "errorRejectedBody": "No pasa nada — podés activar el agente después desde Ajustes, o seguir firmando cada orden manualmente.",
+    "errorRejectedBody": "No pasa nada — puedes activar el agente después desde Ajustes, o seguir firmando cada orden manualmente.",
     "errorRejectedReason": "la firma fue cancelada en la billetera",
     "errorRejectedCode": "4001 · User rejected",
-    "errorConflictTitle": "Ya tenés un agente",
-    "errorConflictBody": "Hay un agente registrado en cadena que no podemos usar desde este dispositivo. Contactanos por WhatsApp para reiniciarlo.",
+    "errorConflictTitle": "Ya tienes un agente",
+    "errorConflictBody": "Hay un agente registrado en cadena que no podemos usar desde este dispositivo. Contáctanos por WhatsApp para reiniciarlo.",
     "errorGenericTitle": "No pudimos activarlo",
     "errorRetry": "Volver a intentar",
     "errorSkip": "Seguir sin agente"
@@ -221,14 +221,14 @@
     "chipHalf": "Mitad",
     "chipMax": "Máx",
     "pickCta": "Revisar depósito",
-    "reviewTitle": "Revisá.",
+    "reviewTitle": "Revisa.",
     "reviewSub": "paso 2 de 2",
     "reviewFrom": "desde",
     "reviewTo": "hacia",
     "reviewDestination": "Delos · Perps",
     "youReceive": "Vas a recibir",
     "tokenOn": "{token} en {chain}",
-    "rowSend": "Enviás",
+    "rowSend": "Envías",
     "rowBridge": "Bridge",
     "rowGas": "Gas en {chain}",
     "rowFee": "Comisión bridge",
@@ -239,7 +239,7 @@
     "progressSub": "en camino",
     "progressHeadlinePre": "Tu plata está",
     "progressHeadlineEm": "viajando",
-    "progressBody": "Llega en ~{eta}. Podés cerrar esta pantalla.",
+    "progressBody": "Llega en ~{eta}. Puedes cerrar esta pantalla.",
     "stepApproved": "Aprobaste",
     "stepApprovedSub": "Confirmando en {chain}",
     "stepBridging": "Bridging",
@@ -258,15 +258,15 @@
     "successHome": "Ir al inicio",
     "successTrade": "Empezar a tradear",
     "errorTimeoutTitle": "El bridge se trabó",
-    "errorTimeoutBody": "Tu transacción se confirmó en {chain} pero el bridge demora más de lo normal. Tu plata está segura — la podés rastrear o reintentar.",
+    "errorTimeoutBody": "Tu transacción se confirmó en {chain} pero el bridge demora más de lo normal. Tu plata está segura — la puedes rastrear o reintentar.",
     "errorStatus": "Estado",
     "errorTx": "Tu Tx",
     "errorElapsed": "Esperando hace",
-    "errorFootnote": "Te avisamos por notificación cuando llegue, o contactá a soporte si no llega en 30 min.",
+    "errorFootnote": "Te avisamos por notificación cuando llegue, o contacta a soporte si no llega en 30 min.",
     "errorSupport": "Soporte",
     "errorTrack": "Rastrear tx",
     "errorFailedTitle": "No pudimos hacer el bridge",
-    "errorFailedBody": "{reason}. Tu plata no salió de tu billetera — podés reintentar.",
+    "errorFailedBody": "{reason}. Tu plata no salió de tu billetera — puedes reintentar.",
     "errorRetry": "Reintentar"
   },
   "outcomeMarkets": {
@@ -280,28 +280,28 @@
     "youHold": "Tienes",
     "contracts": "contratos",
     "side": "Lado",
-    "amountLabel": "¿Cuánto querés apostar?",
+    "amountLabel": "¿Cuánto quieres apostar?",
     "betAmountLabel": "Tu apuesta",
-    "payoutIfWin": "Cobrás si acertás",
+    "payoutIfWin": "Cobras si aciertas",
     "totalCost": "Tu apuesta",
-    "potentialPayout": "Si ganás cobrás",
+    "potentialPayout": "Si ganas cobras",
     "potentialProfit": "Ganancia",
     "buyYes": "Comprar {side}",
     "buySide": "Comprar {side}",
     "placeBetCta": "Apostar {amount} a {side}",
-    "minContracts": "Subí un poco la apuesta",
+    "minContracts": "Sube un poco la apuesta",
     "minNotional": "Mínimo {amount} USDH/USDC",
     "insufficientQuote": "Saldo {token} insuficiente",
     "buyUsdhCta": "Comprar USDH con USDC",
-    "buyUsdhTitle": "Necesitás USDH",
-    "buyUsdhBody": "Este mercado se liquida en USDH. Comprá un poco con tu USDC para apostar.",
+    "buyUsdhTitle": "Necesitas USDH",
+    "buyUsdhBody": "Este mercado se liquida en USDH. Compra un poco con tu USDC para apostar.",
     "buyUsdhAction": "Comprar ${amount} de USDH",
     "buying": "Comprando USDH...",
     "betting": "Apostando...",
     "successBet": "¡Apuesta realizada!",
     "successSell": "¡Listo, cobraste!",
     "sheetBetTitle": "Apostaste a {side}",
-    "sheetBetSub": "Cobrás {amount} si acertás",
+    "sheetBetSub": "Cobras {amount} si aciertas",
     "sheetSellTitle": "Cerraste tu apuesta",
     "sheetSellSub": "{side} · {amount}",
     "errBet": "No se pudo colocar la apuesta",
@@ -329,11 +329,11 @@
     "spreadLabel": "Spread",
     "bidLabel": "Compra",
     "askLabel": "Venta",
-    "needSpotNote": "Las predicciones usan tu bolsillo de Predicción. Mové fondos desde Trade para apostar.",
-    "transferHelp": "Mové USDC entre Trade y Predicción. Al instante y gratis.",
+    "needSpotNote": "Las predicciones usan tu bolsillo de Predicción. Mueve fondos desde Trade para apostar.",
+    "transferHelp": "Mueve USDC entre Trade y Predicción. Al instante y gratis.",
     "close": "Cerrar",
     "confirmClose": "¿Confirmar?",
-    "swipeClose": "Deslizá para cerrar",
+    "swipeClose": "Desliza para cerrar",
     "cancel": "Cancelar",
     "closing": "Cerrando...",
     "addMore": "Agregar",
@@ -342,8 +342,8 @@
     "value": "Valor",
     "buyTab": "Comprar",
     "sellTab": "Vender",
-    "sellMax": "Tenés {n}",
-    "noToSell": "No tenés nada para vender",
+    "sellMax": "Tienes {n}",
+    "noToSell": "No tienes nada para vender",
     "invested": "Invertido",
     "venueLabel": "Casa",
     "searchPlaceholder": "Buscar evento, equipo, cripto…",
@@ -356,20 +356,20 @@
     "volume24h": "{amount} en 24 h",
     "quietMarket": "Poco movimiento",
     "paysMultiplier": "paga {x}",
-    "youHaveN": "Tenés {n}",
+    "youHaveN": "Tienes {n}",
     "showAll": "Ver los {n}",
     "polyNote": "referencia externa",
     "helpTitle": "¿Cómo funciona?",
-    "helpLine1": "Elegís un resultado y comprás contratos. Cada contrato que acierta paga $1.",
-    "helpLine2": "El precio es la probabilidad: a 40% pagás 40¢ y cobrás $1 si acertás (2,5x).",
-    "helpLine3": "No hace falta esperar: podés vender antes de que cierre al precio del momento.",
+    "helpLine1": "Eliges un resultado y compras contratos. Cada contrato que acierta paga $1.",
+    "helpLine2": "El precio es la probabilidad: a 40% pagas 40¢ y cobras $1 si aciertas (2,5x).",
+    "helpLine3": "No hace falta esperar: puedes vender antes de que cierre al precio del momento.",
     "helpDismiss": "Entendido",
     "max": "Máx",
-    "sellAmountLabel": "¿Cuánto querés vender?",
+    "sellAmountLabel": "¿Cuánto quieres vender?",
     "contractsLabel": "Contratos",
     "thinBook": "Hay poca oferta a este precio: parte de la orden puede llenarse peor.",
     "liquidityLabel": "{amount} en órdenes",
-    "needFunds": "Todavía no tenés saldo en Predicción. Mové fondos desde Trade o depositá para empezar."
+    "needFunds": "Todavía no tienes saldo en Predicción. Mueve fondos desde Trade o deposita para empezar."
   },
   "buy": {
     "title": "Comprar Cripto",
@@ -747,14 +747,14 @@
     "amount": "Monto",
     "processing": "Procesando...",
     "withdraw": "Retirar",
-    "desc": "Retirá USDC de tu cuenta de Delos hacia Arbitrum.",
+    "desc": "Retira USDC de tu cuenta de Delos hacia Arbitrum.",
     "fee": "Tarifa de red Hyperliquid",
     "receive": "Recibes",
     "minAmount": "El retiro mínimo es de ${{amount}} USDC",
     "insufficient": "Margen disponible insuficiente",
     "success": "Tu USDC llegará a Arbitrum en unos minutos.",
     "estTime": "Llega en ~5 minutos · Arbitrum",
-    "descMulti": "Elegí la red y la dirección a donde querés retirar tu USDC.",
+    "descMulti": "Elige la red y la dirección a donde quieres retirar tu USDC.",
     "chooseChain": "Red de destino",
     "destAddress": "Dirección de destino",
     "myWallet": "Mi wallet",
@@ -764,13 +764,13 @@
     "successTitle": "Retiro enviado",
     "successBridged": "Tu USDC llegará a {{chain}} en unos minutos.",
     "estTimeBridged": "Llega en ~5-8 minutos · {{chain}}",
-    "fundsSafe": "Tus fondos están seguros en tu wallet de Arbitrum. Podés reintentar el envío.",
+    "fundsSafe": "Tus fondos están seguros en tu wallet de Arbitrum. Puedes reintentar el envío.",
     "retryBridge": "Reintentar envío",
-    "pendingBridge": "Hay un envío pendiente de Circle. Podés completarlo sin iniciar otro retiro.",
+    "pendingBridge": "Hay un envío pendiente de Circle. Puedes completarlo sin iniciar otro retiro.",
     "completePendingBridge": "Completar envío pendiente",
-    "bridgeExistingHint": "Si el USDC ya llegó a tu wallet de Arbitrum, podés enviarlo a la red elegida sin retirar de nuevo.",
+    "bridgeExistingHint": "Si el USDC ya llegó a tu wallet de Arbitrum, puedes enviarlo a la red elegida sin retirar de nuevo.",
     "bridgeExisting": "Enviar desde Arbitrum",
-    "manualRecoveryHint": "Si el envío quedó pendiente, pegá el hash de burn en Arbitrum para completar el minteo.",
+    "manualRecoveryHint": "Si el envío quedó pendiente, pega el hash de burn en Arbitrum para completar el minteo.",
     "bridgeHashLabel": "Hash del bridge",
     "bridgeHashPlaceholder": "0x...",
     "completeWithHash": "Completar con hash",
@@ -794,14 +794,14 @@
     "cashoutOff": "No",
     "autoCloseBelow": "Se cierra sola si baja a",
     "autoCloseAbove": "Se cierra sola si sube a",
-    "ctaCreateAccount": "Creá tu cuenta para operar",
+    "ctaCreateAccount": "Crea tu cuenta para operar",
     "ctaCreateAccountHint": "Solo te pedimos tu email. Tarda un minuto.",
-    "ctaDeposit": "Depositá para empezar",
-    "ctaDepositHint": "Podés empezar con {min}.",
+    "ctaDeposit": "Deposita para empezar",
+    "ctaDepositHint": "Puedes empezar con {min}.",
     "belowMin": "Mínimo {min} por operación",
     "processing": "Procesando…",
     "neverAutoCloses": "Nunca",
-    "slideToConfirm": "Deslizá para confirmar"
+    "slideToConfirm": "Desliza para confirmar"
   },
   "transfer": {
     "title": "Transferir USDC",
@@ -816,7 +816,7 @@
     "transfer": "Transferir",
     "transferring": "Transfiriendo...",
     "transferComplete": "✅ ¡Transferencia completada!",
-    "perpPrompt": "Tu plata está en Predicción. Movela a Trade para operar.",
+    "perpPrompt": "Tu plata está en Predicción. Muévela a Trade para operar.",
     "perpCta": "Mover de Predicción a Trade"
   },
   "tooltips": {
@@ -864,12 +864,12 @@
   },
   "homeRedesign": {
     "greet": {
-      "morning": "Buen día",
+      "morning": "Buenos días",
       "afternoon": "Buenas tardes",
       "evening": "Buenas noches"
     },
     "guestName": "Invitado",
-    "emptyHint": "Todavía no tenés fondos. Depositá desde $10 y hacé tu primera compra.",
+    "emptyHint": "Todavía no tienes fondos. Deposita desde $10 y haz tu primera compra.",
     "shortcuts": {
       "academySub": "Lecciones de 2 minutos",
       "newsSub": "Lo que mueve el mercado"
@@ -890,7 +890,7 @@
     "section": {
       "movers": "Lo que más se mueve",
       "comprar": "comprar",
-      "tenencias": "Lo que tenés",
+      "tenencias": "Lo que tienes",
       "mirando": "Tu lista"
     },
     "cta": {
@@ -954,7 +954,7 @@
   "screens": {
     "academy": {
       "kicker": "Delos Academy",
-      "title": "Aprendé perps sin quemarte.",
+      "title": "Aprende perps sin quemarte.",
       "subtitle": "Lecciones cortas para entender margen, apalancamiento, longs, shorts y liquidación antes de poner plata real en riesgo.",
       "lessonLabel": "Lección",
       "markComplete": "Marcar lista",
@@ -976,7 +976,7 @@
       },
       "simulator": {
         "title": "Mini simulador de apalancamiento",
-        "copy": "Probá cómo cambia tu PnL cuando sube el apalancamiento. Es una aproximación educativa: no incluye comisiones, funding ni precio exacto de liquidación.",
+        "copy": "Prueba cómo cambia tu PnL cuando sube el apalancamiento. Es una aproximación educativa: no incluye comisiones, funding ni precio exacto de liquidación.",
         "margin": "Margen",
         "leverage": "Apalancamiento",
         "move": "Movimiento",
@@ -988,7 +988,7 @@
       },
       "demo": {
         "title": "Paper trading",
-        "copy": "Abrí una posición falsa usando precios reales de mercado. No usa billetera, no manda órdenes y no toca tu plata.",
+        "copy": "Abre una posición falsa usando precios reales de mercado. No usa billetera, no manda órdenes y no toca tu plata.",
         "fakeBadge": "Demo",
         "market": "Mercado",
         "balance": "Saldo demo",
@@ -1022,9 +1022,9 @@
           "duration": "3 min",
           "level": "Básico",
           "takeaways": [
-            "No recibís BTC, ETH o una acción: abrís una posición que sube o baja con ese mercado.",
+            "No recibes BTC, ETH o una acción: abres una posición que sube o baja con ese mercado.",
             "Los perps no vencen como un futuro tradicional; se mantienen vivos mientras tengas margen.",
-            "Podés cerrar la posición cuando quieras si hay mercado disponible."
+            "Puedes cerrar la posición cuando quieras si hay mercado disponible."
           ],
           "example": {
             "label": "Ejemplo",
@@ -1034,19 +1034,19 @@
         },
         {
           "id": "margin",
-          "title": "Margen: la plata que ponés",
-          "summary": "El margen es el colateral que reservás para sostener una posición apalancada.",
+          "title": "Margen: la plata que pones",
+          "summary": "El margen es el colateral que reservas para sostener una posición apalancada.",
           "duration": "4 min",
           "level": "Básico",
           "takeaways": [
-            "Si ponés 100 USDC como margen, esa es la base que absorbe ganancias y pérdidas.",
+            "Si pones 100 USDC como margen, esa es la base que absorbe ganancias y pérdidas.",
             "El margen no es una comisión: sigue siendo tuyo mientras la posición esté sana.",
             "Si la pérdida se acerca demasiado a tu margen, aparece riesgo de liquidación."
           ],
           "example": {
             "label": "Ejemplo",
             "value": "$100 de margen",
-            "note": "Con 100 USDC podés abrir una posición de 100 USDC a 1x o una posición más grande si usás apalancamiento."
+            "note": "Con 100 USDC puedes abrir una posición de 100 USDC a 1x o una posición más grande si usas apalancamiento."
           }
         },
         {
@@ -1073,9 +1073,9 @@
           "duration": "3 min",
           "level": "Básico",
           "takeaways": [
-            "Abrís long cuando querés ganar si el precio sube.",
-            "Abrís short cuando querés ganar si el precio baja.",
-            "En ambos casos podés perder si el mercado se mueve en contra."
+            "Abres long cuando quieres ganar si el precio sube.",
+            "Abres short cuando quieres ganar si el precio baja.",
+            "En ambos casos puedes perder si el mercado se mueve en contra."
           ],
           "example": {
             "label": "Dirección",
@@ -1114,24 +1114,24 @@
           "example": {
             "label": "Orden",
             "value": "Market = ahora · Limit = a mi precio",
-            "note": "Para empezar, entendé qué orden estás mandando antes de tocar el botón final."
+            "note": "Para empezar, entiende qué orden estás mandando antes de tocar el botón final."
           }
         },
         {
           "id": "plan",
           "title": "Tu plan antes del trade",
-          "summary": "Un trade sin plan suele convertirse en esperanza. Definí entrada, salida y pérdida máxima.",
+          "summary": "Un trade sin plan suele convertirse en esperanza. Define entrada, salida y pérdida máxima.",
           "duration": "4 min",
           "level": "Riesgo",
           "takeaways": [
-            "Decidí cuánto podés perder antes de abrir la posición.",
-            "Usá tamaños pequeños mientras aprendés cómo se siente una posición real.",
-            "Si no podés explicar el trade en una frase, probablemente todavía no está listo."
+            "Decide cuánto puedes perder antes de abrir la posición.",
+            "Usa tamaños pequeños mientras aprendes cómo se siente una posición real.",
+            "Si no puedes explicar el trade en una frase, probablemente todavía no está listo."
           ],
           "example": {
             "label": "Plan mínimo",
             "value": "Entro, invalido, salgo",
-            "note": "Entrada: dónde abrís. Invalidación: dónde aceptás que estabas equivocado. Salida: dónde tomás ganancia o cortás pérdida."
+            "note": "Entrada: dónde abres. Invalidación: dónde aceptas que estabas equivocado. Salida: dónde tomas ganancia o cortas pérdida."
           }
         }
       ],
@@ -1151,8 +1151,8 @@
       }
     },
     "chooseUsername": {
-      "title": "Elegí tu usuario",
-      "subtitle": "Así te van a encontrar otros traders. Lo podés cambiar más tarde.",
+      "title": "Elige tu usuario",
+      "subtitle": "Así te van a encontrar otros traders. Lo puedes cambiar más tarde.",
       "placeholder": "tuusuario",
       "hint": "3–20 caracteres · letras, números y _",
       "tooShort": "Mínimo 3 caracteres",
@@ -1184,7 +1184,7 @@
       },
       "error": {
         "title": "No pudimos cargar los mercados",
-        "body": "Revisá tu conexión y volvé a intentar.",
+        "body": "Revisa tu conexión y vuelve a intentar.",
         "retry": "Reintentar"
       },
       "pro": {
@@ -1237,9 +1237,9 @@
         "openInterest": "Posiciones abiertas",
         "openInterestHint": "Dinero que la gente tiene invertido ahora mismo.",
         "funding": "Costo por hora",
-        "fundingHint": "Lo que se cobra o se paga por hora mientras mantenés una posición.",
+        "fundingHint": "Lo que se cobra o se paga por hora mientras mantienes una posición.",
         "maxLeverage": "Multiplicador máximo",
-        "maxLeverageHint": "Lo más que podés multiplicar tu monto. Más alto = más riesgo."
+        "maxLeverageHint": "Lo más que puedes multiplicar tu monto. Más alto = más riesgo."
       },
       "yourPosition": "tu posición",
       "stats": "estadísticas",
@@ -1251,7 +1251,7 @@
         "close": "Cerrar"
       },
       "cta": {
-        "betDown": "o apostá a que baja",
+        "betDown": "o apuesta a que baja",
         "buy": "Comprar {symbol}",
         "sell": "Vender"
       }
@@ -1269,7 +1269,7 @@
       "price": "Precio {symbol}",
       "arrivesIn": "Llega en",
       "instant": "instantáneo",
-      "youPay": "Pagás",
+      "youPay": "Pagas",
       "youReceive": "Vas a recibir",
       "edit": "Editar",
       "buying": "Comprando",
@@ -1357,7 +1357,7 @@
       "section": {
         "stats": "tus números",
         "achievements": "logros",
-        "referrals": "invitá amigos"
+        "referrals": "invita amigos"
       },
       "stats": {
         "trades": "Operaciones",
@@ -1368,8 +1368,8 @@
         "volume": "Volumen"
       },
       "referral": {
-        "headline": "Invitá amigos",
-        "sub": "Ganá $10 por cada uno",
+        "headline": "Invita amigos",
+        "sub": "Gana $10 por cada uno",
         "code": "Tu código",
         "copy": "Copiar",
         "copied": "Copiado",
@@ -1411,7 +1411,7 @@
         "twoFaWarn": "Sin 2FA",
         "twoFaOn": "Activado",
         "twoFaActivate": "Activar",
-        "twoFaError": "No se pudo cambiar el 2FA. Probá de nuevo.",
+        "twoFaError": "No se pudo cambiar el 2FA. Prueba de nuevo.",
         "twoFaCancelled": "Verificación 2FA cancelada",
         "exportError": "No se pudo exportar la clave",
         "backupPhrase": "Frase de respaldo",
@@ -1445,7 +1445,7 @@
       "yourRank": "Tu posición #{rank} de {total}",
       "topPct": "top {pct}% en {flag}",
       "section": "el resto",
-      "you": "Vos"
+      "you": "Tú"
     },
     "common": {
       "viewAll": "Ver todos",
@@ -1529,18 +1529,18 @@
   "onboarding": {
     "welcome": {
       "live": "En vivo · +200 mercados",
-      "headlineA": "Operá de todo.",
+      "headlineA": "Opera de todo.",
       "headlineB": "Un toque.",
-      "subtitle": "Acciones, cripto, oro e índices — ponete largo o corto con apalancamiento, directo desde tu teléfono.",
+      "subtitle": "Acciones, cripto, oro e índices — ponte largo o corto con apalancamiento, directo desde tu teléfono.",
       "createAccount": "Crear cuenta",
       "logIn": "Iniciar sesión",
-      "continueWith": "o continuá con",
+      "continueWith": "o continúa con",
       "wallet": "Billetera",
       "guest": "Entrar como invitado",
       "howItWorks": "Ver cómo funciona",
       "terms": "Términos",
       "privacy": "Política de Privacidad",
-      "agreePre": "Al continuar aceptás nuestros ",
+      "agreePre": "Al continuar aceptas nuestros ",
       "agreeMid": " y ",
       "agreePost": "."
     },
@@ -1550,33 +1550,33 @@
       "depositStart": "Depositar y empezar",
       "perps": {
         "eyebrow": "Perpetuos",
-        "title": "Ganá cuando <up>sube</up> — o <down>baja</down>.",
-        "body": "Ponete largo o corto en cualquier mercado. Sin vencimiento ni liquidación final — mantené la posición el tiempo que quieras.",
+        "title": "Gana cuando <up>sube</up> — o <down>baja</down>.",
+        "body": "Ponte largo o corto en cualquier mercado. Sin vencimiento ni liquidación final — mantén la posición el tiempo que quieras.",
         "long": "LONG +$214",
         "short": "SHORT también"
       },
       "leverage": {
         "eyebrow": "Apalancamiento",
-        "title": "Con poco llegás <y>más lejos</y>.",
-        "body": "Multiplicá tu exposición hasta 20×. Ganancias más grandes — pero las pérdidas también se mueven más rápido y podés ser liquidado.",
-        "putIn": "Ponés",
-        "control": "Controlás",
+        "title": "Con poco llegas <y>más lejos</y>.",
+        "body": "Multiplica tu exposición hasta 20×. Ganancias más grandes — pero las pérdidas también se mueven más rápido y puedes ser liquidado.",
+        "putIn": "Pones",
+        "control": "Controlas",
         "multiplier": "Multiplicador",
         "move": "Movimiento +5%",
         "liquidation": "Liquidación"
       },
       "deposit": {
         "eyebrow": "Depósito",
-        "title": "Cargá saldo en <y>segundos</y>.",
-        "body": "Cargá desde tu billetera, tarjeta o banco. Tu saldo queda listo para operar al instante — sin esperas.",
+        "title": "Carga saldo en <y>segundos</y>.",
+        "body": "Carga desde tu billetera, tarjeta o banco. Tu saldo queda listo para operar al instante — sin esperas.",
         "wallet": "Billetera",
         "card": "Tarjeta",
         "bank": "Banco",
         "balance": "Saldo"
       },
       "ready": {
-        "title": "Hacé tu primer trade.",
-        "body": "Depositá en segundos y operá +200 mercados con apalancamiento.",
+        "title": "Haz tu primer trade.",
+        "body": "Deposita en segundos y opera +200 mercados con apalancamiento.",
         "headline": "Estás listo."
       }
     }

@@ -306,7 +306,7 @@ export default function ComprarScreen({ onOpenAdvanced, onDeposit }: ComprarScre
                                 className="text-[10px] uppercase tracking-[0.18em] font-bold"
                                 style={{ color: 'var(--color-text-tertiary)' }}
                             >
-                                Cuánto querés invertir
+                                Cuánto quieres invertir
                             </span>
                             {amountNum > 0 && (
                                 <span className="text-[10px] tabular-mono" style={{ color: 'var(--color-text-tertiary)' }}>
@@ -509,7 +509,7 @@ export default function ComprarScreen({ onOpenAdvanced, onDeposit }: ComprarScre
                                 Otros activos
                             </h2>
                             <div className="text-[11px]" style={{ color: 'var(--color-text-tertiary)' }}>
-                                Cambiá lo que querés comprar
+                                Cambia lo que quieres comprar
                             </div>
                         </div>
                         <button

@@ -146,7 +146,7 @@ export function useWithdrawToChain() {
                 await new Promise((r) => setTimeout(r, 4000));
             }
             throw new Error(
-                'El retiro a Arbitrum está tardando más de lo normal. Tus fondos están seguros en tu wallet de Arbitrum; podés reintentar el envío cuando lleguen.',
+                'El retiro a Arbitrum está tardando más de lo normal. Tus fondos están seguros en tu wallet de Arbitrum; puedes reintentar el envío cuando lleguen.',
             );
         },
         [],

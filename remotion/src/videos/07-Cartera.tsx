@@ -21,7 +21,7 @@ export const carteraSpec: FilmSpec = {
             dur: 82,
             screen: <OverviewBeat />,
             eyebrow: 'Valor total',
-            caption: 'Cuánto tenés y cómo se reparte.',
+            caption: 'Cuánto tienes y cómo se reparte.',
         },
         {
             dur: 78,

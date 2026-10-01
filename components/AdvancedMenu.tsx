@@ -300,8 +300,8 @@ export default function AdvancedMenu({
                                 className="text-[12px]"
                                 style={{ color: 'var(--color-text-secondary)', lineHeight: 1.5 }}
                             >
-                                Separá tu plata de trading apalancado de tu cripto en propiedad.
-                                Movés entre los dos bolsillos al instante, sin comisión.
+                                Separa tu plata de trading apalancado de tu cripto en propiedad.
+                                Mueves entre los dos bolsillos al instante, sin comisión.
                             </p>
                         </div>
                     </motion.button>

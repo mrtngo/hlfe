@@ -152,7 +152,7 @@ function HomePro({ onTokenClick, onBuyClick, onDeposit, onToggleProMode }: HomeP
                         >
                             {t.homeRedesign.pro.session} ·{' '}
                             {now
-                                ? now.toLocaleTimeString(language === 'es' ? 'es-AR' : 'en-US', {
+                                ? now.toLocaleTimeString(language === 'es' ? 'es-CO' : 'en-US', {
                                       hour: '2-digit',
                                       minute: '2-digit',
                                       second: '2-digit',

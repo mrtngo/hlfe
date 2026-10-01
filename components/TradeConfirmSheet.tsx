@@ -54,7 +54,7 @@ export default function TradeConfirmSheet({
         <ModalSheet open={open} onClose={onClose} dismissable={!submitting}>
             <ModalHeader
                 sub={venueLabel ? `${sideLabelLoud} · ${venueLabel}` : sideLabelLoud}
-                title="Revisá la orden."
+                title="Revisa la orden."
                 onClose={submitting ? undefined : onClose}
             />
 
@@ -114,7 +114,7 @@ export default function TradeConfirmSheet({
             {/* Line items */}
             <div style={{ padding: '16px 18px 0' }}>
                 <Line
-                    label={isBuy ? 'Pagás' : 'Recibís'}
+                    label={isBuy ? 'Pagas' : 'Recibes'}
                     value={`$${usdAmount.toFixed(2)}`}
                 />
                 <Line

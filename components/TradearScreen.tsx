@@ -373,7 +373,7 @@ function NormalMode({
                             <span style={{ fontSize: 24, verticalAlign: 'top' }}>+$</span>{targetProfit.toFixed(2)}
                         </div>
                     ) : (
-                        <div style={{ marginTop: 12, fontSize: 14, color: V2.t3 }}>Opcional · definí un objetivo</div>
+                        <div style={{ marginTop: 12, fontSize: 14, color: V2.t3 }}>Opcional · define un objetivo</div>
                     )}
                 </div>
 

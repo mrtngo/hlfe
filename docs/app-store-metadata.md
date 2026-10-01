@@ -24,7 +24,7 @@ the limit but re-verify after any edit.
 > Alternative subtitles (pick one, all ≤30):
 > - `Compra cripto desde $25` (24)
 > - `Tu plata, a la velocidad del rayo` ❌ 33 — too long
-> - `Invertí en cripto, fácil` (24)
+> - `Invierte en cripto, fácil` (24)
 
 ---
 

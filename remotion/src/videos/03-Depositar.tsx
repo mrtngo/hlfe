@@ -21,14 +21,14 @@ export const depositarSpec: FilmSpec = {
         {
             dur: 84,
             screen: <PickWithTap />,
-            eyebrow: 'Elegí la red',
-            caption: 'Arbitrum, Base o Solana. La que ya usás.',
+            eyebrow: 'Elige la red',
+            caption: 'Arbitrum, Base o Solana. La que ya usas.',
         },
         {
             dur: 86,
             screen: <DepositAddress />,
-            eyebrow: 'Mandá USDC',
-            caption: 'Copiá la dirección o escaneá el QR.',
+            eyebrow: 'Manda USDC',
+            caption: 'Copia la dirección o escanea el QR.',
         },
         {
             dur: 62,

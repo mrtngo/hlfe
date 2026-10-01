@@ -24,7 +24,7 @@ const DestinationBeat: React.FC = () => (
 );
 
 export const retirarSpec: FilmSpec = {
-    title: { kicker: 'Paso 5', title: 'Retirar', sub: 'Tu plata sale cuando querés.' },
+    title: { kicker: 'Paso 5', title: 'Retirar', sub: 'Tu plata sale cuando quieres.' },
     scenes: [
         {
             dur: 76,
@@ -36,7 +36,7 @@ export const retirarSpec: FilmSpec = {
             dur: 76,
             screen: <DestinationBeat />,
             eyebrow: '¿A dónde?',
-            caption: 'Elegí la red y la dirección de destino.',
+            caption: 'Elige la red y la dirección de destino.',
         },
         {
             dur: 78,

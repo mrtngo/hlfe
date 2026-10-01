@@ -92,7 +92,7 @@ export const BuyScreen: React.FC<{
                 </div>
 
                 <Card style={{ padding: 22, textAlign: 'center', ...riseIn(frame, 2, 14) }}>
-                    <Label style={{ fontSize: 11.5, color: V2.t3, marginBottom: 8 }}>¿Cuánto querés poner?</Label>
+                    <Label style={{ fontSize: 11.5, color: V2.t3, marginBottom: 8 }}>¿Cuánto quieres poner?</Label>
                     <div
                         style={{
                             fontSize: 52,
@@ -151,7 +151,7 @@ export const BuyScreen: React.FC<{
                     ))}
                 </Card>
 
-                <SlideToConfirm label="Deslizá para comprar" p={slide} style={{ marginTop: 18 }} />
+                <SlideToConfirm label="Desliza para comprar" p={slide} style={{ marginTop: 18 }} />
             </div>
             <FootNote>
                 Tu orden se firma en tu propio dispositivo. Delos nunca toca tus fondos.
@@ -330,7 +330,7 @@ export const TradeScreen: React.FC<{
                 />
             </div>
             <FootNote icon="⚠️">
-                Con apalancamiento podés perder tu margen. Nunca pongas más de lo que
+                Con apalancamiento puedes perder tu margen. Nunca pongas más de lo que
                 puedas perder.
             </FootNote>
         </Screen>

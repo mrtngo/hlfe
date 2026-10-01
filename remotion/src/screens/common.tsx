@@ -81,7 +81,7 @@ export const HomeScreen: React.FC<{
                                 </div>
                             ) : (
                                 <span style={{ fontSize: 11.5, color: V2.t3 }}>
-                                    Depositá para empezar a operar
+                                    Deposita para empezar a operar
                                 </span>
                             )
                         }

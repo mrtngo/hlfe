@@ -226,7 +226,7 @@ export const TitleCard: React.FC<{
  * they can be dissolved over), and without an opaque cover it shows through
  * the end card for a third of a second.
  */
-export const EndCard: React.FC<{ line?: string }> = ({ line = 'Operá de todo. Un toque.' }) => {
+export const EndCard: React.FC<{ line?: string }> = ({ line = 'Opera de todo. Un toque.' }) => {
     const frame = useCurrentFrame();
     const p = enter(frame, 2);
     const cover = interpolate(frame, [0, 6], [0, 1], { extrapolateRight: 'clamp' });

@@ -102,7 +102,7 @@ export default function TraderSearchScreen({ onBack, onSelect }: TraderSearchScr
                     </div>
                 ) : (
                     <div style={{ padding: '32px 0', textAlign: 'center', color: V2.t3, fontSize: 13.5, lineHeight: 1.5 }}>
-                        Buscá por nombre de usuario o pegá una dirección 0x para ver su perfil, posiciones y operaciones.
+                        Busca por nombre de usuario o pega una dirección 0x para ver su perfil, posiciones y operaciones.
                     </div>
                 )}
             </div>

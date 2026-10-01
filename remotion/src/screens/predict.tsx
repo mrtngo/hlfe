@@ -142,7 +142,7 @@ export const PredictBrowse: React.FC<{ venueFilter?: string }> = ({ venueFilter 
                     HIP-4 · sin comisión de apertura
                 </Label>
                 <div style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 12 }}>
-                    Predecí
+                    Predice
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
@@ -300,7 +300,7 @@ export const PredictTicket: React.FC<{ stake?: string; slide?: number }> = ({
 
                 <Card accent style={{ marginTop: 14, ...riseIn(frame, 7, 14) }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 13, color: V2.t2 }}>Cobrás si acertás</span>
+                        <span style={{ fontSize: 13, color: V2.t2 }}>Cobras si aciertas</span>
                         <Mono size={19} color={V2.accent}>
                             ${(parseFloat(stake) * 1.23).toFixed(2)}
                         </Mono>
@@ -316,7 +316,7 @@ export const PredictTicket: React.FC<{ stake?: string; slide?: number }> = ({
                 </div>
             </div>
             <FootNote icon="↩️">
-                Podés vender tu posición en cualquier momento antes del cierre.
+                Puedes vender tu posición en cualquier momento antes del cierre.
             </FootNote>
         </Screen>
     );
@@ -346,7 +346,7 @@ const SlideBet: React.FC<{ p: number }> = ({ p }) => (
                 color: p > 0.6 ? V2.accent : V2.t2,
             }}
         >
-            Deslizá para apostar
+            Desliza para apostar
         </div>
         <div
             style={{

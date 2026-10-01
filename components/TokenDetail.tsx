@@ -188,7 +188,7 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                         <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 10 }}>Acerca de {ticker}</div>
                         <div style={{ fontSize: 14.5, color: V2.t2, lineHeight: 1.5 }}>
                             {getTokenDescription(ticker) ||
-                                `${fullName} (${ticker}) opera en Delos como mercado de futuros perpetuos liquidado en USDC. Operá al alza o a la baja con el multiplicador que elijas.`}
+                                `${fullName} (${ticker}) opera en Delos como mercado de futuros perpetuos liquidado en USDC. Opera al alza o a la baja con el multiplicador que elijas.`}
                         </div>
                     </div>
                 </>

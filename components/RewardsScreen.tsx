@@ -50,7 +50,7 @@ export default function RewardsScreen() {
         haptic.light();
         const shareData = {
             title: 'Delos',
-            text: 'Invertí en cripto y acciones conmigo en Delos. Usá mi link y empezá en segundos:',
+            text: 'Invierte en cripto y acciones conmigo en Delos. Usa mi link y empieza en segundos:',
             url: link,
         };
         // Native share sheet when available (iOS/Android), else copy.
@@ -84,9 +84,9 @@ export default function RewardsScreen() {
                     <div style={{ width: 70, height: 70, borderRadius: '50%', margin: '0 auto 18px', background: V2.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Icon name="gift" size={30} color={V2.accent} />
                     </div>
-                    <div style={{ fontSize: 20, fontWeight: 800 }}>Iniciá sesión</div>
+                    <div style={{ fontSize: 20, fontWeight: 800 }}>Inicia sesión</div>
                     <div style={{ marginTop: 8, fontSize: 14, color: V2.t3, lineHeight: 1.5 }}>
-                        Creá tu cuenta para obtener tu link de invitación y empezar a ganar.
+                        Crea tu cuenta para obtener tu link de invitación y empezar a ganar.
                     </div>
                     <button
                         onClick={() => { haptic.light(); login(); }}
@@ -105,7 +105,7 @@ export default function RewardsScreen() {
             <div style={{ padding: '60px 20px 0' }}>
                 <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>Recompensas</div>
                 <div style={{ marginTop: 6, fontSize: 14, color: V2.t3 }}>
-                    Sumá puntos por operar, invitar y volver cada día.
+                    Suma puntos por operar, invitar y volver cada día.
                 </div>
             </div>
 
@@ -151,8 +151,8 @@ export default function RewardsScreen() {
                         </div>
                         <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 2 }}>
                             {streak.checkedInToday
-                                ? '¡Sumaste tus puntos de hoy! Volvé mañana.'
-                                : 'Abrí la app cada día para no perder tu racha.'}
+                                ? '¡Sumaste tus puntos de hoy! Vuelve mañana.'
+                                : 'Abre la app cada día para no perder tu racha.'}
                         </div>
                     </div>
                     {streak.longest > 0 && (
@@ -218,9 +218,9 @@ export default function RewardsScreen() {
                 <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Cómo funciona</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {[
-                        { n: '1', t: 'Compartí tu link', b: 'Mandáselo a tus amigos por WhatsApp, Instagram o donde quieras.' },
+                        { n: '1', t: 'Comparte tu link', b: 'Mándaselo a tus amigos por WhatsApp, Instagram o donde quieras.' },
                         { n: '2', t: 'Se registran y operan', b: 'Entran con tu link y hacen su primera operación.' },
-                        { n: '3', t: 'Ganás el 10%', b: 'Te llevás el 10% de las comisiones de todo lo que operen. Para siempre.' },
+                        { n: '3', t: 'Ganas el 10%', b: 'Te llevas el 10% de las comisiones de todo lo que operen. Para siempre.' },
                     ].map((s) => (
                         <div key={s.n} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', borderRadius: 14, background: V2.card, border: `1px solid ${V2.hair}` }}>
                             <div style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0, background: V2.accentSoft, color: V2.accent, fontWeight: 800, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: V2.mono }}>{s.n}</div>
@@ -247,7 +247,7 @@ export default function RewardsScreen() {
                     </div>
                 ) : referredCount === 0 ? (
                     <div style={{ padding: '28px 0', textAlign: 'center', color: V2.t3, fontSize: 13.5, lineHeight: 1.5 }}>
-                        Todavía no invitaste a nadie.<br />Compartí tu link y empezá a ganar.
+                        Todavía no invitaste a nadie.<br />Comparte tu link y empieza a ganar.
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

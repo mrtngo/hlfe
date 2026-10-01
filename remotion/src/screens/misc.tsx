@@ -35,7 +35,7 @@ export const OnboardIntro: React.FC = () => {
                     oro e índices
                 </div>
                 <div style={{ fontSize: 14, color: V2.t2, lineHeight: 1.5, ...riseIn(frame, 9, 16) }}>
-                    Ponete largo o corto con apalancamiento, directo desde tu teléfono.
+                    Ponte largo o corto con apalancamiento, directo desde tu teléfono.
                 </div>
                 <div style={{ width: '100%', marginTop: 12, ...riseIn(frame, 13, 18) }}>
                     <Cta label="Crear cuenta" />
@@ -60,9 +60,9 @@ export const OnboardIntro: React.FC = () => {
 export const OnboardWallet: React.FC = () => {
     const frame = useCurrentFrame();
     const items = [
-        ['📧', 'Entrás con tu email', 'Sin frase semilla que perder'],
-        ['🔑', 'Tu billetera se crea sola', 'Y solo vos tenés las llaves'],
-        ['⚡', 'Operás sin pop-ups', 'Cada orden se firma sola'],
+        ['📧', 'Entras con tu email', 'Sin frase semilla que perder'],
+        ['🔑', 'Tu billetera se crea sola', 'Y solo tú tienes las llaves'],
+        ['⚡', 'Operas sin pop-ups', 'Cada orden se firma sola'],
     ];
     return (
         <Screen>
@@ -229,7 +229,7 @@ export const DcaScreen: React.FC<{ confirmed?: boolean }> = ({ confirmed }) => {
             <div style={{ padding: '56px 20px 0' }}>
                 <Label style={{ fontSize: 11, color: V2.t3, fontWeight: 600 }}>Compra recurrente</Label>
                 <div style={{ fontSize: 27, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 6 }}>
-                    Comprá en automático
+                    Compra en automático
                 </div>
                 <div style={{ fontSize: 13, color: V2.t2, marginBottom: 20, lineHeight: 1.45 }}>
                     Un poco cada semana. Sin mirar el precio.
@@ -309,7 +309,7 @@ export const DcaScreen: React.FC<{ confirmed?: boolean }> = ({ confirmed }) => {
                 )}
             </div>
             <FootNote icon="⏸️">
-                La pausás o la cambiás cuando quieras. Sin comisión por cancelar.
+                La pausas o la cambias cuando quieras. Sin comisión por cancelar.
             </FootNote>
         </Screen>
     );
@@ -352,11 +352,11 @@ export const RewardsScreen: React.FC<{ points?: number }> = ({ points = 12480 })
                     <div style={{ fontSize: 12, color: V2.t2, marginTop: 6 }}>puntos acumulados</div>
                 </Card>
 
-                <SectionHead label="Cómo sumás" />
+                <SectionHead label="Cómo sumas" />
                 {[
-                    ['Operá', '1 punto por cada $1', '+8.240'],
-                    ['Predecí', 'Doble puntos', '+3.100'],
-                    ['Invitá amigos', '500 por cada uno', '+1.140'],
+                    ['Opera', '1 punto por cada $1', '+8.240'],
+                    ['Predice', 'Doble puntos', '+3.100'],
+                    ['Invita amigos', '500 por cada uno', '+1.140'],
                 ].map(([t, s, v], i) => (
                     <Card key={t} style={{ marginBottom: 8, ...riseIn(frame, 6 + i * 3, 14) }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>

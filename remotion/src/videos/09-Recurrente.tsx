@@ -31,14 +31,14 @@ export const recurrenteSpec: FilmSpec = {
         {
             dur: 76,
             screen: <DcaScreen />,
-            eyebrow: 'Elegí',
+            eyebrow: 'Elige',
             caption: 'Qué comprar y cuánto poner cada vez.',
         },
         {
             dur: 74,
             screen: <CadenceBeat />,
             eyebrow: 'Cada cuánto',
-            caption: 'Diario, semanal o mensual. Vos decidís.',
+            caption: 'Diario, semanal o mensual. Tú decides.',
         },
         {
             dur: 70,
@@ -50,7 +50,7 @@ export const recurrenteSpec: FilmSpec = {
             dur: 64,
             screen: <DcaScreen confirmed />,
             eyebrow: 'Activa',
-            caption: 'Ya corre sola. La pausás cuando quieras.',
+            caption: 'Ya corre sola. La pausas cuando quieras.',
         },
         {
             dur: 70,

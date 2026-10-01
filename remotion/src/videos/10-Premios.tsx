@@ -23,7 +23,7 @@ const ReferBeat: React.FC = () => (
 );
 
 export const premiosSpec: FilmSpec = {
-    title: { kicker: 'Programa de puntos', title: 'Premios', sub: 'Operá, predecí, invitá. Sumá.' },
+    title: { kicker: 'Programa de puntos', title: 'Premios', sub: 'Opera, predice, invita. Suma.' },
     scenes: [
         {
             dur: 78,
@@ -34,13 +34,13 @@ export const premiosSpec: FilmSpec = {
         {
             dur: 80,
             screen: <EarnBeat />,
-            eyebrow: 'Cómo sumás',
+            eyebrow: 'Cómo sumas',
             caption: 'Operar, predecir e invitar amigos.',
         },
         {
             dur: 76,
             screen: <ReferBeat />,
-            eyebrow: 'Invitá',
+            eyebrow: 'Invita',
             caption: '500 puntos por cada amigo que entre.',
         },
     ],

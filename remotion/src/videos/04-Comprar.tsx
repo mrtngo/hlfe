@@ -45,20 +45,20 @@ export const comprarSpec: FilmSpec = {
         {
             dur: 74,
             screen: <PickAsset />,
-            eyebrow: 'Elegí',
-            caption: 'Tocá el activo que querés comprar.',
+            eyebrow: 'Elige',
+            caption: 'Toca el activo que quieres comprar.',
         },
         {
             dur: 76,
             screen: <AmountBeat />,
             eyebrow: 'El monto',
-            caption: 'Poné cuánto querés. Desde $10.',
+            caption: 'Pon cuánto quieres. Desde $10.',
         },
         {
             dur: 72,
             screen: <SlideBeat />,
-            eyebrow: 'Confirmá',
-            caption: 'Deslizá. No hay pop-ups que firmar.',
+            eyebrow: 'Confirma',
+            caption: 'Desliza. No hay pop-ups que firmar.',
         },
         {
             dur: 62,

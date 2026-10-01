@@ -269,7 +269,7 @@ var(--radius-full) /* 9999px */
 4. **ALWAYS show positive values in green, negative in red**
 5. **Yellow is ONLY for**: primary action buttons, active nav items, important highlights, brand emphasis
 6. **No test framework** is configured - do not assume tests can be run
-7. **Spanish is the default language** - UI strings should use i18n via `useLanguage()` hook
+7. **Spanish is the default language** - UI strings should use i18n via `useLanguage()` hook. Write **Colombian Spanish with tú** ("elige", "puedes", "tienes"), never Argentine voseo ("elegí", "podés", "tenés") or Argentine slang ("al toque", "tranqui"); date locale `es-CO`
 8. **Components are flat files** - create `components/Name.tsx`, not `components/Name/Name.tsx`
 
 ---

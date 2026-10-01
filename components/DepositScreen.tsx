@@ -346,7 +346,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                 },
             });
         } catch {
-            setCardError('No pudimos abrir la compra con tarjeta. Probá de nuevo o enviá USDC desde un exchange.');
+            setCardError('No pudimos abrir la compra con tarjeta. Prueba de nuevo o envía USDC desde un exchange.');
         }
     };
     const startCard = () => {
@@ -368,7 +368,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     if (method === 'choose') {
         const options = [
             { key: 'card', icon: 'creditcard' as const, title: 'Con tarjeta o Apple Pay', sub: 'Débito o crédito. Llega en minutos.', badge: 'Más fácil', onClick: startCard },
-            { key: 'crypto', icon: 'wallet' as const, title: 'Desde un exchange o billetera', sub: 'Binance, Bitso, Lemon, Belo… Enviás USDC.', onClick: () => { haptic.light(); setMethod('crypto'); } },
+            { key: 'crypto', icon: 'wallet' as const, title: 'Desde un exchange o billetera', sub: 'Binance, Bitso, Lemon, Belo… Envías USDC.', onClick: () => { haptic.light(); setMethod('crypto'); } },
         ];
         return (
             <ScreenV2 pad={0} glow={false}>
@@ -382,7 +382,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                         Agregar dinero
                     </div>
                     <div style={{ marginTop: 10, fontSize: 15, color: V2.t2 }}>
-                        ¿Cómo querés agregarlo?
+                        ¿Cómo quieres agregarlo?
                     </div>
                     <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
                         {options.map((o) => (
@@ -428,13 +428,13 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                 </div>
                 <div style={{ padding: '18px 20px 30px' }}>
                     <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>
-                        Elegí la red
+                        Elige la red
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 10, fontSize: 15, color: V2.t2 }}>
                         Vas a enviar <UsdcPill /> por
                     </div>
                     <div style={{ marginTop: 8, fontSize: 13, color: V2.t3, lineHeight: 1.5 }}>
-                        ¿No sabés cuál? Elegí la misma red en tu exchange al retirar. Si podés, usá Arbitrum: es la más barata y llega directo.
+                        ¿No sabes cuál? Elige la misma red en tu exchange al retirar. Si puedes, usa Arbitrum: es la más barata y llega directo.
                     </div>
 
                     {(pendingEvmDeposit || pendingSolanaDeposit) && (
@@ -536,7 +536,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
 
                 {!depositAddress ? (
                     <div style={{ marginTop: 40, textAlign: 'center', color: V2.t2, fontSize: 14 }}>
-                        Iniciá sesión para ver tu dirección de depósito.
+                        Inicia sesión para ver tu dirección de depósito.
                     </div>
                 ) : success ? (
                     /* ── Success ── */
@@ -605,7 +605,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                         <div style={{ fontSize: 15, color: V2.t2, lineHeight: 1.55, padding: '0 8px' }}>
                             {cardError
                                 ? 'La compra con tarjeta no se abrió.'
-                                : 'Completá la compra en la ventana que se abrió. Cuando lleguen tus dólares (USDC) te avisamos para sumarlos a tu saldo.'}
+                                : 'Completa la compra en la ventana que se abrió. Cuando lleguen tus dólares (USDC) te avisamos para sumarlos a tu saldo.'}
                         </div>
                         <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                             <span style={{ position: 'relative', display: 'inline-flex', width: 8, height: 8 }}>
@@ -637,7 +637,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                             </div>
                         )}
                         <div style={{ marginTop: 16, fontSize: 12, color: V2.t3 }}>
-                            Podés cerrar la app: si llega mientras no estás, la próxima vez que entres a Agregar dinero lo vas a poder sumar.
+                            Puedes cerrar la app: si llega mientras no estás, la próxima vez que entres a Agregar dinero lo vas a poder sumar.
                         </div>
                     </div>
                 ) : (
@@ -658,7 +658,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                         </div>
 
                         <div style={{ marginTop: 20, fontSize: 13.5, color: V2.t2, textAlign: 'center', lineHeight: 1.55, padding: '0 14px' }}>
-                            Enviá solo <b style={{ color: V2.t1 }}>USDC en {net.label}</b> a esta
+                            Envía solo <b style={{ color: V2.t1 }}>USDC en {net.label}</b> a esta
                             dirección desde tu exchange o billetera.
                         </div>
 

@@ -19,7 +19,7 @@ const TradeBeat: React.FC = () => {
 export const marcaSpec: FilmSpec = {
     title: {
         kicker: 'Mercados globales',
-        title: 'Operá de todo.\nUn toque.',
+        title: 'Opera de todo.\nUn toque.',
         sub: 'Cripto, acciones, oro e índices — desde tu teléfono.',
     },
     titleDur: 78,
@@ -33,14 +33,14 @@ export const marcaSpec: FilmSpec = {
         {
             dur: 78,
             screen: <TradeBeat />,
-            eyebrow: 'Operá',
+            eyebrow: 'Opera',
             caption: 'Largo o corto, con el apalancamiento que elijas.',
         },
         {
             dur: 74,
             screen: <PredictBrowse />,
-            eyebrow: 'Predecí',
-            caption: 'Y apostá a lo que va a pasar en el mundo.',
+            eyebrow: 'Predice',
+            caption: 'Y apuesta a lo que va a pasar en el mundo.',
         },
     ],
     end: { line: 'Trading, en serio.' },

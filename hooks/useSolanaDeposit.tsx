@@ -310,7 +310,7 @@ export function useSolanaDeposit() {
                         args: [evmAddressForSend as Hex],
                     })) as bigint;
                 } catch {
-                    setError('No pudimos leer tu balance inicial en Arbitrum. Reintentá antes de quemar USDC.');
+                    setError('No pudimos leer tu balance inicial en Arbitrum. Reintenta antes de quemar USDC.');
                     setStatus('error');
                     return;
                 }
