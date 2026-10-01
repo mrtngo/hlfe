@@ -12,11 +12,16 @@
 //   • Solana      → useSolanaDeposit (same flow, Solana burn)  [beta]
 //   • Arbitrum    → direct sponsored ERC20 transfer into the HL bridge
 //
-// All legs are gas-sponsored and sign silently (showWalletUIs: false), so from
-// the user's POV: send USDC → balance appears. No second tap.
+// All legs are gas-sponsored and sign silently (showWalletUIs: false).
+//
+// Beginners without crypto can instead buy with a card / Apple Pay through
+// Privy's funding flow (MoonPay). The purchase lands as USDC on Arbitrum at the
+// same embedded address, so it reuses the Arbitrum watcher + sweep below.
+// Requires "Funding" enabled in the Privy Dashboard — gated by
+// NEXT_PUBLIC_ENABLE_CARD_ONRAMP=1 until then.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useWallets, useSendTransaction } from '@privy-io/react-auth';
+import { useWallets, useSendTransaction, useFundWallet } from '@privy-io/react-auth';
 import { useWallets as useSolanaWallets } from '@privy-io/react-auth/solana';
 import { createPublicClient, http, formatUnits, type Hex } from 'viem';
 import { mainnet, avalanche, optimism, arbitrum, base, polygon } from 'viem/chains';
@@ -36,6 +41,12 @@ import { copyToClipboard } from '@/lib/clipboard';
 import { haptic } from '@/lib/haptics';
 import { ScreenV2, Icon, V2 } from '@/components/V2Kit';
 
+// Card / Apple Pay on-ramp (Privy funding → MoonPay). Off until Funding is
+// enabled in the Privy Dashboard, otherwise the option would just error.
+const CARD_ONRAMP_ENABLED = process.env.NEXT_PUBLIC_ENABLE_CARD_ONRAMP === '1';
+// Card purchases below ~$30 hit MoonPay minimums / outsized fees.
+const CARD_DEFAULT_AMOUNT = '30';
+
 // Same kill-switch as the manual bridge: Solana is on-chain-untested.
 const SOLANA_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT !== '0';
 
@@ -52,10 +63,12 @@ interface Network {
     /** /public logo path; null renders the inline Base mark. */
     logo: string | null;
     beta?: boolean;
+    /** Cheapest + fastest (lands directly, no bridge) — flagged for beginners. */
+    recommended?: boolean;
 }
 
 const NETWORKS: Network[] = [
-    { key: 'arbitrum', label: 'Arbitrum One', min: 10, logo: '/logos/ARB.svg' },
+    { key: 'arbitrum', label: 'Arbitrum', min: 10, logo: '/logos/ARB.svg', recommended: true },
     { key: 'base', label: 'Base', min: 10, logo: null },
     ...(SOLANA_ENABLED
         ? [{ key: 'solana' as const, label: 'Solana', min: 10, logo: '/logos/SOL.svg', beta: true }]
@@ -104,6 +117,12 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     const evm = useCctpTransfer();
     const sol = useSolanaDeposit();
 
+    const { fundWallet } = useFundWallet();
+
+    // Entry: how the user adds money. Without the card on-ramp there's only one
+    // way in, so skip straight to the network list.
+    const [method, setMethod] = useState<'choose' | 'crypto' | 'card'>(CARD_ONRAMP_ENABLED ? 'choose' : 'crypto');
+    const [cardError, setCardError] = useState('');
     const [net, setNet] = useState<Network | null>(null);
     const [copied, setCopied] = useState(false);
     const [detected, setDetected] = useState<bigint>(BigInt(0));
@@ -308,10 +327,49 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
         }
     };
 
+    // Card purchase → USDC on Arbitrum at the embedded address. Selecting the
+    // Arbitrum network first starts the watcher, so the sweep picks it up.
+    const ARBITRUM = NETWORKS.find((n) => n.key === 'arbitrum')!;
+    const openCardPurchase = async () => {
+        if (!evmAddress) return;
+        haptic.light();
+        setCardError('');
+        try {
+            await fundWallet({
+                address: evmAddress,
+                options: {
+                    chain: arbitrum,
+                    asset: 'USDC',
+                    amount: CARD_DEFAULT_AMOUNT,
+                    defaultFundingMethod: 'card',
+                    card: { preferredProvider: 'moonpay' },
+                },
+            });
+        } catch {
+            setCardError('No pudimos abrir la compra con tarjeta. Probá de nuevo o enviá USDC desde un exchange.');
+        }
+    };
+    const startCard = () => {
+        resetFlows();
+        setMethod('card');
+        setNet(ARBITRUM);
+        void openCardPurchase();
+    };
+    const backToStart = () => {
+        resetFlows();
+        setNet(null);
+        setCardError('');
+        setMethod(CARD_ONRAMP_ENABLED ? 'choose' : 'crypto');
+    };
+
     // ════════════════════════════════════════════════════════════════════════
-    // Stage A — network list
+    // Stage 0 — how do you want to add money?
     // ════════════════════════════════════════════════════════════════════════
-    if (!net) {
+    if (method === 'choose') {
+        const options = [
+            { key: 'card', icon: 'creditcard' as const, title: 'Con tarjeta o Apple Pay', sub: 'Débito o crédito. Llega en minutos.', badge: 'Más fácil', onClick: startCard },
+            { key: 'crypto', icon: 'wallet' as const, title: 'Desde un exchange o billetera', sub: 'Binance, Bitso, Lemon, Belo… Enviás USDC.', onClick: () => { haptic.light(); setMethod('crypto'); } },
+        ];
         return (
             <ScreenV2 pad={0} glow={false}>
                 <div style={{ padding: '54px 18px 0' }}>
@@ -321,10 +379,62 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                 </div>
                 <div style={{ padding: '18px 20px 30px' }}>
                     <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>
+                        Agregar dinero
+                    </div>
+                    <div style={{ marginTop: 10, fontSize: 15, color: V2.t2 }}>
+                        ¿Cómo querés agregarlo?
+                    </div>
+                    <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {options.map((o) => (
+                            <button
+                                key={o.key}
+                                onClick={o.onClick}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 14,
+                                    padding: '18px 16px', borderRadius: 16, cursor: 'pointer',
+                                    background: V2.card, border: `1px solid ${o.badge ? V2.accent : V2.hair}`,
+                                    fontFamily: V2.ui, textAlign: 'left', width: '100%',
+                                }}
+                            >
+                                <span style={{ width: 42, height: 42, borderRadius: 12, background: V2.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <Icon name={o.icon} size={20} color={V2.accent} />
+                                </span>
+                                <span style={{ flex: 1, minWidth: 0 }}>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 700, color: V2.t1 }}>
+                                        {o.title}
+                                        {o.badge && <span style={badgeStyle}>{o.badge}</span>}
+                                    </span>
+                                    <span style={{ display: 'block', marginTop: 4, fontSize: 13, color: V2.t3 }}>{o.sub}</span>
+                                </span>
+                                <Icon name="chevronRight" size={16} color={V2.t3} />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </ScreenV2>
+        );
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // Stage A — network list
+    // ════════════════════════════════════════════════════════════════════════
+    if (!net) {
+        return (
+            <ScreenV2 pad={0} glow={false}>
+                <div style={{ padding: '54px 18px 0' }}>
+                    <button onClick={CARD_ONRAMP_ENABLED ? backToStart : onBack} style={circleBtn} aria-label="Volver">
+                        <Icon name="chevronLeft" size={18} color={V2.t1} />
+                    </button>
+                </div>
+                <div style={{ padding: '18px 20px 30px' }}>
+                    <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>
                         Elegí la red
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 10, fontSize: 15, color: V2.t2 }}>
                         Vas a enviar <UsdcPill /> por
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 13, color: V2.t3, lineHeight: 1.5 }}>
+                        ¿No sabés cuál? Elegí la misma red en tu exchange al retirar. Si podés, usá Arbitrum: es la más barata y llega directo.
                     </div>
 
                     {(pendingEvmDeposit || pendingSolanaDeposit) && (
@@ -369,13 +479,14 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                                 <NetworkLogo net={n} size={38} />
                                 <span style={{ fontSize: 16.5, fontWeight: 700, color: V2.t1, flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     {n.label}
+                                    {n.recommended && <span style={badgeStyle}>Recomendada</span>}
                                     {n.beta && (
                                         <span style={{ fontSize: 10, fontWeight: 800, color: V2.accent, background: V2.accentSoft, padding: '2px 7px', borderRadius: 99, letterSpacing: '0.04em' }}>
                                             BETA
                                         </span>
                                     )}
                                 </span>
-                                <span style={{ fontSize: 14, color: V2.t3, fontFamily: V2.mono }}>
+                                <span style={{ fontSize: 14, color: V2.t3, fontFamily: V2.mono, whiteSpace: 'nowrap' }}>
                                     Mín. ${n.min}
                                 </span>
                                 <Icon name="chevronRight" size={16} color={V2.t3} />
@@ -400,7 +511,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     return (
         <ScreenV2 pad={0} glow={false}>
             <div style={{ padding: '54px 18px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <button onClick={() => { resetFlows(); setNet(null); }} style={circleBtn} aria-label="Volver">
+                <button onClick={method === 'card' ? backToStart : () => { resetFlows(); setNet(null); }} style={circleBtn} aria-label="Volver">
                     <Icon name="chevronLeft" size={18} color={V2.t1} />
                 </button>
             </div>
@@ -410,8 +521,8 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                     Agregar dinero
                 </div>
 
-                {/* Token + network pills */}
-                <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
+                {/* Token + network pills (crypto only — card buyers never pick a network) */}
+                {method !== 'card' && <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
                     <div style={pill}>
                         <UsdcMark size={22} />
                         <span style={{ fontSize: 15, fontWeight: 700 }}>USDC</span>
@@ -421,7 +532,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                         <span style={{ fontSize: 15, fontWeight: 700 }}>{net.label}</span>
                         <Icon name="chevronDown" size={14} color={V2.t3} />
                     </button>
-                </div>
+                </div>}
 
                 {!depositAddress ? (
                     <div style={{ marginTop: 40, textAlign: 'center', color: V2.t2, fontSize: 14 }}>
@@ -488,6 +599,47 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                             No cierres la app — tarda menos de un minuto.
                         </div>
                     </div>
+                ) : method === 'card' ? (
+                    /* ── Waiting for the card purchase to land ── */
+                    <div style={{ marginTop: 28, textAlign: 'center' }}>
+                        <div style={{ fontSize: 15, color: V2.t2, lineHeight: 1.55, padding: '0 8px' }}>
+                            {cardError
+                                ? 'La compra con tarjeta no se abrió.'
+                                : 'Completá la compra en la ventana que se abrió. Cuando lleguen tus dólares (USDC) te avisamos para sumarlos a tu saldo.'}
+                        </div>
+                        <div style={{ marginTop: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                            <span style={{ position: 'relative', display: 'inline-flex', width: 8, height: 8 }}>
+                                <span className="animate-ping" style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: V2.accent, opacity: 0.6 }} />
+                                <span style={{ position: 'relative', width: 8, height: 8, borderRadius: '50%', background: V2.accent }} />
+                            </span>
+                            <span style={{ fontSize: 12.5, color: V2.t3, fontWeight: 600 }}>
+                                {canCreditDetected
+                                    ? `Llegaron $${detectedNum.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+                                    : 'Esperando tu compra · puede tardar unos minutos'}
+                            </span>
+                        </div>
+                        {canCreditDetected ? (
+                            <button onClick={() => runSweep(detected)} style={{ ...primaryBtn, width: '100%', marginTop: 18, flex: 'none' }}>
+                                Sumar ${detectedNum.toLocaleString('en-US', { maximumFractionDigits: 2 })} a mi saldo
+                            </button>
+                        ) : baseline !== null && baseline >= minUnitsForNet ? (
+                            <button onClick={() => runSweep(baseline + detected)} style={{ ...primaryBtn, width: '100%', marginTop: 18, flex: 'none' }}>
+                                Sumar ${(baselineNum + detectedNum).toLocaleString('en-US', { maximumFractionDigits: 2 })} que ya llegaron
+                            </button>
+                        ) : (
+                            <button onClick={() => void openCardPurchase()} style={{ ...secondaryBtn, width: '100%', marginTop: 18, flex: 'none' }}>
+                                Abrir la compra de nuevo
+                            </button>
+                        )}
+                        {(cardError || flow.status === 'error') && (
+                            <div style={{ marginTop: 14, padding: '12px 14px', borderRadius: 12, background: V2.negSoft, border: '1px solid rgba(239,68,68,0.2)', fontSize: 12.5, color: V2.t1, lineHeight: 1.5, textAlign: 'left' }}>
+                                {cardError || flow.error}
+                            </div>
+                        )}
+                        <div style={{ marginTop: 16, fontSize: 12, color: V2.t3 }}>
+                            Podés cerrar la app: si llega mientras no estás, la próxima vez que entres a Agregar dinero lo vas a poder sumar.
+                        </div>
+                    </div>
                 ) : (
                     /* ── Waiting for funds ── */
                     <>
@@ -526,6 +678,12 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                                       : 'Esperando tu envío'}
                             </span>
                         </div>
+
+                        {!canCreditDetected && baseline !== null && baseline >= minUnitsForNet && (
+                            <button onClick={() => runSweep(baseline + detected)} style={{ ...secondaryBtn, width: '100%', marginTop: 16, flex: 'none' }}>
+                                Sumar ${(baselineNum + detectedNum).toLocaleString('en-US', { maximumFractionDigits: 2 })} que ya llegaron
+                            </button>
+                        )}
 
                         {canCreditDetected && (
                             <button
@@ -622,6 +780,11 @@ function UsdcPill() {
         </span>
     );
 }
+
+const badgeStyle: React.CSSProperties = {
+    fontSize: 10, fontWeight: 800, color: V2.accent, background: V2.accentSoft,
+    padding: '2px 7px', borderRadius: 99, letterSpacing: '0.02em', whiteSpace: 'nowrap',
+};
 
 const circleBtn: React.CSSProperties = {
     width: 40, height: 40, borderRadius: '50%', border: 'none', background: 'rgba(255,255,255,0.06)',
