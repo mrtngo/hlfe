@@ -270,8 +270,8 @@
     "errorRetry": "Retry"
   },
   "outcomeMarkets": {
-    "title": "Prediction Markets",
-    "subtitle": "HIP-4 · zero opening fee",
+    "title": "Predictions",
+    "subtitle": "Bet on what you think will happen",
     "venueHL": "Hyperliquid",
     "venuePoly": "Polymarket",
     "empty": "No active markets yet",
@@ -347,6 +347,7 @@
     "invested": "Invested",
     "venueLabel": "Venue",
     "searchPlaceholder": "Search event, team, crypto…",
+    "sortLabel": "Sort",
     "sortPopular": "Popular",
     "sortSoon": "Closing soon",
     "sortOdds": "Most likely",

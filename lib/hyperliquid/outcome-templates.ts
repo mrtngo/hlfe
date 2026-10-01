@@ -55,7 +55,7 @@ export function parseHlTime(s?: string): Date | null {
     return Number.isFinite(t) ? new Date(t) : null;
 }
 
-const locale = (language: string) => (language === 'es' ? 'es-ES' : 'en-US');
+const locale = (language: string) => (language === 'es' ? 'es-CO' : 'en-US');
 
 /**
  * Short date for a deadline, e.g. "1 oct 2026" / "Oct 1, 2026". Formatted in
@@ -89,18 +89,21 @@ export function formatTarget(raw: string | undefined, language: string): string 
 
 /**
  * Deadline including time-of-day when the expiry isn't midnight, e.g.
- * "18 sept 2026, 06:00 UTC". Short-dated ladders expire several times a day,
- * so the date alone doesn't identify which book you're looking at. UTC is
- * stated explicitly rather than converted, to match the dates above.
+ * "1 oct, 3:00 a. m.". Short-dated ladders expire several times a day, so the
+ * date alone doesn't identify which book you're looking at. Timed expiries are
+ * shown in the user's own timezone (a "08:00 UTC" meant nothing to a beginner
+ * in Bogotá); midnight-UTC "resolution day" markets keep the UTC date.
  */
 export function formatDeadlineWithTime(stamp: string | undefined, language: string): string {
     const d = parseHlTime(stamp);
     if (!d) return '';
-    const date = formatDeadline(stamp, language);
-    if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) return date;
-    const hh = String(d.getUTCHours()).padStart(2, '0');
-    const mm = String(d.getUTCMinutes()).padStart(2, '0');
-    return `${date}, ${hh}:${mm} UTC`;
+    if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) return formatDeadline(stamp, language);
+    return new Intl.DateTimeFormat(locale(language), {
+        day: 'numeric',
+        month: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(d);
 }
 
 /* ------------------------------------------------------------------ *
@@ -489,19 +492,24 @@ export function ladderSpec(templateId: string, desc?: string): LadderSpec | null
 }
 
 /**
- * Event name for a ladder, e.g. "BTC toca… · 1 oct 2026" — the trailing
- * ellipsis reads as an open question the rungs below answer.
+ * Event name for a ladder, phrased as the question the rungs answer, e.g.
+ * "¿En cuánto cierra BTC el 1 oct, 3:00 a. m.?". (A trailing "BTC arriba de…"
+ * read as a truncated title.)
  */
 export function renderLadderEventName(spec: LadderSpec, language: string): string {
     const asset = assetLabel(spec.asset, language);
     const when = formatDeadlineWithTime(spec.time, language);
-    const phrase =
-        language === 'es'
-            ? spec.kind === 'above'
-                ? `${asset} arriba de…`
-                : `${asset} toca…`
-            : spec.kind === 'above'
-              ? `${asset} above…`
-              : `${asset} touches…`;
-    return [phrase, when].filter(Boolean).join(' · ');
+    if (language === 'es') {
+        const q = spec.kind === 'above' ? `¿En cuánto cierra ${asset}` : `¿Hasta dónde llega ${asset}`;
+        return when ? `${q} el ${when}?` : `${q}?`;
+    }
+    const q = spec.kind === 'above' ? `Where will ${asset} close` : `How far will ${asset} go`;
+    return when ? `${q} on ${when}?` : `${q}?`;
+}
+
+/** A ladder rung's row label, e.g. "Más de $81.919" / "Llega a $90.000". */
+export function renderLadderRungLabel(spec: LadderSpec, language: string): string {
+    const target = formatTarget(String(spec.value), language);
+    if (language === 'es') return spec.kind === 'above' ? `Más de ${target}` : `Llega a ${target}`;
+    return spec.kind === 'above' ? `Above ${target}` : `Hits ${target}`;
 }

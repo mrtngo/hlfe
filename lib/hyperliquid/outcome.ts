@@ -20,12 +20,12 @@ import {
     assetLabel,
     bareAssetSymbol,
     eventLeague,
-    formatTarget,
     isTradFiAsset,
     ladderSpec,
     parseDescFields,
     parseHlTime,
     renderLadderEventName,
+    renderLadderRungLabel,
     renderOutcomeDetail,
     renderOutcomeTitle,
     renderQuestionTitle,
@@ -429,7 +429,7 @@ export function buildMarketViews(
                 // book, so two venues' ladders stay separate events.
                 groupKey = `p:${venue}:${ladder.kind}:${ladder.asset}:${ladder.time}`;
                 eventName = renderLadderEventName(ladder, language);
-                groupLabel = formatTarget(String(ladder.value), language);
+                groupLabel = renderLadderRungLabel(ladder, language);
             }
 
             return {

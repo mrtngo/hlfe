@@ -202,11 +202,11 @@ function PolyReference({ match, ourMid }: { match: PolyMatch; ourMid: number }) 
     );
 }
 
-/** Subject · closes-in · 24h volume · venue. The context strip on every card. */
+/** Subject · closes-in · 24h volume. The context strip on every card (venue
+ *  names like "Skew" / "Trade.xyz" meant nothing to beginners — dropped). */
 function MetaRow({
     market,
     stat,
-    venueName,
     now,
 }: {
     market: OutcomeMarketView;
@@ -224,7 +224,7 @@ function MetaRow({
                 alignItems: 'center',
                 gap: 8,
                 flexWrap: 'wrap',
-                fontSize: 10.5,
+                fontSize: 11.5,
                 color: V2.t3,
                 fontWeight: 600,
             }}
@@ -243,14 +243,16 @@ function MetaRow({
                 </span>
             )}
             {countdown && (
-                <span className="font-mono">
-                    {t.outcomeMarkets.closesIn.replace('{time}', countdown)}
+                <span>
+                    {/* Past the deadline it's settling — "Cierra en cerrando" read as a bug */}
+                    {market.closeTime && market.closeTime.getTime() <= now
+                        ? (language === 'es' ? 'Cerrando' : 'Closing')
+                        : t.outcomeMarkets.closesIn.replace('{time}', countdown)}
                 </span>
             )}
-            <span className="font-mono" style={{ color: activity.quiet ? V2.t3 : V2.t2 }}>
+            <span style={{ color: activity.quiet ? V2.t3 : V2.t2 }}>
                 {activity.text}
             </span>
-            {venueName && <span style={{ opacity: 0.6 }}>{venueName}</span>}
         </div>
     );
 }

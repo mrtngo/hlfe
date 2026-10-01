@@ -52,7 +52,8 @@ import { useOutcomePositions } from '@/hooks/useOutcomePositions';
 import { ModalSheet, ModalHeader } from '@/components/ModalSheet';
 import ApproveAgentModal from '@/components/ApproveAgentModal';
 import TransferModal from '@/components/TransferModal';
-import TokenCandleChart from '@/components/TokenCandleChart';
+import OutcomeChart from '@/components/OutcomeChart';
+import { usePreferences } from '@/hooks/usePreferences';
 import OrderBook from '@/components/OrderBook';
 import OutcomePositionCard from '@/components/OutcomePositionCard';
 import TradeSuccessSheet from '@/components/TradeSuccessSheet';
@@ -117,7 +118,9 @@ export default function OutcomeMarketsScreen() {
     } | null>(null);
     /** When set, ApproveAgentModal pops; success retries the bet. */
     const [needsAgent, setNeedsAgent] = useState(false);
-    const [activeTab, setActiveTab] = useState<'trade' | 'chart' | 'book'>('trade');
+    // Spread + order book are trader tools — Pro mode only.
+    const { proMode } = usePreferences();
+    const [showBook, setShowBook] = useState(false);
 
     // ── Board controls ──────────────────────────────────────────────
     const [query, setQuery] = useState('');
@@ -315,7 +318,7 @@ export default function OutcomeMarketsScreen() {
             setSelectedSideIdx(sideIdx);
             setTradeSide(side);
             setResult({ kind: 'idle' });
-            setActiveTab('trade');
+            setShowBook(false);
         },
         [],
     );
@@ -336,7 +339,7 @@ export default function OutcomeMarketsScreen() {
     const closeSheet = () => {
         setSelectedId(null);
         setResult({ kind: 'idle' });
-        setActiveTab('trade');
+        setShowBook(false);
     };
 
     /** Which categories actually have markets — drives the filter chips. */
@@ -536,28 +539,7 @@ export default function OutcomeMarketsScreen() {
                 )}
             </div>
 
-            {/* Sort */}
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }} className="v2-noscroll">
-                {(
-                    [
-                        ['popular', t.outcomeMarkets.sortPopular],
-                        ['soon', t.outcomeMarkets.sortSoon],
-                        ['odds', t.outcomeMarkets.sortOdds],
-                    ] as const
-                ).map(([key, label]) => (
-                    <CatChip
-                        key={key}
-                        label={label}
-                        active={sort === key}
-                        onClick={() => {
-                            haptic.light();
-                            setSort(key);
-                        }}
-                    />
-                ))}
-            </div>
-
-            {/* Category filter */}
+            {/* Category filter — one row. Venue ("casa") filter is a Pro tool. */}
             {availableCats.length > 1 && (
                 <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }} className="v2-noscroll">
                     <CatChip label={t.outcomeMarkets.cat.all} active={cat === null} onClick={() => setCat(null)} />
@@ -569,7 +551,7 @@ export default function OutcomeMarketsScreen() {
                             onClick={() => setCat(c)}
                         />
                     ))}
-                    {availableVenues.length > 1 && (
+                    {proMode && availableVenues.length > 1 && (
                         <CatChip
                             label={venue ? venueNameOf(availableVenues, venue) : t.outcomeMarkets.venueLabel}
                             active={venue !== null}
@@ -582,9 +564,32 @@ export default function OutcomeMarketsScreen() {
                 </div>
             )}
 
+            {/* Sort — a quiet segmented control, not a second chip row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12.5 }}>
+                <span style={{ color: V2.t3, fontWeight: 600, marginRight: 4 }}>{t.outcomeMarkets.sortLabel}</span>
+                {(
+                    [
+                        ['popular', t.outcomeMarkets.sortPopular],
+                        ['soon', t.outcomeMarkets.sortSoon],
+                        ['odds', t.outcomeMarkets.sortOdds],
+                    ] as const
+                ).map(([key, label]) => (
+                    <button
+                        key={key}
+                        onClick={() => {
+                            haptic.light();
+                            setSort(key);
+                        }}
+                        style={{ padding: '4px 8px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: V2.ui, fontSize: 12.5, fontWeight: 700, background: sort === key ? 'rgba(255,255,255,0.07)' : 'transparent', color: sort === key ? V2.t1 : V2.t3 }}
+                    >
+                        {label}
+                    </button>
+                ))}
+            </div>
+
             {/* Deployer filter — which venue launched the market. Tucked behind
                 the "Casa" chip: useful, but not a first-glance decision. */}
-            {showVenues && availableVenues.length > 1 && (
+            {proMode && showVenues && availableVenues.length > 1 && (
                 <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }} className="v2-noscroll">
                     <CatChip label={t.outcomeMarkets.cat.all} active={venue === null} onClick={() => setVenue(null)} />
                     {availableVenues.map((v) => (
@@ -644,29 +649,14 @@ export default function OutcomeMarketsScreen() {
                 {selected && selectedSide && (
                     <>
                         <ModalHeader
-                            title={selected.eventName}
-                            sub={[selected.venueName, selected.quoteToken].filter(Boolean).join(' · ')}
+                            sub={selected.closeTime ? `Cierra ${selected.closeTime.toLocaleString('es-CO', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}` : undefined}
                             onClose={closeSheet}
                         />
                         <div style={{ padding: '4px 18px 28px', fontFamily: V2.ui, color: V2.t1 }}>
                             {/* Market title inside the sheet */}
-                            <div style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-0.01em', marginBottom: 6 }}>
+                            <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.25, marginBottom: 14 }}>
                                 {selected.name}
                             </div>
-                            {selected.description && (
-                                <div
-                                    style={{
-                                        fontSize: 12,
-                                        color: V2.t3,
-                                        marginBottom: 14,
-                                        lineHeight: 1.5,
-                                        maxHeight: 100,
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    {selected.description}
-                                </div>
-                            )}
 
                             {/* Side selector — probability leads, payout follows */}
                             <div
@@ -712,53 +702,18 @@ export default function OutcomeMarketsScreen() {
                                 })}
                             </div>
 
-                            {/* At-a-glance spread / liquidity for the chosen side */}
-                            <OutcomeSpread book={book} />
-
-                            {/* Tab selector */}
-                            <div
-                                style={{
-                                    display: 'flex',
-                                    gap: 4,
-                                    padding: 4,
-                                    borderRadius: 12,
-                                    background: V2.card,
-                                    marginBottom: 16,
-                                }}
-                            >
-                                {(
-                                    [
-                                        { key: 'trade', label: t.outcomeMarkets.tabTrade },
-                                        { key: 'chart', label: t.outcomeMarkets.tabChart },
-                                        { key: 'book', label: t.outcomeMarkets.tabBook },
-                                    ] as const
-                                ).map((tab) => {
-                                    const on = activeTab === tab.key;
-                                    return (
-                                        <button
-                                            key={tab.key}
-                                            onClick={() => setActiveTab(tab.key)}
-                                            style={{
-                                                flex: 1,
-                                                padding: '8px 0',
-                                                borderRadius: 9,
-                                                fontSize: 12.5,
-                                                fontWeight: 700,
-                                                background: on ? V2.cardSolid : 'transparent',
-                                                color: on ? V2.t1 : V2.t3,
-                                                border: 'none',
-                                                cursor: 'pointer',
-                                                fontFamily: V2.ui,
-                                                transition: 'all 120ms ease',
-                                            }}
-                                        >
-                                            {tab.label}
-                                        </button>
-                                    );
-                                })}
+                            {/* Probability over time for the chosen side — always visible */}
+                            <div style={{ padding: '14px 14px 10px', borderRadius: 14, background: V2.card, border: `1px solid ${V2.hair}`, marginBottom: 16 }}>
+                                <OutcomeChart
+                                    key={selectedSide.coinRef}
+                                    coinRef={selectedSide.coinRef}
+                                    mid={selectedSide.mid}
+                                    color={(SIDE_COLOR[selectedSideIdx as 0 | 1] || SIDE_COLOR[0]).color}
+                                    sideLabel={localizeSideName(selectedSide.name, language)}
+                                />
                             </div>
 
-                            {activeTab === 'trade' && (
+                            {(
                                 <>
                                     {/* Buy / Sell toggle */}
                                     <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
@@ -987,25 +942,30 @@ export default function OutcomeMarketsScreen() {
                                 </>
                             )}
 
-                            {activeTab === 'chart' && (
-                                <div style={{ marginTop: 4 }}>
-                                    <TokenCandleChart symbol={selectedSide.coinRef} height={220} />
+                            {/* Pro: spread + order book, collapsed by default */}
+                            {proMode && (
+                                <div style={{ marginTop: 18 }}>
+                                    <OutcomeSpread book={book} />
+                                    <button
+                                        onClick={() => setShowBook((v) => !v)}
+                                        style={{ width: '100%', padding: '9px 0', borderRadius: 10, border: `1px solid ${V2.hair}`, background: 'transparent', color: V2.t2, fontWeight: 700, fontSize: 12.5, cursor: 'pointer', fontFamily: V2.ui }}
+                                    >
+                                        {t.outcomeMarkets.tabBook}
+                                    </button>
+                                    {showBook && (
+                                        <div style={{ height: 280, borderRadius: 12, overflow: 'hidden', border: `1px solid ${V2.hair}`, background: V2.card, marginTop: 8 }}>
+                                            <OrderBook symbol={selectedSide.coinRef} levels={5} />
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
-                            {activeTab === 'book' && (
-                                <div
-                                    style={{
-                                        height: 280,
-                                        borderRadius: 12,
-                                        overflow: 'hidden',
-                                        border: `1px solid ${V2.hair}`,
-                                        background: V2.card,
-                                        marginTop: 4,
-                                    }}
-                                >
-                                    <OrderBook symbol={selectedSide.coinRef} levels={5} />
-                                </div>
+                            {/* Resolution rules — the deployer's text, last */}
+                            {selected.description && (
+                                <details style={{ marginTop: 18 }}>
+                                    <summary style={{ fontSize: 12.5, color: V2.t3, fontWeight: 700, cursor: 'pointer' }}>Cómo se resuelve</summary>
+                                    <div style={{ marginTop: 8, fontSize: 12, color: V2.t3, lineHeight: 1.5 }}>{selected.description}</div>
+                                </details>
                             )}
                         </div>
                     </>

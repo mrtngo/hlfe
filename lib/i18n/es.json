@@ -270,8 +270,8 @@
     "errorRetry": "Reintentar"
   },
   "outcomeMarkets": {
-    "title": "Mercados de Predicción",
-    "subtitle": "HIP-4 · sin comisión de apertura",
+    "title": "Predicciones",
+    "subtitle": "Apuesta a lo que crees que va a pasar",
     "venueHL": "Hyperliquid",
     "venuePoly": "Polymarket",
     "empty": "Aún no hay mercados activos",
@@ -347,6 +347,7 @@
     "invested": "Invertido",
     "venueLabel": "Casa",
     "searchPlaceholder": "Buscar evento, equipo, cripto…",
+    "sortLabel": "Ordenar",
     "sortPopular": "Populares",
     "sortSoon": "Cierran pronto",
     "sortOdds": "Más probables",
