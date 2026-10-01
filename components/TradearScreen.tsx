@@ -27,9 +27,13 @@ interface TradearScreenProps {
     onBack?: () => void;
     /** Preselected side when entering the screen (e.g. "Bajar" → sell). */
     initialSide?: 'buy' | 'sell';
+    /** Guest browsing without an account — the CTA becomes "create account". */
+    needsAccount?: boolean;
+    onSignIn?: () => void;
+    onDeposit?: () => void;
 }
 
-export default function TradearScreen({ onBack, initialSide = 'buy' }: TradearScreenProps) {
+export default function TradearScreen({ onBack, initialSide = 'buy', needsAccount = false, onSignIn, onDeposit }: TradearScreenProps) {
     const { formatCurrency } = useCurrency();
     const { proMode, toggleProMode } = usePreferences();
     const {
@@ -102,6 +106,9 @@ export default function TradearScreen({ onBack, initialSide = 'buy' }: TradearSc
             placeTriggerOrder={placeTriggerOrder}
             refreshAccountData={refreshAccountData}
             formatCurrency={formatCurrency}
+            needsAccount={needsAccount}
+            onSignIn={onSignIn}
+            onDeposit={onDeposit}
         />
     );
 }
@@ -128,6 +135,9 @@ function NormalMode({
     placeTriggerOrder,
     refreshAccountData,
     formatCurrency,
+    needsAccount,
+    onSignIn,
+    onDeposit,
 }: {
     market: any;
     ticker: string;
@@ -146,6 +156,9 @@ function NormalMode({
     placeTriggerOrder: any;
     refreshAccountData: () => void;
     formatCurrency: (v: number, dp?: number) => string;
+    needsAccount: boolean;
+    onSignIn?: () => void;
+    onDeposit?: () => void;
 }) {
     const { t } = useLanguage();
     const [side, setSide] = useState<'buy' | 'sell'>(initialSide);
@@ -181,14 +194,17 @@ function NormalMode({
     const changeAbs = (price * (market.change24h || 0)) / 100;
     const targetProfit = cashout != null ? (amount * cashout) / 100 : 0;
 
-    // Estimated liquidation price (isolated margin). Maintenance margin ≈ 50%
-    // of initial margin — same approximation as OrderPanel:
-    //   long:  entry × (1 − (1 − MMR) / lev)    short: entry × (1 + (1 − MMR) / lev)
-    const MMR = 0.5;
+    // Estimated liquidation price (isolated margin), per Hyperliquid's formula:
+    // maintenance margin is half the initial margin *at max leverage*, i.e.
+    // l = 1 / (2 × maxLev) of notional — not half of the chosen leverage's.
+    //   long:  entry × (1 − (1/lev − l) / (1 − l))
+    //   short: entry × (1 + (1/lev − l) / (1 + l))
+    // At 1x long this is ~0: the position can't be liquidated.
+    const mm = 1 / (2 * maxLev);
     const liqPrice = price > 0 && positionSize > 0
         ? side === 'buy'
-            ? price * (1 - (1 - MMR) / leverage)
-            : price * (1 + (1 - MMR) / leverage)
+            ? Math.max(0, price * (1 - (1 / leverage - mm) / (1 - mm)))
+            : price * (1 + (1 / leverage - mm) / (1 + mm))
         : 0;
 
     // Taker fee (market order) + builder fee, charged on the notional.
@@ -203,6 +219,9 @@ function NormalMode({
     // not the margin alone — validate against the total with a $1 buffer.
     const totalRequired = amount + estFee;
     const canSubmit = positionSize >= MIN_ORDER_NOTIONAL_USD && totalRequired <= availableUsd + 0.01 && !submitting && price > 0;
+    // Nothing to trade with anywhere (not even in the Predicción pocket) —
+    // the slider is a dead end, so offer the way in instead.
+    const noFunds = availableUsd < MIN_ORDER_NOTIONAL_USD && spotBalance <= 0;
 
     useEffect(() => {
         if (availableUsd <= 0 || availableUsd >= MIN_ORDER_NOTIONAL_USD) return;
@@ -333,9 +352,9 @@ function NormalMode({
                         <span style={{ fontSize: 22, fontWeight: 800, fontFamily: V2.mono, letterSpacing: '-0.02em' }}>{formatCurrency(positionSize)}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
-                        <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>Precio de liquidación</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>{side === 'buy' ? t.tradear.autoCloseBelow : t.tradear.autoCloseAbove}</span>
                         <span style={{ fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: V2.neg }}>
-                            {liqPrice > 0 ? formatCurrency(liqPrice, displayDecimals) : '—'}
+                            {positionSize <= 0 ? '—' : liqPrice > price * 0.001 ? formatCurrency(liqPrice, displayDecimals) : t.tradear.neverAutoCloses}
                         </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
@@ -360,7 +379,7 @@ function NormalMode({
 
                 {/* chips */}
                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                    {([{ id: null, t: 'Off' }, { id: 25, t: '+25%' }, { id: 50, t: '+50%' }, { id: 100, t: '+100%' }] as const).map((c) => {
+                    {([{ id: null, t: t.tradear.cashoutOff }, { id: 25, t: '+25%' }, { id: 50, t: '+50%' }, { id: 100, t: '+100%' }] as const).map((c) => {
                         const on = cashout === c.id;
                         return (
                             <button
@@ -401,15 +420,29 @@ function NormalMode({
                     </button>
                 )}
 
-                {/* Slide to confirm */}
-                <SlideToConfirm
-                    color={sideColor}
-                    soft={sideSoft}
-                    border={sideBorder}
-                    disabled={!canSubmit}
-                    label={submitting ? 'Procesando…' : !canSubmit ? `Total mín. ${formatCurrency(MIN_ORDER_NOTIONAL_USD, 0)}` : 'Deslizá para confirmar'}
-                    onConfirm={handleConfirm}
-                />
+                {/* Slide to confirm — or the way in when there's nothing to trade with */}
+                {needsAccount || noFunds ? (
+                    <>
+                        <button
+                            onClick={() => { haptic.light(); (needsAccount ? onSignIn : onDeposit)?.(); }}
+                            style={{ width: '100%', marginTop: 24, padding: 18, borderRadius: 16, border: 'none', background: V2.accent, color: V2.accentInk, fontWeight: 800, fontSize: 16, cursor: 'pointer', fontFamily: V2.ui }}
+                        >
+                            {needsAccount ? t.tradear.ctaCreateAccount : t.tradear.ctaDeposit}
+                        </button>
+                        <div style={{ marginTop: 10, textAlign: 'center', fontSize: 12.5, color: V2.t3 }}>
+                            {needsAccount ? t.tradear.ctaCreateAccountHint : t.tradear.ctaDepositHint.replace('{min}', formatCurrency(MIN_ORDER_NOTIONAL_USD, 0))}
+                        </div>
+                    </>
+                ) : (
+                    <SlideToConfirm
+                        color={sideColor}
+                        soft={sideSoft}
+                        border={sideBorder}
+                        disabled={!canSubmit}
+                        label={submitting ? t.tradear.processing : !canSubmit ? t.tradear.belowMin.replace('{min}', formatCurrency(MIN_ORDER_NOTIONAL_USD, 0)) : t.tradear.slideToConfirm}
+                        onConfirm={handleConfirm}
+                    />
+                )}
             </div>
 
             {/* Predicción → Trade (spot → perp) transfer. */}

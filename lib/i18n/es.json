@@ -766,6 +766,19 @@
     "high24h": "Máx 24h",
     "low24h": "Mín 24h"
   },
+  "tradear": {
+    "cashoutOff": "No",
+    "autoCloseBelow": "Se cierra sola si baja a",
+    "autoCloseAbove": "Se cierra sola si sube a",
+    "ctaCreateAccount": "Creá tu cuenta para operar",
+    "ctaCreateAccountHint": "Solo te pedimos tu email. Tarda un minuto.",
+    "ctaDeposit": "Depositá para empezar",
+    "ctaDepositHint": "Podés empezar con {min}.",
+    "belowMin": "Mínimo {min} por operación",
+    "processing": "Procesando…",
+    "neverAutoCloses": "Nunca",
+    "slideToConfirm": "Deslizá para confirmar"
+  },
   "transfer": {
     "title": "Transferir USDC",
     "description": "Mueve USDC entre tus cuentas de Spot y Perp. Instantáneo y gratuito.",
@@ -831,12 +844,14 @@
       "afternoon": "Buenas tardes",
       "evening": "Buenas noches"
     },
+    "guestName": "Invitado",
+    "emptyHint": "Todavía no tenés fondos. Depositá desde $10 y hacé tu primera compra.",
     "totalValue": "Valor total",
     "today": "Hoy",
     "thirtyDays": "30 días",
     "available": "Disponible",
     "inPosition": "En posición",
-    "equity": "Equidad",
+    "equity": "Total",
     "quote": {
       "great": "Tu cartera está {pct} esta temporada — el mejor mes en mucho tiempo.",
       "steady": "Estás {pct} en 30 días. Ritmo tranquilo.",
@@ -845,9 +860,10 @@
       "small": "Apenas empiezas. Agrega fondos y vemos."
     },
     "section": {
+      "movers": "Lo que más se mueve",
       "comprar": "comprar",
-      "tenencias": "tenencias",
-      "mirando": "mirando"
+      "tenencias": "Lo que tenés",
+      "mirando": "Tu lista"
     },
     "cta": {
       "comprar": {

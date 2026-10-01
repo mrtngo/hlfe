@@ -767,6 +767,19 @@
     "high24h": "24h High",
     "low24h": "24h Low"
   },
+  "tradear": {
+    "cashoutOff": "No",
+    "autoCloseBelow": "Closes automatically if it drops to",
+    "autoCloseAbove": "Closes automatically if it rises to",
+    "ctaCreateAccount": "Create your account to trade",
+    "ctaCreateAccountHint": "All we need is your email. Takes a minute.",
+    "ctaDeposit": "Deposit to get started",
+    "ctaDepositHint": "You can start with {min}.",
+    "belowMin": "Minimum {min} per trade",
+    "processing": "Processing…",
+    "neverAutoCloses": "Never",
+    "slideToConfirm": "Slide to confirm"
+  },
   "transfer": {
     "title": "Transfer USDC",
     "description": "Move USDC between your Spot and Perp accounts. Instant and free.",
@@ -832,12 +845,14 @@
       "afternoon": "Good afternoon",
       "evening": "Good evening"
     },
+    "guestName": "Guest",
+    "emptyHint": "No funds yet. Deposit from $10 and make your first buy.",
     "totalValue": "Total value",
     "today": "Today",
     "thirtyDays": "30 days",
     "available": "Available",
     "inPosition": "In position",
-    "equity": "Equity",
+    "equity": "Total",
     "quote": {
       "great": "Your portfolio is {pct} this season — your best month in a while.",
       "steady": "You're {pct} in 30 days. Quiet rhythm.",
@@ -846,9 +861,10 @@
       "small": "You're just getting started. Add funds and we'll see."
     },
     "section": {
+      "movers": "Top movers",
       "comprar": "buy",
-      "tenencias": "holdings",
-      "mirando": "watching"
+      "tenencias": "Your holdings",
+      "mirando": "Watchlist"
     },
     "cta": {
       "comprar": {

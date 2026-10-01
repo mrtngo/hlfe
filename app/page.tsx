@@ -72,6 +72,8 @@ export default function Home() {
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Preselected side for the trade screen ("Bajar" → sell). Resets to buy on generic entry. */
     const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
+    // Where the trade screen's back button returns to (token detail, home…).
+    const [tradeReturnView, setTradeReturnView] = useState<typeof view>('home');
     /** Address whose public profile is being viewed. */
     const [profileAddress, setProfileAddress] = useState<string | null>(null);
     /** View to return to from the public profile / search. */
@@ -138,14 +140,16 @@ export default function Home() {
         setGuest(true);
     };
 
-    // Final tutorial CTA: deposit when signed in, otherwise route through auth first.
-    const handleTutorialDeposit = () => {
+    // Deposit needs an account (there's no wallet to deposit into as a guest),
+    // so every deposit entry point routes guests through sign-up first.
+    const goDeposit = () => {
         if (authenticated) {
             setView('deposit');
         } else {
             login();
         }
     };
+    const handleTutorialDeposit = goDeposit;
 
     // NOTE: We intentionally do NOT proactively prompt agent-wallet / builder-fee
     // setup when the user enters the trading view. Surfacing a signature/approval
@@ -176,6 +180,7 @@ export default function Home() {
     // Navigate to the trade screen with a preselected side (defaults to buy).
     const goTrade = (side: 'buy' | 'sell' = 'buy') => {
         setTradeSide(side);
+        if (view !== 'trading') setTradeReturnView(view);
         setView('trading');
     };
 
@@ -226,7 +231,7 @@ export default function Home() {
                 }}
                 onTradeClick={() => goTrade()}
                 onBuyClick={() => goTrade()}
-                onDeposit={() => setView('deposit')}
+                onDeposit={goDeposit}
                 onOpenPredictions={() => setView('predictions')}
             />
         ) : view === 'markets' ? (
@@ -246,7 +251,13 @@ export default function Home() {
                 onTrade={(side) => goTrade(side ?? 'buy')}
             />
         ) : view === 'trading' ? (
-            <TradearScreen onBack={() => setView('advanced')} initialSide={tradeSide} />
+            <TradearScreen
+                onBack={() => setView(tradeReturnView)}
+                initialSide={tradeSide}
+                needsAccount={ready && !authenticated}
+                onSignIn={login}
+                onDeposit={goDeposit}
+            />
         ) : view === 'news' ? (
             <NewsScreen
                 onTickerClick={(symbol) => {
@@ -355,7 +366,7 @@ export default function Home() {
                     authenticated={authenticated}
                     firstName={firstName}
                     onLogin={login}
-                    onDeposit={() => setView('deposit')}
+                    onDeposit={goDeposit}
                     onOpenProfile={handleProfileClick}
                     onOpenSearch={() => setView('markets')}
                     onTogglePro={toggleProMode}
@@ -371,7 +382,7 @@ export default function Home() {
                                 setSelectedSpotBase(coin);
                                 setView('spotManage');
                             }}
-                            onDeposit={() => setView('deposit')}
+                            onDeposit={goDeposit}
                             onOpenPredictions={() => setView('predictions')}
                         />
                     ) : view === 'markets' ? (
@@ -445,7 +456,7 @@ export default function Home() {
                 }}>
                     {showDesktopTerminal ? (
                         <DesktopTerminal
-                            onOpenDeposit={() => setView('deposit')}
+                            onOpenDeposit={goDeposit}
                             onOpenHistory={() => setView('history')}
                             onOpenNews={() => setView('news')}
                             onOpenPredictions={() => setView('predictions')}
@@ -455,7 +466,7 @@ export default function Home() {
                         />
                     ) : showDesktopPredictions ? (
                         <DesktopPredictions
-                            onOpenDeposit={() => setView('deposit')}
+                            onOpenDeposit={goDeposit}
                             onOpenHistory={() => setView('history')}
                             onOpenNews={() => setView('news')}
                             onOpenProfile={() => setView('profile')}
@@ -495,7 +506,7 @@ export default function Home() {
                             <div className="mt-6 max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <ComprarFlow
                                     onOpenAdvanced={() => goTrade()}
-                                    onDeposit={() => setView('deposit')}
+                                    onDeposit={goDeposit}
                                     onClose={() => setView('home')}
                                 />
                             </div>
@@ -503,7 +514,7 @@ export default function Home() {
                             <div className="mt-6 max-w-2xl mx-auto" id="spot-buy-panel" style={{ paddingBottom: '100px' }}>
                                 <SpotBuyScreen
                                     initialBase={selectedSpotBase}
-                                    onDeposit={() => setView('deposit')}
+                                    onDeposit={goDeposit}
                                     onClose={() => {
                                         setSelectedSpotBase(undefined);
                                         setView('home');
@@ -515,7 +526,7 @@ export default function Home() {
                             <div className="mt-6 max-w-2xl mx-auto" id="trading-spot-panel" style={{ paddingBottom: '100px' }}>
                                 <SpotScreen
                                     initialBase={selectedSpotBase}
-                                    onDeposit={() => setView('deposit')}
+                                    onDeposit={goDeposit}
                                     onClose={() => {
                                         setSelectedSpotBase(undefined);
                                         setView('spotReal');
@@ -538,7 +549,7 @@ export default function Home() {
                             <div className="max-w-2xl mx-auto" style={{ paddingBottom: '100px' }}>
                                 <BolsillosScreen
                                     onBack={() => setView('home')}
-                                    onDeposit={() => setView('deposit')}
+                                    onDeposit={goDeposit}
                                 />
                             </div>
                         ) : (

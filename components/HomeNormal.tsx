@@ -133,7 +133,10 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
         return '';
     }, [user, privyUser]);
 
-    const avatarInitial = (firstName || 'R').charAt(0).toUpperCase();
+    const avatarInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
+    // Brand-new / guest account: nothing to break down or withdraw yet, so the
+    // stat row and Retirar give way to a single deposit call.
+    const isEmptyAccount = portfolioValue <= 0 && positions.length === 0 && outcomePositions.length === 0;
 
     const addToWatchlist = (symbol: string) => {
         if (!watchlist.includes(symbol)) setWatchlist([...watchlist, symbol]);
@@ -154,11 +157,11 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
             <div style={{ padding: '54px 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 40, height: 40, borderRadius: '50%', background: V2.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: V2.accentInk, fontSize: 18 }}>
-                        {avatarInitial}
+                        {avatarInitial || <Icon name="user" size={20} color={V2.accentInk} />}
                     </div>
                     <div>
-                        <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, textTransform: 'capitalize' }}>{greet}</div>
-                        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>{firstName || 'Delos'}</div>
+                        <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, }}>{greet}</div>
+                        <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>{firstName || t.homeRedesign.guestName}</div>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -173,6 +176,9 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                 <DelosSun size={130} color={V2.accent} style={{ position: 'absolute', top: 4, right: 6, opacity: 0.05, pointerEvents: 'none' }} />
                 <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, letterSpacing: '0.01em' }}>{t.homeRedesign.totalValue}</div>
                 <div style={{ marginTop: 8 }}><BigMoney value={portfolioValue} size={52} /></div>
+                {isEmptyAccount ? (
+                    <div style={{ marginTop: 12, fontSize: 14, color: V2.t2, lineHeight: 1.5 }}>{t.homeRedesign.emptyHint}</div>
+                ) : (<>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
                     <span style={{ color: thirtyDayPnl >= 0 ? V2.pos : V2.neg, fontWeight: 700, fontSize: 16, fontFamily: V2.mono }}>
                         {thirtyDayPnl >= 0 ? '+' : '-'}${Math.abs(thirtyDayPnl).toFixed(2)}
@@ -196,6 +202,7 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                         </div>
                     ))}
                 </div>
+                </>)}
 
                 {/* actions */}
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
@@ -205,12 +212,12 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                     >
                         {t.common.deposit}
                     </button>
-                    <button
+                    {!isEmptyAccount && <button
                         onClick={() => setShowWithdrawModal(true)}
                         style={{ flex: 1, padding: 14, borderRadius: 14, border: `1px solid ${V2.hair2}`, background: 'transparent', color: V2.t1, fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: V2.ui }}
                     >
                         {withdrawLabel}
-                    </button>
+                    </button>}
                 </div>
             </div>
 
@@ -321,7 +328,7 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
 
             {/* Movers by category */}
             <SectionHead
-                title="Movers"
+                title={t.homeRedesign.section.movers}
                 right={
                     <div style={{ display: 'flex', gap: 6 }}>
                         {([{ id: 'crypto', l: 'Cripto' }, { id: 'stocks', l: 'Acciones' }] as const).map((c) => {

@@ -4,6 +4,7 @@
 // your referral link, and the list of people you've brought in.
 
 import { useState } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import { useRewards } from '@/hooks/useRewards';
 import { usePoints } from '@/hooks/usePoints';
 import { useUser } from '@/hooks/useUser';
@@ -21,6 +22,7 @@ function shortAddr(a: string) {
 
 export default function RewardsScreen() {
     const { user } = useUser();
+    const { login } = usePrivy();
     const { formatCurrency } = useCurrency();
     const {
         referralCode,
@@ -86,6 +88,12 @@ export default function RewardsScreen() {
                     <div style={{ marginTop: 8, fontSize: 14, color: V2.t3, lineHeight: 1.5 }}>
                         Creá tu cuenta para obtener tu link de invitación y empezar a ganar.
                     </div>
+                    <button
+                        onClick={() => { haptic.light(); login(); }}
+                        style={{ marginTop: 24, padding: '14px 28px', borderRadius: 14, border: 'none', background: V2.accent, color: V2.accentInk, fontWeight: 800, fontSize: 15, cursor: 'pointer', fontFamily: V2.ui }}
+                    >
+                        Crear cuenta
+                    </button>
                 </div>
             </ScreenV2>
         );

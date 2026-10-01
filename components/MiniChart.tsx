@@ -24,6 +24,7 @@ export default function MiniChart({ symbol, isStock = false }: MiniChartProps) {
 
     const market = markets.find(m => m.symbol === symbol);
     const currentPrice = market?.price || 0;
+    const change24h = market?.change24h || 0;
 
     // Measure real container dimensions — no SVG rendered until we have them
     useEffect(() => {
@@ -73,7 +74,10 @@ export default function MiniChart({ symbol, isStock = false }: MiniChartProps) {
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data) && data.length > 0) {
+                        // Only candles inside the badge's 24h window — the
+                        // snapshot can start an hour early.
                         const prices = data
+                            .filter((c: { t?: number }) => (c.t || 0) >= startTime)
                             .map((c: { c?: string }) => parseFloat(c.c || '0'))
                             .filter((p: number) => p > 0);
                         if (prices.length > 0) {
@@ -93,10 +97,13 @@ export default function MiniChart({ symbol, isStock = false }: MiniChartProps) {
 
     useEffect(() => { fetchedRef.current = false; }, [symbol]);
 
+    // Anchor the line on the same 24h-ago price the % badge uses, so the
+    // sparkline and the badge never disagree on direction.
     const prices = useMemo(() => {
-        if (sparklineData.length === 0) return currentPrice > 0 ? [currentPrice, currentPrice] : [];
-        return [...sparklineData.slice(0, -1), currentPrice];
-    }, [sparklineData, currentPrice]);
+        if (currentPrice <= 0) return [];
+        const baseline = currentPrice / (1 + change24h / 100);
+        return [baseline, ...sparklineData.slice(0, -1), currentPrice];
+    }, [sparklineData, currentPrice, change24h]);
 
     const chart = useMemo(() => {
         if (!dims || prices.length < 2) return null;
@@ -122,12 +129,11 @@ export default function MiniChart({ symbol, isStock = false }: MiniChartProps) {
         }
 
         const area = `${line} L ${pts[pts.length - 1].x},${h} L ${pts[0].x},${h} Z`;
-        const isUp = prices[prices.length - 1] >= prices[0];
-        const color = isUp ? '#4FB7B4' : '#E05858';
+        const color = change24h >= 0 ? 'var(--color-positive)' : 'var(--color-negative)';
         const gid = `g-${symbol.replace(/[^a-zA-Z0-9]/g, '')}`;
 
         return { w, h, line, area, color, gid, last: pts[pts.length - 1] };
-    }, [dims, prices, symbol]);
+    }, [dims, prices, symbol, change24h]);
 
     return (
         <div ref={containerRef} style={{ width: '100%', height: '100%', display: 'block' }}>
@@ -144,13 +150,13 @@ export default function MiniChart({ symbol, isStock = false }: MiniChartProps) {
                 >
                     <defs>
                         <linearGradient id={chart.gid} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={chart.color} stopOpacity="0.3" />
-                            <stop offset="100%" stopColor={chart.color} stopOpacity="0" />
+                            <stop offset="0%" style={{ stopColor: chart.color }} stopOpacity="0.3" />
+                            <stop offset="100%" style={{ stopColor: chart.color }} stopOpacity="0" />
                         </linearGradient>
                     </defs>
                     <path d={chart.area} fill={`url(#${chart.gid})`} />
-                    <path d={chart.line} fill="none" stroke={chart.color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                    <circle cx={chart.last.x} cy={chart.last.y} r="2" fill={chart.color} />
+                    <path d={chart.line} fill="none" style={{ stroke: chart.color }} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx={chart.last.x} cy={chart.last.y} r="2" style={{ fill: chart.color }} />
                 </svg>
             )}
         </div>

@@ -45,6 +45,11 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
             logo: '/logo.svg', // Delos sun mark
             walletList: [], // hide all wallet connectors
             showWalletLoginFirst: false,
+            // Spanish is the default language. Privy can't localize its email /
+            // code screens ("Submit" stays English), but the header and subtitle
+            // are ours. PrivyProvider sits above LanguageProvider, so no t() here.
+            landingHeader: 'Entrá o creá tu cuenta',
+            loginMessage: 'Te mandamos un código a tu email. Sin contraseñas.',
         },
         embeddedWallets: {
             // Sign + send happen silently under the hood — no Privy confirmation
