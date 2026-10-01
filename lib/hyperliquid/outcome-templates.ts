@@ -157,6 +157,39 @@ export function isTradFiAsset(perp: string): boolean {
     return !!ASSET_LABELS[bareAssetSymbol(perp).toUpperCase()];
 }
 
+/**
+ * HL's `sport` values, in words a reader recognises. Note the two footballs:
+ * HL writes `football/soccer` for association football and bare `football` for
+ * the NFL kind, so they must not collapse into one label.
+ */
+const SPORT_LABELS: Record<string, { es: string; en: string }> = {
+    'football/soccer': { es: 'Fútbol', en: 'Soccer' },
+    football: { es: 'Fútbol americano', en: 'Football' },
+    basketball: { es: 'Básquet', en: 'Basketball' },
+    baseball: { es: 'Béisbol', en: 'Baseball' },
+    hockey: { es: 'Hockey', en: 'Hockey' },
+    tennis: { es: 'Tenis', en: 'Tennis' },
+    esports: { es: 'Esports', en: 'Esports' },
+};
+
+/** Display name for a sport, falling back to the raw value capitalized. */
+export function sportLabel(sport: string, language: string): string {
+    if (!sport) return '';
+    const known = SPORT_LABELS[sport.trim().toLowerCase()];
+    if (known) return language === 'es' ? known.es : known.en;
+    return sport.charAt(0).toUpperCase() + sport.slice(1);
+}
+
+/**
+ * League prefix of an event string: "NFL: Browns vs Buccaneers" → "NFL".
+ * Over/under markets carry no `competition`, but their `event` names the
+ * league up front.
+ */
+export function eventLeague(event: string): string {
+    const m = /^([A-Za-z0-9.& ]{2,20}):/.exec(event || '');
+    return m ? m[1].trim() : '';
+}
+
 /* ------------------------------------------------------------------ *
  * Venues (deployers)
  * ------------------------------------------------------------------ */
@@ -234,6 +267,8 @@ interface Strings {
     tournamentWinner: (competition: string, season: string) => string;
     /** "Rate decision · {institution} {label}" */
     rateDecision: (institution: string, label: string) => string;
+    /** "{event} · over/under {line}?" */
+    overUnder: (event: string, line: string) => string;
     vs: string;
 }
 
@@ -247,6 +282,7 @@ const ES: Strings = {
     rateIncrease: 'Suba de tasas',
     tournamentWinner: (c, s) => `Ganador · ${[c, s].filter(Boolean).join(' ')}`,
     rateDecision: (i, l) => `Decisión de tasas · ${[i, l].filter(Boolean).join(' ')}`,
+    overUnder: (e, l) => `${e ? `${e} · ` : ''}¿más de ${l}?`,
     vs: 'vs',
 };
 
@@ -260,6 +296,7 @@ const EN: Strings = {
     rateIncrease: 'Rate hike',
     tournamentWinner: (c, s) => `Winner · ${[c, s].filter(Boolean).join(' ')}`,
     rateDecision: (i, l) => `Rate decision · ${[i, l].filter(Boolean).join(' ')}`,
+    overUnder: (e, l) => `${e ? `${e} · ` : ''}over ${l}?`,
     vs: 'vs',
 };
 
@@ -361,6 +398,11 @@ export function renderOutcomeTitle(
             const b = at('participantB');
             return a && b ? `${a} ${s.vs} ${b}` : humanizeUnknown(templateId, f);
         }
+        case 'sportsOverUnderMarket':
+            // "NFL: Browns vs Buccaneers · ¿más de 8.5?" — the event and the
+            // line are the two things a bettor needs; `measure` (which side's
+            // points, counted how) goes in the detail line below the title.
+            return s.overUnder(at('event'), formatLine(at('line'), language));
         case 'policyRateNoChange':
             return s.rateNoChange;
         case 'policyRateDecrease':
@@ -370,6 +412,14 @@ export function renderOutcomeTitle(
         default:
             return humanizeUnknown(templateId, f);
     }
+}
+
+/** A betting line with the locale's decimal mark: 8.5 → "8,5" in Spanish. */
+export function formatLine(raw: string | undefined, language: string): string {
+    if (!raw) return '';
+    const n = parseFloat(raw);
+    if (!Number.isFinite(n)) return raw;
+    return new Intl.NumberFormat(locale(language), { maximumFractionDigits: 2 }).format(n);
 }
 
 /**
@@ -384,6 +434,7 @@ export function renderOutcomeDetail(
     const f = { ...parseDescFields(parentDesc), ...parseDescFields(desc) };
     const parts: string[] = [];
     if (f.competition) parts.push(f.competition);
+    if (f.measure) parts.push(f.measure);
     if (f.stage) parts.push(f.stage);
     if (f.season) parts.push(f.season);
     if (f.priceDescription) parts.push(f.priceDescription);

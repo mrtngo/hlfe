@@ -17,15 +17,20 @@
  */
 import { API_URL } from '@/lib/hyperliquid/client';
 import {
+    assetLabel,
+    bareAssetSymbol,
+    eventLeague,
     formatTarget,
     isTradFiAsset,
     ladderSpec,
     parseDescFields,
+    parseHlTime,
     renderLadderEventName,
     renderOutcomeDetail,
     renderOutcomeTitle,
     renderQuestionTitle,
     resolveSideName,
+    sportLabel,
     stripTemplatePrefix,
     venueLabel,
 } from '@/lib/hyperliquid/outcome-templates';
@@ -131,6 +136,21 @@ export interface OutcomeMarketView {
     venueName: string;
     /** Template id this market was deployed from, for debugging/grouping. */
     template: string;
+    /**
+     * Merged template arguments (parent question's, overridden by the
+     * outcome's own). Structured data beats re-parsing a rendered title:
+     * the subject chips, the countdown and the Polymarket matcher all read
+     * these rather than sniffing prose.
+     */
+    fields: Record<string, string>;
+    /** When the market stops trading / resolves. Null when HL ships no stamp. */
+    closeTime: Date | null;
+    /**
+     * What the market is *about*, in one or two words — "BTC", "Fed",
+     * "Premier League". Drives the subject chips and reads better on a card
+     * than the category ("crypto").
+     */
+    subject: string;
 }
 
 /**
@@ -243,11 +263,21 @@ export function oddsMultiplier(mid: number): string {
     return `${parseFloat((1 / mid).toFixed(2))}x`;
 }
 
-/** Localize a side name (HL ships English): "Yes" → "Sí" in Spanish. */
+/**
+ * Localize a side name. HL ships English labels for the generic sides
+ * (Yes/No, Over/Under); participant names are proper nouns and pass through.
+ */
+const SIDE_ES: Record<string, string> = {
+    yes: 'Sí',
+    no: 'No',
+    over: 'Más',
+    under: 'Menos',
+};
+
 export function localizeSideName(name: string, language: string): string {
     if (!name) return name;
-    if (language === 'es' && name.trim().toLowerCase() === 'yes') return 'Sí';
-    return name;
+    if (language !== 'es') return name;
+    return SIDE_ES[name.trim().toLowerCase()] || name;
 }
 
 /**
@@ -278,6 +308,49 @@ export function deriveCategory(
     if (/(btc|bitcoin|eth|ethereum|crypto|solana|\bsol\b|\bhype\b|token)/.test(n)) return 'crypto';
     if (/(election|president|senate|congress|vote|poll|trump|government|elecc)/.test(n)) return 'politics';
     return 'other';
+}
+
+/**
+ * One- or two-word subject for a market — what a bettor scans for.
+ *
+ * outcome.xyz fronts its board with subject chips (BTC, HYPE, Football,
+ * WTIOIL) rather than only broad categories, and that's the filter people
+ * actually reach for: "show me the BTC ones". Derived from structured fields
+ * so it stays right as new templates ship.
+ */
+export function deriveSubject(
+    fields: Record<string, string>,
+    templateId: string,
+    language: string,
+): string {
+    const perp = fields.perp || fields.underlying;
+    if (perp) return assetLabel(perp, language) || bareAssetSymbol(perp);
+    if (fields.competition) return fields.competition;
+    // Over/under markets carry no competition but name the league in `event`.
+    const league = eventLeague(fields.event || '');
+    if (league) return league;
+    if (fields.institution) {
+        const n = fields.institution.toLowerCase();
+        if (n.includes('federal reserve')) return 'Fed';
+        if (n.includes('european central bank')) return language === 'es' ? 'BCE' : 'ECB';
+        return fields.institution;
+    }
+    if (fields.company) return fields.company;
+    if (fields.sport) return sportLabel(fields.sport, language);
+    return stripTemplatePrefix(templateId);
+}
+
+/**
+ * What a stake returns if the side wins. Contracts settle at $1, so a side
+ * priced at 0.4 turns $100 into $250.
+ *
+ * Both Outcome and Polymarket lead with this framing instead of a raw
+ * probability — "$100 → $250" needs no explanation, "40¢" does. Returns 0
+ * for an unpriced side so callers can hide the line.
+ */
+export function payoutFor(stake: number, mid: number): number {
+    if (!mid || mid <= 0 || mid >= 1) return 0;
+    return stake / mid;
 }
 
 /**
@@ -338,6 +411,7 @@ export function buildMarketViews(
             // a `sportsContestDraw2` has no description of its own.
             const parentFields = parseDescFields(q?.description);
             const name = renderOutcomeTitle(o.name, o.description, language, parentFields);
+            const merged = { ...parentFields, ...fields };
             const venue = o.venue || '';
 
             // Three ways a market joins an event, in precedence order: an
@@ -368,10 +442,15 @@ export function buildMarketViews(
                 eventName,
                 groupLabel,
                 ladderValue: ladder?.value ?? null,
-                category: deriveCategory(eventName || name, { ...parentFields, ...fields }, o.name),
+                category: deriveCategory(eventName || name, merged, o.name),
                 venue,
                 venueName: venueLabel(venue),
                 template: stripTemplatePrefix(o.name),
+                fields: merged,
+                closeTime: parseHlTime(
+                    merged.time || merged.dateTime || merged.resolutionDeadline,
+                ),
+                subject: deriveSubject(merged, o.name, language),
                 sides: o.sideSpecs.map((s, idx) => {
                     const ref = outcomeCoinRef(o.outcome, idx);
                     const midStr = allMids[ref];
