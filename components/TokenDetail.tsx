@@ -67,8 +67,8 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
 
     const stats = [
         { label: 'Vol 24h', value: `$${((market.volume24h || 0) / 1_000_000).toFixed(1)}M` },
-        { label: 'Open Interest', value: `$${((market.openInterest || 0) / 1_000_000).toFixed(1)}M` },
-        { label: 'Funding', value: `${((market.fundingRate || 0) * 100).toFixed(3)}%`, color: (market.fundingRate || 0) >= 0 ? V2.pos : V2.neg },
+        { label: 'Open Interest', value: `$${((market.openInterest || 0) * market.price / 1_000_000).toFixed(1)}M` },
+        { label: 'Funding', value: `${(market.fundingRate || 0).toFixed(4)}%`, color: (market.fundingRate || 0) >= 0 ? V2.pos : V2.neg },
         { label: t.markets.lev, value: `${market.maxLeverage || 20}×` },
     ];
 

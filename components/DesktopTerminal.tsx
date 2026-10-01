@@ -263,8 +263,8 @@ export default function DesktopTerminal({
 
                             <div className="dt-market-stats">
                                 <Metric label="Vol 24h" value={compactUsd(currentMarket?.volume24h || 0)} />
-                                <Metric label="Open interest" value={compactUsd(currentMarket?.openInterest || 0)} />
-                                <Metric label="Funding" value={`${(((currentMarket?.fundingRate || 0) * 100)).toFixed(4)}%`} />
+                                <Metric label="Open interest" value={compactUsd((currentMarket?.openInterest || 0) * (currentMarket?.price || 0))} />
+                                <Metric label="Funding" value={`${(currentMarket?.fundingRate || 0).toFixed(4)}%`} />
                                 <Metric label="Max lev" value={`${currentMarket?.maxLeverage || 20}x`} />
                             </div>
                         </div>

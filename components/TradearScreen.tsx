@@ -506,7 +506,7 @@ function ProMode({
                 <div className="tabular-mono" style={{ fontSize: 20, fontWeight: 700, color: '#fff', textShadow: '0 0 24px rgba(227,179,76,0.18)' }}>${formatUsdPrice(market.price || 0, market)}</div>
                 <div className="tabular-mono" style={{ fontSize: 12, color: cl, fontWeight: 700 }}>{up ? '+' : ''}{(market.change24h || 0).toFixed(2)}%</div>
                 <div className="tabular-mono" style={{ fontSize: 10, color: 'var(--color-text-tertiary)' }}>
-                    VOL ${((market.volume24h || 0) / 1_000_000).toFixed(1)}M · OI ${((market.openInterest || 0) / 1_000_000).toFixed(1)}M · FUND {((market.fundingRate || 0) * 100).toFixed(3)}%
+                    VOL ${((market.volume24h || 0) / 1_000_000).toFixed(1)}M · OI ${((market.openInterest || 0) * market.price / 1_000_000).toFixed(1)}M · FUND {(market.fundingRate || 0).toFixed(4)}%
                 </div>
             </div>
 

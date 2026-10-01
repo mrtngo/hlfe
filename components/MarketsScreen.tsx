@@ -156,7 +156,7 @@ function MarketsScreen({ onTokenClick, onBack }: MarketsScreenProps) {
                                             <TokenLogo symbol={m.symbol} size={20} />
                                             <div style={{ minWidth: 0 }}>
                                                 <div style={{ fontWeight: 700, color: '#fff', fontSize: 11 }}>{baseTicker}</div>
-                                                <div style={{ fontSize: 9, color: 'var(--color-text-tertiary)' }}>OI ${((m.openInterest || 0) / 1_000_000).toFixed(1)}M</div>
+                                                <div style={{ fontSize: 9, color: 'var(--color-text-tertiary)' }}>OI ${((m.openInterest || 0) * m.price / 1_000_000).toFixed(1)}M</div>
                                             </div>
                                         </div>
                                         <div style={{ textAlign: 'right', fontWeight: 600, color: '#E5E5E5' }}>
@@ -169,7 +169,7 @@ function MarketsScreen({ onTokenClick, onBack }: MarketsScreenProps) {
                                             ${vol >= 1 ? `${vol.toFixed(1)}M` : `${(vol * 1000).toFixed(0)}K`}
                                         </div>
                                         <div style={{ textAlign: 'right', color: (m.fundingRate || 0) >= 0 ? 'var(--color-positive)' : 'var(--color-negative)' }}>
-                                            {((m.fundingRate || 0) * 100).toFixed(3)}%
+                                            {(m.fundingRate || 0).toFixed(4)}%
                                         </div>
                                     </button>
                                 );
