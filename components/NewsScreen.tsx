@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNews, type NewsItem } from '@/hooks/useNews';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { apiUrl } from '@/lib/api-base';
-import { ScreenV2, MarketLogo, Icon, V2 } from '@/components/V2Kit';
+import { ScreenV2, MarketLogo, Icon, IconBtn, V2 } from '@/components/V2Kit';
 
 type Filter = 'all' | 'tradfi' | 'crypto' | 'es' | 'BTC' | 'ETH' | 'SOL';
 
@@ -38,9 +38,10 @@ function timeAgo(ts: number): string {
 interface NewsScreenProps {
     /** Tap on a ticker chip → trade that asset. */
     onTickerClick?: (symbol: string) => void;
+    onBack?: () => void;
 }
 
-export default function NewsScreen({ onTickerClick }: NewsScreenProps) {
+export default function NewsScreen({ onTickerClick, onBack }: NewsScreenProps) {
     const { data: items, isLoading, isError, refetch } = useNews();
     const { markets } = useHyperliquid();
     const [filter, setFilter] = useState<Filter>('all');
@@ -69,6 +70,7 @@ export default function NewsScreen({ onTickerClick }: NewsScreenProps) {
         <ScreenV2 pad={0} glow={false}>
             {/* Header */}
             <div style={{ padding: '60px 20px 0' }}>
+                {onBack && <div style={{ marginBottom: 14 }}><IconBtn name="chevronLeft" onClick={onBack} /></div>}
                 <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em' }}>Noticias</div>
                 <div style={{ marginTop: 6, fontSize: 14, color: V2.t3 }}>
                     Lo que mueve al mercado, en un solo lugar.

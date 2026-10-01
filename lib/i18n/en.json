@@ -847,6 +847,10 @@
     },
     "guestName": "Guest",
     "emptyHint": "No funds yet. Deposit from $10 and make your first buy.",
+    "shortcuts": {
+      "academySub": "2-minute lessons",
+      "newsSub": "What's moving markets"
+    },
     "totalValue": "Total value",
     "today": "Today",
     "thirtyDays": "30 days",
@@ -1203,6 +1207,17 @@
       }
     },
     "tokenDetail": {
+      "statsTab": "Data",
+      "statsPlain": {
+        "volume": "Traded today",
+        "volumeHint": "How much was bought and sold in the last 24 h.",
+        "openInterest": "Open positions",
+        "openInterestHint": "Money people have invested right now.",
+        "funding": "Hourly cost",
+        "fundingHint": "What you pay or earn per hour while holding a position.",
+        "maxLeverage": "Max multiplier",
+        "maxLeverageHint": "The most you can multiply your amount. Higher = riskier."
+      },
       "yourPosition": "your position",
       "stats": "stats",
       "about": "about {name}",
@@ -1213,6 +1228,7 @@
         "close": "Close"
       },
       "cta": {
+        "betDown": "or bet it goes down",
         "buy": "Buy {symbol}",
         "sell": "Sell"
       }

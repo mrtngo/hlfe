@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useHyperliquid, type Market } from '@/hooks/useHyperliquid';
-import { Icon, ScreenV2 } from '@/components/V2Kit';
+import { Icon, IconBtn, ScreenV2 } from '@/components/V2Kit';
 
 const STORAGE_KEY = 'rayo_academy_completed';
 
@@ -48,7 +48,7 @@ function writeCompleted(ids: string[]) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
 }
 
-export default function AcademyScreen() {
+export default function AcademyScreen({ onBack }: { onBack?: () => void } = {}) {
     const { t, language, formatCurrency, formatPercent } = useLanguage();
     const { markets } = useHyperliquid();
     const academy = t.screens.academy;
@@ -160,6 +160,7 @@ export default function AcademyScreen() {
         <ScreenV2 pad={0} glow={false}>
             <div style={styles.shell}>
                 <header style={styles.header}>
+                    {onBack && <div style={{ marginBottom: 14 }}><IconBtn name="chevronLeft" onClick={onBack} /></div>}
                     <div style={styles.kicker}>
                         <Icon name="bolt" size={14} color="var(--color-brand-primary)" strokeWidth={2.4} />
                         {academy.kicker}

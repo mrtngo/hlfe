@@ -846,6 +846,10 @@
     },
     "guestName": "Invitado",
     "emptyHint": "Todavía no tenés fondos. Depositá desde $10 y hacé tu primera compra.",
+    "shortcuts": {
+      "academySub": "Lecciones de 2 minutos",
+      "newsSub": "Lo que mueve el mercado"
+    },
     "totalValue": "Valor total",
     "today": "Hoy",
     "thirtyDays": "30 días",
@@ -1202,6 +1206,17 @@
       }
     },
     "tokenDetail": {
+      "statsTab": "Datos",
+      "statsPlain": {
+        "volume": "Operado hoy",
+        "volumeHint": "Cuánto se compró y vendió en las últimas 24 h.",
+        "openInterest": "Posiciones abiertas",
+        "openInterestHint": "Dinero que la gente tiene invertido ahora mismo.",
+        "funding": "Costo por hora",
+        "fundingHint": "Lo que se cobra o se paga por hora mientras mantenés una posición.",
+        "maxLeverage": "Multiplicador máximo",
+        "maxLeverageHint": "Lo más que podés multiplicar tu monto. Más alto = más riesgo."
+      },
       "yourPosition": "tu posición",
       "stats": "estadísticas",
       "about": "sobre {name}",
@@ -1212,6 +1227,7 @@
         "close": "Cerrar"
       },
       "cta": {
+        "betDown": "o apostá a que baja",
         "buy": "Comprar {symbol}",
         "sell": "Vender"
       }

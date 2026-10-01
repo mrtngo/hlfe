@@ -45,7 +45,7 @@ type Tab = 'all' | 'closed' | 'open' | 'deposits';
 const LEVERAGE_STORAGE_KEY = 'rayo_leverage_by_symbol';
 const MS_DAY = 24 * 60 * 60 * 1000;
 
-export default function OrderHistory() {
+export default function OrderHistory({ onBack }: { onBack?: () => void } = {}) {
     const { t, language } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { address, fills, userDataLoading, positions } = useHyperliquid();
@@ -234,7 +234,7 @@ export default function OrderHistory() {
     if (!address) {
         return (
             <ScreenV2 pad={0}>
-                <V2Header title={t.screens.historial.title.replace(/\.$/, '')} />
+                <V2Header title={t.screens.historial.title.replace(/\.$/, '')} onBack={onBack} />
                 <div style={{ padding: '24px 20px' }}>
                     <EmptyState icon={History} title={t.history.connectWalletToView} />
                 </div>
@@ -244,7 +244,7 @@ export default function OrderHistory() {
 
     return (
         <ScreenV2 pad={0}>
-            <V2Header title={t.screens.historial.title.replace(/\.$/, '')} right={<IconBtn name="arrowDownLeft" />} />
+            <V2Header title={t.screens.historial.title.replace(/\.$/, '')} onBack={onBack} right={<IconBtn name="arrowDownLeft" />} />
 
             {/* Summary */}
             <div style={{ padding: '8px 20px 0' }}>

@@ -72,6 +72,12 @@ export default function Home() {
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Preselected side for the trade screen ("Bajar" → sell). Resets to buy on generic entry. */
     const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
+    // Each screen opens at the top — the window scroll otherwise carries over
+    // from the previous view (token detail opened mid-page).
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [view]);
+
     // Where the trade screen's back button returns to (token detail, home…).
     const [tradeReturnView, setTradeReturnView] = useState<typeof view>('home');
     /** Address whose public profile is being viewed. */
@@ -178,6 +184,14 @@ export default function Home() {
     };
 
     // Navigate to the trade screen with a preselected side (defaults to buy).
+    // Academia / Noticias / Historial are no longer tabs: they open from Home,
+    // Perfil or Ajustes and their back button returns there.
+    const [secondaryReturnView, setSecondaryReturnView] = useState<typeof view>('home');
+    const openSecondary = (target: 'academy' | 'news' | 'history') => {
+        setSecondaryReturnView(view);
+        setView(target);
+    };
+
     const goTrade = (side: 'buy' | 'sell' = 'buy') => {
         setTradeSide(side);
         if (view !== 'trading') setTradeReturnView(view);
@@ -233,6 +247,8 @@ export default function Home() {
                 onBuyClick={() => goTrade()}
                 onDeposit={goDeposit}
                 onOpenPredictions={() => setView('predictions')}
+                onOpenAcademy={() => openSecondary('academy')}
+                onOpenNews={() => openSecondary('news')}
             />
         ) : view === 'markets' ? (
             <MarketsScreen
@@ -260,6 +276,7 @@ export default function Home() {
             />
         ) : view === 'news' ? (
             <NewsScreen
+                onBack={desktopConsumerShell ? undefined : () => setView(secondaryReturnView)}
                 onTickerClick={(symbol) => {
                     setSelectedMarket(symbol);
                     goTrade();
@@ -268,7 +285,7 @@ export default function Home() {
         ) : view === 'rewards' ? (
             <RewardsScreen />
         ) : view === 'academy' ? (
-            <AcademyScreen />
+            <AcademyScreen onBack={desktopConsumerShell ? undefined : () => setView(secondaryReturnView)} />
         ) : view === 'predictions' ? (
             <PredictionsHub />
         ) : view === 'traderSearch' ? (
@@ -310,12 +327,12 @@ export default function Home() {
                 }}
             />
         ) : view === 'history' ? (
-            <OrderHistory />
+            <OrderHistory onBack={desktopConsumerShell ? undefined : () => setView(secondaryReturnView)} />
         ) : view === 'profile' ? (
             <ProfileScreen
                 onOpenSettings={() => setView('settings')}
                 onOpenPortfolio={() => setView('portfolio')}
-                onOpenHistory={() => setView('history')}
+                onOpenHistory={() => openSecondary('history')}
                 onOpenLeaderboard={() => setView('leaderboard')}
                 onOpenAdvanced={() => setView('advanced')}
             />
@@ -323,7 +340,7 @@ export default function Home() {
             <AjustesScreen
                 onBack={() => setView('profile')}
                 onReplayTutorial={() => setShowTutorial(true)}
-                onOpenAcademy={() => setView('academy')}
+                onOpenAcademy={() => openSecondary('academy')}
             />
         );
 
@@ -575,14 +592,11 @@ export default function Home() {
                 Always visible, on every screen. */}
             {!hideMobileFooter && (() => {
                 const tabs: { id: string; label: string; icon: IconName; on: boolean; onClick: () => void; domId?: string }[] = [
-                    { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home', onClick: () => setView('home') },
+                    { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home' || view === 'academy' || view === 'news', onClick: () => setView('home') },
                     { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },
-                    { id: 'academy', label: t.nav.academy || 'Academia', icon: 'info', on: view === 'academy', onClick: () => setView('academy'), domId: 'nav-academy-tab' },
                     { id: 'predictions', label: t.nav.predictions || 'Predice', icon: 'target', on: view === 'predictions', onClick: () => setView('predictions'), domId: 'nav-predictions-tab' },
-                    { id: 'news', label: t.nav.news || 'Noticias', icon: 'news', on: view === 'news', onClick: () => setView('news'), domId: 'nav-news-tab' },
-                    { id: 'history', label: t.nav.history, icon: 'history', on: view === 'history', onClick: () => setView('history') },
                     { id: 'rewards', label: t.nav.rewards || 'Premios', icon: 'gift', on: view === 'rewards', onClick: () => setView('rewards'), domId: 'nav-rewards-tab' },
-                    { id: 'account', label: t.nav.profile, icon: 'user', on: view === 'profile' || view === 'settings' || view === 'portfolio' || view === 'advanced' || view === 'leaderboard' || view === 'cctp' || view === 'bolsillos' || view === 'traderSearch' || view === 'publicProfile', onClick: handleProfileClick, domId: 'nav-profile-tab' },
+                    { id: 'account', label: t.nav.profile, icon: 'user', on: view === 'profile' || view === 'history' || view === 'settings' || view === 'portfolio' || view === 'advanced' || view === 'leaderboard' || view === 'cctp' || view === 'bolsillos' || view === 'traderSearch' || view === 'publicProfile', onClick: handleProfileClick, domId: 'nav-profile-tab' },
                 ];
                 return (
                     <nav

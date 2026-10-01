@@ -65,16 +65,19 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
     const displayDecimals = priceDecimalsFromMarket(market);
     const changeAbs = (price * (market.change24h || 0)) / 100;
 
-    const stats = [
-        { label: 'Vol 24h', value: `$${((market.volume24h || 0) / 1_000_000).toFixed(1)}M` },
-        { label: 'Open Interest', value: `$${((market.openInterest || 0) * market.price / 1_000_000).toFixed(1)}M` },
-        { label: 'Funding', value: `${(market.fundingRate || 0).toFixed(4)}%`, color: (market.fundingRate || 0) >= 0 ? V2.pos : V2.neg },
-        { label: t.markets.lev, value: `${market.maxLeverage || 20}×` },
+    // Plain-language market stats, each with a one-line "what this means".
+    // Funding is neutral-colored: whether it's good or bad depends on your side.
+    const st = t.screens.tokenDetail.statsPlain;
+    const stats: { label: string; hint: string; value: string; color?: string }[] = [
+        { label: st.volume, hint: st.volumeHint, value: `$${((market.volume24h || 0) / 1_000_000).toFixed(1)}M` },
+        { label: st.openInterest, hint: st.openInterestHint, value: `$${((market.openInterest || 0) * market.price / 1_000_000).toFixed(1)}M` },
+        { label: st.funding, hint: st.fundingHint, value: `${(market.fundingRate || 0).toFixed(4)}%` },
+        { label: st.maxLeverage, hint: st.maxLeverageHint, value: `${market.maxLeverage || 20}×` },
     ];
 
     const TABS: { id: typeof tab; label: string }[] = [
         { id: 'overview', label: 'Resumen' },
-        { id: 'stats', label: 'Stats' },
+        { id: 'stats', label: t.screens.tokenDetail.statsTab },
         { id: 'results', label: 'Resultados' },
         { id: 'news', label: 'Noticias' },
     ];
@@ -187,25 +190,20 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                             {getTokenDescription(ticker) ||
                                 `${fullName} (${ticker}) opera en Delos como mercado de futuros perpetuos liquidado en USDC. Operá al alza o a la baja con el multiplicador que elijas.`}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 20 }}>
-                            {stats.map((s) => (
-                                <div key={s.label}>
-                                    <div style={{ fontSize: 12.5, color: V2.t3, fontWeight: 600 }}>{s.label}</div>
-                                    <div style={{ fontSize: 15.5, fontWeight: 700, marginTop: 3, fontFamily: V2.mono, color: s.color || V2.t1 }}>{s.value}</div>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </>
             )}
 
             {tab === 'stats' && (
                 <div style={{ padding: '20px 20px 0' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                        {stats.map((s) => (
-                            <div key={s.label} className="v2-card" style={{ padding: 14, borderRadius: 14 }}>
-                                <div style={{ fontSize: 11.5, color: V2.t3, fontWeight: 600, letterSpacing: '0.02em' }}>{s.label}</div>
-                                <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6, fontFamily: V2.mono, color: s.color || V2.t1 }}>{s.value}</div>
+                    <div className="v2-card" style={{ overflow: 'hidden' }}>
+                        {stats.map((s, i) => (
+                            <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: i < stats.length - 1 ? `1px solid ${V2.hair}` : 'none' }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontSize: 14, fontWeight: 700 }}>{s.label}</div>
+                                    <div style={{ fontSize: 12, color: V2.t3, marginTop: 3, lineHeight: 1.4 }}>{s.hint}</div>
+                                </div>
+                                <div style={{ fontSize: 15.5, fontWeight: 700, fontFamily: V2.mono, color: s.color || V2.t1, whiteSpace: 'nowrap' }}>{s.value}</div>
                             </div>
                         ))}
                     </div>
@@ -218,19 +216,20 @@ export default function TokenDetail({ symbol, onBack, onBuy, onTrade }: TokenDet
                 </div>
             )}
 
-            {/* Sticky Up / Down */}
-            <div style={{ position: 'sticky', bottom: 0, marginTop: 24, padding: '16px 18px calc(16px + env(safe-area-inset-bottom))', background: `linear-gradient(180deg, rgba(10,12,14,0) 0%, ${V2.bg} 36%)`, display: 'flex', gap: 12 }}>
+            {/* Sticky buy — one clear action for beginners; betting on a drop is a
+                quiet secondary link. Sits above the floating bottom nav. */}
+            <div style={{ position: 'sticky', bottom: 'calc(78px + env(safe-area-inset-bottom))', marginTop: 24, padding: '16px 18px 10px', background: `linear-gradient(180deg, rgba(10,12,14,0) 0%, ${V2.bg} 36%)`, textAlign: 'center' }}>
                 <button
                     onClick={() => { setSelectedMarket(market.symbol); onBuy?.(); }}
-                    style={{ flex: 1, padding: 17, borderRadius: 99, border: 'none', cursor: 'pointer', fontFamily: V2.ui, background: V2.pos, color: '#05381b', fontWeight: 800, fontSize: 16, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}
+                    style={{ width: '100%', padding: 17, borderRadius: 99, border: 'none', cursor: 'pointer', fontFamily: V2.ui, background: V2.accent, color: V2.accentInk, fontWeight: 800, fontSize: 16 }}
                 >
-                    Subir <Icon name="arrowUpRight" size={17} color="#05381b" strokeWidth={2.8} />
+                    {t.screens.tokenDetail.cta.buy.replace('{symbol}', ticker)}
                 </button>
                 <button
                     onClick={() => { setSelectedMarket(market.symbol); onTrade?.('sell'); }}
-                    style={{ flex: 1, padding: 17, borderRadius: 99, border: 'none', cursor: 'pointer', fontFamily: V2.ui, background: V2.neg, color: '#fff', fontWeight: 800, fontSize: 16, display: 'inline-flex', justifyContent: 'center', alignItems: 'center', gap: 6 }}
+                    style={{ marginTop: 10, padding: '6px 10px', background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: V2.ui, color: V2.t3, fontWeight: 600, fontSize: 13 }}
                 >
-                    Bajar <Icon name="arrowDownLeft" size={17} color="#fff" strokeWidth={2.8} />
+                    {t.screens.tokenDetail.cta.betDown}
                 </button>
             </div>
 

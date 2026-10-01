@@ -37,9 +37,12 @@ interface HomeNormalProps {
     onToggleProMode: () => void;
     /** Navigate to the predictions screen (to manage outcome positions). */
     onOpenPredictions?: () => void;
+    /** Academia / Noticias left the bottom nav — Home links to them instead. */
+    onOpenAcademy?: () => void;
+    onOpenNews?: () => void;
 }
 
-function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode, onOpenPredictions }: HomeNormalProps) {
+function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode, onOpenPredictions, onOpenAcademy, onOpenNews }: HomeNormalProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, markets, thirtyDayPnl, setSelectedMarket, spotBalances, spotPrices } = useHyperliquid();
@@ -219,6 +222,29 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
                         {withdrawLabel}
                     </button>}
                 </div>
+
+                {/* shortcuts — Academia / Noticias live here, not in the nav */}
+                {(onOpenAcademy || onOpenNews) && (
+                    <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+                        {[
+                            { on: onOpenAcademy, icon: 'info' as const, l: t.nav.academy || 'Academia', s: t.homeRedesign.shortcuts.academySub },
+                            { on: onOpenNews, icon: 'news' as const, l: t.nav.news || 'Noticias', s: t.homeRedesign.shortcuts.newsSub },
+                        ].filter((x) => x.on).map((x) => (
+                            <button
+                                key={x.l}
+                                onClick={x.on}
+                                className="v2-card"
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 14, cursor: 'pointer', fontFamily: V2.ui, color: V2.t1, textAlign: 'left' }}
+                            >
+                                <Icon name={x.icon} size={18} color={V2.accent} />
+                                <span style={{ minWidth: 0 }}>
+                                    <span style={{ display: 'block', fontSize: 14, fontWeight: 700 }}>{x.l}</span>
+                                    <span style={{ display: 'block', fontSize: 11.5, color: V2.t3, marginTop: 2 }}>{x.s}</span>
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Open positions */}

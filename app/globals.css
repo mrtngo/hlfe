@@ -191,9 +191,12 @@ button.text-black,
 html,
 body {
   max-width: 100vw;
+  /* `clip`, not `hidden`: hidden forces overflow-y to auto, which turns body
+     into its own (never-scrolling) scroll container and breaks every
+     position: sticky element (e.g. the token screen's Comprar CTA). The
+     viewport still scrolls vertically. `hidden` is the pre-iOS-16 fallback. */
   overflow-x: hidden;
-  overflow-y: auto;
-  /* Ensure vertical scrolling is enabled */
+  overflow-x: clip;
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: #0A0C0E;
   color: #FFFFFF;
