@@ -13,7 +13,7 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { copyToClipboard } from '@/lib/clipboard';
 import { Icon, V2 } from '@/components/V2Kit';
 
-const APP_ORIGIN = 'https://app.rayotrade.xyz';
+const APP_ORIGIN = 'https://www.delosapp.xyz';
 
 function shortAddr(a: string) {
     return `${a.slice(0, 6)}…${a.slice(-4)}`;
@@ -122,7 +122,7 @@ export default function DesktopRewards() {
                     <div style={{ fontSize: 13, fontWeight: 700, color: V2.t2, marginBottom: 10 }}>Tu link de invitación</div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', borderRadius: 12, background: 'rgba(0,0,0,0.25)', border: `1px solid ${V2.hair}` }}>
                         <span style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontFamily: V2.mono, color: V2.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {referralCode ? `app.rayotrade.xyz/?ref=${referralCode}` : '—'}
+                            {referralCode ? `delosapp.xyz/?ref=${referralCode}` : '—'}
                         </span>
                         <button onClick={handleCopy} aria-label="Copiar" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
                             <Icon name="copy" size={18} color={copied ? V2.pos : V2.t2} />

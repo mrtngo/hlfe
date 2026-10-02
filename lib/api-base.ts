@@ -45,7 +45,7 @@ export const API_BASE: string = RAW_BASE.replace(/\/+$/, '');
  * non-http(s) origin and no base was configured, route to production instead
  * of the (non-existent) local origin.
  */
-const NATIVE_FALLBACK_BASE = 'https://www.rayotrade.xyz';
+const NATIVE_FALLBACK_BASE = 'https://www.delosapp.xyz';
 
 /** Effective base for the current runtime (explicit env wins; native shells
  *  fall back to production; web stays same-origin). */
@@ -64,7 +64,7 @@ function resolveBase(): string {
  *
  * Examples:
  *   apiUrl('/api/news')        → '/api/news'                          (web)
- *   apiUrl('/api/news')        → 'https://www.rayotrade.xyz/api/...'  (iOS)
+ *   apiUrl('/api/news')        → 'https://www.delosapp.xyz/api/...'  (iOS)
  *   apiUrl('/api/news?x=1')    → preserves query string
  */
 export function apiUrl(path: string): string {

@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 // Host-based routing for the split between the marketing site and the app:
 //   • rayotrade.xyz / www.rayotrade.xyz  → marketing landing (/landing)
-//   • app.rayotrade.xyz                  → the trading app (/) — untouched
+//   • app.rayotrade.xyz, www.delosapp.xyz → the trading app (/) — untouched
 //   • localhost (dev)                    → the app, so local dev is unchanged
 //
 // Only the root path is rewritten (matcher below), so shared pages like

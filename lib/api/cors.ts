@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 
 const DEFAULT_ALLOWED_ORIGINS = [
+    'https://www.delosapp.xyz',
+    'https://delosapp.xyz',
     'https://www.rayotrade.xyz',
     'https://rayotrade.xyz',
     'https://api.rayotrade.xyz',

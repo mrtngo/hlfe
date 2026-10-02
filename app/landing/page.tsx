@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 // Marketing landing served at the apex domain (rayotrade.xyz) via proxy.
-// The app itself lives on app.rayotrade.xyz. Pure server component — no client
+// The app itself lives on www.delosapp.xyz (formerly app.rayotrade.xyz). Pure server component — no client
 // providers needed; the only action is a link to the app.
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     },
 };
 
-const APP_URL = 'https://app.rayotrade.xyz';
+const APP_URL = 'https://www.delosapp.xyz';
 
 const ACCENT = '#E3B34C';
 const BG = '#0A0C0E';

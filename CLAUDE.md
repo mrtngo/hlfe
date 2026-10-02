@@ -282,7 +282,7 @@ npm run build   # Production build
 npm run lint    # ESLint
 ```
 
-**Production URL**: [https://www.rayotrade.xyz](https://www.rayotrade.xyz)
+**Production URL**: [https://www.delosapp.xyz](https://www.delosapp.xyz) (app). www.rayotrade.xyz still serves the marketing landing; support email stays support@rayotrade.xyz
 
 ---
 

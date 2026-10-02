@@ -245,7 +245,7 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItem[]> {
     try {
         const res = await fetch(feed.url, {
             signal: ctrl.signal,
-            headers: { 'user-agent': 'RayoNews/1.0 (+https://www.rayotrade.xyz)' },
+            headers: { 'user-agent': 'DelosNews/1.0 (+https://www.delosapp.xyz)' },
             next: { revalidate: 300 },
         });
         if (!res.ok) return [];

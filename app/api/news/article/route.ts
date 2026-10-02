@@ -140,7 +140,7 @@ async function extractFromFeed(articleUrl: string, host: string): Promise<Omit<A
     if (!root) return null;
     try {
         const res = await fetch(FEED_BY_HOST[root], {
-            headers: { 'user-agent': 'RayoNews/1.0 (+https://www.rayotrade.xyz)' },
+            headers: { 'user-agent': 'DelosNews/1.0 (+https://www.delosapp.xyz)' },
             next: { revalidate: 300 },
         });
         if (!res.ok) return null;

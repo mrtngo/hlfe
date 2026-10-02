@@ -62,11 +62,14 @@ function secureCompare(a: string, b: string): boolean {
   return aBuf.length === bBuf.length && crypto.timingSafeEqual(aBuf, bBuf);
 }
 
+const APP_ORIGINS = new Set(['https://www.delosapp.xyz', 'https://delosapp.xyz', 'https://www.rayotrade.xyz', 'https://app.rayotrade.xyz']);
+
 function safePath(value: unknown): string {
   if (typeof value !== 'string' || !value.trim()) return '/';
   try {
-    const parsed = new URL(value, 'https://www.rayotrade.xyz');
-    if (parsed.origin !== 'https://www.rayotrade.xyz') return '/';
+    const parsed = new URL(value, 'https://www.delosapp.xyz');
+    // Both domains serve the same deployment (rayotrade.xyz pre-rebrand).
+    if (!APP_ORIGINS.has(parsed.origin)) return '/';
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
     return '/';
