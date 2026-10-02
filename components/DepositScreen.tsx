@@ -47,8 +47,11 @@ const CARD_ONRAMP_ENABLED = process.env.NEXT_PUBLIC_ENABLE_CARD_ONRAMP === '1';
 // Card purchases below ~$30 hit MoonPay minimums / outsized fees.
 const CARD_DEFAULT_AMOUNT = '30';
 
-// Same kill-switch as the manual bridge: Solana is on-chain-untested.
-const SOLANA_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT !== '0';
+// Off unless explicitly enabled: the Solana → HL burn has never run with real
+// funds (open risk: Circle's in-instruction rent payer vs Privy sponsorship),
+// and it needs Solana embedded wallets enabled in the Privy Dashboard. Same
+// opt-in as the manual bridge — set NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT=1.
+const SOLANA_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT === '1';
 
 const SOLANA_RPC =
     process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
@@ -155,7 +158,12 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
         setSolCreating(true);
         setSolCreateError('');
         try {
-            await createSolanaWallet();
+            // Privy's createWallet can hang (e.g. Solana wallets not enabled in
+            // the dashboard) — don't spin "Preparando…" forever.
+            await Promise.race([
+                createSolanaWallet(),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20_000)),
+            ]);
         } catch (e) {
             setSolCreateError(e instanceof Error ? e.message : 'No pudimos crear tu dirección de Solana.');
         } finally {
