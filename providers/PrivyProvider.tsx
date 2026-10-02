@@ -48,7 +48,13 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
             theme: 'dark',
             accentColor: '#E3B34C', // Delos Apollonian gold
             logo: '/logo.svg', // Delos sun mark
-            walletList: [], // hide all wallet connectors
+            // Not shown anywhere (loginMethods has no 'wallet'), but Privy only
+            // marks wallets `ready` after an external connector initializes.
+            // With an empty list there were none, so EVM + Solana `ready` stayed
+            // false forever and the Solana wallet never loaded. The WalletConnect
+            // Solana connector exists on every device (no wallet app needed) —
+            // verified locally: ready flips in ~0.5s, never without it.
+            walletList: ['wallet_connect_qr_solana'],
             showWalletLoginFirst: false,
             // Spanish is the default language. Privy can't localize its email /
             // code screens ("Submit" stays English), but the header and subtitle
@@ -85,11 +91,9 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
                 },
             },
         },
-        // Required for Privy's wallet `ready` flags: they only flip once an
-        // external connector fires `connectorInitialized`. With every external
-        // wallet hidden (walletList: []) no connector existed, so `ready` stayed
-        // false forever and the Solana wallet list never loaded (deposit screen
-        // stuck on "Preparando…"). Login still offers only email + Google.
+        // Privy's documented Solana setup (detects installed Solana wallets).
+        // Alone it doesn't fix `ready` on devices without a wallet app — see
+        // walletList above. Login still offers only email + Google.
         externalWallets: {
             solana: { connectors: toSolanaWalletConnectors({ shouldAutoConnect: false }) },
         },

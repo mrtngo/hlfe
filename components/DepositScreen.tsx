@@ -183,11 +183,14 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
             return;
         }
         const id = setTimeout(() => {
-            console.warn('[deposit:solana] Solana wallets never became ready', { solCount: solWallets?.length ?? 0 });
+            console.warn('[deposit:solana] Solana wallets never became ready');
             setSolCreateError('not-ready');
         }, 12_000);
         return () => clearTimeout(id);
-    }, [net?.key, solReady, solWallets, solAddress, evmAddress, solCreating, solCreateError, ensureSolanaWallet]);
+        // Deliberately not depending on the wallets array: it's a new array on
+        // every render (price ticks), which kept resetting this timer.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [net?.key, solReady, solAddress, evmAddress, solCreating, solCreateError]);
 
     // Normalize whichever flow applies so the render is agnostic.
     const flow = useMemo(() => {
