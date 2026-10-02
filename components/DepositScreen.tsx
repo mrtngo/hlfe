@@ -165,6 +165,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                 new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 20_000)),
             ]);
         } catch (e) {
+            console.warn('[deposit:solana] createWallet failed', e);
             setSolCreateError(e instanceof Error ? e.message : 'No pudimos crear tu dirección de Solana.');
         } finally {
             setSolCreating(false);
@@ -172,10 +173,13 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     }, [evmAddress, solAddress, solCreating, createSolanaWallet]);
 
     useEffect(() => {
-        if (net?.key === 'solana' && solReady && !solAddress && evmAddress && !solCreateError) {
+        if (net?.key !== 'solana') return;
+        // Diagnostics for the Solana-wallet rollout (remove once stable).
+        console.info('[deposit:solana]', { solReady, solCount: solWallets?.length ?? 0, hasSol: !!solAddress, hasEvm: !!evmAddress, creating: solCreating, error: solCreateError || null });
+        if (solReady && !solAddress && evmAddress && !solCreateError) {
             void ensureSolanaWallet();
         }
-    }, [net?.key, solReady, solAddress, evmAddress, solCreateError, ensureSolanaWallet]);
+    }, [net?.key, solReady, solWallets, solAddress, evmAddress, solCreating, solCreateError, ensureSolanaWallet]);
 
     // Normalize whichever flow applies so the render is agnostic.
     const flow = useMemo(() => {
