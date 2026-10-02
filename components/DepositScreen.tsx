@@ -509,7 +509,6 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     // ════════════════════════════════════════════════════════════════════════
     // Stage B — address + auto-credit watcher
     // ════════════════════════════════════════════════════════════════════════
-    const chunked = depositAddress ? (depositAddress.match(/.{1,4}/g) || []).join(' ') : '';
     const success = flow.status === 'success';
 
     return (
@@ -653,12 +652,13 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
 
                         <div
                             style={{
-                                marginTop: 22, fontSize: 21, fontWeight: 700, fontFamily: V2.mono,
-                                lineHeight: 1.7, letterSpacing: '0.02em', textAlign: 'center',
-                                wordBreak: 'break-word', padding: '0 6px', color: V2.t1,
+                                marginTop: 22, fontSize: 18, fontWeight: 700, fontFamily: V2.mono,
+                                lineHeight: 1.6, textAlign: 'center',
+                                // Unspaced so a long-press copy is a valid address; one tap selects it all.
+                                wordBreak: 'break-all', userSelect: 'all', WebkitUserSelect: 'all', padding: '0 6px', color: V2.t1,
                             }}
                         >
-                            {chunked}
+                            {depositAddress}
                         </div>
 
                         <div style={{ marginTop: 20, fontSize: 13.5, color: V2.t2, textAlign: 'center', lineHeight: 1.55, padding: '0 14px' }}>
