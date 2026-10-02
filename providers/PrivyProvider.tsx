@@ -1,6 +1,7 @@
 'use client';
 
 import { PrivyProvider as PrivyAuth } from '@privy-io/react-auth';
+import { Capacitor } from '@capacitor/core';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { arbitrumSepolia, arbitrum, mainnet, polygon, base, optimism, avalanche, bsc } from 'viem/chains';
@@ -33,12 +34,15 @@ const wagmiConfig = createConfig({
 
 
 export function PrivyProvider({ children }: { children: React.ReactNode }) {
-    // Beginner-first login: email OTP only.
-    // Privy auto-creates an embedded wallet under the hood — the user never sees the word "wallet".
-    // External wallet connect (MetaMask etc.) and social logins are intentionally
-    // hidden for the LATAM hodler/DCA audience — just email + one-time code.
+    // Beginner-first login: email OTP + Google (one tap for people who live in
+    // Gmail). Privy auto-creates an embedded wallet under the hood — the user
+    // never sees the word "wallet". External wallets stay hidden.
+    // Google is web-only: Google blocks OAuth inside embedded web views
+    // ("disallowed_useragent"), so the Capacitor iOS shell keeps email until
+    // native Google sign-in is wired there. Needs Google enabled in the Privy
+    // Dashboard (Login methods → Socials).
     const config: any = {
-        loginMethods: ['email'],
+        loginMethods: Capacitor.isNativePlatform() ? ['email'] : ['email', 'google'],
         appearance: {
             theme: 'dark',
             accentColor: '#E3B34C', // Delos Apollonian gold
@@ -49,7 +53,7 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
             // code screens ("Submit" stays English), but the header and subtitle
             // are ours. PrivyProvider sits above LanguageProvider, so no t() here.
             landingHeader: 'Entra o crea tu cuenta',
-            loginMessage: 'Te mandamos un código a tu email. Sin contraseñas.',
+            loginMessage: 'Con Google o con un código a tu email. Sin contraseñas.',
         },
         embeddedWallets: {
             // Sign + send happen silently under the hood — no Privy confirmation
