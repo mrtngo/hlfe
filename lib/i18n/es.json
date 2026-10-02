@@ -902,7 +902,7 @@
       "evening": "Buenas noches"
     },
     "guestName": "Invitado",
-    "emptyHint": "Todavía no tienes fondos. Deposita desde $10 y haz tu primera compra.",
+    "emptyHint": "Todavía no tienes fondos. Deposita desde $5 y haz tu primera compra.",
     "shortcuts": {
       "academySub": "Lecciones de 2 minutos",
       "newsSub": "Lo que mueve el mercado"

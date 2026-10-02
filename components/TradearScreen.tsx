@@ -220,8 +220,10 @@ function NormalMode({
     const totalRequired = amount + estFee;
     const canSubmit = positionSize >= MIN_ORDER_NOTIONAL_USD && totalRequired <= availableUsd + 0.01 && !submitting && price > 0;
     // Nothing to trade with anywhere (not even in the Predicción pocket) —
-    // the slider is a dead end, so offer the way in instead.
-    const noFunds = availableUsd < MIN_ORDER_NOTIONAL_USD && spotBalance <= 0;
+    // the slider is a dead end, so offer the way in instead. Small balances
+    // (e.g. a $5 deposit) still trade: the effect below raises the multiplier
+    // until the order clears HL's $10 notional minimum.
+    const noFunds = availableUsd < 1 && spotBalance <= 0;
 
     useEffect(() => {
         if (availableUsd <= 0 || availableUsd >= MIN_ORDER_NOTIONAL_USD) return;

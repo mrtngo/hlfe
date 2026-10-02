@@ -58,7 +58,11 @@ type NetKey = CctpChainKey | 'solana';
 interface Network {
     key: NetKey;
     label: string;
-    /** Minimum deposit in USDC — below this we don't sweep. */
+    /** Minimum deposit in USDC — below this we don't sweep. The hard floor is
+     *  Hyperliquid's: bridge deposits under 5 USDC are lost. Arbitrum goes
+     *  straight to the bridge (5); CCTP chains lose a fast-transfer fee on the
+     *  way (≤0.1%), so they get 6 to always land ≥5. Funds below the minimum
+     *  aren't lost — they wait at the address and "ya llegaron" sums them. */
     min: number;
     /** /public logo path; null renders the inline Base mark. */
     logo: string | null;
@@ -68,16 +72,16 @@ interface Network {
 }
 
 const NETWORKS: Network[] = [
-    { key: 'arbitrum', label: 'Arbitrum', min: 10, logo: '/logos/ARB.svg', recommended: true },
-    { key: 'base', label: 'Base', min: 10, logo: null },
+    { key: 'arbitrum', label: 'Arbitrum', min: 5, logo: '/logos/ARB.svg', recommended: true },
+    { key: 'base', label: 'Base', min: 6, logo: null },
     ...(SOLANA_ENABLED
-        ? [{ key: 'solana' as const, label: 'Solana', min: 10, logo: '/logos/SOL.svg', beta: true }]
+        ? [{ key: 'solana' as const, label: 'Solana', min: 6, logo: '/logos/SOL.svg', beta: true }]
         : []),
-    // Mainnet gas (sponsored by us) is expensive — higher minimum.
-    { key: 'ethereum', label: 'Ethereum', min: 50, logo: '/logos/ETH.svg' },
-    { key: 'optimism', label: 'Optimism', min: 10, logo: '/logos/OP.svg' },
-    { key: 'polygon', label: 'Polygon', min: 10, logo: '/logos/MATIC.svg' },
-    { key: 'avalanche', label: 'Avalanche', min: 10, logo: '/logos/AVAX.svg' },
+    // Mainnet gas (sponsored by us) costs real money per deposit — small buffer.
+    { key: 'ethereum', label: 'Ethereum', min: 10, logo: '/logos/ETH.svg' },
+    { key: 'optimism', label: 'Optimism', min: 6, logo: '/logos/OP.svg' },
+    { key: 'polygon', label: 'Polygon', min: 6, logo: '/logos/MATIC.svg' },
+    { key: 'avalanche', label: 'Avalanche', min: 6, logo: '/logos/AVAX.svg' },
 ];
 
 const VIEM_CHAINS = {

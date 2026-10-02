@@ -903,7 +903,7 @@
       "evening": "Good evening"
     },
     "guestName": "Guest",
-    "emptyHint": "No funds yet. Deposit from $10 and make your first buy.",
+    "emptyHint": "No funds yet. Deposit from $5 and make your first buy.",
     "shortcuts": {
       "academySub": "2-minute lessons",
       "newsSub": "What's moving markets"
