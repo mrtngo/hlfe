@@ -2,6 +2,7 @@
 
 import { PrivyProvider as PrivyAuth } from '@privy-io/react-auth';
 import { Capacitor } from '@capacitor/core';
+import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { arbitrumSepolia, arbitrum, mainnet, polygon, base, optimism, avalanche, bsc } from 'viem/chains';
@@ -83,6 +84,14 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
                     rpcSubscriptions: createSolanaRpcSubscriptions(SOLANA_WSS),
                 },
             },
+        },
+        // Required for Privy's wallet `ready` flags: they only flip once an
+        // external connector fires `connectorInitialized`. With every external
+        // wallet hidden (walletList: []) no connector existed, so `ready` stayed
+        // false forever and the Solana wallet list never loaded (deposit screen
+        // stuck on "Preparando…"). Login still offers only email + Google.
+        externalWallets: {
+            solana: { connectors: toSolanaWalletConnectors({ shouldAutoConnect: false }) },
         },
         defaultChain: arbitrum,
         supportedChains: [arbitrum, mainnet, polygon, base, optimism, avalanche, bsc, arbitrumSepolia],

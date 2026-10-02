@@ -172,17 +172,20 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
         }
     }, [evmAddress, solAddress, solCreating, createSolanaWallet]);
 
-    // Don't gate on the Solana list's `ready`: Privy derives it from overall
-    // wallet readiness, which also waits on external connectors — with
-    // external wallets hidden it never turns true here (verified in prod:
-    // solReady stayed false while the EVM wallet worked). Give the list a few
-    // seconds to load an existing wallet, then create one.
+    // Wait for Privy's Solana wallet list (`ready` needs an external connector
+    // to initialize — see externalWallets in PrivyProvider), then create the
+    // wallet only if the user really has none. If the list never becomes
+    // ready, surface the retry state instead of "Preparando…" forever.
     useEffect(() => {
         if (net?.key !== 'solana' || solAddress || !evmAddress || solCreateError || solCreating) return;
-        const id = setTimeout(() => {
-            console.info('[deposit:solana] no Solana wallet after wait — creating', { solReady, solCount: solWallets?.length ?? 0 });
+        if (solReady) {
             void ensureSolanaWallet();
-        }, 3000);
+            return;
+        }
+        const id = setTimeout(() => {
+            console.warn('[deposit:solana] Solana wallets never became ready', { solCount: solWallets?.length ?? 0 });
+            setSolCreateError('not-ready');
+        }, 12_000);
         return () => clearTimeout(id);
     }, [net?.key, solReady, solWallets, solAddress, evmAddress, solCreating, solCreateError, ensureSolanaWallet]);
 
