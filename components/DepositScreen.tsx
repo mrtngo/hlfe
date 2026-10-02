@@ -22,7 +22,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWallets, useSendTransaction, useFundWallet } from '@privy-io/react-auth';
-import { useWallets as useSolanaWallets } from '@privy-io/react-auth/solana';
+import { useWallets as useSolanaWallets, useCreateWallet as useCreateSolanaWallet } from '@privy-io/react-auth/solana';
 import { createPublicClient, http, formatUnits, type Hex } from 'viem';
 import { mainnet, avalanche, optimism, arbitrum, base, polygon } from 'viem/chains';
 import {
@@ -114,7 +114,10 @@ interface DepositScreenProps {
 
 export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     const { wallets: evmWallets } = useWallets();
-    const { wallets: solWallets } = useSolanaWallets();
+    const { wallets: solWallets, ready: solReady } = useSolanaWallets();
+    const { createWallet: createSolanaWallet } = useCreateSolanaWallet();
+    const [solCreating, setSolCreating] = useState(false);
+    const [solCreateError, setSolCreateError] = useState('');
     const { sendTransaction } = useSendTransaction();
     const { refreshAccountData } = useHyperliquid();
 
@@ -143,6 +146,28 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     const evmAddress = evmWallet?.address;
     const solAddress = solWallets?.[0]?.address;
     const depositAddress = net?.key === 'solana' ? solAddress : evmAddress;
+
+    // Accounts created before Solana deposits have only the EVM wallet
+    // (createOnLogin skipped them). Create the Solana one on demand — silent,
+    // like the EVM wallet (showWalletUIs: false).
+    const ensureSolanaWallet = useCallback(async () => {
+        if (!evmAddress || solAddress || solCreating) return;
+        setSolCreating(true);
+        setSolCreateError('');
+        try {
+            await createSolanaWallet();
+        } catch (e) {
+            setSolCreateError(e instanceof Error ? e.message : 'No pudimos crear tu dirección de Solana.');
+        } finally {
+            setSolCreating(false);
+        }
+    }, [evmAddress, solAddress, solCreating, createSolanaWallet]);
+
+    useEffect(() => {
+        if (net?.key === 'solana' && solReady && !solAddress && evmAddress && !solCreateError) {
+            void ensureSolanaWallet();
+        }
+    }, [net?.key, solReady, solAddress, evmAddress, solCreateError, ensureSolanaWallet]);
 
     // Normalize whichever flow applies so the render is agnostic.
     const flow = useMemo(() => {
@@ -538,9 +563,25 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                 </div>}
 
                 {!depositAddress ? (
-                    <div style={{ marginTop: 40, textAlign: 'center', color: V2.t2, fontSize: 14 }}>
-                        Inicia sesión para ver tu dirección de depósito.
-                    </div>
+                    net.key === 'solana' && evmAddress ? (
+                        /* Logged in, Solana wallet being created */
+                        <div style={{ marginTop: 40, textAlign: 'center', color: V2.t2, fontSize: 14 }}>
+                            {solCreateError ? (
+                                <>
+                                    <div>No pudimos preparar tu dirección de Solana.</div>
+                                    <button onClick={() => setSolCreateError('')} style={{ ...secondaryBtn, marginTop: 14, flex: 'none', padding: '12px 22px' }}>
+                                        Reintentar
+                                    </button>
+                                </>
+                            ) : (
+                                'Preparando tu dirección de Solana…'
+                            )}
+                        </div>
+                    ) : (
+                        <div style={{ marginTop: 40, textAlign: 'center', color: V2.t2, fontSize: 14 }}>
+                            Inicia sesión para ver tu dirección de depósito.
+                        </div>
+                    )
                 ) : success ? (
                     /* ── Success ── */
                     <div style={{ marginTop: 36, textAlign: 'center' }}>

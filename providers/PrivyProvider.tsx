@@ -66,9 +66,13 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
                 createOnLogin: 'users-without-wallets',
             },
             // Every user also gets a Solana embedded wallet — the deposit
-            // address for the Solana → Hyperliquid CCTP on-ramp.
+            // address for the Solana → Hyperliquid CCTP on-ramp. 'all-users':
+            // 'users-without-wallets' skips anyone who already has the EVM
+            // wallet, so pre-Solana accounts never got one ("Inicia sesión
+            // para ver tu dirección" while logged in). DepositScreen also
+            // creates it on demand for sessions that predate this.
             solana: {
-                createOnLogin: 'users-without-wallets',
+                createOnLogin: 'all-users',
             },
         },
         // RPC the embedded Solana wallet uses to fetch blockhashes / send.
