@@ -47,11 +47,11 @@ const CARD_ONRAMP_ENABLED = process.env.NEXT_PUBLIC_ENABLE_CARD_ONRAMP === '1';
 // Card purchases below ~$30 hit MoonPay minimums / outsized fees.
 const CARD_DEFAULT_AMOUNT = '30';
 
-// Off unless explicitly enabled: the Solana → HL burn has never run with real
-// funds (open risk: Circle's in-instruction rent payer vs Privy sponsorship),
-// and it needs Solana embedded wallets enabled in the Privy Dashboard. Same
-// opt-in as the manual bridge — set NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT=1.
-const SOLANA_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT === '1';
+// On by default (kill-switch: NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT=0). Needs Solana
+// embedded wallets enabled in the Privy Dashboard. The Solana → HL burn is not
+// yet tested with real funds (open risk: Circle's in-instruction rent payer vs
+// Privy sponsorship) — first deposits should be small.
+const SOLANA_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT !== '0';
 
 const SOLANA_RPC =
     process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
