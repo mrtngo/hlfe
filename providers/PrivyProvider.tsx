@@ -3,6 +3,7 @@
 import { PrivyProvider as PrivyAuth } from '@privy-io/react-auth';
 import { Capacitor } from '@capacitor/core';
 import { toSolanaWalletConnectors } from '@privy-io/react-auth/solana';
+import { solanaRpcUrl, solanaWssUrl } from '@/lib/solana-rpc';
 import { WagmiProvider } from '@privy-io/wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { arbitrumSepolia, arbitrum, mainnet, polygon, base, optimism, avalanche, bsc } from 'viem/chains';
@@ -11,12 +12,9 @@ import { createSolanaRpc, createSolanaRpcSubscriptions } from '@solana/kit';
 
 const queryClient = new QueryClient();
 
-// Solana mainnet RPC for the embedded Solana wallet (used by CCTP deposits).
-// Override with a paid RPC via NEXT_PUBLIC_SOLANA_RPC — and add it to the CSP
-// connect-src in next.config.js if you do.
-const SOLANA_RPC =
-    process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
-const SOLANA_WSS = SOLANA_RPC.replace(/^http/, 'ws');
+// Solana RPC for the embedded Solana wallet: the same-origin relay by default
+// (the public RPC 403s browsers), or NEXT_PUBLIC_SOLANA_RPC — add a custom
+// host to the CSP connect-src in next.config.js. See lib/solana-rpc.
 
 // Create wagmi config with all supported chains for cross-chain bridging
 const wagmiConfig = createConfig({
@@ -86,8 +84,8 @@ export function PrivyProvider({ children }: { children: React.ReactNode }) {
         solana: {
             rpcs: {
                 'solana:mainnet': {
-                    rpc: createSolanaRpc(SOLANA_RPC),
-                    rpcSubscriptions: createSolanaRpcSubscriptions(SOLANA_WSS),
+                    rpc: createSolanaRpc(solanaRpcUrl()),
+                    rpcSubscriptions: createSolanaRpcSubscriptions(solanaWssUrl()),
                 },
             },
         },

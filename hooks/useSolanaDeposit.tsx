@@ -12,6 +12,7 @@
 // gas-sponsorship interaction (see lib/cctp/solana-deposit.ts) is the most
 // likely first-test failure point.
 
+import { solanaRpcUrl } from '@/lib/solana-rpc';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePrivy, useSendTransaction, useWallets as useEvmWallets } from '@privy-io/react-auth';
 import {
@@ -50,8 +51,8 @@ export type SolanaDepositStatus =
     | 'success'
     | 'error';
 
-const SOLANA_RPC =
-    process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
+// Resolved per call: the browser must use the same-origin relay (see lib/solana-rpc).
+const SOLANA_RPC_URL = solanaRpcUrl;
 
 const log = createLogger('solana-deposit');
 
@@ -299,7 +300,7 @@ export function useSolanaDeposit() {
 
             const arbDest = CCTP_CHAINS.arbitrum;
             try {
-                const connection = new Connection(SOLANA_RPC, 'confirmed');
+                const connection = new Connection(SOLANA_RPC_URL(), 'confirmed');
                 const destPub = createPublicClient({ chain: arbitrum, transport: http() });
                 let balanceBefore: bigint;
                 try {

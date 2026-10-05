@@ -20,6 +20,7 @@
 // Requires "Funding" enabled in the Privy Dashboard — gated by
 // NEXT_PUBLIC_ENABLE_CARD_ONRAMP=1 until then.
 
+import { solanaRpcUrl } from '@/lib/solana-rpc';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWallets, useSendTransaction, useFundWallet } from '@privy-io/react-auth';
 import { useWallets as useSolanaWallets, useCreateWallet as useCreateSolanaWallet } from '@privy-io/react-auth/solana';
@@ -53,8 +54,8 @@ const CARD_DEFAULT_AMOUNT = '30';
 // Privy sponsorship) — first deposits should be small.
 const SOLANA_ENABLED = process.env.NEXT_PUBLIC_ENABLE_SOLANA_DEPOSIT !== '0';
 
-const SOLANA_RPC =
-    process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
+// Resolved per call: the browser must use the same-origin relay (see lib/solana-rpc).
+const SOLANA_RPC_URL = solanaRpcUrl;
 
 type NetKey = CctpChainKey | 'solana';
 
@@ -142,6 +143,11 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
     // Direct Arbitrum → HL bridge forward (no CCTP needed).
     const [arbStatus, setArbStatus] = useState<'idle' | 'depositing' | 'success' | 'error'>('idle');
     const [arbError, setArbError] = useState('');
+    // Circle's Solana burn makes the owner pay ~0.0015 SOL rent for the
+    // MessageSent event account; Privy sponsorship only covers the tx fee. With
+    // no SOL the burn is rejected (atomically — funds stay put). Until the
+    // rent is sponsored, check first and say so plainly.
+    const [solFeeShort, setSolFeeShort] = useState(false);
     const baselineRef = useRef<bigint | null>(null);
 
     const evmWallet =
@@ -237,6 +243,17 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
             setSweepAmount(amountStr);
 
             if (net.key === 'solana') {
+                try {
+                    const [{ Connection, PublicKey }] = await Promise.all([import('@solana/web3.js')]);
+                    const lamports = await new Connection(SOLANA_RPC_URL(), 'confirmed').getBalance(new PublicKey(solAddress!));
+                    if (lamports < 2_500_000) {
+                        setSolFeeShort(true);
+                        return;
+                    }
+                } catch {
+                    /* can't check — let the burn try; failure is atomic */
+                }
+                setSolFeeShort(false);
                 sol.deposit(amountStr);
                 return;
             }
@@ -260,7 +277,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
             evm.transfer(net.key, 'arbitrum', amountStr, { autoDeposit: true, movementKind: 'deposit' });
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [net, sol.deposit, evm.transfer, sendTransaction, evmWallet],
+        [net, sol.deposit, evm.transfer, sendTransaction, evmWallet, solAddress],
     );
 
     // ── Balance watcher — polls the deposit address on the selected chain ───
@@ -278,7 +295,7 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                         import('@solana/spl-token'),
                         import('@/lib/cctp/solana'),
                     ]);
-                const conn = new Connection(SOLANA_RPC, 'confirmed');
+                const conn = new Connection(SOLANA_RPC_URL(), 'confirmed');
                 const ata = getAssociatedTokenAddressSync(
                     SOLANA_USDC_MINT,
                     new PublicKey(depositAddress),
@@ -772,6 +789,12 @@ export default function DepositScreen({ onBack, onDone }: DepositScreenProps) {
                             >
                                 Acreditar ${detectedNum.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC
                             </button>
+                        )}
+
+                        {solFeeShort && net.key === 'solana' && (
+                            <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 12, background: V2.accentSoft, border: '1px solid rgba(227,179,76,0.25)', fontSize: 12.5, color: V2.t1, lineHeight: 1.5 }}>
+                                Para mover tus USDC de Solana necesitas un poquito de SOL para la comisión de la red (unos 0,005 SOL, menos de $1). Envía SOL a esta misma dirección y vuelve a tocar el botón.
+                            </div>
                         )}
 
                         {flow.status === 'error' && (

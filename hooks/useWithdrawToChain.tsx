@@ -17,6 +17,7 @@
 //                                 (see lib/cctp/solana-mint.ts). EVM destinations
 //                                 reuse useCctpTransfer for leg 2.
 
+import { solanaRpcUrl } from '@/lib/solana-rpc';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import {
     useWallets as useEvmWallets,
@@ -61,8 +62,8 @@ export type WithdrawStatus =
     | 'success'
     | 'error';
 
-const SOLANA_RPC =
-    process.env.NEXT_PUBLIC_SOLANA_RPC || 'https://api.mainnet-beta.solana.com';
+// Resolved per call: the browser must use the same-origin relay (see lib/solana-rpc).
+const SOLANA_RPC_URL = solanaRpcUrl;
 
 /** Map the EVM CCTP sub-status (leg 2) onto our unified status. */
 function fromCctpStatus(s: CctpStatus): WithdrawStatus {
@@ -212,7 +213,7 @@ export function useWithdrawToChain() {
 
             // Mint on Solana to the recipient (creates their USDC ATA if missing).
             setPhase('minting');
-            const connection = new Connection(SOLANA_RPC, 'confirmed');
+            const connection = new Connection(SOLANA_RPC_URL(), 'confirmed');
             const { buildSolanaReceiveMessageTx } = await import('@/lib/cctp/solana-mint');
             const { transaction } = await buildSolanaReceiveMessageTx({
                 connection,
