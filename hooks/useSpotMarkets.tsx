@@ -130,6 +130,10 @@ export function useSpotMarkets(
             // Build a tokenIndex -> token lookup for fast joins.
             const tokensByIndex = new Map<number, HLSpotTokenMeta>();
             for (const tok of meta.tokens) tokensByIndex.set(tok.index, tok);
+            // Asset contexts are NOT position-aligned with `universe` (the ctx
+            // list is longer) — join on the pair's coin name.
+            const ctxByCoin = new Map<string, HLSpotAssetCtx>();
+            for (const c of contexts) if (c?.coin) ctxByCoin.set(c.coin, c);
 
             // 1. Build one SpotMarket per base token, restricted to USDC-
             //    quoted pairs. If a base has multiple USDC pairs (HL sometimes
@@ -146,7 +150,7 @@ export function useSpotMarkets(
                 // USDC0 variants) would require extra hops we don't support.
                 if (quoteTok?.name !== 'USDC') return;
 
-                const ctx = contexts[idx];
+                const ctx = ctxByCoin.get(pair.name);
                 const markPx = ctx?.markPx ? parseFloat(ctx.markPx) : 0;
                 const prevPx = ctx?.prevDayPx ? parseFloat(ctx.prevDayPx) : 0;
                 const change24h = prevPx > 0 ? ((markPx - prevPx) / prevPx) * 100 : 0;
@@ -163,7 +167,10 @@ export function useSpotMarkets(
                     // findIndex resolves the actual pair via tokens[0]
                     // matching the base token's index, so the literal
                     // pair name doesn't need to match.
-                    symbol: `${baseTok.name}/USDC`,
+                    // "@N" pairs: pass the exact pair id (the provider routes
+                    // it directly) — several tokens share a display name and
+                    // a name lookup could hit a dead duplicate.
+                    symbol: /^@\d+$/.test(pair.name) ? pair.name : `${baseTok.name}/USDC`,
                     pairIndex: idx,
                     szDecimals: baseTok.szDecimals,
                     price: markPx,

@@ -890,8 +890,12 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
             }
 
             const market = markets.find(m => m.symbol === symbol);
-            // If it's a spot market (usually contains /) and not in perpetuals, we need to handle it
-            const isSpot = symbol.includes('/');
+            // If it's a spot market (usually contains /) and not in perpetuals, we need to handle it.
+            // "@N" = an exact spot pair id (e.g. "@702" = NVDAX/USDC). Prefer it:
+            // several spot tokens share a display name (two "NVDAX"), and a
+            // name lookup can route to a dead duplicate.
+            const isSpotPairId = /^@\d+$/.test(symbol);
+            const isSpot = symbol.includes('/') || isSpotPairId;
 
             if (!market && !isSpot) {
                 throw new Error(`Market not found: ${symbol}. Available markets: ${markets.map(m => m.symbol).join(', ') || 'none loaded yet'}`);
@@ -942,10 +946,13 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // name and find a pair where tokens[0] === b.token. We
                 // prefer USDC-quoted pairs (matching what the picker
                 // surfaces) and fall back to any pair if needed.
-                const ownedBalance = spotBalances.find((b: any) => b.coin === baseCoin);
+                const ownedBalance = isSpotPairId ? undefined : spotBalances.find((b: any) => b.coin === baseCoin);
                 let pairIndex: number;
 
-                if (ownedBalance) {
+                if (isSpotPairId) {
+                    // Exact pair id — no name guessing.
+                    pairIndex = spotMeta.universe.findIndex((p: any) => p.name === symbol);
+                } else if (ownedBalance) {
                     // Owned coin: route to a pair containing THIS specific
                     // token index. USDC-quoted preferred.
                     pairIndex = spotMeta.universe.findIndex((p: any) => {
@@ -994,9 +1001,15 @@ export function HyperliquidProvider({ children }: { children: ReactNode }) {
                 // even when the user clearly holds the underlying token.
                 const resolvedPair = spotMeta.universe[pairIndex];
                 assetIndex = resolvedPair.index;
-                const spotCtx = spotContexts[pairIndex];
+                // Asset contexts are NOT aligned with `universe` by position
+                // (the ctx list is longer) — match on the pair's coin name, or
+                // the slippage reference price comes from another market.
+                const spotCtx = (spotContexts as any[]).find((c) => c?.coin === resolvedPair.name);
                 referencePrice = spotCtx?.markPx ? parseFloat(spotCtx.markPx) : null;
-                actualSzDecimals = spotMeta.tokens.find((t: any) => t.name === baseCoin)?.szDecimals;
+                // szDecimals by the pair's base TOKEN INDEX (names can repeat).
+                const baseToken = spotMeta.tokens.find((t: any) => t.index === resolvedPair.tokens[0]);
+                actualSzDecimals = baseToken?.szDecimals;
+                if (isSpotPairId && baseToken?.name) assetName = baseToken.name;
 
                 logger.debug(
                     `🔎 Spot pair resolution: baseCoin=${baseCoin}, ownedTokenIndex=${ownedBalance?.token ?? '(none)'}, arrayIdx=${pairIndex}, canonicalIndex=${assetIndex}, pairName=${resolvedPair.name}`,
