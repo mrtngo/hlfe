@@ -14,7 +14,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { haptic } from '@/lib/haptics';
 import { ScreenV2, V2Header, MarketLogo, Icon, V2 } from '@/components/V2Kit';
 import UserAvatar from '@/components/UserAvatar';
-import { ArticleReader } from '@/components/NewsScreen';
+import { ArticleReader, TickerChip } from '@/components/NewsScreen';
 
 type Filter = 'all' | 'trades' | 'news';
 type Entry = { kind: 'trade'; time: number; trade: FeedTradeItem } | { kind: 'news'; time: number; news: NewsItem };
@@ -152,7 +152,13 @@ export default function FeedScreen({
                         e.kind === 'trade' ? (
                             <TradeCard key={`t:${e.trade.id}`} item={e.trade} f={f} onOpen={() => openTicker(e.trade.coin)} />
                         ) : (
-                            <NewsCard key={`n:${e.news.id}`} item={e.news} onOpen={() => setReading(e.news)} />
+                            <NewsCard
+                                key={`n:${e.news.id}`}
+                                item={e.news}
+                                onOpen={() => setReading(e.news)}
+                                tradeable={tradeable}
+                                onTicker={openTicker}
+                            />
                         ),
                     )}
                 </div>
@@ -201,10 +207,24 @@ function TradeCard({ item, f, onOpen }: { item: FeedTradeItem; f: Record<string,
     );
 }
 
-function NewsCard({ item, onOpen }: { item: NewsItem; onOpen: () => void }) {
+function NewsCard({
+    item,
+    onOpen,
+    tradeable,
+    onTicker,
+}: {
+    item: NewsItem;
+    onOpen: () => void;
+    tradeable: (tk: string) => boolean;
+    onTicker: (tk: string) => void;
+}) {
     return (
-        <button
+        // div, not button: it contains ticker-chip buttons (no nested buttons).
+        <div
+            role="button"
+            tabIndex={0}
             onClick={onOpen}
+            onKeyDown={(ev) => { if (ev.key === 'Enter') onOpen(); }}
             className="v2-card"
             style={{ display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 16, cursor: 'pointer', fontFamily: V2.ui, color: V2.t1, textAlign: 'left', width: '100%' }}
         >
@@ -219,14 +239,20 @@ function NewsCard({ item, onOpen }: { item: NewsItem; onOpen: () => void }) {
                     {item.title}
                 </span>
                 {item.tickers.length > 0 && (
-                    <span style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                    // Same chip as Noticias: token logo + name, tap → token page.
+                    <span style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                         {item.tickers.slice(0, 3).map((tk) => (
-                            <span key={tk} style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 99, background: V2.accentSoft, color: V2.accent }}>{tk}</span>
+                            <TickerChip
+                                key={tk}
+                                tk={tk}
+                                tradeable={tradeable(tk)}
+                                onClick={(ev) => { ev.stopPropagation(); onTicker(tk); }}
+                            />
                         ))}
                     </span>
                 )}
             </span>
-        </button>
+        </div>
     );
 }
 

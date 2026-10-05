@@ -220,7 +220,7 @@ function SentimentBadge({ s }: { s: 'up' | 'down' }) {
     );
 }
 
-function TickerChip({
+export function TickerChip({
     tk,
     tradeable,
     onClick,
