@@ -34,6 +34,8 @@ interface BolsillosScreenProps {
     onDeposit?: () => void;
     /** Opens "Ganar intereses" (HyperCore USDC lending). */
     onOpenEarn?: () => void;
+    /** Opens "Invertir" (spot assets for the Spot pocket). */
+    onOpenInvest?: () => void;
 }
 
 // ─── Pocket palette ────────────────────────────────────────────
@@ -75,6 +77,7 @@ export default function BolsillosScreen({
     onBack,
     onDeposit,
     onOpenEarn,
+    onOpenInvest,
 }: BolsillosScreenProps) {
     const lending = useLending();
     const { t } = useLanguage();
@@ -449,6 +452,26 @@ export default function BolsillosScreen({
                         {t.bolsillos.cta}
                     </button>
                 </div>
+
+                {/* Invertir — what the Spot pocket is for */}
+                {onOpenInvest && (
+                    <div style={{ padding: '0 22px 12px' }}>
+                        <button
+                            onClick={onOpenInvest}
+                            className="v2-card"
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 16, cursor: 'pointer', fontFamily: V2.ui, color: V2.t1, textAlign: 'left' }}
+                        >
+                            <span style={{ width: 38, height: 38, borderRadius: 11, background: V2.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                <Icon name="chart" size={18} color={V2.accent} />
+                            </span>
+                            <span style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>{t.invest.title}</span>
+                                <span style={{ display: 'block', fontSize: 12.5, color: V2.t3, marginTop: 2 }}>{t.invest.sub}</span>
+                            </span>
+                            <Icon name="chevronRight" size={16} color={V2.t3} />
+                        </button>
+                    </div>
+                )}
 
                 {/* Earn — idle USDC → HyperCore lending */}
                 {onOpenEarn && (

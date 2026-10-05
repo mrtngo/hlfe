@@ -14,14 +14,16 @@ import EmptyState from '@/components/EmptyState';
 import SkeletonRow from '@/components/SkeletonRow';
 import ProToggle from '@/components/ProToggle';
 import TickerTape from '@/components/TickerTape';
-import { ScreenV2, PctBadge, MarketLogo, V2 } from '@/components/V2Kit';
+import { ScreenV2, PctBadge, MarketLogo, Icon, V2 } from '@/components/V2Kit';
 
 interface MarketsScreenProps {
     onTokenClick?: (symbol: string) => void;
     onBack?: () => void;
+    /** Opens "Invertir" (spot: own the asset, no leverage). */
+    onOpenInvest?: () => void;
 }
 
-function MarketsScreen({ onTokenClick, onBack }: MarketsScreenProps) {
+function MarketsScreen({ onTokenClick, onBack, onOpenInvest }: MarketsScreenProps) {
     const { t } = useLanguage();
     const { proMode, toggleProMode } = usePreferences();
     const { markets, setSelectedMarket } = useHyperliquid();
@@ -202,6 +204,26 @@ function MarketsScreen({ onTokenClick, onBack }: MarketsScreenProps) {
                 </div>
                 <ProToggle pro={false} onClick={toggleProMode} />
             </div>
+
+            {/* Invertir (spot) — own the asset; this list is for trading */}
+            {onOpenInvest && (
+                <div style={{ padding: '0 20px 12px' }}>
+                    <button
+                        onClick={onOpenInvest}
+                        className="v2-card"
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 16px', borderRadius: 16, cursor: 'pointer', fontFamily: V2.ui, color: V2.t1, textAlign: 'left' }}
+                    >
+                        <span style={{ width: 36, height: 36, borderRadius: 11, background: V2.posSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <Icon name="coins" size={18} color={V2.pos} />
+                        </span>
+                        <span style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>{t.invest.title}</span>
+                            <span style={{ display: 'block', fontSize: 12.5, color: V2.t3, marginTop: 2 }}>{t.invest.sub}</span>
+                        </span>
+                        <Icon name="chevronRight" size={16} color={V2.t3} />
+                    </button>
+                </div>
+            )}
 
             {/* Search */}
             <div style={{ padding: '0 20px 16px' }}>

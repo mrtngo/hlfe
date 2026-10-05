@@ -32,6 +32,8 @@ import PortfolioScreen from '@/components/PortfolioScreen';
 import BolsillosScreen from '@/components/BolsillosScreen';
 import EarnScreen from '@/components/EarnScreen';
 import FeedScreen from '@/components/FeedScreen';
+import InvestScreen from '@/components/InvestScreen';
+import SpotAssetScreen from '@/components/SpotAssetScreen';
 import DepositScreen from '@/components/DepositScreen';
 import DesktopPredictions from '@/components/DesktopPredictions';
 import DesktopTerminal from '@/components/DesktopTerminal';
@@ -70,10 +72,13 @@ export default function Home() {
     const { ready, authenticated, login, getAccessToken } = usePrivy();
     const { user, loading: userLoading, needsConsent, recordConsent } = useUser();
     const { proMode, toggleProMode } = usePreferences();
-    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'academy' | 'bolsillos' | 'earn' | 'feed' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
+    const [view, setView] = useState<'home' | 'trading' | 'history' | 'profile' | 'leaderboard' | 'spot' | 'spotReal' | 'spotManage' | 'cctp' | 'deposit' | 'news' | 'rewards' | 'academy' | 'bolsillos' | 'earn' | 'feed' | 'invest' | 'spotAsset' | 'predictions' | 'advanced' | 'markets' | 'tokenDetail' | 'portfolio' | 'settings' | 'traderSearch' | 'publicProfile'>('home');
     const [detailSymbol, setDetailSymbol] = useState<string | null>(null);
     /** Preselected side for the trade screen ("Bajar" → sell). Resets to buy on generic entry. */
     const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
+    // Invertir (spot): selected asset key + where its back button returns.
+    const [investKey, setInvestKey] = useState<string>('btc');
+    const [investReturnView, setInvestReturnView] = useState<'markets' | 'bolsillos' | 'home'>('markets');
     // Each screen opens at the top — the window scroll otherwise carries over
     // from the previous view (token detail opened mid-page).
     useEffect(() => {
@@ -211,7 +216,7 @@ export default function Home() {
     // V2 "serious redesign" screens render full-bleed (they own their padding
     // and background via ScreenV2). Everything else keeps the legacy padded
     // container + live-sync chip.
-    const V2_VIEWS = ['earn', 'feed', 'home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'academy', 'traderSearch', 'publicProfile', 'predictions'];
+    const V2_VIEWS = ['earn', 'feed', 'invest', 'spotAsset', 'home', 'markets', 'tokenDetail', 'trading', 'portfolio', 'history', 'profile', 'settings', 'deposit', 'news', 'rewards', 'academy', 'traderSearch', 'publicProfile', 'predictions'];
     const isV2View = V2_VIEWS.includes(view);
     const DESKTOP_TERMINAL_VIEWS = ['home', 'markets', 'tokenDetail', 'trading', 'advanced'];
     // The dense pro terminal is opt-in: desktop users get the consumer shell by
@@ -257,6 +262,10 @@ export default function Home() {
         ) : view === 'markets' ? (
             <MarketsScreen
                 onBack={() => setView('home')}
+                onOpenInvest={() => {
+                    setInvestReturnView('markets');
+                    setView('invest');
+                }}
                 onTokenClick={(symbol) => {
                     setSelectedMarket(symbol);
                     setDetailSymbol(symbol);
@@ -290,6 +299,21 @@ export default function Home() {
             />
         ) : view === 'rewards' ? (
             <RewardsScreen />
+        ) : view === 'invest' ? (
+            <InvestScreen
+                onBack={() => setView(investReturnView)}
+                onOpenAsset={(key) => {
+                    setInvestKey(key);
+                    setView('spotAsset');
+                }}
+            />
+        ) : view === 'spotAsset' ? (
+            <SpotAssetScreen
+                assetKey={investKey}
+                onBack={() => setView('invest')}
+                needsAccount={ready && !authenticated}
+                onSignIn={login}
+            />
         ) : view === 'feed' ? (
             <FeedScreen
                 onTokenClick={(symbol) => {
@@ -586,6 +610,10 @@ export default function Home() {
                                     onBack={() => setView('home')}
                                     onDeposit={goDeposit}
                                     onOpenEarn={() => setView('earn')}
+                                    onOpenInvest={() => {
+                                        setInvestReturnView('bolsillos');
+                                        setView('invest');
+                                    }}
                                 />
                             </div>
                         ) : (
@@ -612,7 +640,7 @@ export default function Home() {
             {!hideMobileFooter && (() => {
                 const tabs: { id: string; label: string; icon: IconName; on: boolean; onClick: () => void; domId?: string }[] = [
                     { id: 'home', label: t.nav.home, icon: 'home', on: view === 'home' || view === 'academy' || view === 'news', onClick: () => setView('home') },
-                    { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets', onClick: () => setView('markets'), domId: 'nav-markets-tab' },
+                    { id: 'markets', label: t.nav.markets, icon: 'chart', on: view === 'markets' || view === 'invest' || view === 'spotAsset', onClick: () => setView('markets'), domId: 'nav-markets-tab' },
                     { id: 'feed', label: t.feed.nav, icon: 'flame', on: view === 'feed', onClick: () => setView('feed'), domId: 'nav-feed-tab' },
                     { id: 'predictions', label: t.nav.predictions || 'Predice', icon: 'target', on: view === 'predictions', onClick: () => setView('predictions'), domId: 'nav-predictions-tab' },
                     { id: 'rewards', label: t.nav.rewards || 'Premios', icon: 'gift', on: view === 'rewards', onClick: () => setView('rewards'), domId: 'nav-rewards-tab' },
