@@ -793,6 +793,15 @@
     "low24h": "24h Low"
   },
   "tradear": {
+    "feeOpen": "Fee to open",
+    "feeClose": "Fee to close (approx.)",
+    "fundingLabel": "Cost to hold",
+    "fundingPay": "You pay to hold it",
+    "fundingEarn": "You get paid to hold it",
+    "perDay": "/day",
+    "perWeek": " /week",
+    "calculating": "Calculating…",
+    "fundingNote": "Estimated from the last 7 days of funding. It changes every hour, so it may differ.",
     "cashoutOff": "No",
     "autoCloseBelow": "Closes automatically if it drops to",
     "autoCloseAbove": "Closes automatically if it rises to",

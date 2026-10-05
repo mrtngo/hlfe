@@ -6,6 +6,7 @@ import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCurrency } from '@/context/CurrencyContext';
 import { usePreferences } from '@/hooks/usePreferences';
+import { useFundingForecast } from '@/hooks/useFundingForecast';
 import { MIN_ORDER_NOTIONAL_USD } from '@/lib/constants';
 import { BUILDER_CONFIG } from '@/lib/hyperliquid/client';
 import { haptic } from '@/lib/haptics';
@@ -207,8 +208,19 @@ function NormalMode({
             : price * (1 + (1 / leverage - mm) / (1 + mm))
         : 0;
 
-    // Taker fee (market order) + builder fee, charged on the notional.
+    // Taker fee (market order) + builder fee, charged on the notional — once
+    // to open, and again to close (estimated at today's price).
     const estFee = positionSize * feeRate;
+    const estCloseFee = positionSize * feeRate;
+    // How far the auto-close price is from now, in % (shown next to it).
+    const liqDistancePct = liqPrice > 0 && price > 0 ? ((liqPrice - price) / price) * 100 : null;
+
+    // Funding forecast (past 7 days' average). Positive rate → longs pay.
+    // `fundingPerDay` > 0 means the user pays; < 0 means they get paid.
+    const funding = useFundingForecast(market.symbol, market.isStock === true);
+    const fundingPerDay = funding.data && positionSize > 0
+        ? positionSize * funding.data.avgHourly * 24 * (side === 'buy' ? 1 : -1)
+        : null;
     const targetPrice = cashout != null
         ? side === 'buy'
             ? price * (1 + cashout / 100 / leverage)
@@ -353,18 +365,58 @@ function NormalMode({
                         <span style={{ fontSize: 16, fontWeight: 600, color: V2.t2 }}>Total</span>
                         <span style={{ fontSize: 22, fontWeight: 800, fontFamily: V2.mono, letterSpacing: '-0.02em' }}>{formatCurrency(positionSize)}</span>
                     </div>
+                    {/* Auto-close (isolated margin liquidation) + distance */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
                         <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>{side === 'buy' ? t.tradear.autoCloseBelow : t.tradear.autoCloseAbove}</span>
-                        <span style={{ fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: V2.neg }}>
+                        <span style={{ fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: V2.neg, textAlign: 'right' }}>
                             {positionSize <= 0 ? '—' : liqPrice > price * 0.001 ? formatCurrency(liqPrice, displayDecimals) : t.tradear.neverAutoCloses}
+                            {positionSize > 0 && liqPrice > price * 0.001 && liqDistancePct != null && (
+                                <span style={{ fontSize: 12, fontWeight: 600, color: V2.t3, marginLeft: 6 }}>
+                                    ({liqDistancePct > 0 ? '+' : ''}{liqDistancePct.toFixed(1).replace('.', ',')}%)
+                                </span>
+                            )}
                         </span>
                     </div>
+
+                    {/* Fees: open now, close later (estimate) */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-                        <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>Comisión</span>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>{t.tradear.feeOpen}</span>
                         <span style={{ fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: V2.t2 }}>
                             {estFee > 0 ? `~${formatCurrency(estFee)}` : '—'}
                         </span>
                     </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>{t.tradear.feeClose}</span>
+                        <span style={{ fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: V2.t2 }}>
+                            {estCloseFee > 0 ? `~${formatCurrency(estCloseFee)}` : '—'}
+                        </span>
+                    </div>
+
+                    {/* Funding forecast: pay or get paid to hold, from the last 7 days */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginTop: 8, gap: 12 }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 600, color: V2.t3 }}>
+                            {fundingPerDay == null ? t.tradear.fundingLabel : fundingPerDay > 0 ? t.tradear.fundingPay : t.tradear.fundingEarn}
+                        </span>
+                        <span style={{ textAlign: 'right' }}>
+                            <span style={{ display: 'block', fontSize: 14.5, fontWeight: 700, fontFamily: V2.mono, color: fundingPerDay == null ? V2.t2 : fundingPerDay > 0 ? V2.neg : V2.pos }}>
+                                {positionSize <= 0
+                                    ? '—'
+                                    : funding.isLoading
+                                      ? t.tradear.calculating
+                                      : fundingPerDay == null
+                                        ? '—'
+                                        : `${fundingPerDay > 0 ? '−' : '+'}${formatCurrency(Math.abs(fundingPerDay))}${t.tradear.perDay}`}
+                            </span>
+                            {fundingPerDay != null && positionSize > 0 && (
+                                <span style={{ display: 'block', fontSize: 11.5, fontFamily: V2.mono, color: V2.t3, marginTop: 2 }}>
+                                    {fundingPerDay > 0 ? '−' : '+'}{formatCurrency(Math.abs(fundingPerDay * 7))}{t.tradear.perWeek}
+                                </span>
+                            )}
+                        </span>
+                    </div>
+                    {fundingPerDay != null && positionSize > 0 && (
+                        <div style={{ marginTop: 6, fontSize: 11.5, color: V2.t3, lineHeight: 1.45 }}>{t.tradear.fundingNote}</div>
+                    )}
                 </div>
 
                 {/* Cash out when I'm up */}

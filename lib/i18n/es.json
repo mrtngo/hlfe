@@ -792,6 +792,15 @@
     "low24h": "Mín 24h"
   },
   "tradear": {
+    "feeOpen": "Comisión al abrir",
+    "feeClose": "Comisión al cerrar (aprox.)",
+    "fundingLabel": "Costo por mantenerla",
+    "fundingPay": "Pagas por mantenerla",
+    "fundingEarn": "Te pagan por mantenerla",
+    "perDay": "/día",
+    "perWeek": " /semana",
+    "calculating": "Calculando…",
+    "fundingNote": "Estimado según el financiamiento de los últimos 7 días. Cambia cada hora, así que puede ser distinto.",
     "cashoutOff": "No",
     "autoCloseBelow": "Se cierra sola si baja a",
     "autoCloseAbove": "Se cierra sola si sube a",
