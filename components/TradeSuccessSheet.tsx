@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useUser } from '@/hooks/useUser';
+import { useLanguage } from '@/hooks/useLanguage';
 import { MarketLogo, Icon, V2, DelosSun } from '@/components/V2Kit';
 import { haptic } from '@/lib/haptics';
 
@@ -156,6 +158,7 @@ export default function TradeSuccessSheet({
                         </div>
                     </div>
                 </div>
+                <FeedSharePrompt />
                 <button
                     onClick={onClose}
                     className="v2-rise d3"
@@ -167,6 +170,57 @@ export default function TradeSuccessSheet({
                     }}
                 >
                     {ctaLabel || 'Listo'}
+                </button>
+            </div>
+        </div>
+    );
+}
+
+const FEED_PROMPT_KEY = 'delos:feedPromptAnswered';
+
+/**
+ * One-time ask after a trade: share trades in the Feed? Prior, express
+ * consent (Ley 1581) — nothing is shared unless the user taps "Sí".
+ * Either answer is remembered; never shown once sharing is on.
+ */
+function FeedSharePrompt() {
+    const { t } = useLanguage();
+    const { user, setShareTrades } = useUser();
+    const [answered, setAnswered] = useState(() => {
+        try {
+            return typeof window !== 'undefined' && localStorage.getItem(FEED_PROMPT_KEY) === '1';
+        } catch {
+            return true;
+        }
+    });
+    const [saving, setSaving] = useState(false);
+    if (!user || user.share_trades || answered) return null;
+
+    const answer = async (yes: boolean) => {
+        haptic.light();
+        if (yes) {
+            setSaving(true);
+            await setShareTrades(true, 'trade_success');
+            setSaving(false);
+        }
+        try {
+            localStorage.setItem(FEED_PROMPT_KEY, '1');
+        } catch {
+            /* private mode */
+        }
+        setAnswered(true);
+    };
+
+    return (
+        <div className="v2-card" style={{ padding: '14px 16px', borderRadius: 16, marginBottom: 12, textAlign: 'left' }}>
+            <div style={{ fontSize: 14, fontWeight: 800 }}>{t.feed.prompt}</div>
+            <div style={{ fontSize: 12.5, color: V2.t3, marginTop: 4, lineHeight: 1.45 }}>{t.feed.promptBody}</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <button onClick={() => answer(false)} disabled={saving} style={{ flex: 1, padding: '10px 0', borderRadius: 12, border: `1px solid ${V2.hair2}`, background: 'transparent', color: V2.t2, fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: V2.ui }}>
+                    {t.feed.promptNo}
+                </button>
+                <button onClick={() => answer(true)} disabled={saving} style={{ flex: 1.4, padding: '10px 0', borderRadius: 12, border: 'none', background: V2.cardSolid, color: V2.t1, fontWeight: 800, fontSize: 13, cursor: 'pointer', fontFamily: V2.ui, opacity: saving ? 0.6 : 1 }}>
+                    {saving ? '…' : t.feed.promptYes}
                 </button>
             </div>
         </div>

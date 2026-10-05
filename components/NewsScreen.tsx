@@ -251,7 +251,7 @@ function TickerChip({
 
 // ── In-app reader ───────────────────────────────────────────────────────────
 
-function ArticleReader({
+export function ArticleReader({
     item,
     onClose,
     onTicker,

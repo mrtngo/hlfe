@@ -3,6 +3,7 @@ import { corsHeaders } from '@/lib/api/cors';
 import { verifyPrivyWalletRequest } from '@/lib/auth/privy';
 import { getOrCreateUserForWallet } from '@/lib/supabase/account-server';
 import { getSupabaseServiceClient } from '@/lib/supabase/server';
+import { isPresetAvatarUrl } from '@/lib/avatars';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,6 +21,7 @@ function cleanText(value: unknown, maxLength: number): string | null {
 function isAllowedAvatarUrl(value: unknown): value is string {
     if (value === null || value === '') return true;
     if (typeof value !== 'string') return false;
+    if (isPresetAvatarUrl(value)) return true; // "preset:<id>" (lib/avatars)
     try {
         const parsed = new URL(value);
         const allowedDomains = [
@@ -83,7 +85,7 @@ export async function PATCH(request: NextRequest) {
         const session = await verifyPrivyWalletRequest(request, walletAddress);
         await getOrCreateUserForWallet(session.walletAddress);
 
-        const updates: Record<string, string | null> = {};
+        const updates: Record<string, string | boolean | null> = {};
         if ('username' in body) {
             const username = cleanText(body.username, 20)?.toLowerCase() ?? null;
             if (username !== null && !/^[a-z0-9_]{3,20}$/.test(username)) {
@@ -111,6 +113,13 @@ export async function PATCH(request: NextRequest) {
             updates.referral_code = referralCode;
         }
 
+        // Feed sharing (Ley 1581: prior, express consent — off by default).
+        const sharingChange = typeof body.share_trades === 'boolean' ? body.share_trades : null;
+        if (sharingChange !== null) {
+            updates.share_trades = sharingChange;
+            updates.share_trades_updated_at = new Date().toISOString();
+        }
+
         if (Object.keys(updates).length === 0) {
             return json(request, { error: 'No updates supplied.' }, 400);
         }
@@ -130,6 +139,20 @@ export async function PATCH(request: NextRequest) {
                 { error: isConflict ? 'Value already taken.' : 'Failed to update profile.', code: error.code },
                 isConflict ? 409 : 500,
             );
+        }
+
+        if (sharingChange !== null) {
+            // Append-only consent trail; a failed log must not undo the change
+            // the user just made, but it is reported.
+            const source = typeof body.share_source === 'string' ? body.share_source.slice(0, 32) : null;
+            const { error: logError } = await supabase.from('feed_sharing_events').insert({
+                user_id: data.id,
+                wallet_address: session.walletAddress,
+                enabled: sharingChange,
+                source,
+                user_agent: request.headers.get('user-agent')?.slice(0, 300) ?? null,
+            });
+            if (logError) console.error('feed_sharing_events insert failed', logError);
         }
 
         return json(request, { user: data });

@@ -1,5 +1,6 @@
 'use client';
 
+import { isPresetAvatarUrl } from '@/lib/avatars';
 import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { User } from '@/lib/supabase/client';
@@ -65,6 +66,7 @@ function writeLocalConsent(walletAddress: string, policyVersion: string): void {
 // Validate avatar URL: must be HTTPS from allowed domains
 const isValidAvatarUrl = (url: string): boolean => {
     if (typeof url !== 'string' || !url) return true; // Empty is OK
+    if (isPresetAvatarUrl(url)) return true; // "preset:<id>" (lib/avatars)
     try {
         const parsed = new URL(url);
         // Only allow HTTPS
@@ -97,6 +99,8 @@ interface UserContextType {
     /** Sets the display name and derives the referral code from it (name in CAPS). */
     updateName: (name: string) => Promise<{ success: boolean; message: string }>;
     refreshUser: () => Promise<void>;
+    /** Opt in/out of showing your trades in the Feed (Ley 1581 consent, logged server-side). */
+    setShareTrades: (enabled: boolean, source: 'profile' | 'feed_banner' | 'trade_success') => Promise<{ success: boolean; message: string }>;
     // ── Data-protection (Ley 1581) ──
     /** True once the user is loaded and hasn't accepted the current policy version. */
     needsConsent: boolean;
@@ -281,6 +285,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
     }, [address, getAccessToken]);
 
+    const setShareTrades = useCallback(async (enabled: boolean, source: 'profile' | 'feed_banner' | 'trade_success'): Promise<{ success: boolean; message: string }> => {
+        if (!address) return { success: false, message: 'Wallet not connected' };
+        try {
+            const { user: updatedUser } = await authedJson<{ user: User }>(
+                '/api/account/profile',
+                getAccessToken,
+                {
+                    method: 'PATCH',
+                    body: JSON.stringify({ walletAddress: address, share_trades: enabled, share_source: source }),
+                },
+            );
+            if (updatedUser) {
+                setUser(updatedUser);
+                return { success: true, message: enabled ? 'Sharing on' : 'Sharing off' };
+            }
+            return { success: false, message: 'Failed to update' };
+        } catch (err: unknown) {
+            return { success: false, message: toDbError(err).message || 'Failed to update' };
+        }
+    }, [address, getAccessToken]);
+
     // Update display name + derive a referral code from it. Ensures the code
     // is unique by appending a numeric suffix on collision.
     const updateName = useCallback(async (name: string): Promise<{ success: boolean; message: string }> => {
@@ -402,6 +427,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             updateProfile,
             updateName,
             refreshUser,
+            setShareTrades,
             needsConsent,
             recordConsent,
             exportData,

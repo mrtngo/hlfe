@@ -33,6 +33,9 @@ export interface User {
     // Data-protection consent (Ley 1581) — latest accepted policy version + when.
     privacy_policy_version?: string | null;
     privacy_consent_at?: string | null;
+    // Feed: opt-in trade sharing (migration 20261004120000_social_feed).
+    share_trades?: boolean;
+    share_trades_updated_at?: string | null;
 }
 
 export interface Trade {

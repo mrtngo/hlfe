@@ -1,5 +1,8 @@
 'use client';
 
+import UserAvatar from '@/components/UserAvatar';
+import { haptic } from '@/lib/haptics';
+import { AVATAR_PRESETS, presetAvatarUrl } from '@/lib/avatars';
 import { useEffect, useMemo, useState } from 'react';
 import { useHyperliquid } from '@/hooks/useHyperliquid';
 import { useUser } from '@/hooks/useUser';
@@ -25,13 +28,15 @@ interface ProfileScreenProps {
     onOpenHistory?: () => void;
     onOpenLeaderboard?: () => void;
     onOpenAdvanced?: () => void;
+    /** No Perfil tab anymore — back to where the avatar was tapped. */
+    onBack?: () => void;
 }
 
-export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenHistory, onOpenLeaderboard, onOpenAdvanced }: ProfileScreenProps) {
+export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenHistory, onOpenLeaderboard, onOpenAdvanced, onBack }: ProfileScreenProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { address, fills } = useHyperliquid();
-    const { user, updateName } = useUser();
+    const { user, updateName, updateUsername, updateProfile, setShareTrades } = useUser();
     const { user: privyUser, logout, getAccessToken } = usePrivy();
     const [copied, setCopied] = useState(false);
     const [addressCopied, setAddressCopied] = useState(false);
@@ -41,6 +46,43 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
     const [nameInput, setNameInput] = useState('');
     const [savingName, setSavingName] = useState(false);
     const [nameError, setNameError] = useState('');
+    const [showAvatars, setShowAvatars] = useState(false);
+    const [savingAvatar, setSavingAvatar] = useState(false);
+    const [editingUser, setEditingUser] = useState(false);
+    const [userInput, setUserInput] = useState('');
+    const [userError, setUserError] = useState('');
+    const [savingUser, setSavingUser] = useState(false);
+    const [savingShare, setSavingShare] = useState(false);
+    const px = t.profileExtra;
+
+    const pickAvatar = async (id: string) => {
+        haptic.light();
+        setSavingAvatar(true);
+        const res = await updateProfile({ avatar_url: presetAvatarUrl(id) });
+        setSavingAvatar(false);
+        if (res.success) setShowAvatars(false);
+    };
+
+    const saveUsername = async () => {
+        const clean = userInput.trim().toLowerCase().replace(/^@/, '');
+        if (!/^[a-z0-9_]{3,20}$/.test(clean)) {
+            setUserError(px.usernameInvalid);
+            return;
+        }
+        setSavingUser(true);
+        setUserError('');
+        const res = await updateUsername(clean);
+        setSavingUser(false);
+        if (res.success) setEditingUser(false);
+        else setUserError(/taken/i.test(res.message) ? px.usernameTaken : res.message);
+    };
+
+    const toggleShare = async () => {
+        haptic.medium();
+        setSavingShare(true);
+        await setShareTrades(!user?.share_trades, 'profile');
+        setSavingShare(false);
+    };
 
     const copyAddress = async () => {
         if (!address) return;
@@ -91,7 +133,6 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
         (user?.username ? `@${user.username}` : 'Trader');
     const handle = user?.username ? `@${user.username}` : '';
     const truncated = address ? `${address.slice(0, 4)}…${address.slice(-4)}` : '0x0000…0000';
-    const initial = (displayName || '?').charAt(0).toUpperCase();
     const referralCode = user?.referral_code || '';
 
     const copyCode = async () => {
@@ -145,12 +186,33 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
 
     return (
         <ScreenV2 pad={0}>
-            <V2Header title={t.nav.profile} right={<IconBtn name="settings" onClick={onOpenSettings} />} />
+            <V2Header title={t.nav.profile} onBack={onBack} right={<IconBtn name="settings" onClick={onOpenSettings} />} />
 
             {/* Identity */}
             <div style={{ padding: '8px 20px 0' }}>
                 <div className="v2-card" style={{ padding: 22, borderRadius: 20, textAlign: 'center' }}>
-                    <div style={{ width: 80, height: 80, borderRadius: '50%', margin: '0 auto 14px', background: V2.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: V2.accentInk, fontSize: 36 }}>{initial}</div>
+                    <button
+                        onClick={() => { haptic.light(); setShowAvatars((v) => !v); }}
+                        aria-label={px.changePhoto}
+                        style={{ position: 'relative', display: 'block', margin: '0 auto 14px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                    >
+                        <UserAvatar avatarUrl={user?.avatar_url} name={displayName} size={80} />
+                        <span style={{ position: 'absolute', right: -2, bottom: -2, width: 28, height: 28, borderRadius: '50%', background: V2.cardSolid, border: `1px solid ${V2.hair2}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Icon name="pencil" size={13} color={V2.t1} />
+                        </span>
+                    </button>
+                    {showAvatars && (
+                        <div style={{ marginBottom: 16 }}>
+                            <div style={{ fontSize: 12.5, color: V2.t3, fontWeight: 600, marginBottom: 10 }}>{px.choosePhoto}</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10, justifyItems: 'center', opacity: savingAvatar ? 0.5 : 1 }}>
+                                {AVATAR_PRESETS.map((p) => (
+                                    <button key={p.id} disabled={savingAvatar} onClick={() => pickAvatar(p.id)} style={{ padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }} aria-label={p.id}>
+                                        <UserAvatar avatarUrl={presetAvatarUrl(p.id)} size={40} ring={user?.avatar_url === presetAvatarUrl(p.id)} />
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     {editingName ? (
                         <div style={{ marginTop: 2 }}>
                             <input
@@ -191,17 +253,65 @@ export default function ProfileScreen({ onOpenSettings, onOpenPortfolio, onOpenH
                             <Icon name="pencil" size={15} color={V2.t3} />
                         </button>
                     )}
-                    <button
-                        onClick={copyAddress}
-                        style={{ marginTop: 4, background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13.5, color: addressCopied ? V2.pos : V2.t3, fontFamily: V2.mono, display: 'inline-flex', alignItems: 'center', gap: 6 }}
-                    >
-                        {handle ? `${handle} · ` : ''}{truncated} <Icon name="copy" size={12} color={addressCopied ? V2.pos : V2.t3} />
-                    </button>
+                    {editingUser ? (
+                        <div style={{ marginTop: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,0.35)', border: `1px solid ${V2.hair}`, borderRadius: 12, padding: '8px 12px' }}>
+                                <span style={{ color: V2.t3, fontFamily: V2.mono }}>@</span>
+                                <input
+                                    autoFocus
+                                    value={userInput}
+                                    onChange={(e) => setUserInput(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' && !savingUser) saveUsername(); }}
+                                    maxLength={20}
+                                    placeholder={px.username}
+                                    style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: V2.t1, fontSize: 15, fontFamily: V2.mono }}
+                                />
+                            </div>
+                            <div style={{ fontSize: 11.5, color: userError ? V2.neg : V2.t3, marginTop: 6, minHeight: 14 }}>{userError || px.usernameHint}</div>
+                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                <button onClick={() => setEditingUser(false)} disabled={savingUser} style={{ flex: 1, padding: '9px 0', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: `1px solid ${V2.hair}`, color: V2.t2, fontWeight: 700, fontSize: 13.5, cursor: 'pointer', fontFamily: V2.ui }}>{px.cancel}</button>
+                                <button onClick={saveUsername} disabled={savingUser} style={{ flex: 1, padding: '9px 0', borderRadius: 10, background: V2.accent, border: 'none', color: V2.accentInk, fontWeight: 800, fontSize: 13.5, cursor: 'pointer', fontFamily: V2.ui, opacity: savingUser ? 0.6 : 1 }}>{savingUser ? '…' : px.save}</button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <button
+                                onClick={() => { setUserInput(user?.username || ''); setUserError(''); setEditingUser(true); }}
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13.5, color: V2.t2, fontFamily: V2.mono, display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                            >
+                                {handle || `@${px.username.toLowerCase()}`} <Icon name="pencil" size={12} color={V2.t3} />
+                            </button>
+                            <button
+                                onClick={copyAddress}
+                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 13.5, color: addressCopied ? V2.pos : V2.t3, fontFamily: V2.mono, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                            >
+                                {truncated} <Icon name="copy" size={12} color={addressCopied ? V2.pos : V2.t3} />
+                            </button>
+                        </div>
+                    )}
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 14 }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 99, background: V2.accentSoft, color: V2.accent, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em' }}>⚡ PRO</span>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 99, background: V2.posSoft, color: V2.pos, fontSize: 11, fontWeight: 800, letterSpacing: '0.06em' }}>✓ {t.screens.perfil.verified}</span>
                     </div>
                 </div>
+            </div>
+
+            {/* Feed sharing — opt-in (Ley 1581), logged server-side */}
+            <div style={{ padding: '14px 20px 0' }}>
+                <button
+                    onClick={toggleShare}
+                    disabled={savingShare || !user}
+                    className="v2-card"
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 16, cursor: 'pointer', fontFamily: V2.ui, color: V2.t1, textAlign: 'left' }}
+                >
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ display: 'block', fontSize: 15, fontWeight: 700 }}>{px.shareTitle}</span>
+                        <span style={{ display: 'block', fontSize: 12.5, color: V2.t3, marginTop: 3, lineHeight: 1.45 }}>{px.shareDesc}</span>
+                    </span>
+                    <span role="switch" aria-checked={!!user?.share_trades} style={{ width: 46, height: 28, borderRadius: 99, background: user?.share_trades ? V2.accent : 'rgba(255,255,255,0.12)', position: 'relative', flexShrink: 0, opacity: savingShare ? 0.6 : 1, transition: 'background 0.2s' }}>
+                        <span style={{ position: 'absolute', top: 3, left: user?.share_trades ? 21 : 3, width: 22, height: 22, borderRadius: '50%', background: user?.share_trades ? V2.accentInk : V2.t1, transition: 'left 0.2s' }} />
+                    </span>
+                </button>
             </div>
 
             {/* Quick links */}

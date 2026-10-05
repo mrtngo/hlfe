@@ -15,7 +15,7 @@ import { DelosWordmark, Icon, V2, type IconName } from '@/components/V2Kit';
 import ProToggle from '@/components/ProToggle';
 
 export type ShellView =
-    | 'home' | 'markets' | 'academy' | 'predictions'
+    | 'home' | 'markets' | 'feed' | 'academy' | 'predictions'
     | 'news' | 'history' | 'rewards' | 'profile';
 
 interface NavItem {
@@ -29,6 +29,7 @@ interface NavItem {
 const NAV: NavItem[] = [
     { id: 'home', label: 'Inicio', icon: 'home' },
     { id: 'markets', label: 'Mercados', icon: 'chart' },
+    { id: 'feed', label: 'Feed', icon: 'flame' },
     { id: 'predictions', label: 'Predice', icon: 'target' },
     { id: 'news', label: 'Noticias', icon: 'news' },
     { id: 'academy', label: 'Academia', icon: 'info' },

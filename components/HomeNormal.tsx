@@ -1,5 +1,6 @@
 'use client';
 
+import UserAvatar from '@/components/UserAvatar';
 import { useEffect, useMemo, useState, memo } from 'react';
 import { useHyperliquid, type Market } from '@/hooks/useHyperliquid';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -42,9 +43,11 @@ interface HomeNormalProps {
     onOpenNews?: () => void;
     /** Tap the balance → Bolsillos (where your money is + move it). */
     onOpenPockets?: () => void;
+    /** Avatar → Perfil (there's no Perfil tab; guests get the sign-in sheet). */
+    onOpenProfile?: () => void;
 }
 
-function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode, onOpenPredictions, onOpenAcademy, onOpenNews, onOpenPockets }: HomeNormalProps) {
+function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, onToggleProMode, onOpenPredictions, onOpenAcademy, onOpenNews, onOpenPockets, onOpenProfile }: HomeNormalProps) {
     const { t } = useLanguage();
     const { formatCurrency } = useCurrency();
     const { account, positions, markets, thirtyDayPnl, setSelectedMarket, spotBalances, spotPrices } = useHyperliquid();
@@ -138,7 +141,6 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
         return '';
     }, [user, privyUser]);
 
-    const avatarInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
     // Brand-new / guest account: nothing to break down or withdraw yet, so the
     // stat row and Retirar give way to a single deposit call.
     const isEmptyAccount = portfolioValue <= 0 && positions.length === 0 && outcomePositions.length === 0;
@@ -160,15 +162,17 @@ function HomeNormal({ onTokenClick, onSpotHoldingClick, onBuyClick, onDeposit, o
         <ScreenV2 pad={0}>
             {/* Header */}
             <div style={{ padding: '54px 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: V2.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: V2.accentInk, fontSize: 18 }}>
-                        {avatarInitial || <Icon name="user" size={20} color={V2.accentInk} />}
-                    </div>
+                <button
+                    onClick={onOpenProfile}
+                    aria-label={t.nav.profile}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'transparent', border: 'none', padding: 0, cursor: onOpenProfile ? 'pointer' : 'default', color: V2.t1, fontFamily: V2.ui, textAlign: 'left' }}
+                >
+                    <UserAvatar avatarUrl={user?.avatar_url} name={firstName} size={40} />
                     <div>
                         <div style={{ fontSize: 13, color: V2.t3, fontWeight: 600, }}>{greet}</div>
                         <div style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>{firstName || t.homeRedesign.guestName}</div>
                     </div>
-                </div>
+                </button>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <ProToggle pro={false} onClick={onToggleProMode} />
                     <IconBtn name="search" onClick={() => setPicker('search')} />
