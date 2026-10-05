@@ -282,8 +282,10 @@ export default function Home() {
             <NewsScreen
                 onBack={desktopConsumerShell ? undefined : () => setView(secondaryReturnView)}
                 onTickerClick={(symbol) => {
+                    // Chip → the token's page (chart + Comprar), same as the Feed.
                     setSelectedMarket(symbol);
-                    goTrade();
+                    setDetailSymbol(symbol);
+                    setView('tokenDetail');
                 }}
             />
         ) : view === 'rewards' ? (

@@ -103,7 +103,9 @@ function findImage(block: string): string | null {
 // are added where the bare ticker isn't an everyday word.
 const TICKER_WORDS: [RegExp, string][] = [
     // ── Crypto ──────────────────────────────────────────────────────────────
-    [/\bbitcoin\b|\bbtc\b/i, 'BTC'],
+    // "Bitcoin Cash" is BCH, not BTC — checked first, and excluded from BTC.
+    [/\bbitcoin cash\b|\bbch\b/i, 'BCH'],
+    [/\bbitcoin\b(?!\s+cash)|\bbtc\b/i, 'BTC'],
     [/\bethereum\b|\bether\b|\beth\b/i, 'ETH'],
     [/\bsolana\b|\bsol\b/i, 'SOL'],
     [/\bxrp\b|\bripple\b/i, 'XRP'],
@@ -118,7 +120,8 @@ const TICKER_WORDS: [RegExp, string][] = [
     [/\bsui\b/i, 'SUI'],
     [/\baptos\b/i, 'APT'],
     [/\barbitrum\b/i, 'ARB'],
-    [/\boptimism\b/i, 'OP'],
+    // The word "optimism" is everywhere in business news — only the network.
+    [/\boptimism (?:network|mainnet|superchain)\b|\bop mainnet\b/i, 'OP'],
     [/\btoncoin\b/i, 'TON'],
     [/\btron\b|\btrx\b/i, 'TRX'],
     [/\blitecoin\b|\bltc\b/i, 'LTC'],
@@ -225,12 +228,70 @@ const UP_WORDS =
 const DOWN_WORDS =
     /\b(cae|caída|caida|desploma|derrumba|mínimo|minimo|pierde|hackeo|hack|exploit|crash|drops?|plunges?|falls?|sinks?|tumbles?|bearish|bajista|liquidaciones)\b/i;
 
-function enrich(title: string, description = ''): { tickers: string[]; sentiment: 'up' | 'down' | null } {
+// ── Live market tickers ─────────────────────────────────────────────────────
+// The name list above only knows ~90 assets; headlines like "TIA sube 6,22%"
+// or "Starknet (STRK) sube 36%" name the ticker directly. Match any capitalized
+// token / $cashtag that is an actual Hyperliquid market (main perps + the xyz
+// dex), refreshed hourly. Capitalized everyday words are never tickers here.
+const HL_INFO = 'https://api.hyperliquid.xyz/info';
+const MARKETS_TTL_MS = 60 * 60 * 1000;
+let marketsCache: { at: number; names: Set<string> } = { at: 0, names: new Set() };
+
+const NOT_TICKERS = new Set([
+    'USD', 'USDC', 'USDT', 'USDH', 'EUR', 'CEO', 'CFO', 'CTO', 'ETF', 'ETFS', 'SEC', 'CFTC', 'FED', 'FOMC', 'IPO',
+    'ATH', 'API', 'NFT', 'NFTS', 'DEFI', 'DEX', 'CEX', 'TVL', 'GDP', 'PIB', 'CPI', 'IPC', 'IMF', 'FMI', 'BCE',
+    'USA', 'EEUU', 'ONU', 'OTAN', 'NATO', 'NEW', 'TOP', 'ALL', 'THE', 'AND', 'FOR', 'NOT', 'BIG', 'BUY', 'SELL',
+    'LONG', 'SHORT', 'HOT', 'ONE', 'TWO', 'AIR', 'WHY', 'HOW', 'WHO', 'YES', 'BTW',
+]);
+
+async function marketNames(): Promise<Set<string>> {
+    if (Date.now() - marketsCache.at < MARKETS_TTL_MS && marketsCache.names.size) return marketsCache.names;
+    try {
+        const load = async (body: object) => {
+            const res = await fetch(HL_INFO, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+                cache: 'no-store',
+            });
+            if (!res.ok) return [] as string[];
+            const meta = await res.json();
+            return ((meta?.universe ?? []) as { name: string; isDelisted?: boolean }[])
+                .filter((a) => !a.isDelisted)
+                .map((a) => a.name.split(':').pop()!.toUpperCase());
+        };
+        const [main, xyz] = await Promise.all([load({ type: 'meta' }), load({ type: 'meta', dex: 'xyz' })]);
+        const names = new Set([...main, ...xyz].filter((n) => !NOT_TICKERS.has(n)));
+        if (names.size) marketsCache = { at: Date.now(), names };
+    } catch {
+        /* keep the previous list; name aliases still work */
+    }
+    return marketsCache.names;
+}
+
+function tickersFromSymbols(title: string, description: string, names: Set<string>): string[] {
+    const found: string[] = [];
+    // $cashtags anywhere (any case), e.g. "$tia".
+    for (const m of `${title} ${description}`.matchAll(/\$([A-Za-z][A-Za-z0-9]{1,9})\b/g)) found.push(m[1].toUpperCase());
+    // Bare CAPITALIZED tokens in the headline only (bodies are noisy), ≥3 chars.
+    for (const m of title.matchAll(/\b[A-Z][A-Z0-9]{2,9}\b/g)) found.push(m[0]);
+    return found.filter((t) => names.has(t));
+}
+
+function enrich(
+    title: string,
+    description = '',
+    names: Set<string> = new Set(),
+): { tickers: string[]; sentiment: 'up' | 'down' | null } {
     // Match tickers against title + description (better recall on wire stories
     // that name the company in the body), but score sentiment on the title
     // only (the headline is the signal; bodies are noisy). Cap at 4 chips.
+    // Name aliases ("Nvidia", "oro") first, then literal market tickers.
     const haystack = `${title} ${description}`;
-    const tickers = TICKER_WORDS.filter(([re]) => re.test(haystack)).map(([, t]) => t);
+    const tickers = [
+        ...TICKER_WORDS.filter(([re]) => re.test(haystack)).map(([, t]) => t),
+        ...tickersFromSymbols(title, description, names),
+    ];
     const deduped = [...new Set(tickers)].slice(0, 4);
     const up = UP_WORDS.test(title);
     const down = DOWN_WORDS.test(title);
@@ -239,7 +300,7 @@ function enrich(title: string, description = ''): { tickers: string[]; sentiment
 
 // ── Fetch + assemble ────────────────────────────────────────────────────────
 
-async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItem[]> {
+async function fetchFeed(feed: (typeof FEEDS)[number], names: Set<string>): Promise<NewsItem[]> {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), FEED_TIMEOUT_MS);
     try {
@@ -261,7 +322,7 @@ async function fetchFeed(feed: (typeof FEEDS)[number]): Promise<NewsItem[]> {
             const publishedAt = pub ? Date.parse(pub) : Date.now();
             if (!Number.isFinite(publishedAt)) return [];
             const description = tag(block, 'description') || tag(block, 'content:encoded');
-            const { tickers, sentiment } = enrich(title, description);
+            const { tickers, sentiment } = enrich(title, description, names);
             // The whole point of the TradFi feeds is "news that alludes to a
             // ticker we trade" — drop the rest.
             if (feed.category === 'tradfi' && tickers.length === 0) return [];
@@ -291,7 +352,8 @@ export function OPTIONS(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     if (Date.now() - cache.at > CACHE_TTL_MS) {
-        const results = await Promise.allSettled(FEEDS.map(fetchFeed));
+        const names = await marketNames();
+        const results = await Promise.allSettled(FEEDS.map((f) => fetchFeed(f, names)));
         const items = results
             .flatMap((r) => (r.status === 'fulfilled' ? r.value : []))
             .sort((a, b) => b.publishedAt - a.publishedAt);
